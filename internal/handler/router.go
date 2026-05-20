@@ -1,0 +1,203 @@
+package handler
+
+import (
+	"context"
+	"database/sql"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"shiguang-vps/internal/handler/middleware"
+	"shiguang-vps/internal/logger"
+	"shiguang-vps/internal/ratelimit"
+	"shiguang-vps/internal/storage"
+)
+
+// silentPrefixSettingKey is the system_settings row that stores the active
+// 32-hex prefix used by the silent mode middleware.
+const silentPrefixSettingKey = "silent_mode_prefix"
+
+// Deps bundles cross-cutting collaborators the router (and the handlers it
+// mounts) need. Subsequent tasks extend this struct with their own repos
+// and services; T-3 only wires the fields used by /healthz and the
+// middleware chain.
+//
+// All fields are optional: NewRouter tolerates nil collaborators so that
+// tests can exercise individual handlers without bringing up a full DB.
+type Deps struct {
+	// DB is the SQLite pool pair. nil disables the DB ping in /healthz and
+	// the silent-mode prefix watcher.
+	DB *storage.DB
+
+	// Logger is the shared slog logger. nil falls back to logger.Default().
+	Logger *slog.Logger
+
+	// Now returns the current wall-clock time. nil falls back to time.Now.
+	// Tests inject a fake clock here.
+	Now func() time.Time
+
+	// SilentPrefix is the initial 32-hex prefix loaded at startup. When
+	// non-empty the silent-mode middleware enforces /_app/<prefix>/ on all
+	// non-whitelisted paths. Subsequent rotations are picked up by the
+	// background watcher (every middleware.SilentModeReloadInterval).
+	SilentPrefix string
+
+	// GlobalRateLimit is the per-IP throughput cap used by RateLimit. nil
+	// disables the middleware (useful for tests).
+	GlobalRateLimit *ratelimit.Limiter
+
+	// DevMode toggles whether panic stack traces are echoed back to the
+	// client. False in production.
+	DevMode bool
+
+	// Version is the semver string surfaced by /healthz.
+	Version string
+
+	// AuditRepo is wired by T-28; nil means "do not record audit logs"
+	// (current state during T-3 development).
+	// TODO(T-28): inject real AuditRepository.
+	AuditRepo middleware.AuditRepository
+
+	// Silent owns the live silent-mode prefix. Internal — populated by
+	// NewRouter when DB is supplied.
+	silent *middleware.SilentMode
+	mux    *http.ServeMux
+	chain  []middleware.Middleware
+}
+
+// NewRouter constructs the project's HTTP handler. It returns the
+// *http.ServeMux so callers (including tests) can both directly invoke it
+// (the middleware chain is applied as a top-level wrapper exposed via the
+// Handler method) and mount their own handlers into it before serving.
+//
+// For production use, callers should serve Deps.Handler — that returns the
+// mux wrapped in the global middleware chain (recover → log → ratelimit →
+// silent_mode → audit). Calling ServeHTTP on the *http.ServeMux directly
+// also exercises the chain because the chain wraps the mux as a whole; we
+// install it via SetMuxHandler so all paths (including 404s from unknown
+// routes) are subject to silent-mode enforcement.
+//
+// Only /healthz is mounted at this time; business endpoints will be
+// registered by T-4..T-29.
+func NewRouter(deps *Deps) *http.ServeMux {
+	if deps == nil {
+		deps = &Deps{}
+	}
+	mux := http.NewServeMux()
+
+	silent := middleware.NewSilentMode(middleware.SilentModeConfig{
+		InitialPrefix: deps.SilentPrefix,
+		Loader:        silentPrefixLoader(deps.DB),
+		Logger:        deps.logger(),
+		Now:           deps.now,
+	})
+	deps.silent = silent
+	deps.chain = []middleware.Middleware{
+		middleware.Recover(deps.logger(), deps.DevMode),
+		middleware.RequestLog(deps.logger(), deps.Now),
+		middleware.RateLimit(deps.GlobalRateLimit),
+		silent.Middleware(),
+		middleware.Audit(middleware.AuditConfig{
+			Repo:   deps.AuditRepo,
+			Logger: deps.logger(),
+		}),
+	}
+	deps.mux = mux
+
+	mux.Handle("GET /healthz", Healthz(deps))
+
+	// TODO(T-4):  mount auth handlers   (/api/auth/*, /api/me/*).
+	// TODO(T-5):  mount admin user routes (/api/admin/users/*).
+	// TODO(T-8):  mount subscription handlers (/api/subscriptions/*).
+	// TODO(T-9):  mount node handlers (/api/subscriptions/:id/nodes, /api/nodes/*).
+	// TODO(T-12): mount sub-store compat (GET /download/:name).
+	// TODO(T-13): mount pipeline handlers (/api/pipelines/*).
+	// TODO(T-14): mount agent ws + REST handlers (/api/agent/ws, /api/agents/*).
+	// TODO(T-15): mount rule handlers (/api/rules/*).
+	// TODO(T-17): mount script handlers (/api/scripts/*).
+	// TODO(T-18): mount nezha compat (/api/v1/nezha/*).
+	// TODO(T-19): mount tcping handler (POST /api/nodes/tcping).
+	// TODO(T-21): mount traffic handlers (/api/traffic/*).
+	// TODO(T-22): mount notification handlers (/api/notify/*).
+	// TODO(T-25): mount shortlink handlers (/api/shortlinks, GET /s/:code).
+	// TODO(T-26): mount settings + silent-mode rotate (/api/admin/settings/*).
+	// TODO(T-28): mount audit log query (/api/admin/audit).
+	// TODO(T-29): mount OTA handlers (/api/admin/ota/*).
+
+	return mux
+}
+
+// Handler returns the mux wrapped in the global middleware chain. Use this
+// value in http.Server.Handler so that silent-mode enforcement, rate
+// limiting and recovery cover the entire surface (including the mux's
+// implicit 404s for unknown paths).
+func (d *Deps) Handler() http.Handler {
+	if d == nil || d.mux == nil {
+		return http.NotFoundHandler()
+	}
+	return middleware.Chain(d.mux, d.chain...)
+}
+
+// Start launches background watchers spun up by NewRouter (currently just
+// the silent-mode prefix poller). Call from main() after NewRouter and
+// before http.ListenAndServe. Stop via Shutdown.
+func (d *Deps) Start(ctx context.Context) {
+	if d == nil || d.silent == nil {
+		return
+	}
+	d.silent.Start(ctx)
+}
+
+// Shutdown halts background watchers. Safe to call multiple times.
+func (d *Deps) Shutdown() {
+	if d == nil || d.silent == nil {
+		return
+	}
+	d.silent.Stop()
+}
+
+// SilentMode exposes the live silent-mode controller so the settings handler
+// (T-26) can trigger immediate rotation without waiting for the next poll.
+func (d *Deps) SilentMode() *middleware.SilentMode {
+	if d == nil {
+		return nil
+	}
+	return d.silent
+}
+
+func (d *Deps) logger() *slog.Logger {
+	if d == nil || d.Logger == nil {
+		return logger.Default()
+	}
+	return d.Logger
+}
+
+func (d *Deps) now() time.Time {
+	if d == nil || d.Now == nil {
+		return time.Now()
+	}
+	return d.Now()
+}
+
+// silentPrefixLoader returns a loader closure for SilentModeConfig that reads
+// the prefix from system_settings. nil DB yields a nil loader which disables
+// the background watcher (the initial prefix stays in effect).
+func silentPrefixLoader(db *storage.DB) func(ctx context.Context) (string, error) {
+	if db == nil || db.Read == nil {
+		return nil
+	}
+	return func(ctx context.Context) (string, error) {
+		var value string
+		err := db.Read.QueryRowContext(ctx,
+			"SELECT value FROM system_settings WHERE key = ?",
+			silentPrefixSettingKey,
+		).Scan(&value)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return "", nil
+			}
+			return "", err
+		}
+		return value, nil
+	}
+}

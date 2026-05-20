@@ -108,6 +108,55 @@ var errorStatusMap = map[types.ErrorCode]int{
 	types.ErrInternalUnknown:  http.StatusInternalServerError,
 }
 
+// StatusRecorder wraps an http.ResponseWriter and remembers the status code
+// and number of bytes written so middleware (logging, audit) can observe the
+// response after the handler has run. The zero value defaults Status to 200,
+// matching Go's stdlib behaviour when a handler writes a body without first
+// calling WriteHeader.
+type StatusRecorder struct {
+	http.ResponseWriter
+	Status    int
+	BytesSent int64
+	written   bool
+}
+
+// NewStatusRecorder wraps w. Pass the result down the middleware chain in
+// place of the original ResponseWriter.
+func NewStatusRecorder(w http.ResponseWriter) *StatusRecorder {
+	return &StatusRecorder{ResponseWriter: w, Status: http.StatusOK}
+}
+
+// WriteHeader captures the status code and forwards it to the underlying
+// writer. Subsequent calls are no-ops (matching stdlib semantics).
+func (r *StatusRecorder) WriteHeader(code int) {
+	if r.written {
+		return
+	}
+	r.Status = code
+	r.written = true
+	r.ResponseWriter.WriteHeader(code)
+}
+
+// Write forwards data and tracks the cumulative byte count. If the handler
+// did not explicitly call WriteHeader, stdlib auto-emits 200; we mirror that
+// flag here so duplicate WriteHeader calls are suppressed.
+func (r *StatusRecorder) Write(b []byte) (int, error) {
+	if !r.written {
+		r.written = true
+	}
+	n, err := r.ResponseWriter.Write(b)
+	r.BytesSent += int64(n)
+	return n, err
+}
+
+// Flush forwards to the underlying writer if it implements http.Flusher.
+// Required for SSE / streaming handlers wrapped by middleware.
+func (r *StatusRecorder) Flush() {
+	if f, ok := r.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
 // DecodeJSONBody decodes r.Body into dst, enforcing DisallowUnknownFields.
 // Returns a wrapped error suitable for logging; handlers translate it into
 // ErrValidationInvalidFormat.
