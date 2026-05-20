@@ -388,11 +388,23 @@ type Subscription struct {
 }
 
 // SubscriptionDetail 订阅详情（含节点列表）。
+//
+// 仅订阅详情接口（GET /api/subscriptions/:id）返回完整 share_token；列表接口
+// （GET /api/subscriptions）不返回该字段，避免在多订阅页面无意中泄露 sub-store
+// 兼容 URL 凭据（详见 docs/05-tech-lead-plan.md §1.3 裁决）。
 type SubscriptionDetail struct {
 	Subscription
+	ShareToken       string            `json:"share_token,omitempty"`
 	Nodes            []Node            `json:"nodes"`
 	NodesTotal       int32             `json:"nodes_total"`
 	PipelineBindings []PipelineBinding `json:"pipeline_bindings"`
+}
+
+// RotateShareTokenResponse 轮换 sub-store 兼容 token 响应。
+//
+// 由 POST /api/subscriptions/:id/rotate-share-token 返回新 share_token。
+type RotateShareTokenResponse struct {
+	ShareToken string `json:"share_token"`
 }
 
 // CreateSubscriptionRequest 创建订阅请求。

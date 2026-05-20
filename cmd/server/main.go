@@ -31,6 +31,7 @@ import (
 	"shiguang-vps/internal/logger"
 	"shiguang-vps/internal/ratelimit"
 	"shiguang-vps/internal/storage"
+	"shiguang-vps/internal/substore"
 )
 
 // shutdownTimeout caps how long graceful shutdown waits for in-flight requests
@@ -84,6 +85,7 @@ func run() error {
 
 	users := storage.NewUserRepo(db, time.Now)
 	sessions := storage.NewSessionRepo(db, time.Now)
+	subscriptions := storage.NewSubscriptionRepo(db, time.Now)
 	tokens, err := auth.NewTokenStore(auth.TokenStoreConfig{
 		Sessions: sessions, Users: users, TTL: cfg.Session.TTL,
 	})
@@ -118,17 +120,42 @@ func run() error {
 		)
 	}
 
+	// T-8: subscription module wiring. NodeRepo and notification hooks land
+	// in T-11 / T-22; nil stubs let the service start while exposing the
+	// full HTTP surface (sync attempts on URL subscriptions still parse the
+	// upstream body correctly via the in-process pipeline).
+	syncService, err := substore.NewSyncService(substore.SyncServiceConfig{
+		Repo:     subscriptions,
+		NodeRepo: substore.NoopNodeRepo{},
+		Logger:   log,
+	})
+	if err != nil {
+		return fmt.Errorf("sync service: %w", err)
+	}
+	compatService, err := substore.NewSubstoreCompatService(substore.SubstoreCompatConfig{
+		Repo:     subscriptions,
+		NodeRepo: substore.NoopNodeRepo{},
+		Sync:     syncService,
+	})
+	if err != nil {
+		return fmt.Errorf("substore compat service: %w", err)
+	}
+	subHandler := handler.NewSubscriptionHandler(subscriptions, syncService, log)
+	compatHandler := handler.NewSubstoreCompatHandler(compatService, log)
+
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
-		Version:        "v0.0.0-dev",
-		AuthManager:    authMgr,
-		TokenStore:     tokens,
-		BruteProtector: brute,
-		TOTPManager:    totpMgr,
-		UserRepo:       users,
-		SessionRepo:    sessions,
-		LoginRateLimit: ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
-		GlobalRateLimit: ratelimit.New(100, 200, 0),
+		Version:               "v0.0.0-dev",
+		AuthManager:           authMgr,
+		TokenStore:            tokens,
+		BruteProtector:        brute,
+		TOTPManager:           totpMgr,
+		UserRepo:              users,
+		SessionRepo:           sessions,
+		SubscriptionHandler:   subHandler,
+		SubstoreCompatHandler: compatHandler,
+		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
+		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
 	mux := handler.NewRouter(deps)
 	_ = mux

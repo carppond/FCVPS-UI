@@ -80,6 +80,12 @@ type Deps struct {
 	// nil for tests; those routes 501 in that case.
 	SessionRepo *storage.SessionRepo
 
+	// SubscriptionHandler is wired by T-8; nil disables /api/subscriptions/*.
+	SubscriptionHandler *SubscriptionHandler
+
+	// SubstoreCompatHandler is wired by T-8; nil disables GET /download/:name.
+	SubstoreCompatHandler *SubstoreCompatHandler
+
 	// LoginRateLimit is the per-(IP|username) login bucket (5/hour by default).
 	// nil disables.
 	LoginRateLimit *ratelimit.Limiter
@@ -132,11 +138,14 @@ func NewRouter(deps *Deps) *http.ServeMux {
 
 	mux.Handle("GET /healthz", Healthz(deps))
 	mountUserRoutes(mux, deps)
+	mountSubscriptionRoutes(mux, deps)
+	mountSubstoreCompatRoutes(mux, deps)
 
-	// TODO(T-8):  mount subscription handlers (/api/subscriptions/*).
 	// TODO(T-9):  mount node handlers (/api/subscriptions/:id/nodes, /api/nodes/*).
-	// TODO(T-12): mount sub-store compat (GET /download/:name).
 	// TODO(T-13): mount pipeline handlers (/api/pipelines/*).
+	//             Engine + 6 operators + YAML codec already implemented in
+	//             internal/pipeline (T-19); only HTTP / repo wiring pending
+	//             (T-20 / T-21 will pick it up).
 	// TODO(T-14): mount agent ws + REST handlers (/api/agent/ws, /api/agents/*).
 	// TODO(T-15): mount rule handlers (/api/rules/*).
 	// TODO(T-17): mount script handlers (/api/scripts/*).
@@ -259,6 +268,41 @@ func mountUserRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("POST /api/admin/users/{id}/reset-password", requireAdmin(http.HandlerFunc(uh.AdminResetPassword)))
 	mux.Handle("POST /api/admin/users/{id}/disable-2fa", requireAdmin(http.HandlerFunc(uh.AdminDisableTOTP)))
 	mux.Handle("POST /api/admin/users/{id}/revoke-sessions", requireAdmin(http.HandlerFunc(uh.AdminRevokeSessions)))
+}
+
+// mountSubscriptionRoutes installs /api/subscriptions/* when deps carries a
+// SubscriptionHandler. Every route is wrapped in auth.Required so anonymous
+// callers see 401 (the sub-store compat path is registered separately and is
+// the only public surface of M-SUB).
+func mountSubscriptionRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.SubscriptionHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	sh := deps.SubscriptionHandler
+
+	mux.Handle("GET /api/subscriptions", required(http.HandlerFunc(sh.List)))
+	mux.Handle("POST /api/subscriptions", required(http.HandlerFunc(sh.Create)))
+	mux.Handle("POST /api/subscriptions/upload", required(http.HandlerFunc(sh.Upload)))
+	mux.Handle("GET /api/subscriptions/{id}", required(http.HandlerFunc(sh.Get)))
+	// Architecture §5.1 lists PATCH for the update verb. We additionally
+	// accept PUT (Tech Lead task spec) so the contract and the task spec are
+	// both satisfied.
+	mux.Handle("PATCH /api/subscriptions/{id}", required(http.HandlerFunc(sh.Update)))
+	mux.Handle("PUT /api/subscriptions/{id}", required(http.HandlerFunc(sh.Update)))
+	mux.Handle("DELETE /api/subscriptions/{id}", required(http.HandlerFunc(sh.Delete)))
+	mux.Handle("POST /api/subscriptions/{id}/sync", required(http.HandlerFunc(sh.Sync)))
+	mux.Handle("POST /api/subscriptions/{id}/rotate-share-token",
+		required(http.HandlerFunc(sh.RotateShareToken)))
+}
+
+// mountSubstoreCompatRoutes installs the sub-store v2 compat path. Public:
+// no auth middleware (token validation lives inside the handler).
+func mountSubstoreCompatRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.SubstoreCompatHandler == nil {
+		return
+	}
+	mux.Handle("GET /download/{name}", http.HandlerFunc(deps.SubstoreCompatHandler.Download))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads
