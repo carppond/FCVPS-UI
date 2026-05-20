@@ -7,6 +7,14 @@
   "NOT_FOUND": "Resource not found",
   "CONFLICT": "Resource already exists",
   "INTERNAL": "Internal server error, please try again later",
+  "INTERNAL_UNKNOWN": "An unexpected error occurred, please try again later",
+  "INTERNAL_DATABASE": "Database operation failed, please try again later",
+  "INTERNAL_NETWORK": "Network request failed, please check your connection",
+  "INTERNAL_PARSE": "Unexpected server response, please try again later",
+  "HTTP_500": "Internal server error (500), please try again later",
+  "HTTP_502": "Bad gateway (502), please try again later",
+  "HTTP_503": "Service unavailable (503), please try again later",
+  "HTTP_504": "Gateway timeout (504), please try again later",
   "RATE_LIMITED": "Too many requests, please try again later",
   "FORBIDDEN": "You do not have permission to perform this action"
 }
