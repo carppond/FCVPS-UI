@@ -1110,3 +1110,28 @@ breakpoint-2xl: "1536px"    # 大桌面
 ---
 
 文档结束。下一步：交付给 Tech Lead / 架构师对齐，并由前端开发实现 Design Tokens 与组件库。
+
+## 开发提示
+
+> 本小节由 design-tokens-bootstrap 自动追加，供后续开发 Agent 参考。
+
+### 风格关键词（开发时必须遵守的视觉语言）
+
+1. `generous whitespace` —— 大量留白，间距优先于装饰
+2. `functional typography` —— 字体即层级，禁止用色彩区分层级
+3. `1px hairline border` —— 用 1px 细线分隔区域，禁止粗边框
+4. `monochrome with single accent` —— 90% 中性灰 + 一个强调色（青蓝）
+5. `grid-based layout` —— 8 列 / 12 列网格对齐，禁止飘字符位
+6. `subtle elevation` —— 阴影只用于 popover / modal，不用于卡片
+7. `numeric-first` —— 数字（流量 / 延迟 / 时间戳）用 tabular-nums 等宽对齐
+8. `tonal hierarchy` —— 同色相不同明度表达层级（bg / surface / elevated）
+9. `data-ink ratio first` —— 图表去除多余轴线刻度，墨水都给数据
+10. `keyboard-first` —— 所有核心动作都有快捷键，鼠标是辅助
+
+### Anti-patterns（绝对禁止）
+
+1. **禁止 gradient / 渐变装饰**：仅图表数据填充允许 alpha 渐变，按钮 / 卡片 / banner 不允许任何渐变。
+2. **禁止彩色硬阴影 + 阴影 ≥ 4 层**：暗色下黑阴影叠黑无效；阴影只用 `rgba(0,0,0,0.3-0.6)` 软阴影，且不超过 3 个层级。
+3. **禁止圆角 < 4px 或 > 16px**：4-12 是统一区间；表单 / 按钮 / 卡片 / 弹窗在此区间内分配。
+4. **禁止使用 ≥ 3 种主色**：全站只有一个强调色（青蓝 #00B8D9 系列）+ 4 个语义色（success/warning/error/info），不允许引入紫 / 粉 / 橙作为装饰。
+5. **禁止 glassmorphism / neumorphism / 拟物**：任何模糊背景、浮雕、3D 投影、纹理填充都不允许。表格背景必须 solid color。
