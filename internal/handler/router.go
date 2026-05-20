@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/handler/middleware"
 	"shiguang-vps/internal/logger"
 	"shiguang-vps/internal/ratelimit"
@@ -58,6 +59,31 @@ type Deps struct {
 	// TODO(T-28): inject real AuditRepository.
 	AuditRepo middleware.AuditRepository
 
+	// AuthManager / TokenStore / BruteProtector are populated by T-4 and
+	// consumed by the auth + admin user routes. When nil, those routes are
+	// not mounted (useful for /healthz-only tests).
+	AuthManager    *auth.Manager
+	TokenStore     *auth.TokenStore
+	BruteProtector *auth.BruteProtector
+	TOTPManager    auth.TOTPManager
+
+	// AuthHandler / UserHandler can be supplied explicitly; otherwise NewRouter
+	// constructs them from the manager / repos above.
+	AuthHandler *AuthHandler
+	UserHandler *UserHandler
+
+	// UserRepo is needed by UserHandler. When nil, /api/me/* and
+	// /api/admin/users/* are skipped.
+	UserRepo *storage.UserRepo
+
+	// SessionRepo backs the /api/me/sessions list / revoke endpoints. May be
+	// nil for tests; those routes 501 in that case.
+	SessionRepo *storage.SessionRepo
+
+	// LoginRateLimit is the per-(IP|username) login bucket (5/hour by default).
+	// nil disables.
+	LoginRateLimit *ratelimit.Limiter
+
 	// Silent owns the live silent-mode prefix. Internal — populated by
 	// NewRouter when DB is supplied.
 	silent *middleware.SilentMode
@@ -105,9 +131,8 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	deps.mux = mux
 
 	mux.Handle("GET /healthz", Healthz(deps))
+	mountUserRoutes(mux, deps)
 
-	// TODO(T-4):  mount auth handlers   (/api/auth/*, /api/me/*).
-	// TODO(T-5):  mount admin user routes (/api/admin/users/*).
 	// TODO(T-8):  mount subscription handlers (/api/subscriptions/*).
 	// TODO(T-9):  mount node handlers (/api/subscriptions/:id/nodes, /api/nodes/*).
 	// TODO(T-12): mount sub-store compat (GET /download/:name).
@@ -177,6 +202,63 @@ func (d *Deps) now() time.Time {
 		return time.Now()
 	}
 	return d.Now()
+}
+
+// mountUserRoutes installs the auth + user + admin endpoints when the
+// required collaborators are present in deps. Missing dependencies cause the
+// routes to be quietly skipped — useful for unit tests that exercise only the
+// /healthz path. Each route is wrapped with the appropriate middleware
+// (Required / RequireAdmin / RequirePending2FA) plus the canonical handler.
+func mountUserRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.TokenStore == nil || deps.AuthManager == nil {
+		return
+	}
+	if deps.AuthHandler == nil {
+		deps.AuthHandler = NewAuthHandler(deps.AuthManager, deps.TokenStore,
+			deps.BruteProtector, deps.LoginRateLimit, deps.logger())
+	}
+	if deps.UserHandler == nil && deps.UserRepo != nil && deps.TOTPManager != nil {
+		deps.UserHandler = NewUserHandler(deps.AuthManager, deps.UserRepo,
+			deps.SessionRepo, deps.TOTPManager, deps.logger())
+	}
+
+	// Public auth endpoints.
+	mux.Handle("POST /api/auth/login", http.HandlerFunc(deps.AuthHandler.Login))
+	mux.Handle("POST /api/auth/verify-totp", http.HandlerFunc(deps.AuthHandler.VerifyTOTP))
+	mux.Handle("POST /api/auth/verify-recovery", http.HandlerFunc(deps.AuthHandler.VerifyRecovery))
+
+	// Authenticated endpoints share the Required middleware.
+	required := auth.Required(deps.TokenStore)
+	requireAdmin := auth.RequireAdmin(deps.TokenStore)
+
+	mux.Handle("POST /api/auth/logout", required(http.HandlerFunc(deps.AuthHandler.Logout)))
+
+	if deps.UserHandler == nil {
+		return
+	}
+	uh := deps.UserHandler
+	mux.Handle("GET /api/me", required(http.HandlerFunc(uh.Me)))
+	mux.Handle("PATCH /api/me", required(http.HandlerFunc(uh.UpdateMe)))
+	mux.Handle("POST /api/me/password", required(http.HandlerFunc(uh.ChangePassword)))
+	mux.Handle("DELETE /api/me", required(http.HandlerFunc(uh.DeleteMe)))
+	// Contract §5.1.2 documents GET for /api/me/totp/setup (no body needed —
+	// the server mints + persists a new secret and returns provisioning data).
+	mux.Handle("GET /api/me/totp/setup", required(http.HandlerFunc(uh.TOTPSetup)))
+	mux.Handle("POST /api/me/totp/enable", required(http.HandlerFunc(uh.TOTPEnable)))
+	mux.Handle("POST /api/me/totp/disable", required(http.HandlerFunc(uh.TOTPDisable)))
+	mux.Handle("POST /api/me/totp/recovery-codes", required(http.HandlerFunc(uh.RegenerateRecoveryCodes)))
+	mux.Handle("GET /api/me/sessions", required(http.HandlerFunc(uh.ListMySessions)))
+	mux.Handle("DELETE /api/me/sessions/{id}", required(http.HandlerFunc(uh.RevokeMySession)))
+	mux.Handle("POST /api/auth/refresh", required(http.HandlerFunc(deps.AuthHandler.Refresh)))
+
+	mux.Handle("GET /api/admin/users", requireAdmin(http.HandlerFunc(uh.AdminListUsers)))
+	mux.Handle("POST /api/admin/users", requireAdmin(http.HandlerFunc(uh.AdminCreateUser)))
+	mux.Handle("GET /api/admin/users/{id}", requireAdmin(http.HandlerFunc(uh.AdminGetUser)))
+	mux.Handle("PATCH /api/admin/users/{id}", requireAdmin(http.HandlerFunc(uh.AdminUpdateUser)))
+	mux.Handle("DELETE /api/admin/users/{id}", requireAdmin(http.HandlerFunc(uh.AdminDeleteUser)))
+	mux.Handle("POST /api/admin/users/{id}/reset-password", requireAdmin(http.HandlerFunc(uh.AdminResetPassword)))
+	mux.Handle("POST /api/admin/users/{id}/disable-2fa", requireAdmin(http.HandlerFunc(uh.AdminDisableTOTP)))
+	mux.Handle("POST /api/admin/users/{id}/revoke-sessions", requireAdmin(http.HandlerFunc(uh.AdminRevokeSessions)))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads
