@@ -1,0 +1,40 @@
+# Node
+node_modules/
+dist/
+build/
+out/
+
+# DB
+*.db
+*.db-wal
+*.db-shm
+*.wal
+*.shm
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Coverage
+coverage/
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go test binaries
+*.test
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# pnpm
+web/.pnpm-store/
+
+# Tailwind
+web/src/styles/.tailwindcss/

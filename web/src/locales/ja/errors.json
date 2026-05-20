@@ -1,0 +1,12 @@
+{
+  "AUTH_INVALID_PASSWORD": "ユーザー名またはパスワードが無効です",
+  "AUTH_UNAUTHORIZED": "認証が必要です。再度ログインしてください",
+  "AUTH_TOTP_REQUIRED": "二段階認証が必要です",
+  "AUTH_TOTP_INVALID": "認証コードが無効または期限切れです",
+  "VALIDATION_FAILED": "リクエストの検証に失敗しました",
+  "NOT_FOUND": "リソースが見つかりません",
+  "CONFLICT": "リソースが既に存在します",
+  "INTERNAL": "サーバー内部エラーが発生しました。後ほど再試行してください",
+  "RATE_LIMITED": "リクエストが多すぎます。後ほど再試行してください",
+  "FORBIDDEN": "この操作を実行する権限がありません"
+}

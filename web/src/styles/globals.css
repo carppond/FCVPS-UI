@@ -1,0 +1,253 @@
+/* ── Google Fonts ───────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+@import "tailwindcss";
+
+/* ── Design Tokens ──────────────────────────────────────────────────────── */
+@theme {
+  /* Font families */
+  --font-display: "Inter", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", system-ui, sans-serif;
+  --font-body: "Inter", "Noto Sans SC", "Noto Sans JP", "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", "SF Mono", Consolas, monospace;
+
+  /* Font sizes */
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+  --font-size-4xl: 48px;
+
+  /* Line heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  /* Font weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing (4px base grid) */
+  --spacing-0: 0px;
+  --spacing-0_5: 2px;
+  --spacing-1: 4px;
+  --spacing-1_5: 6px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+
+  /* Border radius */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows — dark mode */
+  --shadow-none: none;
+  --shadow-sm-dark: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md-dark: 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg-dark: 0 12px 24px -6px rgba(0, 0, 0, 0.6), 0 4px 8px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl-dark: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+  --shadow-inset: inset 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+
+  /* Shadows — light mode */
+  --shadow-sm-light: 0 1px 2px 0 rgba(16, 18, 28, 0.06);
+  --shadow-md-light: 0 4px 8px -2px rgba(16, 18, 28, 0.08), 0 2px 4px -2px rgba(16, 18, 28, 0.04);
+  --shadow-lg-light: 0 12px 24px -6px rgba(16, 18, 28, 0.12), 0 4px 8px -4px rgba(16, 18, 28, 0.06);
+  --shadow-xl-light: 0 24px 48px -12px rgba(16, 18, 28, 0.18);
+
+  /* Transition durations */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-extra-slow: 500ms;
+
+  /* Easing functions */
+  --easing-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --easing-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Chart palette (7 categorical colors) */
+  --color-chart-1: #00b8d9;
+  --color-chart-2: #7c5cff;
+  --color-chart-3: #22c55e;
+  --color-chart-4: #f59e0b;
+  --color-chart-5: #ec4899;
+  --color-chart-6: #06b6d4;
+  --color-chart-7: #a3a3a3;
+
+  /* Z-index layers */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-banner: 1200;
+  --z-overlay: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-toast: 1600;
+  --z-tooltip: 1700;
+  --z-command-palette: 1800;
+
+  /* Neutral palette */
+  --color-neutral-0: #000000;
+  --color-neutral-50: #0a0a0b;
+  --color-neutral-100: #0f1011;
+  --color-neutral-200: #16181c;
+  --color-neutral-300: #1d2025;
+  --color-neutral-400: #272a30;
+  --color-neutral-500: #3a3d44;
+  --color-neutral-600: #5c606a;
+  --color-neutral-700: #8a8e98;
+  --color-neutral-800: #b4b8c0;
+  --color-neutral-900: #e4e6eb;
+  --color-neutral-950: #ffffff;
+}
+
+/* ── Dark theme (default) ───────────────────────────────────────────────── */
+[data-theme="dark"],
+:root {
+  /* Primary */
+  --color-primary: #00b8d9;
+  --color-primary-hover: #33c8e1;
+  --color-primary-active: #0095af;
+  --color-primary-foreground: #001a1f;
+
+  /* Semantic */
+  --color-success: #22c55e;
+  --color-success-foreground: #04210e;
+  --color-success-bg: #0a2418;
+
+  --color-warning: #f59e0b;
+  --color-warning-foreground: #1f1300;
+  --color-warning-bg: #2a1e08;
+
+  --color-error: #ef4444;
+  --color-error-foreground: #240606;
+  --color-error-bg: #2a1212;
+
+  --color-info: #3b82f6;
+  --color-info-foreground: #050f24;
+  --color-info-bg: #0e1a2e;
+
+  /* Role colors */
+  --color-bg: #0f1011;
+  --color-bg-elevated: #16181c;
+  --color-surface: #1d2025;
+  --color-surface-hover: #22262c;
+  --color-border: #272a30;
+  --color-border-strong: #3a3d44;
+  --color-text-primary: #e4e6eb;
+  --color-text-secondary: #b4b8c0;
+  --color-text-tertiary: #8a8e98;
+  --color-text-disabled: #5c606a;
+
+  /* Status */
+  --color-status-online: #22c55e;
+  --color-status-offline: #ef4444;
+  --color-status-degraded: #f59e0b;
+  --color-status-unknown: #8a8e98;
+
+  /* Active shadows */
+  --shadow-sm: var(--shadow-sm-dark);
+  --shadow-md: var(--shadow-md-dark);
+  --shadow-lg: var(--shadow-lg-dark);
+  --shadow-xl: var(--shadow-xl-dark);
+}
+
+/* ── Light theme ────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  /* Primary */
+  --color-primary: #0095af;
+  --color-primary-hover: #00b8d9;
+  --color-primary-active: #007891;
+  --color-primary-foreground: #ffffff;
+
+  /* Semantic */
+  --color-success: #16a34a;
+  --color-success-foreground: #ffffff;
+  --color-success-bg: #dcfce7;
+
+  --color-warning: #d97706;
+  --color-warning-foreground: #ffffff;
+  --color-warning-bg: #fef3c7;
+
+  --color-error: #dc2626;
+  --color-error-foreground: #ffffff;
+  --color-error-bg: #fee2e2;
+
+  --color-info: #2563eb;
+  --color-info-foreground: #ffffff;
+  --color-info-bg: #dbeafe;
+
+  /* Role colors */
+  --color-bg: #f4f5f7;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f4f5f7;
+  --color-border: #e1e4e8;
+  --color-border-strong: #d0d4da;
+  --color-text-primary: #16181c;
+  --color-text-secondary: #5c606a;
+  --color-text-tertiary: #8a8e98;
+  --color-text-disabled: #b4b8c0;
+
+  /* Status */
+  --color-status-online: #16a34a;
+  --color-status-offline: #dc2626;
+  --color-status-degraded: #d97706;
+  --color-status-unknown: #8a8e98;
+
+  /* Active shadows */
+  --shadow-sm: var(--shadow-sm-light);
+  --shadow-md: var(--shadow-md-light);
+  --shadow-lg: var(--shadow-lg-light);
+  --shadow-xl: var(--shadow-xl-light);
+}
+
+/* ── Base reset ─────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numbers for numeric columns */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Monospace with ligatures */
+code,
+pre,
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "liga" 1;
+}

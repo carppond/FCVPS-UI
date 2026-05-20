@@ -1,0 +1,12 @@
+{
+  "AUTH_INVALID_PASSWORD": "Invalid username or password",
+  "AUTH_UNAUTHORIZED": "Unauthorized, please log in again",
+  "AUTH_TOTP_REQUIRED": "Two-factor authentication required",
+  "AUTH_TOTP_INVALID": "Invalid or expired verification code",
+  "VALIDATION_FAILED": "Request validation failed",
+  "NOT_FOUND": "Resource not found",
+  "CONFLICT": "Resource already exists",
+  "INTERNAL": "Internal server error, please try again later",
+  "RATE_LIMITED": "Too many requests, please try again later",
+  "FORBIDDEN": "You do not have permission to perform this action"
+}

@@ -1,0 +1,19 @@
+/* Monaco Editor style overrides for shiguang-vps theme */
+.monaco-editor,
+.monaco-editor-background,
+.monaco-editor .margin {
+  background-color: var(--color-surface) !important;
+}
+
+.monaco-editor .view-line {
+  font-family: var(--font-mono) !important;
+}
+
+.monaco-editor .current-line {
+  background-color: var(--color-surface-hover) !important;
+  border: none !important;
+}
+
+.monaco-editor .line-numbers {
+  color: var(--color-text-disabled) !important;
+}

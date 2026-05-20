@@ -1,0 +1,47 @@
+{
+  "app_name": "拾光VPS",
+  "actions": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "create": "创建",
+    "edit": "编辑",
+    "confirm": "确认",
+    "refresh": "刷新",
+    "retry": "重试",
+    "back": "返回",
+    "close": "关闭",
+    "search": "搜索",
+    "filter": "筛选",
+    "export": "导出",
+    "import": "导入",
+    "copy": "复制",
+    "enable": "启用",
+    "disable": "禁用",
+    "test": "测试"
+  },
+  "nav": {
+    "dashboard": "总览",
+    "subscriptions": "订阅",
+    "nodes": "节点",
+    "pipelines": "算子流水线",
+    "rules": "规则",
+    "scripts": "脚本",
+    "agents": "探针",
+    "traffic": "流量",
+    "notify": "通知",
+    "settings": "系统设置",
+    "users": "用户管理",
+    "audit": "审计日志",
+    "profile": "个人资料"
+  },
+  "theme": {
+    "light": "亮色",
+    "dark": "暗色",
+    "system": "跟随系统"
+  },
+  "loading": "加载中…",
+  "no_data": "暂无数据",
+  "unknown": "未知",
+  "version": "版本"
+}

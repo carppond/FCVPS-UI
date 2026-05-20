@@ -1,0 +1,47 @@
+{
+  "app_name": "拾光VPS",
+  "actions": {
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "create": "생성",
+    "edit": "편집",
+    "confirm": "확인",
+    "refresh": "새로고침",
+    "retry": "재시도",
+    "back": "뒤로",
+    "close": "닫기",
+    "search": "검색",
+    "filter": "필터",
+    "export": "내보내기",
+    "import": "가져오기",
+    "copy": "복사",
+    "enable": "활성화",
+    "disable": "비활성화",
+    "test": "테스트"
+  },
+  "nav": {
+    "dashboard": "대시보드",
+    "subscriptions": "구독",
+    "nodes": "노드",
+    "pipelines": "파이프라인",
+    "rules": "규칙",
+    "scripts": "스크립트",
+    "agents": "에이전트",
+    "traffic": "트래픽",
+    "notify": "알림",
+    "settings": "설정",
+    "users": "사용자 관리",
+    "audit": "감사 로그",
+    "profile": "프로필"
+  },
+  "theme": {
+    "light": "라이트",
+    "dark": "다크",
+    "system": "시스템 설정 따르기"
+  },
+  "loading": "로딩 중…",
+  "no_data": "데이터 없음",
+  "unknown": "알 수 없음",
+  "version": "버전"
+}

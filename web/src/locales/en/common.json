@@ -1,0 +1,47 @@
+{
+  "app_name": "ShiguangVPS",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "create": "Create",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "back": "Back",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "copy": "Copy",
+    "enable": "Enable",
+    "disable": "Disable",
+    "test": "Test"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "subscriptions": "Subscriptions",
+    "nodes": "Nodes",
+    "pipelines": "Pipelines",
+    "rules": "Rules",
+    "scripts": "Scripts",
+    "agents": "Agents",
+    "traffic": "Traffic",
+    "notify": "Notifications",
+    "settings": "Settings",
+    "users": "Users",
+    "audit": "Audit Log",
+    "profile": "Profile"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "loading": "Loading…",
+  "no_data": "No data",
+  "unknown": "Unknown",
+  "version": "Version"
+}
