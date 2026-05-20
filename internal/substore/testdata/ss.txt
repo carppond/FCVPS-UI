@@ -1,0 +1,2 @@
+ss://YWVzLTI1Ni1nY206c2FtcGxlcGFzc3dvcmQxMjM=@example.com:8388#ss-sip002
+ss://YWVzLTI1Ni1nY206c2FtcGxlcGFzc3dvcmQxMjNAZXhhbXBsZS5jb206ODM4OA==#ss-legacy

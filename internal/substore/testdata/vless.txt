@@ -1,0 +1,1 @@
+vless://12345678-1234-1234-1234-123456789abc@example.com:443?security=tls&type=ws&sni=cdn.example.com&path=/ws&host=cdn.example.com&alpn=h2,http/1.1#vless-test

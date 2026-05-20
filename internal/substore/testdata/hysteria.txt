@@ -1,0 +1,1 @@
+hysteria://example.com:8443?auth=samplepassword&peer=example.com&alpn=h3#hysteria-test

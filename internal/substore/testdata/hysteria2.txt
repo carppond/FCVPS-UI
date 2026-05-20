@@ -1,0 +1,2 @@
+hysteria2://samplepassword@example.com:8443?sni=example.com&alpn=h3#hy2-test
+hy2://anotherpwd@example.org:9443?sni=example.org#hy2-short
