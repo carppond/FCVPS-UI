@@ -212,6 +212,11 @@ const (
 	// CONFLICT
 	ErrConflictUsername        ErrorCode = "ERR_CONFLICT_USERNAME"
 	ErrConflictPipelineVersion ErrorCode = "ERR_CONFLICT_PIPELINE_VERSION"
+	// ErrConflictLastAdmin is returned when an operation would remove or
+	// otherwise neuter the only remaining role=admin account (deletion via
+	// /api/me DELETE or /api/admin/users/{id} DELETE). HTTP 409 — the
+	// install always retains at least one admin.
+	ErrConflictLastAdmin ErrorCode = "ERR_CONFLICT_LAST_ADMIN"
 
 	// PIPELINE
 	ErrPipelineOperatorUnknown ErrorCode = "ERR_PIPELINE_OPERATOR_UNKNOWN"

@@ -837,6 +837,7 @@ PagedResponse<T> {
 | `ERR_NOT_FOUND_CHANNEL` | 404 | 通知通道不存在 |
 | `ERR_CONFLICT_USERNAME` | 409 | 用户名已被占用 |
 | `ERR_CONFLICT_PIPELINE_VERSION` | 409 | 流水线版本冲突（乐观锁，需刷新后重试） |
+| `ERR_CONFLICT_LAST_ADMIN` | 409 | 最后一个管理员账号不可删除（自删除 / 管理员删除均拦截） |
 | `ERR_PIPELINE_OPERATOR_UNKNOWN` | 422 | 未知算子类型 |
 | `ERR_PIPELINE_OPERATOR_PARAMS` | 422 | 算子参数校验失败 |
 | `ERR_PIPELINE_RUN_TIMEOUT` | 408 | 流水线执行超时（> 5s） |

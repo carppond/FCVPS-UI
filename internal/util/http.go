@@ -87,6 +87,7 @@ var errorStatusMap = map[types.ErrorCode]int{
 	// CONFLICT
 	types.ErrConflictUsername:        http.StatusConflict,
 	types.ErrConflictPipelineVersion: http.StatusConflict,
+	types.ErrConflictLastAdmin:       http.StatusConflict,
 
 	// PIPELINE
 	types.ErrPipelineOperatorUnknown: http.StatusUnprocessableEntity,
@@ -158,13 +159,35 @@ func (r *StatusRecorder) Flush() {
 	}
 }
 
-// DecodeJSONBody decodes r.Body into dst, enforcing DisallowUnknownFields.
-// Returns a wrapped error suitable for logging; handlers translate it into
-// ErrValidationInvalidFormat.
+// MaxJSONBodyBytes caps the size of any JSON request body decoded through
+// DecodeJSONBody. 1 MiB is several orders of magnitude larger than any
+// legitimate JSON DTO this project carries (the bulkiest payload is the
+// pipeline YAML, ~64 KiB worst case) yet small enough to defeat a hostile
+// client trying to OOM the hub by streaming an unbounded body.
+//
+// Multipart uploads (subscription upload + backup restore) handle their
+// own limits in their respective handlers; they do NOT flow through
+// DecodeJSONBody.
+const MaxJSONBodyBytes = 1 << 20 // 1 MiB
+
+// DecodeJSONBody decodes r.Body into dst, enforcing DisallowUnknownFields and
+// a hard size limit of MaxJSONBodyBytes (bug-6 of
+// docs/06-review-backend-round1.md). Returns a wrapped error suitable for
+// logging; handlers translate it into ErrValidationInvalidFormat.
+//
+// The size limit is applied via http.MaxBytesReader so the connection is
+// closed on overflow — preventing a hostile client from holding a
+// goroutine open with a slow stream.
 func DecodeJSONBody(r *http.Request, dst any) error {
 	if r == nil || r.Body == nil {
 		return fmt.Errorf("decode json body: nil request or body")
 	}
+	// MaxBytesReader accepts a nil ResponseWriter; the connection will not
+	// be force-closed on overflow but the read will still error out, which
+	// is the important guarantee. Handlers reach in via the request scope
+	// only (no shared ResponseWriter is required here, keeping the
+	// signature unchanged for the 30+ call sites).
+	r.Body = http.MaxBytesReader(nil, r.Body, MaxJSONBodyBytes)
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(dst); err != nil {

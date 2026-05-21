@@ -56,6 +56,15 @@ func (h *StreamHandler) Stream(w http.ResponseWriter, r *http.Request) {
 		util.RespondError(w, types.ErrInternalUnknown, "streaming unsupported", nil, traceID)
 		return
 	}
+	// Bug-7 (review-round1): SSE is a long-lived response so the global
+	// http.Server.WriteTimeout (60s in cmd/server/main.go) would otherwise
+	// kill the connection. Clear the per-response write deadline so
+	// heartbeats can extend indefinitely; the bus + client ctx still drive
+	// graceful teardown.
+	if rc := http.NewResponseController(w); rc != nil {
+		// Tolerate the "not supported" error on test ResponseWriters.
+		_ = rc.SetWriteDeadline(time.Time{})
+	}
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache, no-transform")
 	w.Header().Set("Connection", "keep-alive")

@@ -8,8 +8,12 @@
 # already inlined; the script does NOT need any further environment vars.
 set -euo pipefail
 
-TOKEN="{{.Token}}"
-HUB_URL="{{.HubURL}}"
+# Values are emitted inside single quotes so bash performs NO substitution on
+# them ($... and `...` would otherwise execute inside double quotes). The
+# server-side rendering layer rejects any value containing a literal '\''
+# character, so this delimiter is safe.
+TOKEN='{{.Token}}'
+HUB_URL='{{.HubURL}}'
 
 if [[ -z "$TOKEN" ]]; then
   echo "install-agent.sh: TOKEN is empty — refusing to install" >&2

@@ -14,8 +14,23 @@ import (
 // defaultHTTPClient is shared by the channels so connection pooling kicks in
 // across repeated sends. Timeout is per-request and bounded — the manager's
 // own 30s timeout via context wraps the entire attempt sequence.
-var defaultHTTPClient = &http.Client{
+//
+// cmd/server overrides this at startup via SetDefaultHTTPClient so all
+// webhook-style channels (ch_webhook / ch_discord / ch_slack / ch_serverchan
+// / ch_pushdeer / ch_ifttt / ch_bark / ch_gotify) inherit the SSRF-safe
+// dialer (bug-5 of docs/06-review-backend-round1.md).
+var defaultHTTPClient HTTPClient = &http.Client{
 	Timeout: 15 * time.Second,
+}
+
+// SetDefaultHTTPClient swaps the shared client every channel factory
+// installs at construction time. Must be called BEFORE channel factories
+// run (i.e. before notify.RegisterBuiltins). Idempotent.
+func SetDefaultHTTPClient(c HTTPClient) {
+	if c == nil {
+		return
+	}
+	defaultHTTPClient = c
 }
 
 // HTTPClient is the minimal surface the channels need. Exposed so tests can

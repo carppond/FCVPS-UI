@@ -210,3 +210,41 @@ func TestRouter_StartShutdown_NoCrash(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 	deps.Shutdown()
 }
+
+// TestRouter_TGWebhookRoutes_MountedWithHandler covers Bug-3 (review-round1).
+// Without the TGWebhookHandler in Deps the route 404s; once wired the
+// webhook path is reachable (it then returns the silent-mode 404 because
+// the token doesn't match — both states surface a 404, but the difference
+// is observable through the request log / handler invocation).
+func TestRouter_TGWebhookRoutes_MountedWithHandler(t *testing.T) {
+	// Sanity: bare deps with no TG handler => 404 (mux's literal 404, no
+	// handler was registered at the path at all).
+	bare := &handler.Deps{Logger: newTestLogger()}
+	_ = handler.NewRouter(bare)
+	req := httptest.NewRequest(http.MethodPost,
+		"/api/notify/telegram/webhook/abc123", strings.NewReader("{}"))
+	rr := httptest.NewRecorder()
+	bare.Handler().ServeHTTP(rr, req)
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 without handler, got %d", rr.Code)
+	}
+
+	// With a real handler the route exists (still 404s for unknown token but
+	// via the handler's own Mimic404 path — observable as the response body
+	// matches the nginx clone signature).
+	withHandler := &handler.Deps{
+		Logger: newTestLogger(),
+		TGWebhookHandler: handler.NewTGWebhookHandler(nil, nil, newTestLogger()),
+	}
+	_ = handler.NewRouter(withHandler)
+	req2 := httptest.NewRequest(http.MethodPost,
+		"/api/notify/telegram/webhook/abc123", strings.NewReader("{}"))
+	rr2 := httptest.NewRecorder()
+	withHandler.Handler().ServeHTTP(rr2, req2)
+	if rr2.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 (Mimic404 from handler), got %d", rr2.Code)
+	}
+	if !strings.Contains(rr2.Body.String(), "nginx") {
+		t.Fatalf("expected nginx-clone body when handler is mounted, got %s", rr2.Body.String())
+	}
+}

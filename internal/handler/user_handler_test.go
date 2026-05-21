@@ -235,5 +235,54 @@ func TestAdminCreateUserDuplicate(t *testing.T) {
 	}
 }
 
+// TestDeleteMe_LastAdminProtected covers Bug-2 (review-round1): the sole
+// remaining role=admin account cannot delete itself via /api/me DELETE,
+// preventing operators from accidentally locking themselves out of the
+// install. A second admin allows the operation to succeed.
+func TestDeleteMe_LastAdminProtected(t *testing.T) {
+	s := newAuthTestStack(t)
+	tok, _ := s.loginAs(t, "root", "Hunter2-AAAA", types.RoleAdmin)
+
+	// Sanity: a user attempt with the wrong password is rejected for the
+	// same code path, so we can be confident the password check still runs.
+	rec := s.do(http.MethodDelete, "/api/me", map[string]string{
+		"password": "Hunter2-AAAA",
+	}, tok)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected 409 last-admin protection, got %d body=%s",
+			rec.Code, rec.Body.String())
+	}
+	var env envelope[any]
+	if err := json.Unmarshal(rec.Body.Bytes(), &env); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	if env.Code != string(types.ErrConflictLastAdmin) {
+		t.Fatalf("expected code %s, got %q", types.ErrConflictLastAdmin, env.Code)
+	}
+
+	// After adding a second admin, the original admin can delete themselves.
+	s.createUser("root2", "Hunter2-AAAA", types.RoleAdmin, "")
+	rec = s.do(http.MethodDelete, "/api/me", map[string]string{
+		"password": "Hunter2-AAAA",
+	}, tok)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 after second admin exists, got %d body=%s",
+			rec.Code, rec.Body.String())
+	}
+}
+
+// TestDeleteMe_RegularUserSucceeds keeps the non-admin happy path covered.
+func TestDeleteMe_RegularUserSucceeds(t *testing.T) {
+	s := newAuthTestStack(t)
+	// A regular user is unaffected by the last-admin rail.
+	tok, _ := s.loginAs(t, "alice", "Hunter2-AAAA", types.RoleUser)
+	rec := s.do(http.MethodDelete, "/api/me", map[string]string{
+		"password": "Hunter2-AAAA",
+	}, tok)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", rec.Code, rec.Body.String())
+	}
+}
+
 // _ keeps the storage import used only by interface satisfaction.
 var _ = storage.UserRecord{}

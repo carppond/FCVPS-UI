@@ -22,13 +22,15 @@ import (
 // subTestStack mirrors authTestStack but adds the subscription handler so the
 // full HTTP surface is reachable.
 type subTestStack struct {
-	t       *testing.T
-	mux     http.Handler
-	users   *storage.UserRepo
-	subs    *storage.SubscriptionRepo
-	sync    *substore.SyncService
-	tokens  *auth.TokenStore
-	mgr     *auth.Manager
+	t          *testing.T
+	mux        http.Handler
+	users      *storage.UserRepo
+	subs       *storage.SubscriptionRepo
+	sync       *substore.SyncService
+	tokens     *auth.TokenStore
+	mgr        *auth.Manager
+	subHandler *SubscriptionHandler
+	db         *storage.DB
 }
 
 func newSubTestStack(t *testing.T) *subTestStack {
@@ -81,9 +83,12 @@ func newSubTestStack(t *testing.T) *subTestStack {
 	}
 	mux := NewRouter(deps)
 	return &subTestStack{
-		t:      t, mux: mux,
+		t: t, mux: mux,
 		users: users, subs: subs, sync: syncSvc,
-		tokens: tokens, mgr: mgr,
+		tokens:     tokens,
+		mgr:        mgr,
+		subHandler: subHandler,
+		db:         db,
 	}
 }
 
@@ -346,3 +351,115 @@ func TestSubscriptionNotFoundReturns404(t *testing.T) {
 		t.Fatalf("expected 404, got %d body=%s", rec.Code, rec.Body.String())
 	}
 }
+
+// TestSubscriptionPipelines_Bindings_RoundTrip covers Bug-4 (review-round1):
+// the GET / PUT /api/subscriptions/{id}/pipelines routes round-trip a list
+// of pipeline bindings. The setup wires a fresh stack that includes the
+// PipelineRepo (the default subTestStack omits it, so the endpoint 501s
+// there).
+func TestSubscriptionPipelines_Bindings_RoundTrip(t *testing.T) {
+	s := newSubTestStack(t)
+	pipelineRepo := storage.NewPipelineRepo(s.db, time.Now)
+	// Inject the pipeline repo into the existing subscription handler. The
+	// router was constructed in newSubTestStack — the handler instance is
+	// shared, so SetPipelineRepo takes effect immediately.
+	s.subHandler.SetPipelineRepo(pipelineRepo)
+
+	_, tok := s.createUserWithToken("paul")
+	// Create a subscription.
+	subRec := s.do(http.MethodPost, "/api/subscriptions", types.CreateSubscriptionRequest{
+		Name: "primary", Type: types.SubTypeManual,
+	}, tok)
+	if subRec.Code != http.StatusCreated {
+		t.Fatalf("create sub: %d body=%s", subRec.Code, subRec.Body.String())
+	}
+	var subEnv subEnvelope[types.SubscriptionDetail]
+	_ = json.Unmarshal(subRec.Body.Bytes(), &subEnv)
+	subID := subEnv.Data.ID
+
+	// Seed two pipelines belonging to paul.
+	pipeA, err := pipelineRepo.Create(context.Background(), storage.PipelineRecord{
+		ID: "pipe-a", UserID: "paul-id", Name: "A", ASTJSON: "[]", YAMLContent: "operators: []\n",
+	})
+	if err != nil {
+		t.Fatalf("create pipe a: %v", err)
+	}
+	pipeB, err := pipelineRepo.Create(context.Background(), storage.PipelineRecord{
+		ID: "pipe-b", UserID: "paul-id", Name: "B", ASTJSON: "[]", YAMLContent: "operators: []\n",
+	})
+	if err != nil {
+		t.Fatalf("create pipe b: %v", err)
+	}
+
+	// Initially: empty list.
+	listRec := s.do(http.MethodGet, "/api/subscriptions/"+subID+"/pipelines", nil, tok)
+	if listRec.Code != http.StatusOK {
+		t.Fatalf("list empty: %d body=%s", listRec.Code, listRec.Body.String())
+	}
+
+	// PUT bindings.
+	putBody := types.UpdatePipelineBindingsRequest{
+		Bindings: []types.PipelineBindingInput{
+			{PipelineID: pipeA.ID, Position: 1, Enabled: true},
+			{PipelineID: pipeB.ID, Position: 2, Enabled: false},
+		},
+	}
+	putRec := s.do(http.MethodPut, "/api/subscriptions/"+subID+"/pipelines", putBody, tok)
+	if putRec.Code != http.StatusOK {
+		t.Fatalf("put bindings: %d body=%s", putRec.Code, putRec.Body.String())
+	}
+
+	// GET back the bindings.
+	listRec2 := s.do(http.MethodGet, "/api/subscriptions/"+subID+"/pipelines", nil, tok)
+	if listRec2.Code != http.StatusOK {
+		t.Fatalf("list 2: %d body=%s", listRec2.Code, listRec2.Body.String())
+	}
+	var env subEnvelope[[]types.PipelineBinding]
+	if err := json.Unmarshal(listRec2.Body.Bytes(), &env); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(env.Data) != 2 {
+		t.Fatalf("expected 2 bindings, got %d: %+v", len(env.Data), env.Data)
+	}
+	if env.Data[0].PipelineID != pipeA.ID || env.Data[1].PipelineID != pipeB.ID {
+		t.Fatalf("unexpected binding order: %+v", env.Data)
+	}
+}
+
+// TestSubscriptionPipelines_RejectsForeignPipeline ensures cross-user
+// access is denied (information hiding: 404).
+func TestSubscriptionPipelines_RejectsForeignPipeline(t *testing.T) {
+	s := newSubTestStack(t)
+	pipelineRepo := storage.NewPipelineRepo(s.db, time.Now)
+	s.subHandler.SetPipelineRepo(pipelineRepo)
+
+	_, aliceTok := s.createUserWithToken("alicep")
+	_, _ = s.createUserWithToken("bobp")
+
+	// Alice owns a subscription.
+	subRec := s.do(http.MethodPost, "/api/subscriptions", types.CreateSubscriptionRequest{
+		Name: "primary", Type: types.SubTypeManual,
+	}, aliceTok)
+	var subEnv subEnvelope[types.SubscriptionDetail]
+	_ = json.Unmarshal(subRec.Body.Bytes(), &subEnv)
+	subID := subEnv.Data.ID
+
+	// Bob owns a pipeline.
+	bobPipe, err := pipelineRepo.Create(context.Background(), storage.PipelineRecord{
+		ID: "bob-pipe", UserID: "bobp-id", Name: "B", ASTJSON: "[]", YAMLContent: "operators: []\n",
+	})
+	if err != nil {
+		t.Fatalf("create bob pipe: %v", err)
+	}
+
+	// Alice tries to bind Bob's pipeline → 404 pipeline not found.
+	putRec := s.do(http.MethodPut, "/api/subscriptions/"+subID+"/pipelines",
+		types.UpdatePipelineBindingsRequest{
+			Bindings: []types.PipelineBindingInput{{PipelineID: bobPipe.ID, Position: 1, Enabled: true}},
+		}, aliceTok)
+	if putRec.Code != http.StatusNotFound {
+		t.Fatalf("cross-user pipeline: expected 404, got %d body=%s",
+			putRec.Code, putRec.Body.String())
+	}
+}
+

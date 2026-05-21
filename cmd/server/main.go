@@ -38,6 +38,7 @@ import (
 	"shiguang-vps/internal/storage"
 	"shiguang-vps/internal/substore"
 	"shiguang-vps/internal/traffic"
+	"shiguang-vps/internal/util/safehttp"
 )
 
 // hubBinaryVersion is the semver advertised to the OTA checker. Replaced at
@@ -141,10 +142,19 @@ func run() error {
 	// NodeRepoAdapter bridges substore.NodeRepo / NodeFetcher to the concrete
 	// storage.NodeRepo without creating a storage → substore import cycle.
 	nodeAdapter := substore.NewNodeRepoAdapter(nodeRepo)
+	// Bug-5 (review-round1): force every outbound subscription fetch through
+	// the SSRF-safe dialer. AllowPrivate is governed by the
+	// `allow_private_networks` system setting (read once at startup; admins
+	// who flip it need to restart so the protection lifetime is auditable).
+	allowPrivate := readAllowPrivateNetworks(db, log)
+	subscriptionHTTPClient := safehttp.NewClient(safehttp.Config{
+		AllowPrivate: allowPrivate,
+	}, substore.DefaultHTTPTimeout)
 	syncService, err := substore.NewSyncService(substore.SyncServiceConfig{
-		Repo:     subscriptions,
-		NodeRepo: nodeAdapter,
-		Logger:   log,
+		Repo:       subscriptions,
+		NodeRepo:   nodeAdapter,
+		HTTPClient: subscriptionHTTPClient,
+		Logger:     log,
 	})
 	if err != nil {
 		return fmt.Errorf("sync service: %w", err)
@@ -203,6 +213,12 @@ func run() error {
 	// T-22: notification subsystem. Builds the channel registry (5 batch-1
 	// kinds), the SSE event bus and the manager. The cleanup worker is
 	// stopped at shutdown via the returned cancel func.
+	//
+	// Bug-5 (review-round1): every webhook-style channel inherits the
+	// SSRF-safe HTTP client below before the registry binds factories.
+	notify.SetDefaultHTTPClient(safehttp.NewClient(safehttp.Config{
+		AllowPrivate: allowPrivate,
+	}, 15*time.Second))
 	notify.RegisterBuiltins(notify.DefaultRegistry)
 	notifyChannels := storage.NewNotificationChannelRepo(db, time.Now)
 	notifyEvents := storage.NewNotificationEventRepo(db, time.Now)
@@ -221,6 +237,40 @@ func run() error {
 	}
 	notifyHandler := handler.NewNotifyHandler(notifyChannels, notifyEvents, notifyMgr, notify.DefaultRegistry, log)
 	streamHandler := handler.NewStreamHandler(tokens, notifyBus, log)
+
+	// T-24 / bug-3 (review-round1): wire the Telegram bot so the webhook
+	// routes can be mounted. The bot is best-effort — if the BotConfig
+	// cannot be assembled (e.g. nil whitelist resolver because the user repo
+	// is offline) the webhook handler stays nil and the routes degrade to
+	// 404 instead of crashing the server.
+	tgRouter := notify.NewCommandRouter()
+	notify.RegisterCommands(tgRouter, notify.CommandsConfig{
+		Nodes:         nodeRepo,
+		Subscriptions: subscriptions,
+		Agents:        agentRepo,
+		Channels:      notifyChannels,
+		Users:         users,
+		AdminCheck:    handler.AdminCheckFromUserRepo(users),
+		Now:           time.Now,
+	})
+	tgBot, tgBotErr := notify.NewBot(notify.BotConfig{
+		BotToken:  os.Getenv("TG_BOT_TOKEN"),
+		Router:    tgRouter,
+		Whitelist: handler.BuildTGWhitelistResolver(notifyChannels, users),
+	})
+	var tgWebhookHandler *handler.TGWebhookHandler
+	var tgBotSettingsHandler *handler.TGBotSettingsHandler
+	if tgBotErr != nil {
+		log.Warn("tg bot disabled", slog.String("err", tgBotErr.Error()))
+	} else {
+		// settingsRepo is created later (T-18 block); construct it here so
+		// the bot handler can read the webhook token without re-opening the
+		// DB. Reordering is safe — settings_repo is a thin wrapper around
+		// the existing *storage.DB pool.
+		tgSettingsRepo := storage.NewSettingsRepo(db, time.Now)
+		tgWebhookHandler = handler.NewTGWebhookHandler(tgBot, tgSettingsRepo, log)
+		tgBotSettingsHandler = handler.NewTGBotSettingsHandler(tgSettingsRepo, notifyChannels, tgBot, log)
+	}
 
 	// T-27: OTA service. The hub version + repo can be overridden via env
 	// vars (OTA_GITHUB_REPO) so private forks point at their own release
@@ -297,6 +347,13 @@ func run() error {
 	scriptEngine := scriptengine.NewEngine(log)
 	scriptHandler := handler.NewScriptHandler(scriptRepo, scriptEngine, log)
 
+	// T-19 / bug-4 (review-round1): wire the pipeline repo so the
+	// subscription handler can serve the binding endpoints + the existing
+	// PipelineHandler can manage CRUD.
+	pipelineRepo := storage.NewPipelineRepo(db, time.Now)
+	pipelineHandler := handler.NewPipelineHandler(pipelineRepo, subscriptions, log)
+	subHandler.SetPipelineRepo(pipelineRepo)
+
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
@@ -319,6 +376,9 @@ func run() error {
 		NezhaHandler:          nezhaHandler,
 		TrafficHandler:        trafficHandler,
 		ScriptHandler:         scriptHandler,
+		PipelineHandler:       pipelineHandler,
+		TGWebhookHandler:      tgWebhookHandler,
+		TGBotSettingsHandler:  tgBotSettingsHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
@@ -354,11 +414,19 @@ func run() error {
 	// Ensure the hub broadcasts bye{server_shutdown} during graceful exit.
 	defer agentHub.Close()
 
+	// Bug-7 (review-round1): bound every wall-clock budget so a slowloris
+	// client cannot pin a goroutine indefinitely. The long-running paths
+	// (OTA download / SSE / subscription sync) manage their own ctx
+	// timeouts internally and do not hit these limits because they stream
+	// the body in one shot before holding the connection open.
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Addr,
 		Handler:           deps.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      60 * time.Second,
 		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    1 << 20, // 1 MiB
 	}
 
 	// Surface listener errors back to the main goroutine.
@@ -390,6 +458,37 @@ func run() error {
 		log.Error("http shutdown", slog.String("err", err.Error()))
 	}
 	return nil
+}
+
+// readAllowPrivateNetworks reads the `allow_private_networks` system
+// setting (bug-5 of docs/06-review-backend-round1.md). The setting opts
+// the deployment OUT of the SSRF dialer guard so admins who legitimately
+// fetch http://10.x.y.z/some/internal can do so. Default is false.
+//
+// Errors / missing rows are treated as "false" — fail closed.
+func readAllowPrivateNetworks(db *storage.DB, log *slog.Logger) bool {
+	if db == nil {
+		return false
+	}
+	repo := storage.NewSettingsRepo(db, time.Now)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	value, err := repo.Get(ctx, "allow_private_networks")
+	if err != nil {
+		if !errors.Is(err, storage.ErrSettingNotFound) && log != nil {
+			log.Warn("safehttp: read allow_private_networks failed",
+				slog.String("err", err.Error()))
+		}
+		return false
+	}
+	switch value {
+	case "true", "1", "yes", "on":
+		if log != nil {
+			log.Warn("safehttp: allow_private_networks=true; outbound SSRF guard DISABLED")
+		}
+		return true
+	}
+	return false
 }
 
 // lookupAdminUserID returns the first admin user's ID, or "" when no admin

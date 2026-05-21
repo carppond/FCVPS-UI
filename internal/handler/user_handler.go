@@ -90,6 +90,11 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteMe implements DELETE /api/me. Requires the password in the body.
+//
+// Safety rail: if the caller is the last role=admin account the request is
+// rejected with ErrConflictLastAdmin so the install always retains at least
+// one administrator (mirrors AdminDeleteUser; see Bug-2 in
+// docs/06-review-backend-round1.md).
 func (h *UserHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
 	traceID := middleware.TraceIDFromContext(r.Context())
 	user := auth.MustUserFromContext(r.Context())
@@ -103,6 +108,18 @@ func (h *UserHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
 	if !auth.VerifyPassword(req.Password, user.PasswordHash) {
 		util.RespondError(w, types.ErrAuthInvalidPassword, "password incorrect", nil, traceID)
 		return
+	}
+	if user.Role == string(types.RoleAdmin) {
+		count, err := h.users.CountAdmins(r.Context())
+		if err != nil {
+			h.respondStorageErr(w, traceID, err)
+			return
+		}
+		if count <= 1 {
+			util.RespondError(w, types.ErrConflictLastAdmin,
+				"cannot delete the last admin account", nil, traceID)
+			return
+		}
 	}
 	if err := h.manager.DeleteUser(r.Context(), user.ID); err != nil {
 		h.respondStorageErr(w, traceID, err)
@@ -361,10 +378,7 @@ func (h *UserHandler) AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if count <= 1 {
-			// No dedicated CONFLICT_LAST_ADMIN error code is defined in the
-			// contract; return 403 ErrAuthForbidden with a descriptive
-			// message until a dedicated code is added (see docs/05 §1).
-			util.RespondError(w, types.ErrAuthForbidden,
+			util.RespondError(w, types.ErrConflictLastAdmin,
 				"cannot delete the last admin user", nil, traceID)
 			return
 		}

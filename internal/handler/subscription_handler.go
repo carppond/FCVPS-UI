@@ -22,15 +22,28 @@ const maxUploadBytes = 4 * 1024 * 1024
 
 // SubscriptionHandler hosts /api/subscriptions/* endpoints.
 type SubscriptionHandler struct {
-	repo   *storage.SubscriptionRepo
-	sync   *substore.SyncService
-	logger *slog.Logger
+	repo         *storage.SubscriptionRepo
+	pipelineRepo *storage.PipelineRepo
+	sync         *substore.SyncService
+	logger       *slog.Logger
 }
 
 // NewSubscriptionHandler wires the handler. sync may be nil; manual-create
 // flows still work but POST /sync degrades to 501.
 func NewSubscriptionHandler(repo *storage.SubscriptionRepo, sync *substore.SyncService, logger *slog.Logger) *SubscriptionHandler {
 	return &SubscriptionHandler{repo: repo, sync: sync, logger: logger}
+}
+
+// SetPipelineRepo wires the pipeline binding store. The optional setter lets
+// callers (cmd/server) attach the repo after construction so existing
+// callers / tests that do not exercise the binding endpoints stay
+// unchanged. nil disables the GET / PUT /api/subscriptions/{id}/pipelines
+// endpoints (handlers respond 501).
+func (h *SubscriptionHandler) SetPipelineRepo(repo *storage.PipelineRepo) {
+	if h == nil {
+		return
+	}
+	h.pipelineRepo = repo
 }
 
 // List implements GET /api/subscriptions.
@@ -320,6 +333,117 @@ func (h *SubscriptionHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	util.RespondJSON(w, http.StatusCreated, types.APIResponse[types.SubscriptionDetail]{
 		Data:      subscriptionRecordToDetail(created),
 		RequestID: traceID,
+	})
+}
+
+// GetPipelines implements GET /api/subscriptions/{id}/pipelines.
+//
+// Cross-user access returns 404 (information hiding) — the subscription
+// lookup is scoped to the caller's user_id before the bindings are
+// listed. When the pipeline repo is unwired the endpoint replies 501.
+func (h *SubscriptionHandler) GetPipelines(w http.ResponseWriter, r *http.Request) {
+	traceID := middleware.TraceIDFromContext(r.Context())
+	user := auth.MustUserFromContext(r.Context())
+	if h.pipelineRepo == nil {
+		util.RespondError(w, types.ErrInternalUnknown,
+			"pipeline bindings unavailable", nil, traceID)
+		return
+	}
+	id := r.PathValue("id")
+	if _, err := h.repo.GetByID(r.Context(), id, user.ID); err != nil {
+		h.respondStorageErr(w, traceID, err)
+		return
+	}
+	rows, err := h.pipelineRepo.ListBindings(r.Context(), id)
+	if err != nil {
+		h.respondStorageErr(w, traceID, err)
+		return
+	}
+	out := make([]types.PipelineBinding, 0, len(rows))
+	for _, b := range rows {
+		out = append(out, types.PipelineBinding{
+			SubscriptionID: b.SubscriptionID,
+			PipelineID:     b.PipelineID,
+			Position:       b.Position,
+			Enabled:        b.Enabled,
+		})
+	}
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[[]types.PipelineBinding]{
+		Data: out, RequestID: traceID,
+	})
+}
+
+// PutPipelines implements PUT /api/subscriptions/{id}/pipelines.
+//
+// The request body is an UpdatePipelineBindingsRequest. Every pipeline_id in
+// the list must belong to the calling user — otherwise the entire request
+// is rejected with 404 (information hiding). The replacement is atomic
+// inside PipelineRepo.ReplaceBindings.
+func (h *SubscriptionHandler) PutPipelines(w http.ResponseWriter, r *http.Request) {
+	traceID := middleware.TraceIDFromContext(r.Context())
+	user := auth.MustUserFromContext(r.Context())
+	if h.pipelineRepo == nil {
+		util.RespondError(w, types.ErrInternalUnknown,
+			"pipeline bindings unavailable", nil, traceID)
+		return
+	}
+	id := r.PathValue("id")
+	if _, err := h.repo.GetByID(r.Context(), id, user.ID); err != nil {
+		h.respondStorageErr(w, traceID, err)
+		return
+	}
+	var req types.UpdatePipelineBindingsRequest
+	if err := util.DecodeJSONBody(r, &req); err != nil {
+		util.RespondError(w, types.ErrValidationInvalidFormat, "invalid body", nil, traceID)
+		return
+	}
+	// Validate every referenced pipeline belongs to the caller before we
+	// touch the table. The repo's user_id-scoped GetByID returns
+	// ErrPipelineNotFound for both "does not exist" and "belongs to another
+	// user" — both surface to the caller as 404, which is the intended
+	// behaviour (cross-user 404 == information hiding).
+	bindings := make([]storage.PipelineBindingRecord, 0, len(req.Bindings))
+	for i, b := range req.Bindings {
+		if b.PipelineID == "" {
+			util.RespondError(w, types.ErrValidationRequiredField,
+				"pipeline_id required", nil, traceID)
+			return
+		}
+		if _, err := h.pipelineRepo.GetByID(r.Context(), b.PipelineID, user.ID); err != nil {
+			if errors.Is(err, storage.ErrPipelineNotFound) {
+				util.RespondError(w, types.ErrNotFoundPipeline,
+					"pipeline not found", nil, traceID)
+				return
+			}
+			h.respondStorageErr(w, traceID, err)
+			return
+		}
+		pos := b.Position
+		if pos == 0 {
+			pos = int32(i + 1)
+		}
+		bindings = append(bindings, storage.PipelineBindingRecord{
+			SubscriptionID: id,
+			PipelineID:     b.PipelineID,
+			Position:       pos,
+			Enabled:        b.Enabled,
+		})
+	}
+	if err := h.pipelineRepo.ReplaceBindings(r.Context(), id, bindings); err != nil {
+		h.respondStorageErr(w, traceID, err)
+		return
+	}
+	out := make([]types.PipelineBinding, 0, len(bindings))
+	for _, b := range bindings {
+		out = append(out, types.PipelineBinding{
+			SubscriptionID: b.SubscriptionID,
+			PipelineID:     b.PipelineID,
+			Position:       b.Position,
+			Enabled:        b.Enabled,
+		})
+	}
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[[]types.PipelineBinding]{
+		Data: out, RequestID: traceID,
 	})
 }
 

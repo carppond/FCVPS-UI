@@ -159,6 +159,16 @@ type Deps struct {
 	// (T-28). nil disables.
 	InstallScriptHandler *InstallScriptHandler
 
+	// TGWebhookHandler receives Telegram bot updates at
+	// POST /api/notify/telegram/webhook/{token}. The webhook path itself is
+	// unauthenticated (it validates a per-deployment token in the URL); nil
+	// disables the route entirely.
+	TGWebhookHandler *TGWebhookHandler
+
+	// TGBotSettingsHandler hosts the authenticated admin endpoints for
+	// inspecting / rotating the webhook token. nil disables those routes.
+	TGBotSettingsHandler *TGBotSettingsHandler
+
 	// Silent owns the live silent-mode prefix. Internal — populated by
 	// NewRouter when DB is supplied.
 	silent *middleware.SilentMode
@@ -225,6 +235,7 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountShortLinkRoutes(mux, deps)
 	mountAuditRoutes(mux, deps)
 	mountInstallScriptRoutes(mux, deps)
+	mountTGWebhookRoutes(mux, deps)
 
 	return mux
 }
@@ -362,6 +373,14 @@ func mountSubscriptionRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("POST /api/subscriptions/{id}/sync", required(http.HandlerFunc(sh.Sync)))
 	mux.Handle("POST /api/subscriptions/{id}/rotate-share-token",
 		required(http.HandlerFunc(sh.RotateShareToken)))
+
+	// Pipeline binding endpoints (architecture §5.1.4 line 1271-1273). The
+	// handler 501s when the pipeline repo is unwired so non-pipeline test
+	// stacks remain unaffected.
+	mux.Handle("GET /api/subscriptions/{id}/pipelines",
+		required(http.HandlerFunc(sh.GetPipelines)))
+	mux.Handle("PUT /api/subscriptions/{id}/pipelines",
+		required(http.HandlerFunc(sh.PutPipelines)))
 }
 
 // mountSubstoreCompatRoutes installs the sub-store v2 compat path. Public:
@@ -709,6 +728,40 @@ func mountAuditRoutes(mux *http.ServeMux, deps *Deps) {
 	// Contract §1 line 308 also exposes /api/audit/logs scoped to the
 	// caller (user_id auto-filtered).
 	mux.Handle("GET /api/audit/logs", required(http.HandlerFunc(ah.List)))
+}
+
+// mountTGWebhookRoutes installs the Telegram bot endpoints (bug-3 of
+// docs/06-review-backend-round1.md):
+//
+//   - POST /api/notify/telegram/webhook/{token}     (public — token in URL)
+//   - GET  /api/notify/telegram/status              (auth required)
+//   - POST /api/notify/telegram/webhook/rotate      (auth + admin required)
+//   - POST /api/notify/telegram/webhook/install     (auth + admin required)
+//
+// The webhook endpoint is intentionally NOT wrapped in auth.Required — the
+// caller is Telegram's infrastructure and authenticates via the per-deploy
+// token embedded in the URL path. The silent-mode whitelist already
+// includes /api/notify/telegram/webhook so the route is reachable
+// regardless of prefix rotation (silent_mode.go silentWhitelist).
+func mountTGWebhookRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil {
+		return
+	}
+	if deps.TGWebhookHandler != nil {
+		mux.Handle("POST /api/notify/telegram/webhook/{token}",
+			http.HandlerFunc(deps.TGWebhookHandler.Webhook))
+	}
+	if deps.TGBotSettingsHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	requireAdmin := auth.RequireAdmin(deps.TokenStore)
+	bh := deps.TGBotSettingsHandler
+	mux.Handle("GET /api/notify/telegram/status", required(http.HandlerFunc(bh.Status)))
+	mux.Handle("POST /api/notify/telegram/webhook/rotate",
+		requireAdmin(http.HandlerFunc(bh.RotateWebhookToken)))
+	mux.Handle("POST /api/notify/telegram/webhook/install",
+		requireAdmin(http.HandlerFunc(bh.SetWebhook)))
 }
 
 // mountInstallScriptRoutes installs the T-28 agent install endpoints. The
