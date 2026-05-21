@@ -115,6 +115,9 @@ type Deps struct {
 	// StreamHandler hosts GET /api/notify/stream (T-22 SSE). nil disables.
 	StreamHandler *StreamHandler
 
+	// OTAHandler hosts /api/admin/ota/* (T-27). nil disables the routes.
+	OTAHandler *OTAHandler
+
 	// LoginRateLimit is the per-(IP|username) login bucket (5/hour by default).
 	// nil disables.
 	LoginRateLimit *ratelimit.Limiter
@@ -174,6 +177,7 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountNodeRoutes(mux, deps)
 	mountTCPingRoutes(mux, deps)
 	mountNotifyRoutes(mux, deps)
+	mountOTARoutes(mux, deps)
 
 	// TODO(T-15): mount rule handlers (/api/rules/*).
 	// TODO(T-17): mount script handlers (/api/scripts/*).
@@ -182,7 +186,6 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	// TODO(T-25): mount shortlink handlers (/api/shortlinks, GET /s/:code).
 	// TODO(T-26): mount settings + silent-mode rotate (/api/admin/settings/*).
 	// TODO(T-28): mount audit log query (/api/admin/audit).
-	// TODO(T-29): mount OTA handlers (/api/admin/ota/*).
 
 	return mux
 }
@@ -465,6 +468,27 @@ func mountNotifyRoutes(mux *http.ServeMux, deps *Deps) {
 		// ?token=) so EventSource clients can connect from the browser.
 		mux.Handle("GET /api/notify/stream", http.HandlerFunc(deps.StreamHandler.Stream))
 	}
+}
+
+// mountOTARoutes installs the M-OPS OTA admin surface (T-27):
+//
+//   - GET  /api/admin/ota/status   — cached release info (no GitHub call)
+//   - GET  /api/admin/ota/check    — force an immediate GitHub poll
+//   - POST /api/admin/ota/apply    — kick off download → verify → restart
+//   - GET  /api/admin/ota/history  — in-memory log of past upgrade attempts
+//
+// All endpoints require role=admin. Progress events flow through the SSE
+// channel mounted by mountNotifyRoutes (kind = "ota_progress").
+func mountOTARoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.OTAHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	requireAdmin := auth.RequireAdmin(deps.TokenStore)
+	oh := deps.OTAHandler
+	mux.Handle("GET /api/admin/ota/status", requireAdmin(http.HandlerFunc(oh.Status)))
+	mux.Handle("GET /api/admin/ota/check", requireAdmin(http.HandlerFunc(oh.Check)))
+	mux.Handle("POST /api/admin/ota/apply", requireAdmin(http.HandlerFunc(oh.Apply)))
+	mux.Handle("GET /api/admin/ota/history", requireAdmin(http.HandlerFunc(oh.History)))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads

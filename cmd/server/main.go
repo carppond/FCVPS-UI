@@ -31,10 +31,21 @@ import (
 	"shiguang-vps/internal/handler"
 	"shiguang-vps/internal/logger"
 	"shiguang-vps/internal/notify"
+	"shiguang-vps/internal/ota"
 	"shiguang-vps/internal/ratelimit"
 	"shiguang-vps/internal/storage"
 	"shiguang-vps/internal/substore"
 )
+
+// hubBinaryVersion is the semver advertised to the OTA checker. Replaced at
+// build-time via -ldflags "-X main.hubBinaryVersion=v1.2.3". Empty / dev
+// values mean the OTA daily sweep skips notifications (a dev binary should
+// not pester operators to upgrade).
+var hubBinaryVersion = ""
+
+// hubGitHubRepo overrides the upstream release source. Falls back to
+// ota.DefaultGitHubRepo at runtime when the env var OTA_GITHUB_REPO is unset.
+var hubGitHubRepo = ""
 
 // shutdownTimeout caps how long graceful shutdown waits for in-flight requests
 // to drain before forcing the server closed.
@@ -189,6 +200,30 @@ func run() error {
 	notifyHandler := handler.NewNotifyHandler(notifyChannels, notifyEvents, notifyMgr, notify.DefaultRegistry, log)
 	streamHandler := handler.NewStreamHandler(tokens, notifyBus, log)
 
+	// T-27: OTA service. The hub version + repo can be overridden via env
+	// vars (OTA_GITHUB_REPO) so private forks point at their own release
+	// stream without rebuilding. The admin user-id is best-effort: we look up
+	// the bootstrapped admin via users.LookupAdmin so the ota_available
+	// email reaches the operator without manual config.
+	otaRepo := hubGitHubRepo
+	if v := os.Getenv("OTA_GITHUB_REPO"); v != "" {
+		otaRepo = v
+	}
+	otaSvc, err := ota.NewService(ota.ServiceConfig{
+		DB:             db,
+		CurrentVersion: hubBinaryVersion,
+		GitHubRepo:     otaRepo,
+		Logger:         log,
+		Now:            time.Now,
+		NotifyManager:  notifyMgr,
+		EventBus:       notifyBus,
+		AdminUserID:    lookupAdminUserID(users, log),
+	})
+	if err != nil {
+		return fmt.Errorf("ota service: %w", err)
+	}
+	otaHandler := handler.NewOTAHandler(otaSvc, log)
+
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
@@ -207,6 +242,7 @@ func run() error {
 		TCPingHandler:         tcpingHandler,
 		NotifyHandler:         notifyHandler,
 		StreamHandler:         streamHandler,
+		OTAHandler:            otaHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
@@ -223,6 +259,10 @@ func run() error {
 	// T-22: kick off the notification_events retention sweep (30 days).
 	stopNotifyCleanup := notifyMgr.StartCleanup(rootCtx)
 	defer stopNotifyCleanup()
+	// T-27: daily OTA poll. Stops on shutdown so the goroutine does not
+	// outlive the DB pool (the checker logs would otherwise spam errors).
+	stopOTAChecker := otaSvc.StartChecker(rootCtx)
+	defer stopOTAChecker()
 	// Ensure the hub broadcasts bye{server_shutdown} during graceful exit.
 	defer agentHub.Close()
 
@@ -262,6 +302,30 @@ func run() error {
 		log.Error("http shutdown", slog.String("err", err.Error()))
 	}
 	return nil
+}
+
+// lookupAdminUserID returns the first admin user's ID, or "" when no admin
+// exists yet (the OTA service tolerates an empty user-id — the SSE broadcast
+// still works, only the email/telegram emission is skipped).
+func lookupAdminUserID(users *storage.UserRepo, log *slog.Logger) string {
+	if users == nil {
+		return ""
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	list, _, err := users.List(ctx, storage.UserListOptions{
+		Page: 1, PageSize: 1, Role: "admin",
+	})
+	if err != nil {
+		if log != nil {
+			log.Warn("ota: lookup admin user failed", slog.String("err", err.Error()))
+		}
+		return ""
+	}
+	if len(list) == 0 {
+		return ""
+	}
+	return list[0].ID
 }
 
 // agentRecordsRetention is the 7-day retention window for high-frequency

@@ -271,3 +271,13 @@ pre,
 .animate-totp-shake {
   animation: totp-shake 200ms ease-in-out;
 }
+
+/* ── Progress bar indeterminate animation (OTA verifying / restarting) ──── */
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}

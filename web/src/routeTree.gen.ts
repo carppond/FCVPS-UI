@@ -25,6 +25,7 @@ import { Route as AuthedSubscriptionsIdRouteImport } from './routes/_authed/subs
 import { Route as AuthedProfile2faRouteImport } from './routes/_authed/profile/2fa'
 import { Route as AuthedNodesNodeIdRouteImport } from './routes/_authed/nodes/$nodeId'
 import { Route as AuthedAdminUsersRouteImport } from './routes/_authed/admin/users'
+import { Route as AuthedAdminOtaRouteImport } from './routes/_authed/admin/ota'
 import { Route as AuthedPipelinesPipelineIdEditRouteImport } from './routes/_authed/pipelines/$pipelineId/edit'
 
 const PublicRouteRoute = PublicRouteRouteImport.update({
@@ -106,6 +107,11 @@ const AuthedAdminUsersRoute = AuthedAdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedAdminOtaRoute = AuthedAdminOtaRouteImport.update({
+  id: '/admin/ota',
+  path: '/admin/ota',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
 const AuthedPipelinesPipelineIdEditRoute =
   AuthedPipelinesPipelineIdEditRouteImport.update({
     id: '/pipelines/$pipelineId/edit',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/not-found': typeof PublicNotFoundRoute
   '/recovery': typeof PublicRecoveryRoute
   '/totp': typeof PublicTotpRoute
+  '/admin/ota': typeof AuthedAdminOtaRoute
   '/admin/users': typeof AuthedAdminUsersRoute
   '/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/not-found': typeof PublicNotFoundRoute
   '/recovery': typeof PublicRecoveryRoute
   '/totp': typeof PublicTotpRoute
+  '/admin/ota': typeof AuthedAdminOtaRoute
   '/admin/users': typeof AuthedAdminUsersRoute
   '/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_public/not-found': typeof PublicNotFoundRoute
   '/_public/recovery': typeof PublicRecoveryRoute
   '/_public/totp': typeof PublicTotpRoute
+  '/_authed/admin/ota': typeof AuthedAdminOtaRoute
   '/_authed/admin/users': typeof AuthedAdminUsersRoute
   '/_authed/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/_authed/profile/2fa': typeof AuthedProfile2faRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/not-found'
     | '/recovery'
     | '/totp'
+    | '/admin/ota'
     | '/admin/users'
     | '/nodes/$nodeId'
     | '/profile/2fa'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/not-found'
     | '/recovery'
     | '/totp'
+    | '/admin/ota'
     | '/admin/users'
     | '/nodes/$nodeId'
     | '/profile/2fa'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/_public/not-found'
     | '/_public/recovery'
     | '/_public/totp'
+    | '/_authed/admin/ota'
     | '/_authed/admin/users'
     | '/_authed/nodes/$nodeId'
     | '/_authed/profile/2fa'
@@ -343,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminUsersRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/admin/ota': {
+      id: '/_authed/admin/ota'
+      path: '/admin/ota'
+      fullPath: '/admin/ota'
+      preLoaderRoute: typeof AuthedAdminOtaRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/pipelines/$pipelineId/edit': {
       id: '/_authed/pipelines/$pipelineId/edit'
       path: '/pipelines/$pipelineId/edit'
@@ -355,6 +374,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedAdminOtaRoute: typeof AuthedAdminOtaRoute
   AuthedAdminUsersRoute: typeof AuthedAdminUsersRoute
   AuthedNodesNodeIdRoute: typeof AuthedNodesNodeIdRoute
   AuthedProfile2faRoute: typeof AuthedProfile2faRoute
@@ -368,6 +388,7 @@ interface AuthedRouteRouteChildren {
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedAdminOtaRoute: AuthedAdminOtaRoute,
   AuthedAdminUsersRoute: AuthedAdminUsersRoute,
   AuthedNodesNodeIdRoute: AuthedNodesNodeIdRoute,
   AuthedProfile2faRoute: AuthedProfile2faRoute,
