@@ -1,0 +1,165 @@
+{
+  "title": "订阅",
+  "subtitle": "管理订阅来源，触发同步，导出 sub-store 兼容链接。",
+  "actions": {
+    "create": "新建订阅",
+    "sync": "同步",
+    "edit": "编辑",
+    "delete": "删除",
+    "copy_url": "复制订阅链接",
+    "rotate_token": "轮换 token",
+    "back_to_list": "返回订阅列表",
+    "test_connection": "测试连接"
+  },
+  "columns": {
+    "name": "名称",
+    "owner": "所有者",
+    "type": "来源",
+    "nodes": "节点数",
+    "status": "状态",
+    "last_synced_at": "上次同步",
+    "traffic": "流量",
+    "actions": "操作"
+  },
+  "filters": {
+    "search_placeholder": "搜索订阅名称…",
+    "show_all_users": "显示所有用户的订阅"
+  },
+  "source_type": {
+    "url": "URL",
+    "upload": "上传",
+    "manual": "手动"
+  },
+  "status": {
+    "ok": "正常",
+    "error": "异常",
+    "pending": "同步中",
+    "never": "从未同步"
+  },
+  "empty": {
+    "title": "暂无订阅",
+    "description": "新建第一条订阅以开始拉取节点。",
+    "cta": "新建订阅"
+  },
+  "error": {
+    "load_failed": "加载订阅失败",
+    "load_detail_failed": "加载订阅详情失败",
+    "create_failed": "创建订阅失败",
+    "update_failed": "更新订阅失败",
+    "delete_failed": "删除订阅失败",
+    "sync_failed": "同步失败",
+    "rotate_failed": "轮换 token 失败",
+    "upload_failed": "上传失败",
+    "yaml_parse_failed": "YAML 解析失败",
+    "url_required": "URL 不能为空",
+    "name_required": "请填写订阅名称",
+    "file_required": "请选择 YAML 文件"
+  },
+  "wizard": {
+    "title": "新建订阅",
+    "step1": "选择来源",
+    "step2": "填写信息",
+    "step3": "标签与周期",
+    "next": "下一步",
+    "back": "上一步",
+    "finish": "完成创建",
+    "source": {
+      "url_title": "URL 订阅",
+      "url_desc": "拉取远程 sub-store 兼容订阅链接",
+      "upload_title": "上传文件",
+      "upload_desc": "上传本地 YAML / Base64 节点文件",
+      "manual_title": "手动添加",
+      "manual_desc": "创建空订阅后自行粘贴节点 URI"
+    },
+    "form": {
+      "name_label": "订阅名称",
+      "name_placeholder": "例如：机场 A",
+      "source_url_label": "订阅 URL",
+      "source_url_placeholder": "https://…",
+      "ua_label": "自定义 User-Agent",
+      "ua_placeholder": "留空使用默认值",
+      "ua_hint": "部分机场要求特定 UA，例如 ClashforWindows/0.20.39"
+    },
+    "tags": {
+      "label": "标签",
+      "placeholder": "回车 / 逗号添加标签"
+    },
+    "sync_interval": {
+      "label": "同步周期",
+      "h1": "每 1 小时",
+      "h6": "每 6 小时",
+      "h12": "每 12 小时",
+      "h24": "每 24 小时",
+      "manual": "仅手动"
+    }
+  },
+  "edit": {
+    "title": "编辑订阅",
+    "name_label": "名称",
+    "tags_label": "标签",
+    "remark_label": "备注",
+    "remark_placeholder": "便于团队识别的备注",
+    "sync_interval_label": "同步周期（秒）",
+    "ua_label": "自定义 UA",
+    "expire_at_label": "到期时间（毫秒时间戳）",
+    "traffic_total_label": "总流量（字节）",
+    "submit": "保存修改",
+    "success": "已保存"
+  },
+  "upload": {
+    "drop_hint": "拖拽 YAML 文件到此或点击选择",
+    "browse": "浏览文件",
+    "max_size": "最大 5 MB"
+  },
+  "detail": {
+    "tabs": {
+      "nodes": "节点 ({{count}})",
+      "metadata": "元数据",
+      "sync_history": "同步历史",
+      "pipeline": "流水线挂载",
+      "share": "分享配置"
+    },
+    "metadata": {
+      "type": "来源类型",
+      "source_url": "源 URL",
+      "ua": "User-Agent",
+      "sync_interval": "同步周期",
+      "expire_at": "到期",
+      "traffic": "流量",
+      "traffic_unlimited": "未设置上限",
+      "tags": "标签",
+      "remark": "备注",
+      "created_at": "创建时间",
+      "updated_at": "更新时间",
+      "none": "未设置"
+    },
+    "sync_history": {
+      "title": "最近同步",
+      "empty": "尚未同步过",
+      "node_count": "节点数 {{count}}",
+      "history_unavailable": "暂仅显示最近一次同步结果，完整历史将在后续版本提供。"
+    },
+    "pipeline": {
+      "placeholder_title": "流水线挂载",
+      "placeholder_desc": "节点流水线编辑器将在 T-21 提供。当前可以在「流水线」页面单独创建后续挂载。",
+      "drop_hint": "拖拽流水线至此（功能开发中）"
+    },
+    "share": {
+      "title": "sub-store 兼容订阅链接",
+      "url_hint": "客户端可使用此 URL 拉取经流水线处理后的节点。",
+      "copy_success": "已复制链接到剪贴板",
+      "rotate_title": "轮换分享 token",
+      "rotate_confirm": "轮换后所有使用旧 token 的客户端将立即失效，确认继续？",
+      "rotate_success": "已生成新 token",
+      "qr_alt": "订阅链接二维码"
+    },
+    "delete_confirm": {
+      "title": "删除订阅",
+      "description": "将删除「{{name}}」及其全部节点，此操作不可撤销。",
+      "submit": "确认删除",
+      "success": "已删除订阅"
+    },
+    "sync_success": "同步完成，新增 {{added}} / 删除 {{removed}}",
+    "owner_unknown": "未知用户"
+  }
+}

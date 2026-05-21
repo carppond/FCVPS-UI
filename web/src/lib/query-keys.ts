@@ -18,6 +18,7 @@ export const queryKeys = {
     all: () => ["subscription"] as const,
     list: () => ["subscription", "list"] as const,
     detail: (id: string) => ["subscription", "detail", id] as const,
+    tags: () => ["subscription", "tags"] as const,
   },
 
   node: {

@@ -1,0 +1,165 @@
+{
+  "title": "Subscriptions",
+  "subtitle": "Manage subscription sources, trigger syncs, export sub-store URLs.",
+  "actions": {
+    "create": "New subscription",
+    "sync": "Sync",
+    "edit": "Edit",
+    "delete": "Delete",
+    "copy_url": "Copy share URL",
+    "rotate_token": "Rotate token",
+    "back_to_list": "Back to subscriptions",
+    "test_connection": "Test connection"
+  },
+  "columns": {
+    "name": "Name",
+    "owner": "Owner",
+    "type": "Source",
+    "nodes": "Nodes",
+    "status": "Status",
+    "last_synced_at": "Last sync",
+    "traffic": "Traffic",
+    "actions": "Actions"
+  },
+  "filters": {
+    "search_placeholder": "Search by name…",
+    "show_all_users": "Show subscriptions from all users"
+  },
+  "source_type": {
+    "url": "URL",
+    "upload": "Upload",
+    "manual": "Manual"
+  },
+  "status": {
+    "ok": "OK",
+    "error": "Error",
+    "pending": "Syncing",
+    "never": "Never synced"
+  },
+  "empty": {
+    "title": "No subscriptions yet",
+    "description": "Create your first subscription to start pulling nodes.",
+    "cta": "New subscription"
+  },
+  "error": {
+    "load_failed": "Failed to load subscriptions",
+    "load_detail_failed": "Failed to load subscription detail",
+    "create_failed": "Failed to create subscription",
+    "update_failed": "Failed to update subscription",
+    "delete_failed": "Failed to delete subscription",
+    "sync_failed": "Sync failed",
+    "rotate_failed": "Failed to rotate token",
+    "upload_failed": "Upload failed",
+    "yaml_parse_failed": "Failed to parse YAML",
+    "url_required": "URL is required",
+    "name_required": "Name is required",
+    "file_required": "Please select a YAML file"
+  },
+  "wizard": {
+    "title": "Create subscription",
+    "step1": "Choose source",
+    "step2": "Fill details",
+    "step3": "Tags & interval",
+    "next": "Next",
+    "back": "Back",
+    "finish": "Create",
+    "source": {
+      "url_title": "URL subscription",
+      "url_desc": "Fetch from a remote sub-store compatible URL",
+      "upload_title": "Upload file",
+      "upload_desc": "Upload a local YAML / Base64 node list",
+      "manual_title": "Manual",
+      "manual_desc": "Create an empty subscription and paste node URIs later"
+    },
+    "form": {
+      "name_label": "Name",
+      "name_placeholder": "e.g. Airport A",
+      "source_url_label": "Subscription URL",
+      "source_url_placeholder": "https://…",
+      "ua_label": "Custom User-Agent",
+      "ua_placeholder": "Leave empty to use default",
+      "ua_hint": "Some providers require a specific UA, e.g. ClashforWindows/0.20.39"
+    },
+    "tags": {
+      "label": "Tags",
+      "placeholder": "Press Enter or comma to add a tag"
+    },
+    "sync_interval": {
+      "label": "Sync interval",
+      "h1": "Every 1 hour",
+      "h6": "Every 6 hours",
+      "h12": "Every 12 hours",
+      "h24": "Every 24 hours",
+      "manual": "Manual only"
+    }
+  },
+  "edit": {
+    "title": "Edit subscription",
+    "name_label": "Name",
+    "tags_label": "Tags",
+    "remark_label": "Remark",
+    "remark_placeholder": "Internal note for your team",
+    "sync_interval_label": "Sync interval (seconds)",
+    "ua_label": "Custom UA",
+    "expire_at_label": "Expires at (ms timestamp)",
+    "traffic_total_label": "Traffic limit (bytes)",
+    "submit": "Save changes",
+    "success": "Saved"
+  },
+  "upload": {
+    "drop_hint": "Drop a YAML file here or click to browse",
+    "browse": "Browse",
+    "max_size": "Max 5 MB"
+  },
+  "detail": {
+    "tabs": {
+      "nodes": "Nodes ({{count}})",
+      "metadata": "Metadata",
+      "sync_history": "Sync history",
+      "pipeline": "Pipeline",
+      "share": "Share"
+    },
+    "metadata": {
+      "type": "Source type",
+      "source_url": "Source URL",
+      "ua": "User-Agent",
+      "sync_interval": "Sync interval",
+      "expire_at": "Expires",
+      "traffic": "Traffic",
+      "traffic_unlimited": "Unlimited",
+      "tags": "Tags",
+      "remark": "Remark",
+      "created_at": "Created",
+      "updated_at": "Updated",
+      "none": "Not set"
+    },
+    "sync_history": {
+      "title": "Latest sync",
+      "empty": "Never synced",
+      "node_count": "{{count}} nodes",
+      "history_unavailable": "Only the latest sync is currently shown; full history will arrive in a later release."
+    },
+    "pipeline": {
+      "placeholder_title": "Pipeline bindings",
+      "placeholder_desc": "The pipeline editor lands in T-21. You can still create pipelines from the Pipelines page and attach them later.",
+      "drop_hint": "Drop a pipeline here (coming soon)"
+    },
+    "share": {
+      "title": "sub-store compatible URL",
+      "url_hint": "Clients can use this URL to pull pipeline-processed nodes.",
+      "copy_success": "Copied to clipboard",
+      "rotate_title": "Rotate share token",
+      "rotate_confirm": "Rotating the token invalidates the URL for every client that has it. Continue?",
+      "rotate_success": "New token issued",
+      "qr_alt": "Subscription URL QR code"
+    },
+    "delete_confirm": {
+      "title": "Delete subscription",
+      "description": "This permanently removes \"{{name}}\" and all of its nodes.",
+      "submit": "Delete",
+      "success": "Subscription deleted"
+    },
+    "sync_success": "Sync complete: +{{added}} / −{{removed}}",
+    "owner_unknown": "Unknown owner"
+  }
+}

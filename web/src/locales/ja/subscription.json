@@ -1,0 +1,165 @@
+{
+  "title": "サブスクリプション",
+  "subtitle": "ソースを管理し、同期をトリガーし、sub-store 互換 URL を出力します。",
+  "actions": {
+    "create": "新規作成",
+    "sync": "同期",
+    "edit": "編集",
+    "delete": "削除",
+    "copy_url": "共有 URL をコピー",
+    "rotate_token": "トークンを再生成",
+    "back_to_list": "一覧へ戻る",
+    "test_connection": "接続テスト"
+  },
+  "columns": {
+    "name": "名前",
+    "owner": "所有者",
+    "type": "ソース",
+    "nodes": "ノード数",
+    "status": "状態",
+    "last_synced_at": "最終同期",
+    "traffic": "トラフィック",
+    "actions": "操作"
+  },
+  "filters": {
+    "search_placeholder": "名前で検索…",
+    "show_all_users": "全ユーザーのサブスクを表示"
+  },
+  "source_type": {
+    "url": "URL",
+    "upload": "アップロード",
+    "manual": "手動"
+  },
+  "status": {
+    "ok": "正常",
+    "error": "エラー",
+    "pending": "同期中",
+    "never": "未同期"
+  },
+  "empty": {
+    "title": "サブスクリプションがありません",
+    "description": "最初のサブスクリプションを作成して、ノードの取得を開始しましょう。",
+    "cta": "新規作成"
+  },
+  "error": {
+    "load_failed": "サブスクの読み込みに失敗",
+    "load_detail_failed": "詳細の読み込みに失敗",
+    "create_failed": "作成に失敗",
+    "update_failed": "更新に失敗",
+    "delete_failed": "削除に失敗",
+    "sync_failed": "同期に失敗",
+    "rotate_failed": "トークン再生成に失敗",
+    "upload_failed": "アップロードに失敗",
+    "yaml_parse_failed": "YAML の解析に失敗",
+    "url_required": "URL は必須です",
+    "name_required": "名前は必須です",
+    "file_required": "YAML ファイルを選択してください"
+  },
+  "wizard": {
+    "title": "サブスクリプションを作成",
+    "step1": "ソース選択",
+    "step2": "詳細入力",
+    "step3": "タグと周期",
+    "next": "次へ",
+    "back": "戻る",
+    "finish": "作成",
+    "source": {
+      "url_title": "URL サブスクリプション",
+      "url_desc": "リモートの sub-store 互換 URL を取得",
+      "upload_title": "ファイルアップロード",
+      "upload_desc": "ローカル YAML / Base64 ノードリストをアップロード",
+      "manual_title": "手動",
+      "manual_desc": "空のサブスクを作成し、後でノード URI を貼り付け"
+    },
+    "form": {
+      "name_label": "名前",
+      "name_placeholder": "例: Airport A",
+      "source_url_label": "サブスク URL",
+      "source_url_placeholder": "https://…",
+      "ua_label": "カスタム User-Agent",
+      "ua_placeholder": "空欄でデフォルト使用",
+      "ua_hint": "プロバイダーによっては特定の UA が必要です。例: ClashforWindows/0.20.39"
+    },
+    "tags": {
+      "label": "タグ",
+      "placeholder": "Enter / カンマでタグ追加"
+    },
+    "sync_interval": {
+      "label": "同期周期",
+      "h1": "1 時間ごと",
+      "h6": "6 時間ごと",
+      "h12": "12 時間ごと",
+      "h24": "24 時間ごと",
+      "manual": "手動のみ"
+    }
+  },
+  "edit": {
+    "title": "サブスクリプションを編集",
+    "name_label": "名前",
+    "tags_label": "タグ",
+    "remark_label": "メモ",
+    "remark_placeholder": "チーム内の識別用メモ",
+    "sync_interval_label": "同期周期 (秒)",
+    "ua_label": "カスタム UA",
+    "expire_at_label": "有効期限 (ミリ秒)",
+    "traffic_total_label": "トラフィック上限 (バイト)",
+    "submit": "保存",
+    "success": "保存しました"
+  },
+  "upload": {
+    "drop_hint": "YAML をドロップまたはクリックして選択",
+    "browse": "ファイル選択",
+    "max_size": "最大 5 MB"
+  },
+  "detail": {
+    "tabs": {
+      "nodes": "ノード ({{count}})",
+      "metadata": "メタデータ",
+      "sync_history": "同期履歴",
+      "pipeline": "パイプライン",
+      "share": "共有"
+    },
+    "metadata": {
+      "type": "ソース種別",
+      "source_url": "ソース URL",
+      "ua": "User-Agent",
+      "sync_interval": "同期周期",
+      "expire_at": "有効期限",
+      "traffic": "トラフィック",
+      "traffic_unlimited": "無制限",
+      "tags": "タグ",
+      "remark": "メモ",
+      "created_at": "作成日時",
+      "updated_at": "更新日時",
+      "none": "未設定"
+    },
+    "sync_history": {
+      "title": "最新の同期",
+      "empty": "まだ同期されていません",
+      "node_count": "{{count}} ノード",
+      "history_unavailable": "現在は最新の同期のみ表示されます。完全な履歴は今後のリリースで提供予定です。"
+    },
+    "pipeline": {
+      "placeholder_title": "パイプライン挂载",
+      "placeholder_desc": "パイプラインエディタは T-21 で提供予定です。Pipelines ページから先にパイプラインを作成し、後で関連付けてください。",
+      "drop_hint": "ここにパイプラインをドロップ (開発中)"
+    },
+    "share": {
+      "title": "sub-store 互換 URL",
+      "url_hint": "クライアントはこの URL でパイプライン処理済みノードを取得できます。",
+      "copy_success": "クリップボードへコピーしました",
+      "rotate_title": "共有トークンを再生成",
+      "rotate_confirm": "再生成すると既存トークンを使用中のクライアントは即座に無効になります。続行しますか？",
+      "rotate_success": "新しいトークンを発行しました",
+      "qr_alt": "サブスク URL の QR コード"
+    },
+    "delete_confirm": {
+      "title": "サブスクリプションを削除",
+      "description": "「{{name}}」とその全ノードを完全に削除します。",
+      "submit": "削除",
+      "success": "削除しました"
+    },
+    "sync_success": "同期完了: +{{added}} / −{{removed}}",
+    "owner_unknown": "不明な所有者"
+  }
+}

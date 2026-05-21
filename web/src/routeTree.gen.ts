@@ -17,9 +17,11 @@ import { Route as PublicRecoveryRouteImport } from './routes/_public/recovery'
 import { Route as PublicNotFoundRouteImport } from './routes/_public/not-found'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
 import { Route as AuthedPipelinesIndexRouteImport } from './routes/_authed/pipelines/index'
 import { Route as AuthedNodesIndexRouteImport } from './routes/_authed/nodes/index'
+import { Route as AuthedSubscriptionsIdRouteImport } from './routes/_authed/subscriptions/$id'
 import { Route as AuthedProfile2faRouteImport } from './routes/_authed/profile/2fa'
 import { Route as AuthedNodesNodeIdRouteImport } from './routes/_authed/nodes/$nodeId'
 import { Route as AuthedAdminUsersRouteImport } from './routes/_authed/admin/users'
@@ -63,6 +65,12 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedSubscriptionsIndexRoute =
+  AuthedSubscriptionsIndexRouteImport.update({
+    id: '/subscriptions/',
+    path: '/subscriptions/',
+    getParentRoute: () => AuthedRouteRoute,
+  } as any)
 const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
   id: '/profile/',
   path: '/profile/',
@@ -76,6 +84,11 @@ const AuthedPipelinesIndexRoute = AuthedPipelinesIndexRouteImport.update({
 const AuthedNodesIndexRoute = AuthedNodesIndexRouteImport.update({
   id: '/nodes/',
   path: '/nodes/',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedSubscriptionsIdRoute = AuthedSubscriptionsIdRouteImport.update({
+  id: '/subscriptions/$id',
+  path: '/subscriptions/$id',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedProfile2faRoute = AuthedProfile2faRouteImport.update({
@@ -110,9 +123,11 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthedAdminUsersRoute
   '/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
+  '/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
   '/nodes/': typeof AuthedNodesIndexRoute
   '/pipelines/': typeof AuthedPipelinesIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
+  '/subscriptions/': typeof AuthedSubscriptionsIndexRoute
   '/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -125,9 +140,11 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthedAdminUsersRoute
   '/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
+  '/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
   '/nodes': typeof AuthedNodesIndexRoute
   '/pipelines': typeof AuthedPipelinesIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
+  '/subscriptions': typeof AuthedSubscriptionsIndexRoute
   '/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRoutesById {
@@ -143,9 +160,11 @@ export interface FileRoutesById {
   '/_authed/admin/users': typeof AuthedAdminUsersRoute
   '/_authed/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/_authed/profile/2fa': typeof AuthedProfile2faRoute
+  '/_authed/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
   '/_authed/nodes/': typeof AuthedNodesIndexRoute
   '/_authed/pipelines/': typeof AuthedPipelinesIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
+  '/_authed/subscriptions/': typeof AuthedSubscriptionsIndexRoute
   '/_authed/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRouteTypes {
@@ -160,9 +179,11 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/nodes/$nodeId'
     | '/profile/2fa'
+    | '/subscriptions/$id'
     | '/nodes/'
     | '/pipelines/'
     | '/profile/'
+    | '/subscriptions/'
     | '/pipelines/$pipelineId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -175,9 +196,11 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/nodes/$nodeId'
     | '/profile/2fa'
+    | '/subscriptions/$id'
     | '/nodes'
     | '/pipelines'
     | '/profile'
+    | '/subscriptions'
     | '/pipelines/$pipelineId/edit'
   id:
     | '__root__'
@@ -192,9 +215,11 @@ export interface FileRouteTypes {
     | '/_authed/admin/users'
     | '/_authed/nodes/$nodeId'
     | '/_authed/profile/2fa'
+    | '/_authed/subscriptions/$id'
     | '/_authed/nodes/'
     | '/_authed/pipelines/'
     | '/_authed/profile/'
+    | '/_authed/subscriptions/'
     | '/_authed/pipelines/$pipelineId/edit'
   fileRoutesById: FileRoutesById
 }
@@ -262,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/subscriptions/': {
+      id: '/_authed/subscriptions/'
+      path: '/subscriptions'
+      fullPath: '/subscriptions/'
+      preLoaderRoute: typeof AuthedSubscriptionsIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/profile/': {
       id: '/_authed/profile/'
       path: '/profile'
@@ -281,6 +313,13 @@ declare module '@tanstack/react-router' {
       path: '/nodes'
       fullPath: '/nodes/'
       preLoaderRoute: typeof AuthedNodesIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/subscriptions/$id': {
+      id: '/_authed/subscriptions/$id'
+      path: '/subscriptions/$id'
+      fullPath: '/subscriptions/$id'
+      preLoaderRoute: typeof AuthedSubscriptionsIdRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/profile/2fa': {
@@ -319,9 +358,11 @@ interface AuthedRouteRouteChildren {
   AuthedAdminUsersRoute: typeof AuthedAdminUsersRoute
   AuthedNodesNodeIdRoute: typeof AuthedNodesNodeIdRoute
   AuthedProfile2faRoute: typeof AuthedProfile2faRoute
+  AuthedSubscriptionsIdRoute: typeof AuthedSubscriptionsIdRoute
   AuthedNodesIndexRoute: typeof AuthedNodesIndexRoute
   AuthedPipelinesIndexRoute: typeof AuthedPipelinesIndexRoute
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
+  AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute
   AuthedPipelinesPipelineIdEditRoute: typeof AuthedPipelinesPipelineIdEditRoute
 }
 
@@ -330,9 +371,11 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedAdminUsersRoute: AuthedAdminUsersRoute,
   AuthedNodesNodeIdRoute: AuthedNodesNodeIdRoute,
   AuthedProfile2faRoute: AuthedProfile2faRoute,
+  AuthedSubscriptionsIdRoute: AuthedSubscriptionsIdRoute,
   AuthedNodesIndexRoute: AuthedNodesIndexRoute,
   AuthedPipelinesIndexRoute: AuthedPipelinesIndexRoute,
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
+  AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
   AuthedPipelinesPipelineIdEditRoute: AuthedPipelinesPipelineIdEditRoute,
 }
 
