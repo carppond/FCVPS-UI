@@ -1,0 +1,71 @@
+{
+  "title": "スクリプト",
+  "description": "JavaScript フックでサブスクリプションの同期処理をカスタマイズ（goja サンドボックス、5 秒タイムアウト、ファイル / ネットワークアクセス不可）",
+  "hook": {
+    "pre_save_nodes": "保存前",
+    "post_fetch": "取得後"
+  },
+  "list": {
+    "create": "新しいスクリプト",
+    "search_placeholder": "名前で検索",
+    "filter_hook": "フック種別",
+    "filter_all": "すべて",
+    "columns": {
+      "name": "名前",
+      "hook": "フック",
+      "enabled": "有効",
+      "last_run_at": "最終実行",
+      "last_error": "最終エラー",
+      "actions": "操作"
+    },
+    "never_run": "未実行",
+    "empty": {
+      "title": "スクリプトがありません",
+      "description": "スクリプトを作成して、サブスクリプション同期に独自の処理を追加できます"
+    },
+    "actions": {
+      "edit": "編集",
+      "delete": "削除"
+    },
+    "delete_confirm": {
+      "title": "スクリプトを削除",
+      "description": "「{{name}}」を削除してもよろしいですか？この操作は取り消せません",
+      "submit": "削除"
+    }
+  },
+  "editor": {
+    "name_placeholder": "無題のスクリプト",
+    "back_to_list": "一覧へ戻る",
+    "save": "保存",
+    "saving": "保存中…",
+    "save_success": "保存しました",
+    "delete": "削除",
+    "enabled": "有効",
+    "run_test": "テスト実行",
+    "running": "実行中…",
+    "last_error_title": "最終エラー",
+    "no_last_error": "エラーはありません",
+    "code_label": "スクリプトコード",
+    "loading": "読み込み中…",
+    "hook_immutable": "作成後にフック種別は変更できません",
+    "boilerplate_pre_save": "// 入力：__input.nodes（ノード配列）\n// 出力：__output（処理後のノード配列）\nconst out = __input.nodes;\n__output = out;\n",
+    "boilerplate_post_fetch": "// 入力：__input.raw（サブスクリプション原文）\n// 出力：__output（処理後のテキスト）\n__output = __input.raw;\n"
+  },
+  "test_panel": {
+    "title": "テスト実行",
+    "input_label": "入力データ（JSON）",
+    "input_placeholder": "{}",
+    "output_label": "出力",
+    "logs_label": "ログ",
+    "logs_empty": "ログ出力なし",
+    "error_label": "エラー",
+    "duration": "{{ms}} ms",
+    "invalid_json": "入力は有効な JSON ではありません"
+  },
+  "toast": {
+    "saved": "保存しました",
+    "deleted": "削除しました",
+    "created": "作成しました",
+    "test_failed": "テスト失敗"
+  }
+}

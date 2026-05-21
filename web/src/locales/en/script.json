@@ -1,0 +1,71 @@
+{
+  "title": "Scripts",
+  "description": "Customise node processing with JavaScript hooks (goja sandbox, 5s timeout, no filesystem / network access)",
+  "hook": {
+    "pre_save_nodes": "Before save",
+    "post_fetch": "After fetch"
+  },
+  "list": {
+    "create": "New script",
+    "search_placeholder": "Search by name",
+    "filter_hook": "Hook",
+    "filter_all": "All",
+    "columns": {
+      "name": "Name",
+      "hook": "Hook",
+      "enabled": "Enabled",
+      "last_run_at": "Last run",
+      "last_error": "Last error",
+      "actions": "Actions"
+    },
+    "never_run": "Never run",
+    "empty": {
+      "title": "No scripts yet",
+      "description": "Create a script to add custom processing to your subscription sync pipeline"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "delete_confirm": {
+      "title": "Delete script",
+      "description": "Are you sure you want to delete \"{{name}}\"? This cannot be undone.",
+      "submit": "Delete"
+    }
+  },
+  "editor": {
+    "name_placeholder": "Untitled script",
+    "back_to_list": "Back to list",
+    "save": "Save",
+    "saving": "Saving…",
+    "save_success": "Saved",
+    "delete": "Delete",
+    "enabled": "Enabled",
+    "run_test": "Run test",
+    "running": "Running…",
+    "last_error_title": "Last error",
+    "no_last_error": "No errors recorded",
+    "code_label": "Script code",
+    "loading": "Loading…",
+    "hook_immutable": "Hook type cannot be changed after creation",
+    "boilerplate_pre_save": "// Input: __input.nodes (array of nodes)\n// Output: __output (transformed array of nodes)\nconst out = __input.nodes;\n__output = out;\n",
+    "boilerplate_post_fetch": "// Input: __input.raw (raw subscription text)\n// Output: __output (transformed text)\n__output = __input.raw;\n"
+  },
+  "test_panel": {
+    "title": "Test run",
+    "input_label": "Input data (JSON)",
+    "input_placeholder": "{}",
+    "output_label": "Output",
+    "logs_label": "Logs",
+    "logs_empty": "No log output",
+    "error_label": "Error",
+    "duration": "took {{ms}} ms",
+    "invalid_json": "Input is not valid JSON"
+  },
+  "toast": {
+    "saved": "Script saved",
+    "deleted": "Script deleted",
+    "created": "Script created",
+    "test_failed": "Test failed"
+  }
+}

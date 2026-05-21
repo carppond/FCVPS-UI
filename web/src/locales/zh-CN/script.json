@@ -1,0 +1,71 @@
+{
+  "title": "脚本",
+  "description": "用 JavaScript 自定义订阅同步前后的节点处理逻辑（goja 沙箱，5 秒超时，禁用文件 / 网络访问）",
+  "hook": {
+    "pre_save_nodes": "节点入库前",
+    "post_fetch": "拉取后"
+  },
+  "list": {
+    "create": "新建脚本",
+    "search_placeholder": "按名称搜索",
+    "filter_hook": "钩子类型",
+    "filter_all": "全部",
+    "columns": {
+      "name": "名称",
+      "hook": "钩子",
+      "enabled": "启用",
+      "last_run_at": "最近运行",
+      "last_error": "最近错误",
+      "actions": "操作"
+    },
+    "never_run": "从未运行",
+    "empty": {
+      "title": "尚无脚本",
+      "description": "创建一个脚本以在订阅同步流程中加入自定义处理逻辑"
+    },
+    "actions": {
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "delete_confirm": {
+      "title": "删除脚本",
+      "description": "确定删除「{{name}}」？此操作无法撤销",
+      "submit": "删除"
+    }
+  },
+  "editor": {
+    "name_placeholder": "未命名脚本",
+    "back_to_list": "返回列表",
+    "save": "保存",
+    "saving": "保存中…",
+    "save_success": "已保存",
+    "delete": "删除",
+    "enabled": "启用",
+    "run_test": "运行测试",
+    "running": "运行中…",
+    "last_error_title": "最近错误",
+    "no_last_error": "尚未出错",
+    "code_label": "脚本代码",
+    "loading": "加载中…",
+    "hook_immutable": "创建后无法修改钩子类型",
+    "boilerplate_pre_save": "// 输入：__input.nodes（节点数组）\n// 输出：__output（处理后的节点数组）\nconst out = __input.nodes;\n__output = out;\n",
+    "boilerplate_post_fetch": "// 输入：__input.raw（订阅原始文本）\n// 输出：__output（处理后的文本）\n__output = __input.raw;\n"
+  },
+  "test_panel": {
+    "title": "测试运行",
+    "input_label": "输入数据（JSON）",
+    "input_placeholder": "{}",
+    "output_label": "输出",
+    "logs_label": "日志",
+    "logs_empty": "无日志输出",
+    "error_label": "错误",
+    "duration": "耗时 {{ms}} ms",
+    "invalid_json": "输入不是合法 JSON"
+  },
+  "toast": {
+    "saved": "脚本已保存",
+    "deleted": "脚本已删除",
+    "created": "脚本已创建",
+    "test_failed": "测试失败"
+  }
+}

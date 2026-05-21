@@ -1,0 +1,71 @@
+{
+  "title": "스크립트",
+  "description": "JavaScript 훅으로 구독 동기화 처리를 사용자화합니다(goja 샌드박스, 5초 시간 제한, 파일 / 네트워크 액세스 금지)",
+  "hook": {
+    "pre_save_nodes": "저장 전",
+    "post_fetch": "가져온 후"
+  },
+  "list": {
+    "create": "새 스크립트",
+    "search_placeholder": "이름으로 검색",
+    "filter_hook": "훅 유형",
+    "filter_all": "전체",
+    "columns": {
+      "name": "이름",
+      "hook": "훅",
+      "enabled": "사용",
+      "last_run_at": "최근 실행",
+      "last_error": "최근 오류",
+      "actions": "작업"
+    },
+    "never_run": "실행 안 함",
+    "empty": {
+      "title": "스크립트가 없습니다",
+      "description": "스크립트를 만들어 구독 동기화 파이프라인에 사용자 처리를 추가하세요"
+    },
+    "actions": {
+      "edit": "편집",
+      "delete": "삭제"
+    },
+    "delete_confirm": {
+      "title": "스크립트 삭제",
+      "description": "「{{name}}」을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다",
+      "submit": "삭제"
+    }
+  },
+  "editor": {
+    "name_placeholder": "이름 없는 스크립트",
+    "back_to_list": "목록으로",
+    "save": "저장",
+    "saving": "저장 중…",
+    "save_success": "저장됨",
+    "delete": "삭제",
+    "enabled": "사용",
+    "run_test": "테스트 실행",
+    "running": "실행 중…",
+    "last_error_title": "최근 오류",
+    "no_last_error": "기록된 오류 없음",
+    "code_label": "스크립트 코드",
+    "loading": "불러오는 중…",
+    "hook_immutable": "생성 후 훅 유형은 변경할 수 없습니다",
+    "boilerplate_pre_save": "// 입력: __input.nodes(노드 배열)\n// 출력: __output(처리된 노드 배열)\nconst out = __input.nodes;\n__output = out;\n",
+    "boilerplate_post_fetch": "// 입력: __input.raw(구독 원문)\n// 출력: __output(처리된 텍스트)\n__output = __input.raw;\n"
+  },
+  "test_panel": {
+    "title": "테스트 실행",
+    "input_label": "입력 데이터(JSON)",
+    "input_placeholder": "{}",
+    "output_label": "출력",
+    "logs_label": "로그",
+    "logs_empty": "로그 출력 없음",
+    "error_label": "오류",
+    "duration": "{{ms}} ms",
+    "invalid_json": "입력이 유효한 JSON이 아닙니다"
+  },
+  "toast": {
+    "saved": "스크립트가 저장됨",
+    "deleted": "스크립트가 삭제됨",
+    "created": "스크립트가 생성됨",
+    "test_failed": "테스트 실패"
+  }
+}

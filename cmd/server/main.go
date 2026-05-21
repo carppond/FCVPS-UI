@@ -34,6 +34,7 @@ import (
 	"shiguang-vps/internal/notify"
 	"shiguang-vps/internal/ota"
 	"shiguang-vps/internal/ratelimit"
+	"shiguang-vps/internal/scriptengine"
 	"shiguang-vps/internal/storage"
 	"shiguang-vps/internal/substore"
 	"shiguang-vps/internal/traffic"
@@ -289,6 +290,13 @@ func run() error {
 	}
 	trafficHandler := handler.NewTrafficHandler(trafficRepo, agentRepo, settingsRepo, log)
 
+	// T-13: M-SCRIPT goja sandbox + per-user CRUD. The engine is process-
+	// wide (sync.Pool inside) so a single instance handles every concurrent
+	// /test invocation without per-request VM construction cost.
+	scriptRepo := storage.NewScriptRepo(db, time.Now)
+	scriptEngine := scriptengine.NewEngine(log)
+	scriptHandler := handler.NewScriptHandler(scriptRepo, scriptEngine, log)
+
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
@@ -310,6 +318,7 @@ func run() error {
 		OTAHandler:            otaHandler,
 		NezhaHandler:          nezhaHandler,
 		TrafficHandler:        trafficHandler,
+		ScriptHandler:         scriptHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
