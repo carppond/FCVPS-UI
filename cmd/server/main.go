@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"shiguang-vps/internal/agent"
+	"shiguang-vps/internal/audit"
 	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/config"
 	"shiguang-vps/internal/handler"
@@ -36,6 +37,7 @@ import (
 	"shiguang-vps/internal/ota"
 	"shiguang-vps/internal/ratelimit"
 	"shiguang-vps/internal/scriptengine"
+	"shiguang-vps/internal/shortlink"
 	"shiguang-vps/internal/storage"
 	"shiguang-vps/internal/substore"
 	"shiguang-vps/internal/traffic"
@@ -387,6 +389,56 @@ func run() error {
 	pipelineHandler := handler.NewPipelineHandler(pipelineRepo, subscriptions, log)
 	subHandler.SetPipelineRepo(pipelineRepo)
 
+	// T-12: M-RULE handler. Reuses the substore NodeRepoAdapter from above so
+	// the preview endpoint can re-render Clash YAML against real nodes.
+	customRuleRepo := storage.NewCustomRuleRepo(db, time.Now)
+	ruleHandler := handler.NewRuleHandler(customRuleRepo, subscriptions, nodeAdapter, log)
+
+	// T-26: settings + backup handlers. SettingsHandler exposes
+	// /api/admin/settings and the silent-mode rotate endpoint; it borrows the
+	// same ops.SilentMode instance constructed during the bootstrap above so
+	// rotations take effect immediately without waiting for the watcher poll.
+	settingsHandler := handler.NewSettingsHandler(handler.SettingsHandlerConfig{
+		Repo:   settingsRepo,
+		Silent: silentMgr,
+		Logger: log,
+	})
+	backupSvc, err := ops.NewBackup(ops.BackupConfig{
+		DB:     db,
+		Repo:   settingsRepo,
+		Logger: log,
+	})
+	if err != nil {
+		return fmt.Errorf("backup service: %w", err)
+	}
+	backupHandler := handler.NewBackupHandler(backupSvc, log)
+
+	// T-28: short-link / audit / install-script handlers.
+	//
+	// audit.Logger drains middleware AuditEntry values onto a worker goroutine
+	// so the request hot path never blocks on the DB write. It is also wired
+	// into deps.AuditRepo below so the middleware chain has somewhere to send
+	// entries. Stop() in the shutdown defer flushes any in-flight buffer.
+	auditRepo := storage.NewAuditRepo(db, time.Now)
+	auditLogger := audit.New(audit.Config{
+		Repo:   auditRepo,
+		Logger: log,
+		Now:    time.Now,
+	})
+	auditHandler := handler.NewAuditHandler(handler.AuditHandlerConfig{
+		Repo:   auditRepo,
+		Logger: log,
+	})
+	shortlinkRepo := storage.NewShortLinkRepo(db, time.Now)
+	shortlinkSvc := shortlink.New(shortlinkRepo, log, time.Now)
+	shortlinkHandler := handler.NewShortLinkHandler(handler.ShortLinkHandlerConfig{
+		Service: shortlinkSvc,
+		Logger:  log,
+	})
+	installScriptHandler := handler.NewInstallScriptHandler(handler.InstallScriptHandlerConfig{
+		Logger: log,
+	})
+
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
@@ -411,6 +463,13 @@ func run() error {
 		TrafficHandler:        trafficHandler,
 		ScriptHandler:         scriptHandler,
 		PipelineHandler:       pipelineHandler,
+		RuleHandler:           ruleHandler,
+		SettingsHandler:       settingsHandler,
+		BackupHandler:         backupHandler,
+		ShortLinkHandler:      shortlinkHandler,
+		AuditHandler:          auditHandler,
+		AuditRepo:             auditLogger,
+		InstallScriptHandler:  installScriptHandler,
 		TGWebhookHandler:      tgWebhookHandler,
 		TGBotSettingsHandler:  tgBotSettingsHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
@@ -422,6 +481,11 @@ func run() error {
 	defer cancel()
 	deps.Start(rootCtx)
 	defer deps.Shutdown()
+	// T-28: drain audit log entries on a worker goroutine. Stop() during
+	// shutdown flushes whatever is still on the in-memory queue so a SIGTERM
+	// does not silently drop the last few audit rows.
+	auditLogger.Start(rootCtx)
+	defer auditLogger.Stop()
 	// T-14: 7-day retention sweep for agent_records. Runs at 24h cadence; a
 	// short kick-off delay defers the first sweep so server startup stays
 	// snappy under load.
