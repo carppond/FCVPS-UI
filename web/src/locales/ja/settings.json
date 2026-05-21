@@ -1,0 +1,79 @@
+{
+  "title": "システム設定",
+  "description": "サイレントモード、アカウント設定、トラフィック、エージェント、通知、バックアップを管理",
+  "tabs": {
+    "silent_mode": "サイレントモード",
+    "account": "アカウント",
+    "traffic": "トラフィック",
+    "agent": "エージェント",
+    "notify": "通知",
+    "backup": "バックアップ"
+  },
+  "actions": {
+    "save": "設定を保存",
+    "saving": "保存中…",
+    "saved": "設定を更新しました",
+    "save_failed": "保存に失敗しました"
+  },
+  "silent_mode": {
+    "title": "サイレントモード",
+    "description": "32 文字の 16 進プレフィックスで管理画面の入口を隠します。プレフィックスを知らない訪問者には nginx 404 が表示されます",
+    "current_prefix_label": "現在のプレフィックス",
+    "current_prefix_hint": "安全のため先頭/末尾 4 文字のみ表示しています。完全な URL はローテーションボタンから取得してください",
+    "rotate_button": "プレフィックスをローテーション",
+    "rotate_pending": "ローテーション中…",
+    "rotate_confirm_title": "プレフィックスをローテーションしますか？",
+    "rotate_confirm_description": "新しいプレフィックスが生成され、すべてのセッションが取り消されます。あなたを含む全ユーザーが新 URL で再ログインする必要があります。",
+    "rotate_confirm_submit": "理解した上でローテーション",
+    "rotate_success": "ローテーション完了。下記 URL を安全な場所に保存してください（再表示されません）",
+    "rotate_failed": "ローテーション失敗: {{message}}",
+    "login_url_label": "ログイン URL",
+    "copy_login_url": "ログイン URL をコピー",
+    "copy_success": "クリップボードにコピーしました",
+    "url_only_shown_once": "この URL は今回限り表示されます"
+  },
+  "account": {
+    "session_ttl_label": "セッション有効期限 (秒)",
+    "session_ttl_hint": "60–2592000、既定 86400 (24 時間)",
+    "default_locale_label": "既定言語",
+    "default_locale_hint": "新規ユーザー初回ログイン時の既定言語"
+  },
+  "traffic": {
+    "monthly_reset_day_label": "月次リセット日",
+    "monthly_reset_day_hint": "1–28、毎月この日にトラフィックがリセットされます",
+    "monthly_limit_label": "既定月次上限 (バイト)",
+    "monthly_limit_hint": "0 で無制限"
+  },
+  "agent": {
+    "heartbeat_interval_label": "心拍間隔 (秒)",
+    "heartbeat_interval_hint": "5–300、短いほどリアルタイム"
+  },
+  "notify": {
+    "debounce_label": "通知デバウンス (秒)",
+    "debounce_hint": "同一イベントはこの時間内 1 回のみ。0 で無効"
+  },
+  "backup": {
+    "title": "バックアップ / リストア",
+    "description": "tar.gz にデータベースと設定 JSON が含まれます。リストア後は再起動が必要です",
+    "create_button": "バックアップ作成",
+    "create_pending": "作成中…",
+    "create_hint": "クリックで即時生成、ローカルにダウンロード",
+    "restore_title": "バックアップから復元",
+    "restore_description": "以前作成した tar.gz をアップロードしてください。現在のデータは上書きされ、サービスは再起動が必要です",
+    "restore_button": "ファイルを選択して復元",
+    "restore_pending": "復元中…",
+    "restore_warning": "警告: 復元すると現在のデータベースと設定が上書きされます。先に最新のバックアップを取得してください。",
+    "restore_confirm_title": "バックアップから復元しますか？",
+    "restore_confirm_description": "サービスは再起動し、現在のデータは上書きされます。信頼できるアーカイブであることを確認してください。",
+    "restore_confirm_submit": "確認しました — 復元",
+    "restore_success": "復元完了。間もなく再起動します",
+    "restore_failed": "復元失敗: {{message}}",
+    "history_title": "履歴",
+    "history_empty": "履歴はまだありません (v1 はローカル DL のみ)"
+  },
+  "errors": {
+    "load_failed": "設定の読み込みに失敗",
+    "out_of_range": "値が許容範囲外です",
+    "invalid_number": "整数を入力してください"
+  }
+}

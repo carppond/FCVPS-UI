@@ -160,6 +160,26 @@ func (s *TokenStore) Revoke(ctx context.Context, token string) error {
 	return nil
 }
 
+// RevokeAll deletes every persisted session and purges the LRU cache. Used
+// by the silent-mode rotation flow (T-26): once the URL prefix changes, every
+// outstanding access token MUST be invalidated so attackers who already know
+// the old prefix can't keep operating with leaked credentials.
+//
+// Returns the number of rows removed for audit / logging purposes.
+func (s *TokenStore) RevokeAll(ctx context.Context) (int64, error) {
+	if s == nil {
+		return 0, fmt.Errorf("token store: nil receiver")
+	}
+	n, err := s.sessions.DeleteAll(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("revoke all sessions: %w", err)
+	}
+	s.cacheMu.Lock()
+	s.cache.Purge()
+	s.cacheMu.Unlock()
+	return n, nil
+}
+
 // RevokeAllForUser drops every session row owned by userID and purges the
 // cache. Called on password change, 2FA disable, admin reset, etc.
 func (s *TokenStore) RevokeAllForUser(ctx context.Context, userID string) error {

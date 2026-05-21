@@ -1,0 +1,79 @@
+{
+  "title": "System settings",
+  "description": "Manage silent mode, account defaults, traffic, agent, notifications and backups",
+  "tabs": {
+    "silent_mode": "Silent mode",
+    "account": "Account",
+    "traffic": "Traffic",
+    "agent": "Agent",
+    "notify": "Notifications",
+    "backup": "Backup"
+  },
+  "actions": {
+    "save": "Save settings",
+    "saving": "Saving…",
+    "saved": "Settings updated",
+    "save_failed": "Save failed; please check your input"
+  },
+  "silent_mode": {
+    "title": "Silent mode",
+    "description": "Hides the admin entry point behind a 32-character hex prefix; visitors without the prefix see an nginx 404",
+    "current_prefix_label": "Current prefix",
+    "current_prefix_hint": "Only the first/last 4 characters are shown for safety; click rotate to receive the full URL",
+    "rotate_button": "Rotate prefix",
+    "rotate_pending": "Rotating…",
+    "rotate_confirm_title": "Rotate silent-mode prefix?",
+    "rotate_confirm_description": "A new prefix will be generated and every active session will be revoked. All users — including you — must log in again using the new URL. Make sure you have a way to record the new address before continuing.",
+    "rotate_confirm_submit": "I understand — rotate now",
+    "rotate_success": "Prefix rotated. Copy the URL below — it will not be shown again.",
+    "rotate_failed": "Rotation failed: {{message}}",
+    "login_url_label": "Login URL",
+    "copy_login_url": "Copy login URL",
+    "copy_success": "Copied to clipboard",
+    "url_only_shown_once": "This URL is shown only once; leaving the page hides it forever"
+  },
+  "account": {
+    "session_ttl_label": "Session TTL (seconds)",
+    "session_ttl_hint": "Range 60–2592000; default 86400 (24h)",
+    "default_locale_label": "Default locale",
+    "default_locale_hint": "Locale assigned to brand-new users on first login"
+  },
+  "traffic": {
+    "monthly_reset_day_label": "Monthly reset day",
+    "monthly_reset_day_hint": "1–28; traffic counters reset at 00:00 on this day",
+    "monthly_limit_label": "Default monthly quota (bytes)",
+    "monthly_limit_hint": "0 disables the quota"
+  },
+  "agent": {
+    "heartbeat_interval_label": "Heartbeat interval (seconds)",
+    "heartbeat_interval_hint": "5–300; shorter intervals produce more frequent updates"
+  },
+  "notify": {
+    "debounce_label": "Notification debounce window (seconds)",
+    "debounce_hint": "Repeated events within this window are deduplicated; 0 disables debouncing"
+  },
+  "backup": {
+    "title": "Backup & restore",
+    "description": "tar.gz archive containing the SQLite snapshot plus a settings JSON dump; restore requires a restart",
+    "create_button": "Create backup",
+    "create_pending": "Building archive…",
+    "create_hint": "Click to generate a snapshot and download it locally",
+    "restore_title": "Restore from backup",
+    "restore_description": "Upload a previously generated tar.gz; restoring overwrites current data and requires a restart",
+    "restore_button": "Choose file & restore",
+    "restore_pending": "Restoring…",
+    "restore_warning": "Warning: restoring overwrites the live database and settings! Take a fresh backup first.",
+    "restore_confirm_title": "Restore from backup?",
+    "restore_confirm_description": "The service will restart and current data will be overwritten. Confirm the archive comes from a trusted source.",
+    "restore_confirm_submit": "I confirm — restore now",
+    "restore_success": "Restore complete; the service will restart shortly",
+    "restore_failed": "Restore failed: {{message}}",
+    "history_title": "Backup history",
+    "history_empty": "No history yet — v1 only supports local downloads"
+  },
+  "errors": {
+    "load_failed": "Failed to load settings",
+    "out_of_range": "Value out of allowed range",
+    "invalid_number": "Please enter a valid integer"
+  }
+}

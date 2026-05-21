@@ -1,0 +1,79 @@
+{
+  "title": "系统设置",
+  "description": "管理静默模式、账户偏好、流量、探针、通知与备份",
+  "tabs": {
+    "silent_mode": "静默模式",
+    "account": "账户偏好",
+    "traffic": "流量",
+    "agent": "探针",
+    "notify": "通知",
+    "backup": "备份"
+  },
+  "actions": {
+    "save": "保存设置",
+    "saving": "保存中…",
+    "saved": "设置已更新",
+    "save_failed": "保存失败，请检查输入"
+  },
+  "silent_mode": {
+    "title": "静默模式",
+    "description": "通过 32 位十六进制前缀隐藏后台入口，未带前缀的访问将看到 nginx 404 默认页",
+    "current_prefix_label": "当前前缀",
+    "current_prefix_hint": "出于安全考虑，仅显示前后 4 位；如需完整 URL 请点击右侧轮换按钮",
+    "rotate_button": "轮换前缀",
+    "rotate_pending": "正在轮换…",
+    "rotate_confirm_title": "确认轮换静默模式前缀？",
+    "rotate_confirm_description": "本操作将立即生成新前缀并清空所有 session。所有在线用户将被强制下线，需要使用新 URL 重新登录。请确认你已记录新地址再继续。",
+    "rotate_confirm_submit": "我已知悉，立即轮换",
+    "rotate_success": "前缀已轮换，请妥善保存以下登录 URL（仅显示一次）",
+    "rotate_failed": "轮换失败：{{message}}",
+    "login_url_label": "登录 URL",
+    "copy_login_url": "复制登录 URL",
+    "copy_success": "已复制到剪贴板",
+    "url_only_shown_once": "该 URL 仅本次显示，离开页面后无法再次查看"
+  },
+  "account": {
+    "session_ttl_label": "Session 有效期（秒）",
+    "session_ttl_hint": "范围 60–2592000，默认 86400（24 小时）",
+    "default_locale_label": "默认语言",
+    "default_locale_hint": "新用户首次登录的默认语言"
+  },
+  "traffic": {
+    "monthly_reset_day_label": "月度重置日",
+    "monthly_reset_day_hint": "1–28，每月该日凌晨重置流量统计",
+    "monthly_limit_label": "默认月度限额（字节）",
+    "monthly_limit_hint": "0 表示不限"
+  },
+  "agent": {
+    "heartbeat_interval_label": "心跳间隔（秒）",
+    "heartbeat_interval_hint": "5–300，间隔越短探针上报越实时"
+  },
+  "notify": {
+    "debounce_label": "通知去抖窗口（秒）",
+    "debounce_hint": "同一事件在此窗口内只投递一次，0 表示禁用去抖"
+  },
+  "backup": {
+    "title": "备份与恢复",
+    "description": "tar.gz 归档包含数据库快照与设置 JSON；恢复后需要重启服务",
+    "create_button": "立即备份",
+    "create_pending": "正在生成…",
+    "create_hint": "点击后立即生成快照并下载到本地",
+    "restore_title": "从备份恢复",
+    "restore_description": "上传此前生成的 tar.gz 归档；恢复会覆盖当前数据，且服务需要重启",
+    "restore_button": "选择文件并恢复",
+    "restore_pending": "恢复中…",
+    "restore_warning": "警告：恢复将覆盖现有数据库与设置！请先创建一份当前数据的备份。",
+    "restore_confirm_title": "确认从备份恢复？",
+    "restore_confirm_description": "服务即将重启、当前数据将被覆盖。请确认上传的归档来源可信。",
+    "restore_confirm_submit": "我已确认，开始恢复",
+    "restore_success": "恢复成功，服务即将重启",
+    "restore_failed": "恢复失败：{{message}}",
+    "history_title": "历史备份",
+    "history_empty": "暂无历史，v1 版本仅支持下载到本地"
+  },
+  "errors": {
+    "load_failed": "加载设置失败",
+    "out_of_range": "数值超出允许范围",
+    "invalid_number": "请输入合法的整数"
+  }
+}

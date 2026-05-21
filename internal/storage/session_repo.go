@@ -135,6 +135,21 @@ func (r *SessionRepo) DeleteAllForUser(ctx context.Context, userID string) error
 	return nil
 }
 
+// DeleteAll wipes every session row. Used by the silent-mode rotation flow
+// (T-26) so existing access tokens become invalid the moment the new prefix
+// goes live — admins effectively force-log-out the entire user base.
+//
+// Returns the number of rows removed (best-effort; callers usually don't act
+// on the count but it's useful for logging / audit).
+func (r *SessionRepo) DeleteAll(ctx context.Context) (int64, error) {
+	res, err := r.db.Write.ExecContext(ctx, "DELETE FROM sessions")
+	if err != nil {
+		return 0, fmt.Errorf("delete all sessions: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return n, nil
+}
+
 // ListByUser returns every active session for userID, newest first.
 func (r *SessionRepo) ListByUser(ctx context.Context, userID string) ([]SessionRecord, error) {
 	rows, err := r.db.Read.QueryContext(ctx, `

@@ -29,6 +29,10 @@ type authTestStack struct {
 	mgr      *auth.Manager
 	tokens   *auth.TokenStore
 	totp     auth.TOTPManager
+	// dbRef holds the *storage.DB the stack opened. Exposed so extension
+	// stacks (settings, backup, …) can wire their own repos against the same
+	// physical database without re-opening (which breaks WAL semantics).
+	dbRef *storage.DB
 }
 
 func newAuthTestStack(t *testing.T) *authTestStack {
@@ -78,6 +82,7 @@ func newAuthTestStack(t *testing.T) *authTestStack {
 		mgr:      mgr,
 		tokens:   tokens,
 		totp:     totpMgr,
+		dbRef:    db,
 	}
 }
 
