@@ -86,6 +86,9 @@ type Deps struct {
 	// SubstoreCompatHandler is wired by T-8; nil disables GET /download/:name.
 	SubstoreCompatHandler *SubstoreCompatHandler
 
+	// PipelineHandler hosts /api/pipelines/* (T-19). nil disables the routes.
+	PipelineHandler *PipelineHandler
+
 	// LoginRateLimit is the per-(IP|username) login bucket (5/hour by default).
 	// nil disables.
 	LoginRateLimit *ratelimit.Limiter
@@ -140,12 +143,9 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountUserRoutes(mux, deps)
 	mountSubscriptionRoutes(mux, deps)
 	mountSubstoreCompatRoutes(mux, deps)
+	mountPipelineRoutes(mux, deps)
 
 	// TODO(T-9):  mount node handlers (/api/subscriptions/:id/nodes, /api/nodes/*).
-	// TODO(T-13): mount pipeline handlers (/api/pipelines/*).
-	//             Engine + 6 operators + YAML codec already implemented in
-	//             internal/pipeline (T-19); only HTTP / repo wiring pending
-	//             (T-20 / T-21 will pick it up).
 	// TODO(T-14): mount agent ws + REST handlers (/api/agent/ws, /api/agents/*).
 	// TODO(T-15): mount rule handlers (/api/rules/*).
 	// TODO(T-17): mount script handlers (/api/scripts/*).
@@ -303,6 +303,34 @@ func mountSubstoreCompatRoutes(mux *http.ServeMux, deps *Deps) {
 		return
 	}
 	mux.Handle("GET /download/{name}", http.HandlerFunc(deps.SubstoreCompatHandler.Download))
+}
+
+// mountPipelineRoutes installs /api/pipelines/* when deps carries a
+// PipelineHandler. Every endpoint requires authentication; cross-user
+// resource access returns 404 (information hiding, see PipelineHandler.Get).
+func mountPipelineRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.PipelineHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	ph := deps.PipelineHandler
+
+	mux.Handle("GET /api/pipelines", required(http.HandlerFunc(ph.List)))
+	mux.Handle("POST /api/pipelines", required(http.HandlerFunc(ph.Create)))
+	// /api/pipelines/operators must precede /api/pipelines/{id} when using a
+	// router with path-prefix dispatch; net/http 1.22+ ServeMux already gives
+	// literal segments priority over wildcards, so the registration order
+	// here is purely cosmetic. We list it first regardless to mirror the
+	// architecture §5.1.6 order.
+	mux.Handle("GET /api/pipelines/operators", required(http.HandlerFunc(ph.Operators)))
+	mux.Handle("POST /api/pipelines/yaml-to-ast", required(http.HandlerFunc(ph.YAMLToAST)))
+	mux.Handle("POST /api/pipelines/ast-to-yaml", required(http.HandlerFunc(ph.ASTToYAML)))
+
+	mux.Handle("GET /api/pipelines/{id}", required(http.HandlerFunc(ph.Get)))
+	mux.Handle("PUT /api/pipelines/{id}", required(http.HandlerFunc(ph.Update)))
+	mux.Handle("PATCH /api/pipelines/{id}", required(http.HandlerFunc(ph.Update)))
+	mux.Handle("DELETE /api/pipelines/{id}", required(http.HandlerFunc(ph.Delete)))
+	mux.Handle("POST /api/pipelines/{id}/run", required(http.HandlerFunc(ph.Run)))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads
