@@ -52,6 +52,90 @@
     "drag_handle": "드래그하여 정렬",
     "todo_t21": "매개변수 폼 / YAML 뷰 / 디버그 미리보기는 T-21에서 제공"
   },
+  "param_form": {
+    "filter": {
+      "expr_label": "필터 표현식",
+      "expr_placeholder": "예: protocol in [\"vmess\",\"vless\"] && port > 1000",
+      "expr_help": "필드: name / server / port / protocol / tag / region / network / tls; 연산자: ==, !=, in, &&, ||, !, ()"
+    },
+    "map": {
+      "field_label": "대상 필드",
+      "field_help": "쓰기 가능: name / server / port / tag / network / sni / host / path / password",
+      "value_label": "새 값 (템플릿 지원)",
+      "value_placeholder": "{{.Tag}}-{{.Name}}",
+      "value_help": "변수: {{.Name}} / {{.Protocol}} / {{.Server}} / {{.Port}} / {{.Tag}} / {{.Index}}"
+    },
+    "sort": {
+      "key_label": "정렬 키",
+      "order_label": "순서",
+      "order_asc": "오름차순",
+      "order_desc": "내림차순"
+    },
+    "dedupe": {
+      "fields_label": "중복 제거 키",
+      "fields_placeholder": "Enter로 추가 (예: server)",
+      "fields_help": "비어있으면 server + port가 기본값",
+      "remove_field": "{{field}} 제거"
+    },
+    "regex_rename": {
+      "pattern_label": "정규 표현식",
+      "pattern_placeholder": "예: (\\d+)",
+      "replacement_label": "치환 템플릿",
+      "replacement_placeholder": "예: n$1",
+      "field_label": "대상 필드",
+      "regex_invalid": "정규식 오류: {{message}}",
+      "regex_valid": "정규식 유효"
+    },
+    "output": {
+      "format_label": "출력 형식",
+      "format_clash": "Clash",
+      "format_clash_meta": "Clash Meta",
+      "format_raw": "원본 (JSON)",
+      "max_nodes_label": "최대 노드 수 (0 = 무제한)",
+      "max_nodes_help": "초과 시 입력 순서로 잘림"
+    },
+    "common": {
+      "delete_operator": "현재 오퍼레이터 삭제",
+      "delete_confirm": "이 오퍼레이터를 삭제하시겠습니까?",
+      "no_selection_title": "오퍼레이터 선택 안 됨",
+      "no_selection_description": "중앙 캔버스에서 오퍼레이터를 선택하세요",
+      "type_badge": "유형"
+    }
+  },
+  "yaml_pane": {
+    "title": "YAML 뷰",
+    "copy": "복사",
+    "copied": "복사됨",
+    "download": ".yaml 다운로드",
+    "import": "가져오기",
+    "loading": "에디터 로딩 중…",
+    "sync_error": "YAML 파싱 실패: {{message}}",
+    "ast_to_yaml_error": "AST → YAML 변환 실패",
+    "switch_to_param": "매개변수로 돌아가기"
+  },
+  "preview": {
+    "title": "디버그 미리보기",
+    "subscription_label": "구독",
+    "subscription_placeholder": "구독 ID 입력",
+    "run": "미리보기 실행",
+    "running": "실행 중…",
+    "no_result_title": "미리보기 실행 안 됨",
+    "no_result_description": "구독 ID를 입력하고 '미리보기 실행'을 클릭하세요",
+    "total_ms": "총 {{ms}} ms",
+    "output_count": "출력 노드: {{count}}",
+    "input_count": "입력",
+    "output_count_short": "출력",
+    "step_added": "추가됨 ({{count}})",
+    "step_removed": "제거됨 ({{count}})",
+    "step_modified": "수정됨 ({{count}})",
+    "step_none": "변경 없음",
+    "no_steps": "debug 비활성 또는 오퍼레이터 없음"
+  },
+  "diff": {
+    "added_prefix": "+",
+    "removed_prefix": "-",
+    "empty": "양쪽 내용이 동일합니다"
+  },
   "operators": {
     "filter": {
       "name": "필터",

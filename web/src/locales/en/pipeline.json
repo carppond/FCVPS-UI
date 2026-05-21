@@ -52,6 +52,90 @@
     "drag_handle": "Drag to reorder",
     "todo_t21": "Parameter forms, YAML view and debug preview will land in T-21"
   },
+  "param_form": {
+    "filter": {
+      "expr_label": "Filter expression",
+      "expr_placeholder": "e.g. protocol in [\"vmess\",\"vless\"] && port > 1000",
+      "expr_help": "Fields: name / server / port / protocol / tag / region / network / tls; operators: ==, !=, in, &&, ||, !, (), string / number literals"
+    },
+    "map": {
+      "field_label": "Target field",
+      "field_help": "Writable: name / server / port / tag / network / sni / host / path / password",
+      "value_label": "New value (template-aware)",
+      "value_placeholder": "{{.Tag}}-{{.Name}}",
+      "value_help": "Variables: {{.Name}} / {{.Protocol}} / {{.Server}} / {{.Port}} / {{.Tag}} / {{.Index}}"
+    },
+    "sort": {
+      "key_label": "Sort field",
+      "order_label": "Order",
+      "order_asc": "Ascending",
+      "order_desc": "Descending"
+    },
+    "dedupe": {
+      "fields_label": "Dedupe keys",
+      "fields_placeholder": "Press enter to add a field, e.g. server",
+      "fields_help": "Defaults to server + port when empty",
+      "remove_field": "Remove field {{field}}"
+    },
+    "regex_rename": {
+      "pattern_label": "Regular expression",
+      "pattern_placeholder": "e.g. (\\d+)",
+      "replacement_label": "Replacement template",
+      "replacement_placeholder": "e.g. n$1",
+      "field_label": "Target field",
+      "regex_invalid": "Invalid regex: {{message}}",
+      "regex_valid": "Regex is valid"
+    },
+    "output": {
+      "format_label": "Output format",
+      "format_clash": "Clash",
+      "format_clash_meta": "Clash Meta",
+      "format_raw": "Raw (JSON)",
+      "max_nodes_label": "Max nodes (0 = unlimited)",
+      "max_nodes_help": "Truncated in input order when exceeded"
+    },
+    "common": {
+      "delete_operator": "Delete this operator",
+      "delete_confirm": "Delete this operator?",
+      "no_selection_title": "No operator selected",
+      "no_selection_description": "Click an operator card on the canvas to edit its parameters",
+      "type_badge": "Type"
+    }
+  },
+  "yaml_pane": {
+    "title": "YAML view",
+    "copy": "Copy",
+    "copied": "Copied",
+    "download": "Download .yaml",
+    "import": "Import",
+    "loading": "Loading editor…",
+    "sync_error": "YAML parse failed: {{message}}",
+    "ast_to_yaml_error": "AST → YAML conversion failed",
+    "switch_to_param": "Back to parameters"
+  },
+  "preview": {
+    "title": "Debug preview",
+    "subscription_label": "Subscription",
+    "subscription_placeholder": "Enter a subscription ID",
+    "run": "Run preview",
+    "running": "Running…",
+    "no_result_title": "No preview yet",
+    "no_result_description": "Enter a subscription ID and click \"Run preview\" to inspect per-operator I/O diffs",
+    "total_ms": "Total {{ms}} ms",
+    "output_count": "Output nodes: {{count}}",
+    "input_count": "Input",
+    "output_count_short": "Output",
+    "step_added": "Added ({{count}})",
+    "step_removed": "Removed ({{count}})",
+    "step_modified": "Modified ({{count}})",
+    "step_none": "No changes",
+    "no_steps": "Debug mode disabled or no operators in pipeline"
+  },
+  "diff": {
+    "added_prefix": "+",
+    "removed_prefix": "-",
+    "empty": "Both sides are identical"
+  },
   "operators": {
     "filter": {
       "name": "Filter",

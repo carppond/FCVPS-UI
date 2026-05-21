@@ -72,6 +72,20 @@ interface PipelineEditorActions {
   removeOperator: (id: string) => void;
   /** Reorder operators by index (drag-sort). */
   reorderOperators: (fromIndex: number, toIndex: number) => void;
+  /**
+   * Replace an operator's params (used by the right-rail parameter forms).
+   * No-op when no operator matches `id` so call sites can stay declarative.
+   */
+  updateOperatorParams: (
+    id: string,
+    params: PipelineOperator["params"],
+  ) => void;
+  /**
+   * Replace the whole AST in-place — used by the YAML pane to push a parsed
+   * pipeline back into the canvas. `selectedOperatorId` is cleared if the
+   * previously-selected operator no longer exists in the new list.
+   */
+  replaceAst: (ast: PipelineAST) => void;
   /** Select / deselect an operator (id=null clears selection). */
   selectOperator: (id: string | null) => void;
   /** Store a debug-preview response (consumed by T-21 dialog). */
@@ -211,6 +225,36 @@ export const usePipelineEditorStore = create<
     set((s) =>
       s.selectedOperatorId === id ? s : { ...s, selectedOperatorId: id },
     ),
+
+  updateOperatorParams: (id, params) =>
+    set((s) => {
+      let touched = false;
+      const next = s.ast.operators.map((op) => {
+        if (op.id !== id) return op;
+        touched = true;
+        return { ...op, params };
+      });
+      if (!touched) return s;
+      return {
+        ...s,
+        ast: { operators: next },
+        dirty: true,
+      };
+    }),
+
+  replaceAst: (ast) =>
+    set((s) => {
+      const operators = reindex(ast.operators);
+      const stillExists = operators.some(
+        (op) => op.id === s.selectedOperatorId,
+      );
+      return {
+        ...s,
+        ast: { operators },
+        selectedOperatorId: stillExists ? s.selectedOperatorId : null,
+        dirty: true,
+      };
+    }),
 
   setDebugTrace: (trace) => set({ debugTrace: trace }),
 

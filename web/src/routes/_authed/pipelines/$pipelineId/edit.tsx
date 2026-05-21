@@ -14,14 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
 import { useApiError } from "@/hooks/use-api-error";
 import { OperatorLibrary } from "@/components/pipeline/operator-library";
@@ -29,6 +21,9 @@ import {
   PipelineCanvas,
   resolveCanvasDragEnd,
 } from "@/components/pipeline/canvas";
+import { ParamPanel } from "@/components/pipeline/param-panel";
+import { YamlPane } from "@/components/pipeline/yaml-pane";
+import { PreviewPane } from "@/components/pipeline/preview-pane";
 import {
   usePipeline,
   useToYaml,
@@ -126,10 +121,9 @@ function PipelineEditorPage() {
     }
   };
 
-  // ── T-21 placeholders (debug preview / YAML view) ─────────────────────────
-  const [todoDialogKind, setTodoDialogKind] = React.useState<
-    "debug" | "yaml" | null
-  >(null);
+  // ── Right-rail mode + debug preview dialog ────────────────────────────────
+  const [rightRail, setRightRail] = React.useState<"param" | "yaml">("param");
+  const [previewOpen, setPreviewOpen] = React.useState(false);
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (isLoading) return <EditorSkeleton />;
@@ -193,9 +187,12 @@ function PipelineEditorPage() {
 
         <div className="ml-auto flex items-center gap-2">
           <Button
-            variant="outline"
+            variant={rightRail === "yaml" ? "default" : "outline"}
             size="sm"
-            onClick={() => setTodoDialogKind("yaml")}
+            onClick={() =>
+              setRightRail((prev) => (prev === "yaml" ? "param" : "yaml"))
+            }
+            data-testid="toggle-yaml"
           >
             <Code2 className="mr-1 h-4 w-4" />
             {t("pipeline:editor.toggle_yaml")}
@@ -203,7 +200,8 @@ function PipelineEditorPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setTodoDialogKind("debug")}
+            onClick={() => setPreviewOpen(true)}
+            data-testid="open-preview"
           >
             <Play className="mr-1 h-4 w-4" />
             {t("pipeline:editor.debug_preview")}
@@ -230,63 +228,20 @@ function PipelineEditorPage() {
         <div className="flex min-h-0 flex-1 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)]">
           <OperatorLibrary onClickAdd={handleLibraryClickAdd} />
           <PipelineCanvas />
-          <ParamPanelPlaceholder />
+          {rightRail === "yaml" ? (
+            <YamlPane onBackToParam={() => setRightRail("param")} />
+          ) : (
+            <ParamPanel />
+          )}
         </div>
       </DndContext>
 
-      <Dialog
-        open={todoDialogKind !== null}
-        onOpenChange={(o) => !o && setTodoDialogKind(null)}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {todoDialogKind === "debug"
-                ? t("pipeline:editor.debug_preview")
-                : t("pipeline:editor.toggle_yaml")}
-            </DialogTitle>
-            <DialogDescription>
-              {t("pipeline:editor.todo_t21")}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={() => setTodoDialogKind(null)}>
-              {t("common:actions.close")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PreviewPane
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        pipelineId={pipelineId}
+      />
     </div>
-  );
-}
-
-/**
- * Right-rail parameter panel.
- *
- *  - T-20: placeholder div (320px fixed-width per visual contract).
- *  - T-21: real react-hook-form + zod parameter forms per operator type.
- */
-function ParamPanelPlaceholder() {
-  const { t } = useTranslation(["pipeline"]);
-  const selectedId = usePipelineEditorStore((s) => s.selectedOperatorId);
-  return (
-    <aside
-      data-testid="param-panel-placeholder"
-      // T-21 续作：本面板将被替换为 react-hook-form + zod 的算子参数表单。
-      className={cn(
-        "flex h-full w-80 shrink-0 flex-col gap-3 border-l border-[var(--color-border)]",
-        "bg-[var(--color-bg-elevated)] p-4",
-      )}
-    >
-      <h2 className="text-[var(--font-size-sm)] font-semibold uppercase tracking-wide text-[var(--color-text-tertiary)]">
-        {t("pipeline:editor.param_panel_title")}
-      </h2>
-      <div className="flex flex-1 items-center justify-center rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] p-6 text-center text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-        {selectedId
-          ? t("pipeline:editor.todo_t21")
-          : t("pipeline:editor.param_panel_placeholder")}
-      </div>
-    </aside>
   );
 }
 

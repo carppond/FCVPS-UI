@@ -52,6 +52,90 @@
     "drag_handle": "拖拽以排序",
     "todo_t21": "参数表单 / YAML 视图 / 调试预览将在 T-21 提供"
   },
+  "param_form": {
+    "filter": {
+      "expr_label": "过滤表达式",
+      "expr_placeholder": "例如：protocol in [\"vmess\",\"vless\"] && port > 1000",
+      "expr_help": "支持字段：name / server / port / protocol / tag / region / network / tls；运算符：==、!=、in、&&、||、!、()、字符串/数字字面量"
+    },
+    "map": {
+      "field_label": "目标字段",
+      "field_help": "可写字段：name / server / port / tag / network / sni / host / path / password",
+      "value_label": "新值（支持模板）",
+      "value_placeholder": "{{.Tag}}-{{.Name}}",
+      "value_help": "可用变量：{{.Name}} / {{.Protocol}} / {{.Server}} / {{.Port}} / {{.Tag}} / {{.Index}}"
+    },
+    "sort": {
+      "key_label": "排序字段",
+      "order_label": "顺序",
+      "order_asc": "升序",
+      "order_desc": "降序"
+    },
+    "dedupe": {
+      "fields_label": "去重键字段",
+      "fields_placeholder": "回车添加字段，例如 server",
+      "fields_help": "为空时默认按 server + port 去重",
+      "remove_field": "移除字段 {{field}}"
+    },
+    "regex_rename": {
+      "pattern_label": "正则表达式",
+      "pattern_placeholder": "例如：(\\d+)",
+      "replacement_label": "替换模板",
+      "replacement_placeholder": "例如：n$1",
+      "field_label": "目标字段",
+      "regex_invalid": "正则表达式无效：{{message}}",
+      "regex_valid": "正则有效"
+    },
+    "output": {
+      "format_label": "输出格式",
+      "format_clash": "Clash",
+      "format_clash_meta": "Clash Meta",
+      "format_raw": "原始（JSON）",
+      "max_nodes_label": "最大节点数（0 = 不限）",
+      "max_nodes_help": "超出时按顺序截断"
+    },
+    "common": {
+      "delete_operator": "删除当前算子",
+      "delete_confirm": "确定要删除该算子吗？",
+      "no_selection_title": "未选中算子",
+      "no_selection_description": "点击中间画布上的算子卡片以编辑参数",
+      "type_badge": "类型"
+    }
+  },
+  "yaml_pane": {
+    "title": "YAML 视图",
+    "copy": "复制",
+    "copied": "已复制",
+    "download": "下载 .yaml",
+    "import": "导入",
+    "loading": "加载编辑器…",
+    "sync_error": "YAML 解析失败：{{message}}",
+    "ast_to_yaml_error": "AST 转 YAML 失败",
+    "switch_to_param": "返回参数面板"
+  },
+  "preview": {
+    "title": "调试预览",
+    "subscription_label": "选择订阅",
+    "subscription_placeholder": "输入订阅 ID",
+    "run": "运行预览",
+    "running": "运行中…",
+    "no_result_title": "尚未运行预览",
+    "no_result_description": "输入订阅 ID 并点击「运行预览」查看每个算子的输入 / 输出节点变化",
+    "total_ms": "总耗时 {{ms}} ms",
+    "output_count": "输出节点数：{{count}}",
+    "input_count": "输入",
+    "output_count_short": "输出",
+    "step_added": "新增 ({{count}})",
+    "step_removed": "删除 ({{count}})",
+    "step_modified": "修改 ({{count}})",
+    "step_none": "无变化",
+    "no_steps": "本次运行未启用 debug 模式或无算子可分析"
+  },
+  "diff": {
+    "added_prefix": "+",
+    "removed_prefix": "-",
+    "empty": "两侧内容相同"
+  },
   "operators": {
     "filter": {
       "name": "过滤",

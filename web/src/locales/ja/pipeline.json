@@ -52,6 +52,90 @@
     "drag_handle": "ドラッグで並び替え",
     "todo_t21": "パラメーターフォーム / YAML ビュー / デバッグプレビューは T-21 で対応予定"
   },
+  "param_form": {
+    "filter": {
+      "expr_label": "フィルタ式",
+      "expr_placeholder": "例：protocol in [\"vmess\",\"vless\"] && port > 1000",
+      "expr_help": "フィールド：name / server / port / protocol / tag / region / network / tls；演算子：==、!=、in、&&、||、!、()"
+    },
+    "map": {
+      "field_label": "対象フィールド",
+      "field_help": "書込可：name / server / port / tag / network / sni / host / path / password",
+      "value_label": "新しい値（テンプレート可）",
+      "value_placeholder": "{{.Tag}}-{{.Name}}",
+      "value_help": "変数：{{.Name}} / {{.Protocol}} / {{.Server}} / {{.Port}} / {{.Tag}} / {{.Index}}"
+    },
+    "sort": {
+      "key_label": "ソートキー",
+      "order_label": "順序",
+      "order_asc": "昇順",
+      "order_desc": "降順"
+    },
+    "dedupe": {
+      "fields_label": "重複排除キー",
+      "fields_placeholder": "Enter で追加（例：server）",
+      "fields_help": "空のときは server + port が既定",
+      "remove_field": "{{field}} を削除"
+    },
+    "regex_rename": {
+      "pattern_label": "正規表現",
+      "pattern_placeholder": "例：(\\d+)",
+      "replacement_label": "置換テンプレート",
+      "replacement_placeholder": "例：n$1",
+      "field_label": "対象フィールド",
+      "regex_invalid": "正規表現が無効：{{message}}",
+      "regex_valid": "正規表現は有効"
+    },
+    "output": {
+      "format_label": "出力形式",
+      "format_clash": "Clash",
+      "format_clash_meta": "Clash Meta",
+      "format_raw": "Raw (JSON)",
+      "max_nodes_label": "最大ノード数（0 = 無制限）",
+      "max_nodes_help": "超過時は入力順で切り詰め"
+    },
+    "common": {
+      "delete_operator": "このオペレーターを削除",
+      "delete_confirm": "このオペレーターを削除しますか？",
+      "no_selection_title": "オペレーター未選択",
+      "no_selection_description": "中央キャンバスでオペレーターを選択してください",
+      "type_badge": "種類"
+    }
+  },
+  "yaml_pane": {
+    "title": "YAML ビュー",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "download": ".yaml をダウンロード",
+    "import": "インポート",
+    "loading": "エディタを読み込み中…",
+    "sync_error": "YAML 解析失敗：{{message}}",
+    "ast_to_yaml_error": "AST → YAML 変換に失敗",
+    "switch_to_param": "パラメーターに戻る"
+  },
+  "preview": {
+    "title": "デバッグプレビュー",
+    "subscription_label": "サブスクリプション",
+    "subscription_placeholder": "サブスクリプション ID を入力",
+    "run": "プレビュー実行",
+    "running": "実行中…",
+    "no_result_title": "プレビュー未実行",
+    "no_result_description": "サブスクリプション ID を入力して「プレビュー実行」を押すと、各オペレーターの I/O 差分を確認できます",
+    "total_ms": "合計 {{ms}} ms",
+    "output_count": "出力ノード数：{{count}}",
+    "input_count": "入力",
+    "output_count_short": "出力",
+    "step_added": "追加 ({{count}})",
+    "step_removed": "削除 ({{count}})",
+    "step_modified": "変更 ({{count}})",
+    "step_none": "変更なし",
+    "no_steps": "debug 無効、またはオペレーターがありません"
+  },
+  "diff": {
+    "added_prefix": "+",
+    "removed_prefix": "-",
+    "empty": "両側の内容は同じです"
+  },
   "operators": {
     "filter": {
       "name": "フィルタ",
