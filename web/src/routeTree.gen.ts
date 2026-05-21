@@ -18,8 +18,10 @@ import { Route as PublicNotFoundRouteImport } from './routes/_public/not-found'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
+import { Route as AuthedPipelinesIndexRouteImport } from './routes/_authed/pipelines/index'
 import { Route as AuthedProfile2faRouteImport } from './routes/_authed/profile/2fa'
 import { Route as AuthedAdminUsersRouteImport } from './routes/_authed/admin/users'
+import { Route as AuthedPipelinesPipelineIdEditRouteImport } from './routes/_authed/pipelines/$pipelineId/edit'
 
 const PublicRouteRoute = PublicRouteRouteImport.update({
   id: '/_public',
@@ -64,6 +66,11 @@ const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
   path: '/profile/',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedPipelinesIndexRoute = AuthedPipelinesIndexRouteImport.update({
+  id: '/pipelines/',
+  path: '/pipelines/',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
 const AuthedProfile2faRoute = AuthedProfile2faRouteImport.update({
   id: '/profile/2fa',
   path: '/profile/2fa',
@@ -74,6 +81,12 @@ const AuthedAdminUsersRoute = AuthedAdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedPipelinesPipelineIdEditRoute =
+  AuthedPipelinesPipelineIdEditRouteImport.update({
+    id: '/pipelines/$pipelineId/edit',
+    path: '/pipelines/$pipelineId/edit',
+    getParentRoute: () => AuthedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -84,7 +97,9 @@ export interface FileRoutesByFullPath {
   '/totp': typeof PublicTotpRoute
   '/admin/users': typeof AuthedAdminUsersRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
+  '/pipelines/': typeof AuthedPipelinesIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
+  '/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -95,7 +110,9 @@ export interface FileRoutesByTo {
   '/totp': typeof PublicTotpRoute
   '/admin/users': typeof AuthedAdminUsersRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
+  '/pipelines': typeof AuthedPipelinesIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
+  '/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -109,7 +126,9 @@ export interface FileRoutesById {
   '/_public/totp': typeof PublicTotpRoute
   '/_authed/admin/users': typeof AuthedAdminUsersRoute
   '/_authed/profile/2fa': typeof AuthedProfile2faRoute
+  '/_authed/pipelines/': typeof AuthedPipelinesIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
+  '/_authed/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -122,7 +141,9 @@ export interface FileRouteTypes {
     | '/totp'
     | '/admin/users'
     | '/profile/2fa'
+    | '/pipelines/'
     | '/profile/'
+    | '/pipelines/$pipelineId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,7 +154,9 @@ export interface FileRouteTypes {
     | '/totp'
     | '/admin/users'
     | '/profile/2fa'
+    | '/pipelines'
     | '/profile'
+    | '/pipelines/$pipelineId/edit'
   id:
     | '__root__'
     | '/'
@@ -146,7 +169,9 @@ export interface FileRouteTypes {
     | '/_public/totp'
     | '/_authed/admin/users'
     | '/_authed/profile/2fa'
+    | '/_authed/pipelines/'
     | '/_authed/profile/'
+    | '/_authed/pipelines/$pipelineId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -220,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedProfileIndexRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/pipelines/': {
+      id: '/_authed/pipelines/'
+      path: '/pipelines'
+      fullPath: '/pipelines/'
+      preLoaderRoute: typeof AuthedPipelinesIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/profile/2fa': {
       id: '/_authed/profile/2fa'
       path: '/profile/2fa'
@@ -234,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminUsersRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/pipelines/$pipelineId/edit': {
+      id: '/_authed/pipelines/$pipelineId/edit'
+      path: '/pipelines/$pipelineId/edit'
+      fullPath: '/pipelines/$pipelineId/edit'
+      preLoaderRoute: typeof AuthedPipelinesPipelineIdEditRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
   }
 }
 
@@ -241,14 +280,18 @@ interface AuthedRouteRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedAdminUsersRoute: typeof AuthedAdminUsersRoute
   AuthedProfile2faRoute: typeof AuthedProfile2faRoute
+  AuthedPipelinesIndexRoute: typeof AuthedPipelinesIndexRoute
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
+  AuthedPipelinesPipelineIdEditRoute: typeof AuthedPipelinesPipelineIdEditRoute
 }
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedAdminUsersRoute: AuthedAdminUsersRoute,
   AuthedProfile2faRoute: AuthedProfile2faRoute,
+  AuthedPipelinesIndexRoute: AuthedPipelinesIndexRoute,
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
+  AuthedPipelinesPipelineIdEditRoute: AuthedPipelinesPipelineIdEditRoute,
 }
 
 const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(

@@ -16,8 +16,12 @@ import jaAuth from "@/locales/ja/auth.json";
 import koCommon from "@/locales/ko/common.json";
 import koErrors from "@/locales/ko/errors.json";
 import koAuth from "@/locales/ko/auth.json";
+import zhCNPipeline from "@/locales/zh-CN/pipeline.json";
+import enPipeline from "@/locales/en/pipeline.json";
+import jaPipeline from "@/locales/ja/pipeline.json";
+import koPipeline from "@/locales/ko/pipeline.json";
 
-const EAGER_NS = ["common", "errors", "auth"] as const;
+const EAGER_NS = ["common", "errors", "auth", "pipeline"] as const;
 
 // ── Namespaces that load lazily (by page / feature) ──────────────────────────
 // auth, subscription, pipeline, node, rule, script, agent, traffic, notify, settings
@@ -32,10 +36,30 @@ void i18next
     defaultNS: "common",
     ns: [...EAGER_NS],
     resources: {
-      "zh-CN": { common: zhCNCommon, errors: zhCNErrors, auth: zhCNAuth },
-      en: { common: enCommon, errors: enErrors, auth: enAuth },
-      ja: { common: jaCommon, errors: jaErrors, auth: jaAuth },
-      ko: { common: koCommon, errors: koErrors, auth: koAuth },
+      "zh-CN": {
+        common: zhCNCommon,
+        errors: zhCNErrors,
+        auth: zhCNAuth,
+        pipeline: zhCNPipeline,
+      },
+      en: {
+        common: enCommon,
+        errors: enErrors,
+        auth: enAuth,
+        pipeline: enPipeline,
+      },
+      ja: {
+        common: jaCommon,
+        errors: jaErrors,
+        auth: jaAuth,
+        pipeline: jaPipeline,
+      },
+      ko: {
+        common: koCommon,
+        errors: koErrors,
+        auth: koAuth,
+        pipeline: koPipeline,
+      },
     },
     detection: {
       order: ["localStorage", "navigator"],

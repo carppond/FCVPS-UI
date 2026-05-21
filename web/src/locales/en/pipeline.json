@@ -1,0 +1,94 @@
+{
+  "title": "Pipelines",
+  "description": "Build node-processing flows by dragging operators",
+  "list": {
+    "create": "New pipeline",
+    "search_placeholder": "Search pipelines…",
+    "columns": {
+      "name": "Name",
+      "operator_count": "Operators",
+      "bindings": "Bindings",
+      "updated_at": "Updated",
+      "actions": "Actions"
+    },
+    "empty": {
+      "title": "No pipelines yet",
+      "description": "Create your first pipeline to automate node filtering and renaming"
+    },
+    "actions": {
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "delete": "Delete"
+    },
+    "delete_confirm": {
+      "title": "Delete pipeline",
+      "description": "Delete \"{{name}}\"? All subscription bindings will be detached.",
+      "submit": "Delete"
+    }
+  },
+  "editor": {
+    "title": "Edit pipeline",
+    "back": "Back to list",
+    "name_placeholder": "Untitled pipeline",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "dirty_indicator": "Unsaved",
+    "debug_preview": "Debug preview",
+    "toggle_yaml": "YAML view",
+    "library_title": "Operators",
+    "library_search": "Search operators…",
+    "canvas_title": "Canvas",
+    "param_panel_title": "Parameters",
+    "param_panel_placeholder": "Select an operator to edit its parameters",
+    "canvas_input_node": "Source nodes",
+    "canvas_output_node": "Output",
+    "canvas_run_to_view": "Run preview to view node counts",
+    "canvas_empty_title": "Drag an operator from the left to start",
+    "canvas_empty_description": "Six operators available: filter / map / sort / dedupe / regex-rename / output",
+    "node_status_valid": "Valid",
+    "node_status_error": "Error",
+    "remove_operator": "Remove operator",
+    "drag_handle": "Drag to reorder",
+    "todo_t21": "Parameter forms, YAML view and debug preview will land in T-21"
+  },
+  "operators": {
+    "filter": {
+      "name": "Filter",
+      "description": "Filter nodes by expression, e.g. region in ['hk','jp']"
+    },
+    "map": {
+      "name": "Map",
+      "description": "Set or override a node field"
+    },
+    "sort": {
+      "name": "Sort",
+      "description": "Sort nodes ascending or descending by a key"
+    },
+    "dedupe": {
+      "name": "Dedupe",
+      "description": "Remove duplicates by a tuple of fields"
+    },
+    "regex_rename": {
+      "name": "Regex rename",
+      "description": "Batch rename node tags using a regular expression"
+    },
+    "output": {
+      "name": "Output",
+      "description": "Select output format: Clash / Clash-Meta / raw"
+    }
+  },
+  "errors": {
+    "ERR_NOT_FOUND_PIPELINE": "Pipeline not found or already deleted",
+    "ERR_PIPELINE_OPERATOR_UNKNOWN": "Pipeline contains an unknown operator type",
+    "ERR_PIPELINE_OPERATOR_PARAMS": "Operator parameters failed validation",
+    "ERR_PIPELINE_RUN_TIMEOUT": "Pipeline execution timed out",
+    "ERR_CONFLICT_PIPELINE_VERSION": "Pipeline was modified by another client; please refresh and retry",
+    "PIPELINE_VALIDATION_FAILED": "Pipeline validation failed, check operator parameters"
+  },
+  "toast": {
+    "saved": "Pipeline saved",
+    "deleted": "Pipeline deleted",
+    "duplicated": "Pipeline duplicated"
+  }
+}

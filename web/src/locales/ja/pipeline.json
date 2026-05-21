@@ -1,0 +1,94 @@
+{
+  "title": "パイプライン",
+  "description": "オペレーターをドラッグしてノード処理フローを構築",
+  "list": {
+    "create": "新規パイプライン",
+    "search_placeholder": "パイプラインを検索…",
+    "columns": {
+      "name": "名前",
+      "operator_count": "オペレーター数",
+      "bindings": "バインディング",
+      "updated_at": "更新日時",
+      "actions": "操作"
+    },
+    "empty": {
+      "title": "パイプラインがありません",
+      "description": "最初のパイプラインを作成してノードのフィルタリングとリネームを自動化"
+    },
+    "actions": {
+      "edit": "編集",
+      "duplicate": "複製",
+      "delete": "削除"
+    },
+    "delete_confirm": {
+      "title": "パイプラインを削除",
+      "description": "「{{name}}」を削除しますか？関連するサブスクリプションのバインディングも解除されます。",
+      "submit": "削除"
+    }
+  },
+  "editor": {
+    "title": "パイプラインを編集",
+    "back": "リストに戻る",
+    "name_placeholder": "無題のパイプライン",
+    "save": "保存",
+    "saving": "保存中…",
+    "saved": "保存済み",
+    "dirty_indicator": "未保存",
+    "debug_preview": "デバッグプレビュー",
+    "toggle_yaml": "YAML ビュー",
+    "library_title": "オペレーター",
+    "library_search": "オペレーターを検索…",
+    "canvas_title": "キャンバス",
+    "param_panel_title": "パラメーター",
+    "param_panel_placeholder": "オペレーターを選択してパラメーターを編集",
+    "canvas_input_node": "ソースノード",
+    "canvas_output_node": "出力",
+    "canvas_run_to_view": "プレビューを実行してノード数を表示",
+    "canvas_empty_title": "左側からオペレーターをドラッグして開始",
+    "canvas_empty_description": "6 種類のオペレーター: filter / map / sort / dedupe / regex-rename / output",
+    "node_status_valid": "有効",
+    "node_status_error": "エラー",
+    "remove_operator": "オペレーターを削除",
+    "drag_handle": "ドラッグで並び替え",
+    "todo_t21": "パラメーターフォーム / YAML ビュー / デバッグプレビューは T-21 で対応予定"
+  },
+  "operators": {
+    "filter": {
+      "name": "フィルタ",
+      "description": "式でノードをフィルタリング (例: region in ['hk','jp'])"
+    },
+    "map": {
+      "name": "マップ",
+      "description": "ノードのフィールド値を設定または上書き"
+    },
+    "sort": {
+      "name": "ソート",
+      "description": "キーで昇順または降順に並び替え"
+    },
+    "dedupe": {
+      "name": "重複排除",
+      "description": "フィールドの組み合わせで重複ノードを除去"
+    },
+    "regex_rename": {
+      "name": "正規表現リネーム",
+      "description": "正規表現でタグを一括リネーム"
+    },
+    "output": {
+      "name": "出力",
+      "description": "出力フォーマットを選択: Clash / Clash-Meta / raw"
+    }
+  },
+  "errors": {
+    "ERR_NOT_FOUND_PIPELINE": "パイプラインが見つからないか削除されています",
+    "ERR_PIPELINE_OPERATOR_UNKNOWN": "未知のオペレーター型が含まれています",
+    "ERR_PIPELINE_OPERATOR_PARAMS": "オペレーターのパラメーター検証に失敗しました",
+    "ERR_PIPELINE_RUN_TIMEOUT": "パイプライン実行がタイムアウトしました",
+    "ERR_CONFLICT_PIPELINE_VERSION": "他のクライアントが変更しました。再読込してください",
+    "PIPELINE_VALIDATION_FAILED": "パイプライン検証失敗、オペレーターパラメーターを確認してください"
+  },
+  "toast": {
+    "saved": "パイプラインを保存しました",
+    "deleted": "パイプラインを削除しました",
+    "duplicated": "パイプラインを複製しました"
+  }
+}
