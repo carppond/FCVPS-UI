@@ -37,7 +37,8 @@
     "unreachable": "到達不可",
     "fast": "高速",
     "moderate": "中程度",
-    "slow": "低速"
+    "slow": "低速",
+    "tooltip": "TCP ハンドシェイク時間（3 回中央値）。到達性の指標であり、プロキシの実速ではありません — TLS / reality 握手や帯域も影響します。"
   },
   "empty": {
     "title": "ノードがありません",

@@ -37,7 +37,8 @@
     "unreachable": "도달 불가",
     "fast": "빠름",
     "moderate": "보통",
-    "slow": "느림"
+    "slow": "느림",
+    "tooltip": "TCP 핸드셰이크 지연시간 (3회 중앙값). 도달성 지표이며 프록시 실속도가 아닙니다 — TLS / reality 핸드셰이크와 노드 대역폭도 영향을 줍니다."
   },
   "empty": {
     "title": "노드가 없습니다",

@@ -1,5 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
 
 /**
@@ -59,11 +65,20 @@ export function LatencyBadge({ latencyMs, className }: LatencyBadgeProps) {
       : "bg-[var(--color-error-bg)] text-[var(--color-error)]";
 
   return (
-    <Badge
-      variant="outline"
-      className={cn(tone, "tabular-nums", className)}
-    >
-      {latencyMs} ms
-    </Badge>
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge
+            variant="outline"
+            className={cn(tone, "tabular-nums cursor-help", className)}
+          >
+            {latencyMs} ms
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+          {t("latency.tooltip")}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

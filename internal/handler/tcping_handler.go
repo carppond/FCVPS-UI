@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -260,23 +261,43 @@ func (h *TCPingHandler) runBatch(ctx context.Context, jobs []tcpingJob, concurre
 // error on failure (including timeout). Caller-side cancellation via
 // ctx.Done is respected.
 func (h *TCPingHandler) probe(ctx context.Context, server string, port int, timeout time.Duration) (int32, error) {
+	// Take 3 sequential dials and return the median. Rationale:
+	//   - First dial usually carries OS-level warm-up (TCP state, DNS cache,
+	//     conntrack entry creation), so a lone sample jitters wildly between
+	//     consecutive runs.
+	//   - 3 samples + median removes the warm-up bias and any single outlier
+	//     while keeping latency budget within PRD §6.1 (worst-case reachable
+	//     node ≈ 3×latency, unreachable still aborts on the first timeout).
+	//   - Matches the behaviour users see in mihomo / Clash Verge, which run
+	//     repeated probes for their group health checks.
+	//
+	// On the first dial error we return -1 immediately rather than retrying:
+	// an unreachable node should not be tested 3× back-to-back (would multiply
+	// the 5s timeout in batch flows).
 	addr := net.JoinHostPort(server, strconv.Itoa(port))
-	start := time.Now()
-	conn, err := h.dialer()(ctx, "tcp", addr, timeout)
-	if err != nil {
-		return -1, err
+	const samples = 3
+	results := make([]int32, 0, samples)
+	for i := 0; i < samples; i++ {
+		start := time.Now()
+		conn, err := h.dialer()(ctx, "tcp", addr, timeout)
+		if err != nil {
+			return -1, err
+		}
+		_ = conn.Close()
+		elapsed := time.Since(start)
+		// Use ceil(microseconds / 1000) instead of trunc so a sub-millisecond
+		// dial shows as "1 ms" instead of "0 ms".
+		us := elapsed.Microseconds()
+		var ms int32
+		if us <= 0 {
+			ms = 1
+		} else {
+			ms = int32((us + 999) / 1000)
+		}
+		results = append(results, ms)
 	}
-	_ = conn.Close()
-	elapsed := time.Since(start)
-	// Use ceil(microseconds / 1000) instead of trunc so a sub-millisecond
-	// dial (e.g. 0.7 ms to a CDN-close server) shows as "1 ms" instead of
-	// "0 ms" — which users misread as "didn't measure" or "broken".
-	us := elapsed.Microseconds()
-	if us <= 0 {
-		return 0, nil
-	}
-	ms := int32((us + 999) / 1000) // ceil
-	return ms, nil
+	sort.Slice(results, func(i, j int) bool { return results[i] < results[j] })
+	return results[len(results)/2], nil
 }
 
 // dialer returns the configured dialFunc (test override) or the package

@@ -37,7 +37,8 @@
     "unreachable": "Unreachable",
     "fast": "Fast",
     "moderate": "Moderate",
-    "slow": "Slow"
+    "slow": "Slow",
+    "tooltip": "TCP handshake latency from median of 3 samples. Measures reachability, not proxy throughput — real tunnel speed also depends on TLS / reality handshake and node bandwidth."
   },
   "empty": {
     "title": "No nodes yet",

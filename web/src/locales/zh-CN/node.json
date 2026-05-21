@@ -37,7 +37,8 @@
     "unreachable": "不可达",
     "fast": "快",
     "moderate": "一般",
-    "slow": "慢"
+    "slow": "慢",
+    "tooltip": "TCP 握手时间，反映网络可达性（3 次采样取中位数）。不代表代理速度——实际翻墙速度还受 TLS / reality 握手 / 节点带宽影响。"
   },
   "empty": {
     "title": "暂无节点",
