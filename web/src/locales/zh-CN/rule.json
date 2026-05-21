@@ -1,0 +1,79 @@
+{
+  "title": "规则管理",
+  "subtitle": "自定义 DNS / rules / rule-providers，按顺序注入到订阅渲染的 Clash 配置",
+  "list": {
+    "section_title": "规则列表",
+    "drag_hint": "拖拽手柄调整执行顺序",
+    "add_rule": "新建规则",
+    "search_placeholder": "按名称搜索…",
+    "filter_all": "全部类型",
+    "empty_title": "暂无规则",
+    "empty_description": "可从模板快速创建，或手动编辑 YAML/规则行。",
+    "empty_cta": "选择模板"
+  },
+  "form": {
+    "section_title": "编辑规则",
+    "section_title_new": "新建规则",
+    "name_label": "名称",
+    "name_placeholder": "如：国内直连",
+    "type_label": "类型",
+    "mode_label": "注入模式",
+    "content_label": "内容",
+    "content_placeholder_dns": "YAML 片段，例：\nnameservers:\n  - 1.1.1.1",
+    "content_placeholder_rules": "每行一条规则，例：\nDOMAIN-SUFFIX,cn,DIRECT\nMATCH,Proxy",
+    "content_placeholder_rule_providers": "YAML map，例：\nads:\n  type: http\n  behavior: domain",
+    "enabled_label": "启用",
+    "use_template": "使用模板",
+    "save": "保存",
+    "save_and_apply": "保存并预览",
+    "cancel": "取消",
+    "select_rule_hint": "请从左侧选择一条规则，或点击「新建规则」"
+  },
+  "types": {
+    "dns": "DNS",
+    "rules": "规则",
+    "rule-providers": "规则提供者"
+  },
+  "modes": {
+    "replace": "替换",
+    "prepend": "前置",
+    "append": "追加"
+  },
+  "preview": {
+    "section_title": "预览",
+    "subscription_label": "目标订阅",
+    "no_subscription": "请选择订阅以查看应用规则后的最终 Clash YAML",
+    "rule_count": "已应用 {{count}} 条规则",
+    "before_label": "原始 YAML",
+    "after_label": "最终 YAML",
+    "diff_label": "差异",
+    "copy": "复制 YAML",
+    "copied": "已复制"
+  },
+  "templates": {
+    "dialog_title": "选择模板",
+    "dialog_description": "选择一个预设模板作为起点，可在表单中继续编辑",
+    "select": "使用",
+    "applied": "已填入"
+  },
+  "delete": {
+    "dialog_title": "删除规则",
+    "dialog_description": "删除 \"{{name}}\" 后无法恢复，确定继续？",
+    "confirm": "删除",
+    "cancel": "取消"
+  },
+  "toast": {
+    "create_ok": "规则已创建",
+    "update_ok": "规则已更新",
+    "delete_ok": "规则已删除",
+    "reorder_ok": "顺序已更新"
+  },
+  "error": {
+    "load_failed": "加载规则失败",
+    "create_failed": "创建规则失败",
+    "update_failed": "更新规则失败",
+    "delete_failed": "删除规则失败",
+    "reorder_failed": "更新顺序失败",
+    "preview_failed": "生成预览失败"
+  }
+}

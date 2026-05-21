@@ -1,0 +1,79 @@
+{
+  "title": "Rules",
+  "subtitle": "Custom DNS / rules / rule-providers entries injected into the rendered Clash config in order",
+  "list": {
+    "section_title": "Rule list",
+    "drag_hint": "Drag the handle to reorder execution",
+    "add_rule": "New rule",
+    "search_placeholder": "Search by name…",
+    "filter_all": "All types",
+    "empty_title": "No rules yet",
+    "empty_description": "Start from a template or hand-write YAML / rule lines.",
+    "empty_cta": "Choose a template"
+  },
+  "form": {
+    "section_title": "Edit rule",
+    "section_title_new": "New rule",
+    "name_label": "Name",
+    "name_placeholder": "e.g. CN direct",
+    "type_label": "Type",
+    "mode_label": "Inject mode",
+    "content_label": "Content",
+    "content_placeholder_dns": "YAML fragment, e.g.\nnameservers:\n  - 1.1.1.1",
+    "content_placeholder_rules": "One rule per line, e.g.\nDOMAIN-SUFFIX,cn,DIRECT\nMATCH,Proxy",
+    "content_placeholder_rule_providers": "YAML map, e.g.\nads:\n  type: http\n  behavior: domain",
+    "enabled_label": "Enabled",
+    "use_template": "Use template",
+    "save": "Save",
+    "save_and_apply": "Save & preview",
+    "cancel": "Cancel",
+    "select_rule_hint": "Pick a rule from the left or hit \"New rule\""
+  },
+  "types": {
+    "dns": "DNS",
+    "rules": "Rules",
+    "rule-providers": "Rule providers"
+  },
+  "modes": {
+    "replace": "Replace",
+    "prepend": "Prepend",
+    "append": "Append"
+  },
+  "preview": {
+    "section_title": "Preview",
+    "subscription_label": "Target subscription",
+    "no_subscription": "Pick a subscription to see the final Clash YAML",
+    "rule_count": "{{count}} rule(s) applied",
+    "before_label": "Original YAML",
+    "after_label": "Final YAML",
+    "diff_label": "Diff",
+    "copy": "Copy YAML",
+    "copied": "Copied"
+  },
+  "templates": {
+    "dialog_title": "Choose a template",
+    "dialog_description": "Pick a preset to seed the form; you can keep editing afterwards",
+    "select": "Use",
+    "applied": "Template applied"
+  },
+  "delete": {
+    "dialog_title": "Delete rule",
+    "dialog_description": "Removing \"{{name}}\" cannot be undone. Continue?",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "create_ok": "Rule created",
+    "update_ok": "Rule updated",
+    "delete_ok": "Rule deleted",
+    "reorder_ok": "Order updated"
+  },
+  "error": {
+    "load_failed": "Failed to load rules",
+    "create_failed": "Failed to create rule",
+    "update_failed": "Failed to update rule",
+    "delete_failed": "Failed to delete rule",
+    "reorder_failed": "Failed to update order",
+    "preview_failed": "Failed to render preview"
+  }
+}

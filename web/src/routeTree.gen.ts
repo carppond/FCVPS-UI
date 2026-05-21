@@ -16,6 +16,8 @@ import { Route as PublicTotpRouteImport } from './routes/_public/totp'
 import { Route as PublicRecoveryRouteImport } from './routes/_public/recovery'
 import { Route as PublicNotFoundRouteImport } from './routes/_public/not-found'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as AuthedTrafficRouteImport } from './routes/_authed/traffic'
+import { Route as AuthedRulesRouteImport } from './routes/_authed/rules'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
@@ -25,6 +27,7 @@ import { Route as AuthedSubscriptionsIdRouteImport } from './routes/_authed/subs
 import { Route as AuthedProfile2faRouteImport } from './routes/_authed/profile/2fa'
 import { Route as AuthedNodesNodeIdRouteImport } from './routes/_authed/nodes/$nodeId'
 import { Route as AuthedAdminUsersRouteImport } from './routes/_authed/admin/users'
+import { Route as AuthedAdminSettingsRouteImport } from './routes/_authed/admin/settings'
 import { Route as AuthedAdminOtaRouteImport } from './routes/_authed/admin/ota'
 import { Route as AuthedPipelinesPipelineIdEditRouteImport } from './routes/_authed/pipelines/$pipelineId/edit'
 
@@ -60,6 +63,16 @@ const PublicLoginRoute = PublicLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => PublicRouteRoute,
+} as any)
+const AuthedTrafficRoute = AuthedTrafficRouteImport.update({
+  id: '/traffic',
+  path: '/traffic',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedRulesRoute = AuthedRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
@@ -107,6 +120,11 @@ const AuthedAdminUsersRoute = AuthedAdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedAdminSettingsRoute = AuthedAdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
 const AuthedAdminOtaRoute = AuthedAdminOtaRouteImport.update({
   id: '/admin/ota',
   path: '/admin/ota',
@@ -122,11 +140,14 @@ const AuthedPipelinesPipelineIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/rules': typeof AuthedRulesRoute
+  '/traffic': typeof AuthedTrafficRoute
   '/login': typeof PublicLoginRoute
   '/not-found': typeof PublicNotFoundRoute
   '/recovery': typeof PublicRecoveryRoute
   '/totp': typeof PublicTotpRoute
   '/admin/ota': typeof AuthedAdminOtaRoute
+  '/admin/settings': typeof AuthedAdminSettingsRoute
   '/admin/users': typeof AuthedAdminUsersRoute
   '/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
@@ -140,11 +161,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/rules': typeof AuthedRulesRoute
+  '/traffic': typeof AuthedTrafficRoute
   '/login': typeof PublicLoginRoute
   '/not-found': typeof PublicNotFoundRoute
   '/recovery': typeof PublicRecoveryRoute
   '/totp': typeof PublicTotpRoute
   '/admin/ota': typeof AuthedAdminOtaRoute
+  '/admin/settings': typeof AuthedAdminSettingsRoute
   '/admin/users': typeof AuthedAdminUsersRoute
   '/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
@@ -161,11 +185,14 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteRouteWithChildren
   '/_public': typeof PublicRouteRouteWithChildren
   '/_authed/dashboard': typeof AuthedDashboardRoute
+  '/_authed/rules': typeof AuthedRulesRoute
+  '/_authed/traffic': typeof AuthedTrafficRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/not-found': typeof PublicNotFoundRoute
   '/_public/recovery': typeof PublicRecoveryRoute
   '/_public/totp': typeof PublicTotpRoute
   '/_authed/admin/ota': typeof AuthedAdminOtaRoute
+  '/_authed/admin/settings': typeof AuthedAdminSettingsRoute
   '/_authed/admin/users': typeof AuthedAdminUsersRoute
   '/_authed/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
   '/_authed/profile/2fa': typeof AuthedProfile2faRoute
@@ -181,11 +208,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/rules'
+    | '/traffic'
     | '/login'
     | '/not-found'
     | '/recovery'
     | '/totp'
     | '/admin/ota'
+    | '/admin/settings'
     | '/admin/users'
     | '/nodes/$nodeId'
     | '/profile/2fa'
@@ -199,11 +229,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/dashboard'
+    | '/rules'
+    | '/traffic'
     | '/login'
     | '/not-found'
     | '/recovery'
     | '/totp'
     | '/admin/ota'
+    | '/admin/settings'
     | '/admin/users'
     | '/nodes/$nodeId'
     | '/profile/2fa'
@@ -219,11 +252,14 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/_public'
     | '/_authed/dashboard'
+    | '/_authed/rules'
+    | '/_authed/traffic'
     | '/_public/login'
     | '/_public/not-found'
     | '/_public/recovery'
     | '/_public/totp'
     | '/_authed/admin/ota'
+    | '/_authed/admin/settings'
     | '/_authed/admin/users'
     | '/_authed/nodes/$nodeId'
     | '/_authed/profile/2fa'
@@ -292,6 +328,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicLoginRouteImport
       parentRoute: typeof PublicRouteRoute
     }
+    '/_authed/traffic': {
+      id: '/_authed/traffic'
+      path: '/traffic'
+      fullPath: '/traffic'
+      preLoaderRoute: typeof AuthedTrafficRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/rules': {
+      id: '/_authed/rules'
+      path: '/rules'
+      fullPath: '/rules'
+      preLoaderRoute: typeof AuthedRulesRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/dashboard': {
       id: '/_authed/dashboard'
       path: '/dashboard'
@@ -355,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminUsersRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/admin/settings': {
+      id: '/_authed/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthedAdminSettingsRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/admin/ota': {
       id: '/_authed/admin/ota'
       path: '/admin/ota'
@@ -374,7 +431,10 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedRulesRoute: typeof AuthedRulesRoute
+  AuthedTrafficRoute: typeof AuthedTrafficRoute
   AuthedAdminOtaRoute: typeof AuthedAdminOtaRoute
+  AuthedAdminSettingsRoute: typeof AuthedAdminSettingsRoute
   AuthedAdminUsersRoute: typeof AuthedAdminUsersRoute
   AuthedNodesNodeIdRoute: typeof AuthedNodesNodeIdRoute
   AuthedProfile2faRoute: typeof AuthedProfile2faRoute
@@ -388,7 +448,10 @@ interface AuthedRouteRouteChildren {
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedRulesRoute: AuthedRulesRoute,
+  AuthedTrafficRoute: AuthedTrafficRoute,
   AuthedAdminOtaRoute: AuthedAdminOtaRoute,
+  AuthedAdminSettingsRoute: AuthedAdminSettingsRoute,
   AuthedAdminUsersRoute: AuthedAdminUsersRoute,
   AuthedNodesNodeIdRoute: AuthedNodesNodeIdRoute,
   AuthedProfile2faRoute: AuthedProfile2faRoute,

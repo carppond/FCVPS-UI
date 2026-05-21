@@ -1,0 +1,79 @@
+{
+  "title": "ルール管理",
+  "subtitle": "Clash 設定にカスタム DNS / rules / rule-providers を順番に注入します",
+  "list": {
+    "section_title": "ルール一覧",
+    "drag_hint": "ハンドルをドラッグして並び替え",
+    "add_rule": "ルールを追加",
+    "search_placeholder": "名前で検索…",
+    "filter_all": "すべての種類",
+    "empty_title": "ルールがありません",
+    "empty_description": "テンプレートから作成するか、YAML を手書きしてください。",
+    "empty_cta": "テンプレートを選ぶ"
+  },
+  "form": {
+    "section_title": "ルール編集",
+    "section_title_new": "新規ルール",
+    "name_label": "名前",
+    "name_placeholder": "例：国内直結",
+    "type_label": "種類",
+    "mode_label": "注入モード",
+    "content_label": "内容",
+    "content_placeholder_dns": "YAML 断片、例：\nnameservers:\n  - 1.1.1.1",
+    "content_placeholder_rules": "1 行 1 ルール、例：\nDOMAIN-SUFFIX,cn,DIRECT\nMATCH,Proxy",
+    "content_placeholder_rule_providers": "YAML マップ、例：\nads:\n  type: http\n  behavior: domain",
+    "enabled_label": "有効",
+    "use_template": "テンプレートを使う",
+    "save": "保存",
+    "save_and_apply": "保存してプレビュー",
+    "cancel": "キャンセル",
+    "select_rule_hint": "左からルールを選ぶか、新規作成してください"
+  },
+  "types": {
+    "dns": "DNS",
+    "rules": "ルール",
+    "rule-providers": "ルールプロバイダ"
+  },
+  "modes": {
+    "replace": "置換",
+    "prepend": "先頭追加",
+    "append": "末尾追加"
+  },
+  "preview": {
+    "section_title": "プレビュー",
+    "subscription_label": "対象サブスクリプション",
+    "no_subscription": "サブスクリプションを選択すると最終的な Clash YAML を表示します",
+    "rule_count": "{{count}} 件のルールを適用しました",
+    "before_label": "元 YAML",
+    "after_label": "適用後 YAML",
+    "diff_label": "差分",
+    "copy": "YAML をコピー",
+    "copied": "コピーしました"
+  },
+  "templates": {
+    "dialog_title": "テンプレート選択",
+    "dialog_description": "プリセットをベースとして使用できます",
+    "select": "使用",
+    "applied": "テンプレートを反映しました"
+  },
+  "delete": {
+    "dialog_title": "ルール削除",
+    "dialog_description": "「{{name}}」を削除すると復元できません。続行しますか？",
+    "confirm": "削除",
+    "cancel": "キャンセル"
+  },
+  "toast": {
+    "create_ok": "ルールを作成しました",
+    "update_ok": "ルールを更新しました",
+    "delete_ok": "ルールを削除しました",
+    "reorder_ok": "順序を更新しました"
+  },
+  "error": {
+    "load_failed": "ルールの読み込みに失敗しました",
+    "create_failed": "ルールの作成に失敗しました",
+    "update_failed": "ルールの更新に失敗しました",
+    "delete_failed": "ルールの削除に失敗しました",
+    "reorder_failed": "順序の更新に失敗しました",
+    "preview_failed": "プレビュー生成に失敗しました"
+  }
+}

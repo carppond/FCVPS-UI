@@ -1,0 +1,79 @@
+{
+  "title": "규칙 관리",
+  "subtitle": "Clash 설정에 사용자 지정 DNS / rules / rule-providers를 순차적으로 주입합니다",
+  "list": {
+    "section_title": "규칙 목록",
+    "drag_hint": "핸들을 드래그해 순서 변경",
+    "add_rule": "규칙 추가",
+    "search_placeholder": "이름으로 검색…",
+    "filter_all": "모든 유형",
+    "empty_title": "규칙이 없습니다",
+    "empty_description": "템플릿으로 시작하거나 YAML을 직접 작성하세요.",
+    "empty_cta": "템플릿 선택"
+  },
+  "form": {
+    "section_title": "규칙 편집",
+    "section_title_new": "새 규칙",
+    "name_label": "이름",
+    "name_placeholder": "예: 국내 직결",
+    "type_label": "유형",
+    "mode_label": "주입 모드",
+    "content_label": "내용",
+    "content_placeholder_dns": "YAML 조각 예시:\nnameservers:\n  - 1.1.1.1",
+    "content_placeholder_rules": "한 줄에 한 규칙, 예시:\nDOMAIN-SUFFIX,cn,DIRECT\nMATCH,Proxy",
+    "content_placeholder_rule_providers": "YAML 맵 예시:\nads:\n  type: http\n  behavior: domain",
+    "enabled_label": "활성화",
+    "use_template": "템플릿 사용",
+    "save": "저장",
+    "save_and_apply": "저장 후 미리보기",
+    "cancel": "취소",
+    "select_rule_hint": "왼쪽에서 규칙을 선택하거나 새로 만드세요"
+  },
+  "types": {
+    "dns": "DNS",
+    "rules": "규칙",
+    "rule-providers": "규칙 제공자"
+  },
+  "modes": {
+    "replace": "대체",
+    "prepend": "앞에 삽입",
+    "append": "뒤에 추가"
+  },
+  "preview": {
+    "section_title": "미리보기",
+    "subscription_label": "대상 구독",
+    "no_subscription": "구독을 선택하면 최종 Clash YAML이 표시됩니다",
+    "rule_count": "{{count}}개 규칙 적용됨",
+    "before_label": "원본 YAML",
+    "after_label": "최종 YAML",
+    "diff_label": "차이",
+    "copy": "YAML 복사",
+    "copied": "복사됨"
+  },
+  "templates": {
+    "dialog_title": "템플릿 선택",
+    "dialog_description": "프리셋을 베이스로 사용한 뒤 수정할 수 있습니다",
+    "select": "사용",
+    "applied": "템플릿이 적용되었습니다"
+  },
+  "delete": {
+    "dialog_title": "규칙 삭제",
+    "dialog_description": "\"{{name}}\" 규칙은 삭제하면 복구할 수 없습니다. 계속하시겠습니까?",
+    "confirm": "삭제",
+    "cancel": "취소"
+  },
+  "toast": {
+    "create_ok": "규칙이 생성되었습니다",
+    "update_ok": "규칙이 업데이트되었습니다",
+    "delete_ok": "규칙이 삭제되었습니다",
+    "reorder_ok": "순서가 업데이트되었습니다"
+  },
+  "error": {
+    "load_failed": "규칙 로딩 실패",
+    "create_failed": "규칙 생성 실패",
+    "update_failed": "규칙 업데이트 실패",
+    "delete_failed": "규칙 삭제 실패",
+    "reorder_failed": "순서 업데이트 실패",
+    "preview_failed": "미리보기 생성 실패"
+  }
+}

@@ -580,10 +580,14 @@ func mountTrafficRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PUT /api/traffic/limit", required(http.HandlerFunc(th.SetLimit)))
 }
 
-// mountSettingsRoutes is a forward-compat stub installed alongside T-17 so
-// the parallel-agent T-26 work can wire the SettingsHandler without
-// re-touching the router skeleton. When SettingsHandler is nil the function
-// is a no-op.
+// mountSettingsRoutes installs the M-OPS settings surface (T-26):
+//
+//   - GET   /api/admin/settings                — full k/v map (sensitive masked)
+//   - PUT   /api/admin/settings                — batch update (alias: PATCH)
+//   - POST  /api/admin/silent-mode/rotate      — generate + apply new prefix
+//
+// All endpoints are admin-only. The silent-mode rotation force-logs every user
+// (purges sessions table) and immediately swaps the middleware's live prefix.
 func mountSettingsRoutes(mux *http.ServeMux, deps *Deps) {
 	if deps == nil || deps.SettingsHandler == nil || deps.TokenStore == nil {
 		return
@@ -595,11 +599,21 @@ func mountSettingsRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PATCH /api/admin/settings", requireAdmin(http.HandlerFunc(sh.Update)))
 	mux.Handle("POST /api/admin/silent-mode/rotate",
 		requireAdmin(http.HandlerFunc(sh.RotateSilent)))
+	// Contract §1 line 307 names the legacy endpoint
+	// POST /api/admin/settings/silent-mode — register it as an alias so the
+	// public contract holds without forcing the UI to know about both spellings.
+	mux.Handle("POST /api/admin/settings/silent-mode",
+		requireAdmin(http.HandlerFunc(sh.RotateSilent)))
 }
 
-// mountBackupRoutes is a forward-compat stub installed alongside T-17 so the
-// parallel-agent T-26 work can wire the BackupHandler without re-touching the
-// router skeleton. When BackupHandler is nil the function is a no-op.
+// mountBackupRoutes installs the M-OPS backup surface (T-26):
+//
+//   - POST /api/admin/backup           — create + stream tar.gz to client
+//   - POST /api/admin/backup/restore   — multipart upload + restore in-place
+//
+// Both endpoints are admin-only. Restore returns restart_required=true so the
+// UI can surface the "service is restarting" banner; the actual exec is the
+// operator's responsibility.
 func mountBackupRoutes(mux *http.ServeMux, deps *Deps) {
 	if deps == nil || deps.BackupHandler == nil || deps.TokenStore == nil {
 		return
@@ -609,6 +623,9 @@ func mountBackupRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("POST /api/admin/backup", requireAdmin(http.HandlerFunc(bh.Create)))
 	mux.Handle("POST /api/admin/backup/restore",
 		requireAdmin(http.HandlerFunc(bh.Restore)))
+	// Contract §1 line 310 names the restore endpoint /api/admin/restore as
+	// well — keep both spellings live so docs + UI agree.
+	mux.Handle("POST /api/admin/restore", requireAdmin(http.HandlerFunc(bh.Restore)))
 }
 
 // mountRuleRoutes is a forward-compat stub installed alongside T-17 so the
@@ -622,8 +639,14 @@ func mountRuleRoutes(mux *http.ServeMux, deps *Deps) {
 	rh := deps.RuleHandler
 	mux.Handle("GET /api/rules", required(http.HandlerFunc(rh.List)))
 	mux.Handle("POST /api/rules", required(http.HandlerFunc(rh.Create)))
+	// Literal sub-paths take priority over {id} per net/http 1.22+ ServeMux,
+	// so the ordering below is purely cosmetic — we list literal paths first
+	// to mirror the contract §1 ordering.
 	mux.Handle("GET /api/rules/templates", required(http.HandlerFunc(rh.Templates)))
 	mux.Handle("POST /api/rules/reorder", required(http.HandlerFunc(rh.Reorder)))
+	mux.Handle("PUT /api/rules/order", required(http.HandlerFunc(rh.Reorder)))
+	mux.Handle("GET /api/rules/preview/{subID}", required(http.HandlerFunc(rh.Preview)))
+
 	mux.Handle("GET /api/rules/{id}", required(http.HandlerFunc(rh.Get)))
 	mux.Handle("PUT /api/rules/{id}", required(http.HandlerFunc(rh.Update)))
 	mux.Handle("PATCH /api/rules/{id}", required(http.HandlerFunc(rh.Update)))
