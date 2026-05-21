@@ -39,6 +39,20 @@ export const queryKeys = {
     detail: (id: string) => ["rule", "detail", id] as const,
   },
 
+  ruleSet: {
+    all: () => ["rule-set"] as const,
+    list: () => ["rule-set", "list"] as const,
+    detail: (id: string) => ["rule-set", "detail", id] as const,
+    presets: () => ["rule-set", "presets"] as const,
+  },
+
+  proxyGroup: {
+    all: () => ["proxy-group"] as const,
+    list: () => ["proxy-group", "list"] as const,
+    detail: (id: string) => ["proxy-group", "detail", id] as const,
+    presets: () => ["proxy-group", "presets"] as const,
+  },
+
   script: {
     all: () => ["script"] as const,
     list: () => ["script", "list"] as const,

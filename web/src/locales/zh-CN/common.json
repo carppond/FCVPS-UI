@@ -26,6 +26,8 @@
     "nodes": "节点",
     "pipelines": "算子流水线",
     "rules": "规则",
+    "rule_sets": "规则集",
+    "proxy_groups": "代理组",
     "scripts": "脚本",
     "agents": "探针",
     "traffic": "流量",

@@ -1,0 +1,88 @@
+{
+  "title": "规则集",
+  "subtitle": "管理 Clash 规则提供者（Rule Providers）。订阅生成时会自动写入 rule-providers 块。",
+  "list": {
+    "search_placeholder": "按名称搜索…",
+    "add": "新建规则集",
+    "from_preset": "从预设",
+    "empty_title": "尚未添加规则集",
+    "empty_description": "规则集会以 rule-providers 形式写入 mihomo 配置，由客户端定期拉取。",
+    "never_synced": "从未同步",
+    "rows_drag_hint": "操作"
+  },
+  "columns": {
+    "name": "名称",
+    "behavior": "behavior",
+    "format": "format",
+    "url": "URL",
+    "synced": "上次同步",
+    "enabled": "启用",
+    "actions": "操作"
+  },
+  "form": {
+    "new_title": "新建规则集",
+    "edit_title": "编辑规则集",
+    "name_label": "名称",
+    "name_placeholder": "如：cn-domain",
+    "behavior_label": "behavior",
+    "format_label": "format",
+    "url_label": "URL",
+    "url_placeholder": "https://…",
+    "interval_label": "同步间隔（秒）",
+    "interval_hint": "客户端拉取间隔；默认 86400（24 小时）",
+    "enabled_label": "启用",
+    "save": "保存",
+    "cancel": "取消"
+  },
+  "behavior": {
+    "domain": "domain",
+    "ipcidr": "ipcidr",
+    "classical": "classical"
+  },
+  "format": {
+    "yaml": "yaml",
+    "text": "text",
+    "mrs": "mrs"
+  },
+  "status": {
+    "ok": "正常",
+    "error": "异常",
+    "pending": "同步中",
+    "never": "未同步"
+  },
+  "actions": {
+    "edit": "编辑",
+    "sync_now": "立即同步",
+    "delete": "删除"
+  },
+  "presets": {
+    "dialog_title": "从预设导入",
+    "dialog_description": "选择 meta-rules-dat 维护的常用规则集，一次添加多条。",
+    "tabs": {
+      "common": "常用",
+      "app": "应用",
+      "block": "拦截"
+    },
+    "select_count": "已选 {{count}} 项",
+    "add_selected": "添加所选 ({{count}})",
+    "added_toast": "已添加 {{count}} 条规则集",
+    "added_with_failures": "添加 {{ok}} 条，失败 {{failed}} 条"
+  },
+  "delete": {
+    "confirm": "删除规则集 \"{{name}}\"？此操作不可撤销。"
+  },
+  "toast": {
+    "create_ok": "规则集已创建",
+    "update_ok": "规则集已更新",
+    "delete_ok": "规则集已删除",
+    "sync_ok": "已触发同步"
+  },
+  "error": {
+    "load_failed": "加载规则集失败",
+    "create_failed": "创建规则集失败",
+    "update_failed": "更新规则集失败",
+    "delete_failed": "删除规则集失败",
+    "sync_failed": "同步失败",
+    "presets_failed": "加载预设失败"
+  }
+}

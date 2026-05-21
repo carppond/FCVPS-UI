@@ -26,6 +26,8 @@
     "nodes": "Nodes",
     "pipelines": "Pipelines",
     "rules": "Rules",
+    "rule_sets": "Rule Sets",
+    "proxy_groups": "Proxy Groups",
     "scripts": "Scripts",
     "agents": "Agents",
     "traffic": "Traffic",

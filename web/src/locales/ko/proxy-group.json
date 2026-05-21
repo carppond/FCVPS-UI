@@ -1,0 +1,82 @@
+{
+  "title": "프록시 그룹",
+  "subtitle": "Clash proxy-groups 를 관리합니다. 드래그로 순서를 바꿀 수 있으며, 그 순서대로 설정이 출력됩니다.",
+  "list": {
+    "search_placeholder": "이름으로 검색…",
+    "add": "새 프록시 그룹",
+    "from_preset": "프리셋에서",
+    "empty_title": "프록시 그룹이 없습니다",
+    "empty_description": "프록시 그룹은 mihomo 안에서 노드를 묶습니다(자동 선택 / 지역 분리 등).",
+    "drag_hint": "드래그하여 순서 변경",
+    "members_count": "{{count}} 노드",
+    "groups_count": "{{count}} 하위 그룹",
+    "include_all_label": "모든 노드",
+    "filter_label": "필터 {{filter}}"
+  },
+  "form": {
+    "new_title": "새 프록시 그룹",
+    "edit_title": "프록시 그룹 편집",
+    "name_label": "이름",
+    "name_placeholder": "예: 🚀 노드 선택",
+    "icon_label": "Emoji (선택)",
+    "icon_placeholder": "🚀 / 🇭🇰 / 🤖 …",
+    "type_label": "종류",
+    "include_all_label": "모든 노드 포함",
+    "include_all_hint": "켜면 Clash 설정 생성 시 사용 가능한 모든 노드를 포함합니다.",
+    "filter_label": "필터 정규식(전체 노드일 때만 동작)",
+    "filter_placeholder": "(?i)HK|홍콩",
+    "filter_quick": "단축",
+    "members_label": "멤버 노드(이름)",
+    "members_placeholder": "Enter로 추가: DIRECT / REJECT / HK-01",
+    "subgroups_label": "멤버 하위 그룹",
+    "subgroups_placeholder": "Enter로 다른 그룹 이름을 추가",
+    "test_url_label": "테스트 URL",
+    "test_url_placeholder": "http://www.gstatic.com/generate_204",
+    "test_interval_label": "테스트 간격(초)",
+    "test_interval_placeholder": "300",
+    "sort_order_label": "정렬 가중치",
+    "save": "저장",
+    "cancel": "취소"
+  },
+  "types": {
+    "select": "select",
+    "url-test": "url-test",
+    "fallback": "fallback",
+    "load-balance": "load-balance",
+    "relay": "relay"
+  },
+  "actions": {
+    "edit": "편집",
+    "delete": "삭제"
+  },
+  "presets": {
+    "dialog_title": "프리셋에서 가져오기",
+    "dialog_description": "자주 쓰는 조합을 한 번에 추가합니다.",
+    "tabs": {
+      "core": "코어",
+      "region": "지역",
+      "app": "앱"
+    },
+    "select_count": "{{count}} 개 선택됨",
+    "add_selected": "선택 추가 ({{count}})",
+    "added_toast": "{{count}} 개의 프록시 그룹을 추가했습니다",
+    "added_with_failures": "{{ok}} 개 추가, {{failed}} 개 실패"
+  },
+  "delete": {
+    "confirm": "프록시 그룹 \"{{name}}\" 을 삭제하시겠습니까? 되돌릴 수 없습니다."
+  },
+  "toast": {
+    "create_ok": "프록시 그룹을 만들었습니다",
+    "update_ok": "프록시 그룹을 업데이트했습니다",
+    "delete_ok": "프록시 그룹을 삭제했습니다",
+    "reorder_ok": "순서를 업데이트했습니다"
+  },
+  "error": {
+    "load_failed": "프록시 그룹을 불러오지 못했습니다",
+    "create_failed": "프록시 그룹 생성에 실패했습니다",
+    "update_failed": "프록시 그룹 업데이트에 실패했습니다",
+    "delete_failed": "프록시 그룹 삭제에 실패했습니다",
+    "reorder_failed": "순서 업데이트에 실패했습니다",
+    "presets_failed": "프리셋을 불러오지 못했습니다"
+  }
+}

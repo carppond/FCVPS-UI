@@ -68,7 +68,13 @@
       "skip_desc": "Configure manually on the /rules page.",
       "existing_warning": "You already have {{count}} custom rule(s); selecting a template will append new rules.",
       "partial_failure": "Subscription created, but {{failed}} rule(s) failed to import.",
-      "rules_count": "Contains {{count}} rules"
+      "rules_count": "Contains {{count}} rules",
+      "category": {
+        "common": "Common",
+        "region": "Region",
+        "app": "App",
+        "block": "Block"
+      }
     },
     "next": "Next",
     "back": "Back",

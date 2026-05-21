@@ -1,0 +1,82 @@
+{
+  "title": "Proxy Groups",
+  "subtitle": "Manage Clash proxy-groups. Drag to reorder; the same order is written to the rendered config.",
+  "list": {
+    "search_placeholder": "Search by name…",
+    "add": "New proxy group",
+    "from_preset": "From preset",
+    "empty_title": "No proxy groups yet",
+    "empty_description": "Proxy groups aggregate nodes inside mihomo — e.g. auto-select, region splitters.",
+    "drag_hint": "Drag to reorder",
+    "members_count": "{{count}} nodes",
+    "groups_count": "{{count}} sub-groups",
+    "include_all_label": "All nodes",
+    "filter_label": "Filter {{filter}}"
+  },
+  "form": {
+    "new_title": "New proxy group",
+    "edit_title": "Edit proxy group",
+    "name_label": "Name",
+    "name_placeholder": "e.g. 🚀 Manual",
+    "icon_label": "Emoji (optional)",
+    "icon_placeholder": "🚀 / 🇭🇰 / 🤖 …",
+    "type_label": "Type",
+    "include_all_label": "Include all nodes",
+    "include_all_hint": "If on, all available nodes are included when rendering the Clash config.",
+    "filter_label": "Filter regex (active only when include-all)",
+    "filter_placeholder": "(?i)HK|Hong",
+    "filter_quick": "Shortcut",
+    "members_label": "Member proxies (by name)",
+    "members_placeholder": "Press Enter to add: DIRECT / REJECT / HK-01",
+    "subgroups_label": "Member sub-groups",
+    "subgroups_placeholder": "Press Enter to add another group's name",
+    "test_url_label": "Test URL",
+    "test_url_placeholder": "http://www.gstatic.com/generate_204",
+    "test_interval_label": "Test interval (seconds)",
+    "test_interval_placeholder": "300",
+    "sort_order_label": "Sort order",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "types": {
+    "select": "select",
+    "url-test": "url-test",
+    "fallback": "fallback",
+    "load-balance": "load-balance",
+    "relay": "relay"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "presets": {
+    "dialog_title": "Import from preset",
+    "dialog_description": "Curated proxy-group bundles; pick any to add multiple in one go.",
+    "tabs": {
+      "core": "Core",
+      "region": "Regions",
+      "app": "Apps"
+    },
+    "select_count": "{{count}} selected",
+    "add_selected": "Add selected ({{count}})",
+    "added_toast": "Added {{count}} proxy group(s)",
+    "added_with_failures": "Added {{ok}} — {{failed}} failed"
+  },
+  "delete": {
+    "confirm": "Delete proxy group \"{{name}}\"? This cannot be undone."
+  },
+  "toast": {
+    "create_ok": "Proxy group created",
+    "update_ok": "Proxy group updated",
+    "delete_ok": "Proxy group deleted",
+    "reorder_ok": "Order updated"
+  },
+  "error": {
+    "load_failed": "Failed to load proxy groups",
+    "create_failed": "Failed to create proxy group",
+    "update_failed": "Failed to update proxy group",
+    "delete_failed": "Failed to delete proxy group",
+    "reorder_failed": "Failed to update order",
+    "presets_failed": "Failed to load presets"
+  }
+}

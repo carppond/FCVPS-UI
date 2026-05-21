@@ -1,0 +1,88 @@
+{
+  "title": "ルールセット",
+  "subtitle": "Clash ルールプロバイダーを管理します。サブスクリプション生成時に rule-providers ブロックに書き込まれます。",
+  "list": {
+    "search_placeholder": "名前で検索…",
+    "add": "新規ルールセット",
+    "from_preset": "プリセットから",
+    "empty_title": "ルールセットがありません",
+    "empty_description": "ルールセットは mihomo の rule-providers として出力され、クライアントが定期的に取得します。",
+    "never_synced": "未同期",
+    "rows_drag_hint": "操作"
+  },
+  "columns": {
+    "name": "名前",
+    "behavior": "behavior",
+    "format": "format",
+    "url": "URL",
+    "synced": "最終同期",
+    "enabled": "有効",
+    "actions": "操作"
+  },
+  "form": {
+    "new_title": "新規ルールセット",
+    "edit_title": "ルールセットを編集",
+    "name_label": "名前",
+    "name_placeholder": "例: cn-domain",
+    "behavior_label": "behavior",
+    "format_label": "format",
+    "url_label": "URL",
+    "url_placeholder": "https://…",
+    "interval_label": "同期間隔（秒）",
+    "interval_hint": "クライアントの取得間隔。デフォルトは 86400（24 時間）。",
+    "enabled_label": "有効",
+    "save": "保存",
+    "cancel": "キャンセル"
+  },
+  "behavior": {
+    "domain": "domain",
+    "ipcidr": "ipcidr",
+    "classical": "classical"
+  },
+  "format": {
+    "yaml": "yaml",
+    "text": "text",
+    "mrs": "mrs"
+  },
+  "status": {
+    "ok": "正常",
+    "error": "エラー",
+    "pending": "同期中",
+    "never": "未同期"
+  },
+  "actions": {
+    "edit": "編集",
+    "sync_now": "今すぐ同期",
+    "delete": "削除"
+  },
+  "presets": {
+    "dialog_title": "プリセットから追加",
+    "dialog_description": "meta-rules-dat が提供する一般的なルールセットを一括で追加できます。",
+    "tabs": {
+      "common": "一般",
+      "app": "アプリ",
+      "block": "ブロック"
+    },
+    "select_count": "{{count}} 件選択",
+    "add_selected": "選択を追加 ({{count}})",
+    "added_toast": "{{count}} 件のルールセットを追加しました",
+    "added_with_failures": "{{ok}} 件追加、{{failed}} 件失敗"
+  },
+  "delete": {
+    "confirm": "ルールセット「{{name}}」を削除しますか？元に戻せません。"
+  },
+  "toast": {
+    "create_ok": "ルールセットを作成しました",
+    "update_ok": "ルールセットを更新しました",
+    "delete_ok": "ルールセットを削除しました",
+    "sync_ok": "同期を開始しました"
+  },
+  "error": {
+    "load_failed": "ルールセットの読み込みに失敗しました",
+    "create_failed": "ルールセットの作成に失敗しました",
+    "update_failed": "ルールセットの更新に失敗しました",
+    "delete_failed": "ルールセットの削除に失敗しました",
+    "sync_failed": "同期に失敗しました",
+    "presets_failed": "プリセットの読み込みに失敗しました"
+  }
+}

@@ -55,10 +55,16 @@
   },
   "templates": {
     "dialog_title": "选择模板",
-    "dialog_description": "选择一个预设模板作为起点，可在表单中继续编辑",
+    "dialog_description": "按分类挑选预设模板作为起点，可在表单中继续编辑。",
     "button": "从模板创建",
     "select": "使用",
-    "applied": "已填入"
+    "applied": "已填入",
+    "tabs": {
+      "common": "常用",
+      "region": "地区",
+      "app": "应用",
+      "block": "拦截"
+    }
   },
   "delete": {
     "dialog_title": "删除规则",

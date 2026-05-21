@@ -1,0 +1,88 @@
+{
+  "title": "Rule Sets",
+  "subtitle": "Manage Clash rule providers. They are written to the rule-providers block when subscriptions render.",
+  "list": {
+    "search_placeholder": "Search by name…",
+    "add": "New rule set",
+    "from_preset": "From preset",
+    "empty_title": "No rule sets yet",
+    "empty_description": "Rule sets are emitted as rule-providers in the mihomo config; the client fetches them on its own schedule.",
+    "never_synced": "Never synced",
+    "rows_drag_hint": "Actions"
+  },
+  "columns": {
+    "name": "Name",
+    "behavior": "behavior",
+    "format": "format",
+    "url": "URL",
+    "synced": "Last sync",
+    "enabled": "Enabled",
+    "actions": "Actions"
+  },
+  "form": {
+    "new_title": "New rule set",
+    "edit_title": "Edit rule set",
+    "name_label": "Name",
+    "name_placeholder": "e.g. cn-domain",
+    "behavior_label": "behavior",
+    "format_label": "format",
+    "url_label": "URL",
+    "url_placeholder": "https://…",
+    "interval_label": "Sync interval (seconds)",
+    "interval_hint": "Client fetch interval; default 86400 (24 hours).",
+    "enabled_label": "Enabled",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "behavior": {
+    "domain": "domain",
+    "ipcidr": "ipcidr",
+    "classical": "classical"
+  },
+  "format": {
+    "yaml": "yaml",
+    "text": "text",
+    "mrs": "mrs"
+  },
+  "status": {
+    "ok": "OK",
+    "error": "Error",
+    "pending": "Syncing",
+    "never": "Never"
+  },
+  "actions": {
+    "edit": "Edit",
+    "sync_now": "Sync now",
+    "delete": "Delete"
+  },
+  "presets": {
+    "dialog_title": "Import from preset",
+    "dialog_description": "Curated meta-rules-dat rulesets; pick any to add them in bulk.",
+    "tabs": {
+      "common": "Common",
+      "app": "Apps",
+      "block": "Block"
+    },
+    "select_count": "{{count}} selected",
+    "add_selected": "Add selected ({{count}})",
+    "added_toast": "Added {{count}} rule set(s)",
+    "added_with_failures": "Added {{ok}} — {{failed}} failed"
+  },
+  "delete": {
+    "confirm": "Delete rule set \"{{name}}\"? This cannot be undone."
+  },
+  "toast": {
+    "create_ok": "Rule set created",
+    "update_ok": "Rule set updated",
+    "delete_ok": "Rule set deleted",
+    "sync_ok": "Sync triggered"
+  },
+  "error": {
+    "load_failed": "Failed to load rule sets",
+    "create_failed": "Failed to create rule set",
+    "update_failed": "Failed to update rule set",
+    "delete_failed": "Failed to delete rule set",
+    "sync_failed": "Sync failed",
+    "presets_failed": "Failed to load presets"
+  }
+}

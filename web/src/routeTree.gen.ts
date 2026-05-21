@@ -19,6 +19,8 @@ import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as AuthedTrafficRouteImport } from './routes/_authed/traffic'
 import { Route as AuthedShortlinksRouteImport } from './routes/_authed/shortlinks'
 import { Route as AuthedRulesRouteImport } from './routes/_authed/rules'
+import { Route as AuthedRuleSetsRouteImport } from './routes/_authed/rule-sets'
+import { Route as AuthedProxyGroupsRouteImport } from './routes/_authed/proxy-groups'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index'
 import { Route as AuthedScriptsIndexRouteImport } from './routes/_authed/scripts/index'
@@ -86,6 +88,16 @@ const AuthedShortlinksRoute = AuthedShortlinksRouteImport.update({
 const AuthedRulesRoute = AuthedRulesRouteImport.update({
   id: '/rules',
   path: '/rules',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedRuleSetsRoute = AuthedRuleSetsRouteImport.update({
+  id: '/rule-sets',
+  path: '/rule-sets',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedProxyGroupsRoute = AuthedProxyGroupsRouteImport.update({
+  id: '/proxy-groups',
+  path: '/proxy-groups',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
@@ -197,6 +209,8 @@ const AuthedPipelinesPipelineIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/proxy-groups': typeof AuthedProxyGroupsRoute
+  '/rule-sets': typeof AuthedRuleSetsRoute
   '/rules': typeof AuthedRulesRoute
   '/shortlinks': typeof AuthedShortlinksRoute
   '/traffic': typeof AuthedTrafficRoute
@@ -227,6 +241,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/proxy-groups': typeof AuthedProxyGroupsRoute
+  '/rule-sets': typeof AuthedRuleSetsRoute
   '/rules': typeof AuthedRulesRoute
   '/shortlinks': typeof AuthedShortlinksRoute
   '/traffic': typeof AuthedTrafficRoute
@@ -260,6 +276,8 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteRouteWithChildren
   '/_public': typeof PublicRouteRouteWithChildren
   '/_authed/dashboard': typeof AuthedDashboardRoute
+  '/_authed/proxy-groups': typeof AuthedProxyGroupsRoute
+  '/_authed/rule-sets': typeof AuthedRuleSetsRoute
   '/_authed/rules': typeof AuthedRulesRoute
   '/_authed/shortlinks': typeof AuthedShortlinksRoute
   '/_authed/traffic': typeof AuthedTrafficRoute
@@ -292,6 +310,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/proxy-groups'
+    | '/rule-sets'
     | '/rules'
     | '/shortlinks'
     | '/traffic'
@@ -322,6 +342,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/dashboard'
+    | '/proxy-groups'
+    | '/rule-sets'
     | '/rules'
     | '/shortlinks'
     | '/traffic'
@@ -354,6 +376,8 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/_public'
     | '/_authed/dashboard'
+    | '/_authed/proxy-groups'
+    | '/_authed/rule-sets'
     | '/_authed/rules'
     | '/_authed/shortlinks'
     | '/_authed/traffic'
@@ -458,6 +482,20 @@ declare module '@tanstack/react-router' {
       path: '/rules'
       fullPath: '/rules'
       preLoaderRoute: typeof AuthedRulesRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/rule-sets': {
+      id: '/_authed/rule-sets'
+      path: '/rule-sets'
+      fullPath: '/rule-sets'
+      preLoaderRoute: typeof AuthedRuleSetsRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/proxy-groups': {
+      id: '/_authed/proxy-groups'
+      path: '/proxy-groups'
+      fullPath: '/proxy-groups'
+      preLoaderRoute: typeof AuthedProxyGroupsRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/dashboard': {
@@ -605,6 +643,8 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedProxyGroupsRoute: typeof AuthedProxyGroupsRoute
+  AuthedRuleSetsRoute: typeof AuthedRuleSetsRoute
   AuthedRulesRoute: typeof AuthedRulesRoute
   AuthedShortlinksRoute: typeof AuthedShortlinksRoute
   AuthedTrafficRoute: typeof AuthedTrafficRoute
@@ -631,6 +671,8 @@ interface AuthedRouteRouteChildren {
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedProxyGroupsRoute: AuthedProxyGroupsRoute,
+  AuthedRuleSetsRoute: AuthedRuleSetsRoute,
   AuthedRulesRoute: AuthedRulesRoute,
   AuthedShortlinksRoute: AuthedShortlinksRoute,
   AuthedTrafficRoute: AuthedTrafficRoute,

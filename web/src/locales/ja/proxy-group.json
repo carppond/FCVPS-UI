@@ -1,0 +1,82 @@
+{
+  "title": "プロキシグループ",
+  "subtitle": "Clash の proxy-groups を管理します。ドラッグで並び替えでき、その順序のまま設定が書き出されます。",
+  "list": {
+    "search_placeholder": "名前で検索…",
+    "add": "新規プロキシグループ",
+    "from_preset": "プリセットから",
+    "empty_title": "プロキシグループがありません",
+    "empty_description": "プロキシグループは mihomo 内でノードを集約します（例: 自動選択 / 地域分流）。",
+    "drag_hint": "ドラッグで並び替え",
+    "members_count": "{{count}} ノード",
+    "groups_count": "{{count}} サブグループ",
+    "include_all_label": "全ノード",
+    "filter_label": "フィルター {{filter}}"
+  },
+  "form": {
+    "new_title": "新規プロキシグループ",
+    "edit_title": "プロキシグループを編集",
+    "name_label": "名前",
+    "name_placeholder": "例: 🚀 ノード選択",
+    "icon_label": "Emoji (任意)",
+    "icon_placeholder": "🚀 / 🇭🇰 / 🤖 …",
+    "type_label": "種別",
+    "include_all_label": "全ノードを含める",
+    "include_all_hint": "オンにすると、Clash 設定生成時に利用可能なノードがすべて含まれます。",
+    "filter_label": "フィルター正規表現 (全ノード時のみ有効)",
+    "filter_placeholder": "(?i)HK|香港",
+    "filter_quick": "ショートカット",
+    "members_label": "メンバーノード（名前）",
+    "members_placeholder": "Enter で追加: DIRECT / REJECT / HK-01",
+    "subgroups_label": "メンバーサブグループ",
+    "subgroups_placeholder": "Enter で別グループ名を追加",
+    "test_url_label": "テスト URL",
+    "test_url_placeholder": "http://www.gstatic.com/generate_204",
+    "test_interval_label": "テスト間隔（秒）",
+    "test_interval_placeholder": "300",
+    "sort_order_label": "ソート順",
+    "save": "保存",
+    "cancel": "キャンセル"
+  },
+  "types": {
+    "select": "select",
+    "url-test": "url-test",
+    "fallback": "fallback",
+    "load-balance": "load-balance",
+    "relay": "relay"
+  },
+  "actions": {
+    "edit": "編集",
+    "delete": "削除"
+  },
+  "presets": {
+    "dialog_title": "プリセットから追加",
+    "dialog_description": "よく使う組み合わせを一括で追加できます。",
+    "tabs": {
+      "core": "コア",
+      "region": "地域",
+      "app": "アプリ"
+    },
+    "select_count": "{{count}} 件選択",
+    "add_selected": "選択を追加 ({{count}})",
+    "added_toast": "{{count}} 件のプロキシグループを追加しました",
+    "added_with_failures": "{{ok}} 件追加、{{failed}} 件失敗"
+  },
+  "delete": {
+    "confirm": "プロキシグループ「{{name}}」を削除しますか？元に戻せません。"
+  },
+  "toast": {
+    "create_ok": "プロキシグループを作成しました",
+    "update_ok": "プロキシグループを更新しました",
+    "delete_ok": "プロキシグループを削除しました",
+    "reorder_ok": "並び順を更新しました"
+  },
+  "error": {
+    "load_failed": "プロキシグループの読み込みに失敗しました",
+    "create_failed": "プロキシグループの作成に失敗しました",
+    "update_failed": "プロキシグループの更新に失敗しました",
+    "delete_failed": "プロキシグループの削除に失敗しました",
+    "reorder_failed": "並び順の更新に失敗しました",
+    "presets_failed": "プリセットの読み込みに失敗しました"
+  }
+}

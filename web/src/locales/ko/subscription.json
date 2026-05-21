@@ -68,7 +68,13 @@
       "skip_desc": "/rules 페이지에서 수동으로 구성합니다.",
       "existing_warning": "이미 {{count}}개의 사용자 정의 규칙이 있습니다. 템플릿을 선택하면 새 규칙이 추가됩니다.",
       "partial_failure": "구독은 생성되었지만 {{failed}}개의 규칙 가져오기에 실패했습니다.",
-      "rules_count": "{{count}}개의 규칙 포함"
+      "rules_count": "{{count}}개의 규칙 포함",
+      "category": {
+        "common": "일반",
+        "region": "지역",
+        "app": "앱",
+        "block": "차단"
+      }
     },
     "next": "다음",
     "back": "이전",

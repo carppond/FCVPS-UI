@@ -26,6 +26,8 @@
     "nodes": "ノード",
     "pipelines": "パイプライン",
     "rules": "ルール",
+    "rule_sets": "ルールセット",
+    "proxy_groups": "プロキシグループ",
     "scripts": "スクリプト",
     "agents": "エージェント",
     "traffic": "トラフィック",

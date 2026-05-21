@@ -55,10 +55,16 @@
   },
   "templates": {
     "dialog_title": "テンプレート選択",
-    "dialog_description": "プリセットをベースとして使用できます",
+    "dialog_description": "カテゴリーからプリセットを選び、フォームの初期値として利用できます。",
     "button": "テンプレートから作成",
     "select": "使用",
-    "applied": "テンプレートを反映しました"
+    "applied": "テンプレートを反映しました",
+    "tabs": {
+      "common": "一般",
+      "region": "地域",
+      "app": "アプリ",
+      "block": "ブロック"
+    }
   },
   "delete": {
     "dialog_title": "ルール削除",

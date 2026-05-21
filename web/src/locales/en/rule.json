@@ -55,10 +55,16 @@
   },
   "templates": {
     "dialog_title": "Choose a template",
-    "dialog_description": "Pick a preset to seed the form; you can keep editing afterwards",
+    "dialog_description": "Pick a preset to seed the form; you can keep editing afterwards.",
     "button": "From template",
     "select": "Use",
-    "applied": "Template applied"
+    "applied": "Template applied",
+    "tabs": {
+      "common": "Common",
+      "region": "Regions",
+      "app": "Apps",
+      "block": "Block"
+    }
   },
   "delete": {
     "dialog_title": "Delete rule",

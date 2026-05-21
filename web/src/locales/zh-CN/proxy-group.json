@@ -1,0 +1,82 @@
+{
+  "title": "代理组",
+  "subtitle": "管理 Clash proxy-groups。可拖拽排序，订阅生成时按此顺序写入。",
+  "list": {
+    "search_placeholder": "按名称搜索…",
+    "add": "新建代理组",
+    "from_preset": "从预设",
+    "empty_title": "尚未配置代理组",
+    "empty_description": "代理组用于在 mihomo 中聚合节点，例如「自动选择」「地区分流」等。",
+    "drag_hint": "拖拽手柄调整顺序",
+    "members_count": "{{count}} 节点",
+    "groups_count": "{{count}} 子组",
+    "include_all_label": "全部节点",
+    "filter_label": "过滤 {{filter}}"
+  },
+  "form": {
+    "new_title": "新建代理组",
+    "edit_title": "编辑代理组",
+    "name_label": "名称",
+    "name_placeholder": "如：🚀 节点选择",
+    "icon_label": "Emoji（可选）",
+    "icon_placeholder": "🚀 / 🇭🇰 / 🤖 …",
+    "type_label": "类型",
+    "include_all_label": "包含所有节点",
+    "include_all_hint": "启用后会在生成 Clash 配置时自动包含所有可用节点。",
+    "filter_label": "过滤正则（仅当包含全部时生效）",
+    "filter_placeholder": "(?i)HK|香港",
+    "filter_quick": "快捷",
+    "members_label": "成员节点（按名称）",
+    "members_placeholder": "回车添加，例：DIRECT / REJECT / HK-01",
+    "subgroups_label": "成员子组",
+    "subgroups_placeholder": "回车添加，例：🇭🇰 香港节点",
+    "test_url_label": "测速 URL",
+    "test_url_placeholder": "http://www.gstatic.com/generate_204",
+    "test_interval_label": "测速间隔（秒）",
+    "test_interval_placeholder": "300",
+    "sort_order_label": "排序权重",
+    "save": "保存",
+    "cancel": "取消"
+  },
+  "types": {
+    "select": "select",
+    "url-test": "url-test",
+    "fallback": "fallback",
+    "load-balance": "load-balance",
+    "relay": "relay"
+  },
+  "actions": {
+    "edit": "编辑",
+    "delete": "删除"
+  },
+  "presets": {
+    "dialog_title": "从预设导入",
+    "dialog_description": "选择常用代理组合，一次导入多个组。",
+    "tabs": {
+      "core": "核心",
+      "region": "地区",
+      "app": "应用"
+    },
+    "select_count": "已选 {{count}} 项",
+    "add_selected": "添加所选 ({{count}})",
+    "added_toast": "已添加 {{count}} 个代理组",
+    "added_with_failures": "添加 {{ok}} 个，失败 {{failed}} 个"
+  },
+  "delete": {
+    "confirm": "删除代理组 \"{{name}}\"？此操作不可撤销。"
+  },
+  "toast": {
+    "create_ok": "代理组已创建",
+    "update_ok": "代理组已更新",
+    "delete_ok": "代理组已删除",
+    "reorder_ok": "顺序已更新"
+  },
+  "error": {
+    "load_failed": "加载代理组失败",
+    "create_failed": "创建代理组失败",
+    "update_failed": "更新代理组失败",
+    "delete_failed": "删除代理组失败",
+    "reorder_failed": "更新顺序失败",
+    "presets_failed": "加载预设失败"
+  }
+}

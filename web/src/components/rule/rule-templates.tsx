@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -7,29 +8,39 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { cn } from "@/lib/cn";
 import { useRuleTemplatesQuery } from "@/api/rule";
 import type { RuleTemplate } from "@/types/api";
 
 interface RuleTemplatesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /**
-   * Invoked when the user clicks "use" on a template card. Parent should
-   * close the dialog and seed the form with the supplied template.
-   */
   onTemplateSelect: (template: RuleTemplate) => void;
 }
 
+type TemplateCategory = "common" | "region" | "app" | "block";
+
+const CATEGORY_ORDER: TemplateCategory[] = ["common", "region", "app", "block"];
+
+/** Buckets a template into one of the four tabs. Unknown categories fall back
+ *  to "common" so older templates still render somewhere visible. */
+function categoryFor(t: RuleTemplate): TemplateCategory {
+  const c = t.category;
+  if (c === "region" || c === "app" || c === "block" || c === "common") {
+    return c;
+  }
+  return "common";
+}
+
 /**
- * Built-in template picker. Renders a dialog with 3 preset cards
- * (国内直连 / 全局代理 / 广告屏蔽) returned by GET /api/rules/templates.
- *
- * The dialog stays a thin shell — the parent route owns "what to do" with the
- * chosen template (typically: populate the form's content field and switch
- * type to rules / rule-providers as appropriate).
+ * Categorised template picker — backend now ships 18 templates spread across
+ * common/region/app/block. We split them into tabs so the dialog stays
+ * scannable; the "use" button forwards the chosen template to the host.
  */
 export function RuleTemplatesDialog({
   open,
@@ -39,9 +50,25 @@ export function RuleTemplatesDialog({
   const { t } = useTranslation(["rule", "common"]);
   const { data, isLoading, isError, error, refetch } = useRuleTemplatesQuery();
 
+  const [activeTab, setActiveTab] = React.useState<TemplateCategory>("common");
+  React.useEffect(() => {
+    if (open) setActiveTab("common");
+  }, [open]);
+
+  const byCategory = React.useMemo(() => {
+    const acc: Record<TemplateCategory, RuleTemplate[]> = {
+      common: [],
+      region: [],
+      app: [],
+      block: [],
+    };
+    for (const tpl of data ?? []) acc[categoryFor(tpl)].push(tpl);
+    return acc;
+  }, [data]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>{t("rule:templates.dialog_title")}</DialogTitle>
           <DialogDescription>
@@ -49,30 +76,56 @@ export function RuleTemplatesDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
-          <TemplateListSkeleton />
-        ) : isError ? (
+        {isError ? (
           <ErrorState
             message={error?.message ?? t("rule:error.load_failed")}
             onRetry={() => void refetch()}
             retryLabel={t("common:actions.retry")}
           />
-        ) : !data || data.length === 0 ? (
-          <EmptyState
-            title={t("rule:list.empty_title")}
-            description={t("rule:list.empty_description")}
-          />
         ) : (
-          <ul className="flex flex-col gap-3" data-testid="rule-templates-list">
-            {data.map((tpl) => (
-              <li key={tpl.id}>
-                <TemplateCard
-                  template={tpl}
-                  onSelect={() => onTemplateSelect(tpl)}
-                />
-              </li>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as TemplateCategory)}
+          >
+            <TabsList className="w-full">
+              {CATEGORY_ORDER.map((key) => (
+                <TabsTrigger key={key} value={key} className="flex-1">
+                  {t(`rule:templates.tabs.${key}`)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {CATEGORY_ORDER.map((key) => (
+              <TabsContent
+                key={key}
+                value={key}
+                className="max-h-[60vh] overflow-y-auto"
+              >
+                {isLoading ? (
+                  <TemplateListSkeleton />
+                ) : byCategory[key].length === 0 ? (
+                  <EmptyState
+                    title={t("rule:list.empty_title")}
+                    description={t("rule:list.empty_description")}
+                  />
+                ) : (
+                  <ul
+                    className="grid grid-cols-1 gap-2 py-2 sm:grid-cols-2"
+                    data-testid="rule-templates-list"
+                  >
+                    {byCategory[key].map((tpl) => (
+                      <li key={tpl.id}>
+                        <TemplateCard
+                          template={tpl}
+                          onSelect={() => onTemplateSelect(tpl)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </TabsContent>
             ))}
-          </ul>
+          </Tabs>
         )}
       </DialogContent>
     </Dialog>
@@ -89,38 +142,64 @@ function TemplateCard({ template, onSelect }: TemplateCardProps) {
   return (
     <article
       data-testid={`rule-template-${template.id}`}
-      className="flex items-start justify-between gap-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
+      className={cn(
+        "flex h-full flex-col gap-3 rounded-[var(--radius-md)]",
+        "border border-[var(--color-border)] bg-[var(--color-surface)] p-4",
+        "transition-colors duration-[var(--duration-fast)] hover:bg-[var(--color-surface-hover)]",
+      )}
     >
-      <div className="flex-1">
-        <h3 className="text-[var(--font-size-base)] font-medium text-[var(--color-text-primary)]">
-          {template.name}
-        </h3>
-        <p className="mt-1 text-[var(--font-size-xs)] leading-relaxed text-[var(--color-text-tertiary)]">
-          {template.description}
-        </p>
+      <div className="flex items-start gap-3">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-surface-hover)] text-base"
+          aria-hidden
+        >
+          {template.emoji ?? "·"}
+        </span>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[var(--font-size-base)] font-medium text-[var(--color-text-primary)]">
+            {template.name}
+          </h3>
+          <p className="mt-1 text-[var(--font-size-xs)] leading-relaxed text-[var(--color-text-tertiary)]">
+            {template.description}
+          </p>
+        </div>
       </div>
-      <Button size="sm" variant="default" onClick={onSelect}>
-        {t("rule:templates.select")}
-      </Button>
+      {template.tags && template.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {template.tags.map((tag) => (
+            <Badge key={tag} variant="outline">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )}
+      <div className="mt-auto flex justify-end">
+        <Button size="sm" variant="default" onClick={onSelect}>
+          {t("rule:templates.select")}
+        </Button>
+      </div>
     </article>
   );
 }
 
 function TemplateListSkeleton() {
   return (
-    <ul className="flex flex-col gap-3" aria-hidden>
-      {Array.from({ length: 3 }).map((_, i) => (
-        <li
+    <div className="grid grid-cols-1 gap-2 py-2 sm:grid-cols-2" aria-hidden>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
           key={i}
-          className="flex items-start justify-between gap-4 rounded-[var(--radius-md)] border border-[var(--color-border)] p-4"
+          className="flex flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-4"
         >
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-64" />
+          <div className="flex items-start gap-3">
+            <Skeleton className="h-9 w-9 rounded-[var(--radius-md)]" />
+            <div className="flex flex-1 flex-col gap-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-56" />
+            </div>
           </div>
-          <Skeleton className="h-8 w-16" />
-        </li>
+          <Skeleton className="ml-auto h-8 w-16" />
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }

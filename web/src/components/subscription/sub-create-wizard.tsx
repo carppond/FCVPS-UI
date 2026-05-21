@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { useApiError } from "@/hooks/use-api-error";
@@ -579,6 +580,24 @@ interface StepTemplateProps {
   onChange: (next: TemplateChoice) => void;
 }
 
+/** Tab keys for the category grouping. Templates without a recognised
+ *  `category` fall back to "common" so legacy data still renders. */
+type TemplateCategoryKey = "common" | "region" | "app" | "block";
+const TEMPLATE_CATEGORY_ORDER: TemplateCategoryKey[] = [
+  "common",
+  "region",
+  "app",
+  "block",
+];
+
+function templateCategory(t: RuleTemplate): TemplateCategoryKey {
+  const c = t.category;
+  if (c === "region" || c === "app" || c === "block" || c === "common") {
+    return c;
+  }
+  return "common";
+}
+
 function StepTemplate({
   value,
   templates,
@@ -587,6 +606,32 @@ function StepTemplate({
   onChange,
 }: StepTemplateProps) {
   const { t } = useTranslation("subscription");
+
+  // Group templates by `category` so the 18 built-ins stay scannable —
+  // common defaults sit on tab 1, region / app / block fan out behind tabs.
+  const byCategory = React.useMemo(() => {
+    const acc: Record<TemplateCategoryKey, RuleTemplate[]> = {
+      common: [],
+      region: [],
+      app: [],
+      block: [],
+    };
+    for (const tpl of templates ?? []) {
+      acc[templateCategory(tpl)].push(tpl);
+    }
+    return acc;
+  }, [templates]);
+
+  const [activeTab, setActiveTab] =
+    React.useState<TemplateCategoryKey>("common");
+
+  // Auto-jump to the tab that owns the current selection so the radio dot is
+  // visible even when the user re-enters step 4 after navigating back.
+  React.useEffect(() => {
+    if (value === TEMPLATE_SKIP) return;
+    const owner = (templates ?? []).find((tpl) => tpl.id === value);
+    if (owner) setActiveTab(templateCategory(owner));
+  }, [value, templates]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -610,32 +655,69 @@ function StepTemplate({
         </div>
       )}
 
-      <div
-        role="radiogroup"
-        aria-label={t("subscription:wizard.step4.title")}
-        className="flex flex-col gap-2"
-      >
-        {isLoading && <TemplateCardsSkeleton />}
+      {isLoading ? (
+        <TemplateCardsSkeleton />
+      ) : (
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as TemplateCategoryKey)}
+        >
+          <TabsList className="w-full">
+            {TEMPLATE_CATEGORY_ORDER.map((key) => (
+              <TabsTrigger key={key} value={key} className="flex-1">
+                {t(`subscription:wizard.step4.category.${key}`)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {!isLoading &&
-          templates?.map((tpl) => {
-            const selected = value === tpl.id;
-            const count = countRuleLines(tpl.content);
-            return (
-              <TemplateOption
-                key={tpl.id}
-                id={tpl.id}
-                selected={selected}
-                icon={templateIcon(tpl.id)}
-                title={tpl.name}
-                desc={tpl.description}
-                meta={t("subscription:wizard.step4.rules_count", { count })}
-                onClick={() => onChange(tpl.id)}
-              />
-            );
-          })}
+          {TEMPLATE_CATEGORY_ORDER.map((key) => (
+            <TabsContent
+              key={key}
+              value={key}
+              className="max-h-[50vh] overflow-y-auto"
+            >
+              <div
+                role="radiogroup"
+                aria-label={t(`subscription:wizard.step4.category.${key}`)}
+                className="flex flex-col gap-2 py-2"
+              >
+                {byCategory[key].length === 0 ? (
+                  <p className="py-6 text-center text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+                    —
+                  </p>
+                ) : (
+                  byCategory[key].map((tpl) => {
+                    const selected = value === tpl.id;
+                    const count = countRuleLines(tpl.content);
+                    return (
+                      <TemplateOption
+                        key={tpl.id}
+                        id={tpl.id}
+                        emoji={tpl.emoji}
+                        selected={selected}
+                        icon={templateIcon(tpl.id)}
+                        title={tpl.name}
+                        desc={tpl.description}
+                        meta={t("subscription:wizard.step4.rules_count", {
+                          count,
+                        })}
+                        onClick={() => onChange(tpl.id)}
+                      />
+                    );
+                  })
+                )}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
 
-        {!isLoading && (
+      {!isLoading && (
+        <div
+          role="radiogroup"
+          aria-label={t("subscription:wizard.step4.skip")}
+          className="flex flex-col gap-2"
+        >
           <TemplateOption
             id={TEMPLATE_SKIP}
             selected={value === TEMPLATE_SKIP}
@@ -644,8 +726,8 @@ function StepTemplate({
             desc={t("subscription:wizard.step4.skip_desc")}
             onClick={() => onChange(TEMPLATE_SKIP)}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -654,6 +736,9 @@ interface TemplateOptionProps {
   id: string;
   selected: boolean;
   icon: React.ReactNode;
+  /** Optional emoji from the backend template — overrides the Lucide icon when
+   *  present so region / app templates surface the same glyph as elsewhere. */
+  emoji?: string;
   title: string;
   desc: string;
   meta?: string;
@@ -664,6 +749,7 @@ function TemplateOption({
   id,
   selected,
   icon,
+  emoji,
   title,
   desc,
   meta,
@@ -692,7 +778,7 @@ function TemplateOption({
             : "bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]",
         )}
       >
-        {icon}
+        {emoji ? <span className="text-base leading-none">{emoji}</span> : icon}
       </span>
       <span className="flex flex-col gap-0.5">
         <span className="text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)]">

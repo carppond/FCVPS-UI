@@ -27,6 +27,8 @@ import zhCNDashboard from "@/locales/zh-CN/dashboard.json";
 import zhCNNode from "@/locales/zh-CN/node.json";
 import zhCNNotify from "@/locales/zh-CN/notify.json";
 import zhCNRule from "@/locales/zh-CN/rule.json";
+import zhCNRuleSet from "@/locales/zh-CN/rule-set.json";
+import zhCNProxyGroup from "@/locales/zh-CN/proxy-group.json";
 import zhCNScript from "@/locales/zh-CN/script.json";
 import zhCNSettings from "@/locales/zh-CN/settings.json";
 import zhCNShortlink from "@/locales/zh-CN/shortlink.json";
@@ -45,6 +47,8 @@ import enDashboard from "@/locales/en/dashboard.json";
 import enNode from "@/locales/en/node.json";
 import enNotify from "@/locales/en/notify.json";
 import enRule from "@/locales/en/rule.json";
+import enRuleSet from "@/locales/en/rule-set.json";
+import enProxyGroup from "@/locales/en/proxy-group.json";
 import enScript from "@/locales/en/script.json";
 import enSettings from "@/locales/en/settings.json";
 import enShortlink from "@/locales/en/shortlink.json";
@@ -63,6 +67,8 @@ import jaDashboard from "@/locales/ja/dashboard.json";
 import jaNode from "@/locales/ja/node.json";
 import jaNotify from "@/locales/ja/notify.json";
 import jaRule from "@/locales/ja/rule.json";
+import jaRuleSet from "@/locales/ja/rule-set.json";
+import jaProxyGroup from "@/locales/ja/proxy-group.json";
 import jaScript from "@/locales/ja/script.json";
 import jaSettings from "@/locales/ja/settings.json";
 import jaShortlink from "@/locales/ja/shortlink.json";
@@ -81,6 +87,8 @@ import koDashboard from "@/locales/ko/dashboard.json";
 import koNode from "@/locales/ko/node.json";
 import koNotify from "@/locales/ko/notify.json";
 import koRule from "@/locales/ko/rule.json";
+import koRuleSet from "@/locales/ko/rule-set.json";
+import koProxyGroup from "@/locales/ko/proxy-group.json";
 import koScript from "@/locales/ko/script.json";
 import koSettings from "@/locales/ko/settings.json";
 import koShortlink from "@/locales/ko/shortlink.json";
@@ -99,6 +107,8 @@ const EAGER_NS = [
   "node",
   "notify",
   "rule",
+  "rule-set",
+  "proxy-group",
   "script",
   "settings",
   "shortlink",
@@ -127,6 +137,8 @@ void i18next
         node: zhCNNode,
         notify: zhCNNotify,
         rule: zhCNRule,
+        "rule-set": zhCNRuleSet,
+        "proxy-group": zhCNProxyGroup,
         script: zhCNScript,
         settings: zhCNSettings,
         shortlink: zhCNShortlink,
@@ -145,6 +157,8 @@ void i18next
         node: enNode,
         notify: enNotify,
         rule: enRule,
+        "rule-set": enRuleSet,
+        "proxy-group": enProxyGroup,
         script: enScript,
         settings: enSettings,
         shortlink: enShortlink,
@@ -163,6 +177,8 @@ void i18next
         node: jaNode,
         notify: jaNotify,
         rule: jaRule,
+        "rule-set": jaRuleSet,
+        "proxy-group": jaProxyGroup,
         script: jaScript,
         settings: jaSettings,
         shortlink: jaShortlink,
@@ -181,6 +197,8 @@ void i18next
         node: koNode,
         notify: koNotify,
         rule: koRule,
+        "rule-set": koRuleSet,
+        "proxy-group": koProxyGroup,
         script: koScript,
         settings: koSettings,
         shortlink: koShortlink,

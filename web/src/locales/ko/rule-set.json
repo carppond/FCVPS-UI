@@ -1,0 +1,88 @@
+{
+  "title": "규칙 세트",
+  "subtitle": "Clash 규칙 프로바이더를 관리합니다. 구독 렌더링 시 rule-providers 블록에 기록됩니다.",
+  "list": {
+    "search_placeholder": "이름으로 검색…",
+    "add": "새 규칙 세트",
+    "from_preset": "프리셋에서",
+    "empty_title": "규칙 세트가 없습니다",
+    "empty_description": "규칙 세트는 mihomo 설정의 rule-providers 로 출력되며 클라이언트가 주기적으로 가져옵니다.",
+    "never_synced": "동기화된 적 없음",
+    "rows_drag_hint": "작업"
+  },
+  "columns": {
+    "name": "이름",
+    "behavior": "behavior",
+    "format": "format",
+    "url": "URL",
+    "synced": "최근 동기화",
+    "enabled": "사용",
+    "actions": "작업"
+  },
+  "form": {
+    "new_title": "새 규칙 세트",
+    "edit_title": "규칙 세트 편집",
+    "name_label": "이름",
+    "name_placeholder": "예: cn-domain",
+    "behavior_label": "behavior",
+    "format_label": "format",
+    "url_label": "URL",
+    "url_placeholder": "https://…",
+    "interval_label": "동기화 간격(초)",
+    "interval_hint": "클라이언트 가져오기 간격. 기본 86400(24시간).",
+    "enabled_label": "사용",
+    "save": "저장",
+    "cancel": "취소"
+  },
+  "behavior": {
+    "domain": "domain",
+    "ipcidr": "ipcidr",
+    "classical": "classical"
+  },
+  "format": {
+    "yaml": "yaml",
+    "text": "text",
+    "mrs": "mrs"
+  },
+  "status": {
+    "ok": "정상",
+    "error": "오류",
+    "pending": "동기화 중",
+    "never": "미동기화"
+  },
+  "actions": {
+    "edit": "편집",
+    "sync_now": "즉시 동기화",
+    "delete": "삭제"
+  },
+  "presets": {
+    "dialog_title": "프리셋에서 가져오기",
+    "dialog_description": "meta-rules-dat 의 자주 쓰이는 규칙 세트를 한 번에 추가합니다.",
+    "tabs": {
+      "common": "일반",
+      "app": "앱",
+      "block": "차단"
+    },
+    "select_count": "{{count}} 개 선택됨",
+    "add_selected": "선택 추가 ({{count}})",
+    "added_toast": "{{count}} 개의 규칙 세트를 추가했습니다",
+    "added_with_failures": "{{ok}} 개 추가, {{failed}} 개 실패"
+  },
+  "delete": {
+    "confirm": "규칙 세트 \"{{name}}\" 을 삭제하시겠습니까? 되돌릴 수 없습니다."
+  },
+  "toast": {
+    "create_ok": "규칙 세트를 만들었습니다",
+    "update_ok": "규칙 세트를 업데이트했습니다",
+    "delete_ok": "규칙 세트를 삭제했습니다",
+    "sync_ok": "동기화를 시작했습니다"
+  },
+  "error": {
+    "load_failed": "규칙 세트를 불러오지 못했습니다",
+    "create_failed": "규칙 세트 생성에 실패했습니다",
+    "update_failed": "규칙 세트 업데이트에 실패했습니다",
+    "delete_failed": "규칙 세트 삭제에 실패했습니다",
+    "sync_failed": "동기화에 실패했습니다",
+    "presets_failed": "프리셋을 불러오지 못했습니다"
+  }
+}
