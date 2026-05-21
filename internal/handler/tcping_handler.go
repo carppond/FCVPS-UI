@@ -268,10 +268,14 @@ func (h *TCPingHandler) probe(ctx context.Context, server string, port int, time
 	}
 	_ = conn.Close()
 	elapsed := time.Since(start)
-	ms := int32(elapsed / time.Millisecond)
-	if ms < 0 {
-		ms = 0 // guard against clock skew
+	// Use ceil(microseconds / 1000) instead of trunc so a sub-millisecond
+	// dial (e.g. 0.7 ms to a CDN-close server) shows as "1 ms" instead of
+	// "0 ms" — which users misread as "didn't measure" or "broken".
+	us := elapsed.Microseconds()
+	if us <= 0 {
+		return 0, nil
 	}
+	ms := int32((us + 999) / 1000) // ceil
 	return ms, nil
 }
 
