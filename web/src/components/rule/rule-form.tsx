@@ -7,6 +7,8 @@ import { LayoutTemplate, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { useApiError } from "@/hooks/use-api-error";
 import { cn } from "@/lib/cn";
@@ -65,13 +67,14 @@ function buildSchema(t: (key: string) => string) {
 }
 
 /**
- * Two-mode form (create / edit) for a single custom rule. Keeps the layout
- * vertically dense — labels + inputs only, validation surfaced inline.
+ * Two-mode form (create / edit) for a single custom rule. Layout follows the
+ * Swiss / minimalism cheatsheet: vertical sections separated by hairline rules,
+ * tabs for the enum fields (type / mode), monospaced textarea for content.
  *
- * The textarea is intentionally a plain `<textarea>` (not Monaco) to keep the
- * page bundle small; users who want syntax highlighting can paste into the
- * Monaco-backed preview pane. The placeholder copy switches per type so the
- * user knows what shape of content is expected.
+ * The Save button stays enabled even when the form is pristine — the zod
+ * schema surfaces any validation issue inline. This avoids the "click does
+ * nothing" trap users hit when the button is disabled but they don't know
+ * why.
  */
 export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) {
   const { t } = useTranslation(["rule", "common"]);
@@ -137,101 +140,155 @@ export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) 
     }
   });
 
+  // Cmd/Ctrl + S anywhere inside the form fires Save. Keeps the keyboard-first
+  // promise from the cheatsheet without adding a global hot-key helper.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      void onSubmit();
+    }
+  };
+
   return (
     <form
       data-testid="rule-form"
       onSubmit={onSubmit}
-      className={cn("flex h-full min-h-0 flex-col gap-4 p-4", className)}
+      onKeyDown={onKeyDown}
+      className={cn("flex h-full min-h-0 flex-col", className)}
     >
-      <header className="flex items-center justify-between">
-        <h2 className="text-[var(--font-size-base)] font-semibold text-[var(--color-text-primary)]">
-          {rule ? t("rule:form.section_title") : t("rule:form.section_title_new")}
-        </h2>
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-6 py-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <h2 className="truncate text-[var(--font-size-lg)] font-semibold text-[var(--color-text-primary)]">
+            {rule ? rule.name || t("rule:form.section_title") : t("rule:form.section_title_new")}
+          </h2>
+          {!rule && (
+            <Badge variant="default" className="shrink-0">
+              {t("rule:form.section_title_new")}
+            </Badge>
+          )}
+        </div>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => setTemplateOpen(true)}
         >
-          <LayoutTemplate className="mr-2 h-4 w-4" />
+          <LayoutTemplate className="h-3.5 w-3.5" />
           {t("rule:form.use_template")}
         </Button>
       </header>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="rule-name">{t("rule:form.name_label")}</Label>
-        <Input
-          id="rule-name"
-          placeholder={t("rule:form.name_placeholder")}
-          {...form.register("name")}
-          aria-invalid={Boolean(form.formState.errors.name)}
-        />
-        {form.formState.errors.name && (
-          <p className="text-[var(--font-size-xs)] text-[var(--color-error)]">
-            {form.formState.errors.name.message}
-          </p>
-        )}
-      </div>
+      {/* ── Body ───────────────────────────────────────────────────────── */}
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-4">
+        {/* Name */}
+        <section className="flex flex-col gap-2">
+          <Label htmlFor="rule-name">{t("rule:form.name_label")}</Label>
+          <Input
+            id="rule-name"
+            placeholder={t("rule:form.name_placeholder")}
+            autoComplete="off"
+            {...form.register("name")}
+            aria-invalid={Boolean(form.formState.errors.name)}
+          />
+          {form.formState.errors.name && (
+            <p className="text-[var(--font-size-xs)] text-[var(--color-error)]">
+              {form.formState.errors.name.message}
+            </p>
+          )}
+        </section>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="rule-type">{t("rule:form.type_label")}</Label>
+        {/* Type — disabled when editing (server can't migrate type) */}
+        <section className="flex flex-col gap-2">
+          <Label>{t("rule:form.type_label")}</Label>
           <Controller
             control={form.control}
             name="type"
             render={({ field }) => (
-              <select
-                id="rule-type"
-                className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--font-size-sm)] text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+              <Tabs
                 value={field.value}
-                onChange={(e) => field.onChange(e.target.value as RuleType)}
-                disabled={Boolean(rule)}
+                onValueChange={(v) => field.onChange(v as RuleType)}
               >
-                <option value="rules">{t("rule:types.rules")}</option>
-                <option value="dns">{t("rule:types.dns")}</option>
-                <option value="rule-providers">
-                  {t("rule:types.rule-providers")}
-                </option>
-              </select>
+                <TabsList className="w-full">
+                  <TabsTrigger
+                    value="rules"
+                    className="flex-1"
+                    disabled={Boolean(rule)}
+                  >
+                    {t("rule:types.rules")}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="dns"
+                    className="flex-1"
+                    disabled={Boolean(rule)}
+                  >
+                    {t("rule:types.dns")}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="rule-providers"
+                    className="flex-1"
+                    disabled={Boolean(rule)}
+                  >
+                    {t("rule:types.rule-providers")}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             )}
           />
-        </div>
+        </section>
 
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="rule-mode">{t("rule:form.mode_label")}</Label>
+        {/* Mode */}
+        <section className="flex flex-col gap-2">
+          <Label>{t("rule:form.mode_label")}</Label>
           <Controller
             control={form.control}
             name="mode"
             render={({ field }) => (
-              <select
-                id="rule-mode"
-                className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--font-size-sm)] text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+              <Tabs
                 value={field.value}
-                onChange={(e) => field.onChange(e.target.value as RuleMode)}
+                onValueChange={(v) => field.onChange(v as RuleMode)}
               >
-                <option value="replace">{t("rule:modes.replace")}</option>
-                <option value="prepend">{t("rule:modes.prepend")}</option>
-                <option value="append">{t("rule:modes.append")}</option>
-              </select>
+                <TabsList className="w-full">
+                  <TabsTrigger value="append" className="flex-1">
+                    {t("rule:modes.append")}
+                  </TabsTrigger>
+                  <TabsTrigger value="prepend" className="flex-1">
+                    {t("rule:modes.prepend")}
+                  </TabsTrigger>
+                  <TabsTrigger value="replace" className="flex-1">
+                    {t("rule:modes.replace")}
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             )}
           />
-        </div>
+        </section>
+
+        {/* Content */}
+        <section className="flex min-h-0 flex-1 flex-col gap-2">
+          <Label htmlFor="rule-content">{t("rule:form.content_label")}</Label>
+          <textarea
+            id="rule-content"
+            rows={14}
+            spellCheck={false}
+            placeholder={contentPlaceholder(t, currentType)}
+            className={cn(
+              "min-h-64 w-full flex-1 resize-none",
+              "rounded-[var(--radius-md)] border border-[var(--color-border-strong)]",
+              "bg-[var(--color-surface)] px-3 py-2",
+              "font-mono text-[var(--font-size-xs)] leading-relaxed text-[var(--color-text-primary)]",
+              "placeholder:text-[var(--color-text-disabled)]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]",
+              "transition-colors duration-[var(--duration-fast)]",
+            )}
+            {...form.register("content")}
+          />
+        </section>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2">
-        <Label htmlFor="rule-content">{t("rule:form.content_label")}</Label>
-        <textarea
-          id="rule-content"
-          rows={12}
-          spellCheck={false}
-          placeholder={contentPlaceholder(t, currentType)}
-          className="h-full min-h-[16rem] w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 py-2 font-mono text-[var(--font-size-xs)] text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-          {...form.register("content")}
-        />
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
-        <label className="flex items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-secondary)]">
+      {/* ── Footer ─────────────────────────────────────────────────────── */}
+      <footer className="flex items-center justify-between gap-4 border-t border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-6 py-3">
+        <label className="flex cursor-pointer items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-secondary)]">
           <Controller
             control={form.control}
             name="enabled"
@@ -247,7 +304,7 @@ export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) 
           {t("rule:form.enabled_label")}
         </label>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {onCancel && (
             <Button type="button" variant="outline" size="sm" onClick={onCancel}>
               {t("rule:form.cancel")}
@@ -256,13 +313,13 @@ export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) 
           <Button
             type="submit"
             size="sm"
-            disabled={form.formState.isSubmitting || !form.formState.isDirty}
+            disabled={form.formState.isSubmitting}
           >
-            <Save className="mr-2 h-4 w-4" />
+            <Save className="h-3.5 w-3.5" />
             {t("rule:form.save")}
           </Button>
         </div>
-      </div>
+      </footer>
 
       <RuleTemplatesDialog
         open={templateOpen}

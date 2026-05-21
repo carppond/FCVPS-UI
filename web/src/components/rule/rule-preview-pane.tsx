@@ -62,12 +62,12 @@ export function RulePreviewPane({ className }: RulePreviewPaneProps) {
     <aside
       data-testid="rule-preview-pane"
       className={cn(
-        "flex h-full min-h-0 flex-col gap-3 border-l border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-4",
+        "flex h-full min-h-0 flex-col border-l border-[var(--color-border)] bg-[var(--color-bg-elevated)]",
         className,
       )}
     >
-      <header className="flex items-center justify-between gap-2">
-        <h2 className="text-[var(--font-size-base)] font-semibold text-[var(--color-text-primary)]">
+      <header className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] px-4 py-4">
+        <h2 className="text-[var(--font-size-lg)] font-semibold text-[var(--color-text-primary)]">
           {t("rule:preview.section_title")}
         </h2>
         <div className="flex items-center gap-1">
@@ -79,7 +79,7 @@ export function RulePreviewPane({ className }: RulePreviewPaneProps) {
             disabled={!subscriptionId || previewQuery.isFetching}
             aria-label={t("common:actions.retry")}
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <RefreshCw className={cn("h-3.5 w-3.5", previewQuery.isFetching && "animate-spin")} />
           </Button>
           <Button
             type="button"
@@ -88,14 +88,14 @@ export function RulePreviewPane({ className }: RulePreviewPaneProps) {
             onClick={handleCopy}
             disabled={!previewQuery.data?.final_yaml}
           >
-            <Copy className="mr-1 h-3.5 w-3.5" />
+            <Copy className="h-3.5 w-3.5" />
             {copied ? t("rule:preview.copied") : t("rule:preview.copy")}
           </Button>
         </div>
       </header>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+      <div className="flex flex-col gap-1.5 border-b border-[var(--color-border)] px-4 py-3">
+        <label className="text-[var(--font-size-xs)] font-medium text-[var(--color-text-tertiary)]">
           {t("rule:preview.subscription_label")}
         </label>
         <select
@@ -113,66 +113,73 @@ export function RulePreviewPane({ className }: RulePreviewPaneProps) {
         </select>
       </div>
 
-      {!subscriptionId ? (
-        <div className="flex flex-1 items-center justify-center">
-          <EmptyState
-            title={t("rule:preview.section_title")}
-            description={t("rule:preview.no_subscription")}
+      <div className="flex min-h-0 flex-1 flex-col p-4">
+        {!subscriptionId ? (
+          <div className="flex flex-1 items-center justify-center">
+            <EmptyState
+              title={t("rule:preview.section_title")}
+              description={t("rule:preview.no_subscription")}
+            />
+          </div>
+        ) : previewQuery.isLoading ? (
+          <div className="flex flex-1 flex-col gap-2" aria-hidden>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-full w-full" />
+          </div>
+        ) : previewQuery.isError ? (
+          <ErrorState
+            message={
+              previewQuery.error?.message ?? t("rule:error.preview_failed")
+            }
+            onRetry={() => void previewQuery.refetch()}
+            retryLabel={t("common:actions.retry")}
           />
-        </div>
-      ) : previewQuery.isLoading ? (
-        <div className="flex flex-1 flex-col gap-2" aria-hidden>
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-full w-full" />
-        </div>
-      ) : previewQuery.isError ? (
-        <ErrorState
-          message={
-            previewQuery.error?.message ?? t("rule:error.preview_failed")
-          }
-          onRetry={() => void previewQuery.refetch()}
-          retryLabel={t("common:actions.retry")}
-        />
-      ) : previewQuery.data ? (
-        <div className="flex min-h-0 flex-1 flex-col gap-2">
-          <span className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-            {t("rule:preview.rule_count", {
-              count: previewQuery.data.rule_count,
-            })}
-          </span>
-          <Tabs defaultValue="after" className="flex min-h-0 flex-1 flex-col">
-            <TabsList>
-              <TabsTrigger value="after">
-                {t("rule:preview.after_label")}
-              </TabsTrigger>
-              <TabsTrigger value="before">
-                {t("rule:preview.before_label")}
-              </TabsTrigger>
-              <TabsTrigger value="diff">
-                {t("rule:preview.diff_label")}
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="after" className="min-h-0 flex-1">
-              <YamlMonaco
-                value={previewQuery.data.final_yaml}
-                theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
-              />
-            </TabsContent>
-            <TabsContent value="before" className="min-h-0 flex-1">
-              <YamlMonaco
-                value={previewQuery.data.base_yaml}
-                theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
-              />
-            </TabsContent>
-            <TabsContent value="diff" className="min-h-0 flex-1 overflow-auto">
-              <YamlDiffViewer
-                left={previewQuery.data.base_yaml}
-                right={previewQuery.data.final_yaml}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      ) : null}
+        ) : previewQuery.data ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <Tabs defaultValue="after" className="flex min-h-0 flex-1 flex-col">
+              <TabsList>
+                <TabsTrigger value="after">
+                  {t("rule:preview.after_label")}
+                </TabsTrigger>
+                <TabsTrigger value="before">
+                  {t("rule:preview.before_label")}
+                </TabsTrigger>
+                <TabsTrigger value="diff">
+                  {t("rule:preview.diff_label")}
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="after" className="min-h-0 flex-1 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)]">
+                <YamlMonaco
+                  value={previewQuery.data.final_yaml}
+                  theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
+                />
+              </TabsContent>
+              <TabsContent value="before" className="min-h-0 flex-1 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)]">
+                <YamlMonaco
+                  value={previewQuery.data.base_yaml}
+                  theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
+                />
+              </TabsContent>
+              <TabsContent value="diff" className="min-h-0 flex-1 overflow-auto rounded-[var(--radius-md)] border border-[var(--color-border)]">
+                <YamlDiffViewer
+                  left={previewQuery.data.base_yaml}
+                  right={previewQuery.data.final_yaml}
+                />
+              </TabsContent>
+            </Tabs>
+            <footer className="flex items-center justify-between text-[var(--font-size-xs)] text-[var(--color-text-tertiary)] tabular-nums">
+              <span>
+                {t("rule:preview.rule_count", {
+                  count: previewQuery.data.rule_count,
+                })}
+              </span>
+              <span>
+                {previewQuery.data.final_yaml.split("\n").length} lines · {previewQuery.data.final_yaml.length} chars
+              </span>
+            </footer>
+          </div>
+        ) : null}
+      </div>
     </aside>
   );
 }

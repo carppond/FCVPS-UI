@@ -134,7 +134,7 @@ function RulesPage() {
         </section>
 
         {/* ── Center: form ───────────────────────────────────────────────── */}
-        <section className="min-h-0 overflow-y-auto">
+        <section className="flex min-h-0 flex-col bg-[var(--color-bg-elevated)]">
           {creating || selectedRule ? (
             <RuleForm
               rule={selectedRule}
@@ -145,8 +145,14 @@ function RulesPage() {
               }}
             />
           ) : (
-            <div className="flex h-full items-center justify-center p-6 text-center text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
-              {t("rule:form.select_rule_hint")}
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-12 text-center">
+              <p className="max-w-xs text-[var(--font-size-sm)] leading-relaxed text-[var(--color-text-tertiary)]">
+                {t("rule:form.select_rule_hint")}
+              </p>
+              <Button variant="outline" size="sm" onClick={handleNew}>
+                <Plus className="h-3.5 w-3.5" />
+                {t("rule:list.add_rule")}
+              </Button>
             </div>
           )}
         </section>

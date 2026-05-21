@@ -230,39 +230,57 @@ function SortableRuleRow({ rule, selected, onSelect }: SortableRuleRowProps) {
 
   return (
     <li ref={setNodeRef} style={style}>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => onSelect(rule)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onSelect(rule);
+          }
+        }}
         data-testid={`rule-row-${rule.id}`}
         className={cn(
-          "group flex w-full items-center gap-2 rounded-[var(--radius-md)] border p-3 text-left",
-          "transition-colors duration-[var(--duration-fast)]",
+          "group relative flex w-full items-center gap-2 rounded-[var(--radius-md)] border p-3 text-left",
+          "transition-colors duration-[var(--duration-fast)] cursor-pointer",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]",
           selected
             ? "border-[var(--color-primary)] bg-[var(--color-surface-hover)]"
-            : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-strong)]",
+            : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-hover)]",
         )}
       >
+        {selected && (
+          <span
+            aria-hidden
+            className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-[var(--color-primary)]"
+          />
+        )}
         <span
           {...attributes}
           {...listeners}
-          className="cursor-grab text-[var(--color-text-tertiary)] active:cursor-grabbing"
+          className="shrink-0 cursor-grab text-[var(--color-text-tertiary)] active:cursor-grabbing"
           aria-label={t("rule:list.drag_hint")}
           onClick={(e) => e.stopPropagation()}
         >
           <GripVertical className="h-4 w-4" />
         </span>
-        <div className="flex flex-1 flex-col gap-1 overflow-hidden">
+        <div className="flex flex-1 flex-col gap-1.5 overflow-hidden">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)]">
+            <span
+              className={cn(
+                "truncate text-[var(--font-size-sm)] font-medium",
+                rule.enabled
+                  ? "text-[var(--color-text-primary)]"
+                  : "text-[var(--color-text-tertiary)] line-through",
+              )}
+            >
               {rule.name}
             </span>
-            {!rule.enabled && (
-              <Badge variant="secondary">{t("common:actions.disable")}</Badge>
-            )}
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="outline">{typeLabel(t, rule.type)}</Badge>
-            <Badge variant="outline">{t(`rule:modes.${rule.mode}`)}</Badge>
+            <Badge variant="secondary">{t(`rule:modes.${rule.mode}`)}</Badge>
           </div>
         </div>
         <input
@@ -270,7 +288,7 @@ function SortableRuleRow({ rule, selected, onSelect }: SortableRuleRowProps) {
           checked={rule.enabled}
           onChange={toggleEnabled}
           onClick={(e) => e.stopPropagation()}
-          className="h-4 w-4 rounded border-[var(--color-border-strong)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+          className="h-4 w-4 shrink-0 rounded border-[var(--color-border-strong)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
           aria-label={t("rule:form.enabled_label")}
         />
         <Button
@@ -279,11 +297,11 @@ function SortableRuleRow({ rule, selected, onSelect }: SortableRuleRowProps) {
           variant="ghost"
           onClick={removeRule}
           aria-label={t("rule:delete.confirm")}
-          className="text-[var(--color-text-tertiary)] opacity-0 transition-opacity duration-[var(--duration-fast)] group-hover:opacity-100"
+          className="shrink-0 text-[var(--color-text-tertiary)] opacity-0 transition-opacity duration-[var(--duration-fast)] group-hover:opacity-100 hover:text-[var(--color-error)]"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
-      </button>
+      </div>
     </li>
   );
 }
