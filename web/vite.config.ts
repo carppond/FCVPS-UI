@@ -17,8 +17,36 @@ export default defineConfig({
     },
   },
   server: {
+    // Bind to all interfaces so a phone on the same LAN can scan the QR code
+    // and load the share URL (which encodes window.location.host).
+    host: true,
     proxy: {
       "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+      // sub-store compatible download path — clients (mihomo / sing-box / etc.)
+      // hit this when consuming the share URL displayed in the UI.
+      "/download": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+      // Short link redirect: /s/<code> → hub redirects to the real subscription.
+      "/s": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+      // Embedded install-agent.sh + agent binary download paths.
+      "/_app": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+      "/dl": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+      // Nezha agent v2 compat endpoint.
+      "/api/v1/nezha": {
         target: "http://localhost:8080",
         changeOrigin: true,
       },
