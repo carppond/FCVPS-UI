@@ -1,0 +1,45 @@
+[Unit]
+Description=Shiguang VPS Hub
+Documentation=https://github.com/shiguang-vps/shiguang-vps
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# Dedicated non-root user created by install.sh
+User=shiguang
+Group=shiguang
+
+# The binary is installed to /usr/local/bin/ by install.sh
+ExecStart=/usr/local/bin/shiguang-vps
+
+WorkingDirectory=/var/lib/shiguang-vps
+
+# Restart policy — systemd will back off automatically on repeated failures
+Restart=on-failure
+RestartSec=5
+
+# Log to the system journal (journalctl -u shiguang-vps -f)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=shiguang-vps
+
+# Environment — override via /etc/systemd/system/shiguang-vps.service.d/override.conf
+# or with: systemctl edit shiguang-vps
+Environment=SHIGUANG_DATA_DIR=/var/lib/shiguang-vps
+Environment=SHIGUANG_HTTP_ADDR=:8080
+Environment=SHIGUANG_LOG_LEVEL=info
+Environment=SHIGUANG_LOG_FORMAT=json
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/shiguang-vps
+
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

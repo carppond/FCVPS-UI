@@ -1,0 +1,32 @@
+# deploy/docker-compose.agent.yml — Agent deployment (run on each VPS being monitored)
+#
+# Quick start (on the VPS you want to monitor):
+#   HUB_URL=wss://hub.example.com TOKEN=your-token AGENT_ID=your-uuid \
+#     docker compose -f docker-compose.agent.yml up -d
+
+services:
+  shiguang-agent:
+    image: ghcr.io/shiguang-vps/shiguang-vps-agent:latest
+    container_name: shiguang-agent
+    restart: always
+
+    # host network is required so the agent can observe real interface traffic
+    # counters and real TCP latency from the VPS's perspective.
+    network_mode: host
+
+    environment:
+      # ── Required ───────────────────────────────────────────────────────────
+      # Hub WebSocket URL — must use wss:// in production.
+      SHIGUANG_HUB_URL: "${HUB_URL:-wss://hub.example.com/api/agent/ws}"
+      # Token issued by the hub for this agent (Admin → Agents → Add).
+      SHIGUANG_AGENT_TOKEN: "${TOKEN:-replace-me}"
+      # Stable UUID for this agent (generate once: uuidgen).
+      SHIGUANG_AGENT_ID: "${AGENT_ID:-replace-me}"
+
+      # ── Optional ───────────────────────────────────────────────────────────
+      # Comma-separated tags shown in the hub UI.
+      # SHIGUANG_AGENT_TAGS: "hk,cn2,arm"
+      # Metrics / heartbeat interval in seconds (default 30).
+      # SHIGUANG_AGENT_HEARTBEAT_SECONDS: "30"
+      SHIGUANG_LOG_LEVEL: info
+      SHIGUANG_LOG_FORMAT: json

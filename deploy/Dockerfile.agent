@@ -1,0 +1,40 @@
+# deploy/Dockerfile.agent — Agent multi-stage build
+# Stage 1 (go-build):  compile the agent binary
+# Stage 2 (runtime):   distroless static image < 15 MB
+#
+# Build:
+#   docker buildx build --file deploy/Dockerfile.agent \
+#     --platform linux/amd64,linux/arm64 \
+#     --tag shiguang-vps-agent:latest .
+
+# ---------------------------------------------------------------------------
+# Stage 1: Go build
+# ---------------------------------------------------------------------------
+FROM golang:1.25-alpine AS go-build
+
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /src
+
+# Module download layer
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Source
+COPY . .
+
+# CGO_ENABLED=0 required for distroless static (no libc).
+RUN CGO_ENABLED=0 GOOS=linux go build \
+      -ldflags="-s -w" \
+      -trimpath \
+      -o /out/agent \
+      ./cmd/agent
+
+# ---------------------------------------------------------------------------
+# Stage 2: Runtime
+# ---------------------------------------------------------------------------
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=go-build /out/agent /agent
+
+ENTRYPOINT ["/agent"]

@@ -1,0 +1,56 @@
+# deploy/docker-compose.yml — Hub deployment
+#
+# Quick start:
+#   cp deploy/docker-compose.yml docker-compose.yml
+#   docker compose up -d
+#
+# First-boot admin password appears in the journal:
+#   docker compose logs shiguang-vps | grep ADMIN
+
+services:
+  shiguang-vps:
+    image: ghcr.io/shiguang-vps/shiguang-vps:latest
+    container_name: shiguang-vps
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      # All persistent state lives under ./data on the host.
+      # The container writes as uid=65532 (distroless nonroot).
+      # Run: mkdir -p ./data && chown -R 65532:65532 ./data
+      - ./data:/data
+
+    environment:
+      # ── Storage ────────────────────────────────────────────────────────────
+      SHIGUANG_DATA_DIR: /data
+      # SHIGUANG_DB_FILENAME: traffic.db
+
+      # ── HTTP ───────────────────────────────────────────────────────────────
+      SHIGUANG_HTTP_ADDR: ":8080"
+
+      # ── Logging ────────────────────────────────────────────────────────────
+      SHIGUANG_LOG_LEVEL: info
+      SHIGUANG_LOG_FORMAT: json
+
+      # ── Session ────────────────────────────────────────────────────────────
+      # SHIGUANG_SESSION_TTL_SECONDS: 86400
+
+      # ── OTA ────────────────────────────────────────────────────────────────
+      # OTA_GITHUB_REPO: your-org/shiguang-vps
+
+    healthcheck:
+      test: ["CMD", "/shiguang-vps", "-healthz"]
+      # Fallback: use wget (distroless has no shell; rely on the binary's own
+      # built-in health probe flag, or override with a sidecar approach)
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # Limit blast radius in case of memory leak
+    deploy:
+      resources:
+        limits:
+          memory: 512m

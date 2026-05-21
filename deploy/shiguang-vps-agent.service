@@ -1,0 +1,51 @@
+[Unit]
+Description=Shiguang VPS Agent
+Documentation=https://github.com/shiguang-vps/shiguang-vps
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# Dedicated non-root user created by install-agent.sh
+User=shiguang-agent
+Group=shiguang-agent
+
+ExecStart=/usr/local/bin/shiguang-vps-agent
+
+WorkingDirectory=/var/lib/shiguang-vps-agent
+
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=shiguang-vps-agent
+
+# Environment — required values must be set via an override unit:
+#   systemctl edit shiguang-vps-agent
+# and add:
+#   [Service]
+#   Environment=SHIGUANG_HUB_URL=wss://hub.example.com/api/agent/ws
+#   Environment=SHIGUANG_AGENT_TOKEN=<token>
+#   Environment=SHIGUANG_AGENT_ID=<uuid>
+#
+# Alternatively, install-agent.sh writes these values during installation.
+Environment=SHIGUANG_LOG_LEVEL=info
+Environment=SHIGUANG_LOG_FORMAT=json
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/shiguang-vps-agent
+
+# Needs access to /proc and /sys for metric collection via gopsutil
+PrivateDevices=no
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
