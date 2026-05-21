@@ -41,3 +41,10 @@ web/src/styles/.tailwindcss/
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Playwright
+web/playwright-report/
+web/test-results/
+web/blob-report/
+.e2e-data/
+

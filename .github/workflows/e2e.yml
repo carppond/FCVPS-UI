@@ -1,0 +1,113 @@
+name: E2E
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    env:
+      # Keep all hub state in a tmp dir so the workflow starts from a clean
+      # slate every run (avoids relying on whatever data/ shape exists in the
+      # checkout).
+      SGVPS_DATA_DIR: ${{ github.workspace }}/.e2e-data
+      E2E_API_URL: http://localhost:8080
+      E2E_BASE_URL: http://localhost:5173
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.node-version
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install web dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Prepare hub data dir
+        run: mkdir -p "$SGVPS_DATA_DIR"
+
+      - name: Start hub backend
+        run: |
+          mkdir -p hub-logs
+          go run ./cmd/server > hub-logs/hub.log 2>&1 &
+          echo "HUB_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for hub to be ready
+        run: npx --yes wait-on tcp:8080 --timeout 60000
+
+      - name: Extract bootstrap admin password from hub log
+        id: bootstrap
+        run: |
+          # Best-effort parse: the EnsureAdmin step prints
+          #   "Admin password: <secret>"
+          # to stdout on first boot. If the line is missing we keep going with
+          # the default fallback in fixtures/auth.ts.
+          PASS=$(grep -oE 'Admin password: [^ ]+' hub-logs/hub.log | head -1 | awk '{print $3}' || true)
+          if [ -n "$PASS" ]; then
+            echo "E2E_ADMIN_PASS=$PASS" >> "$GITHUB_ENV"
+          fi
+
+      - name: Start vite dev server
+        working-directory: web
+        run: |
+          pnpm dev > ../vite.log 2>&1 &
+          echo "VITE_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for vite to be ready
+        run: npx --yes wait-on tcp:5173 --timeout 60000
+
+      - name: Run Playwright tests
+        working-directory: web
+        run: pnpm exec playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 7
+
+      - name: Upload hub log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hub-log
+          path: |
+            hub-logs/
+            vite.log
+          retention-days: 3
+
+      - name: Stop background services
+        if: always()
+        run: |
+          for pid in "${HUB_PID:-}" "${VITE_PID:-}"; do
+            if [ -n "$pid" ]; then
+              kill "$pid" 2>/dev/null || true
+            fi
+          done

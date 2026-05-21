@@ -20,5 +20,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     css: false,
+    // Playwright specs live under ./e2e and use a different test runner;
+    // excluding them here prevents vitest from trying to import @playwright/test
+    // hooks that aren't compatible with the jsdom environment.
+    exclude: ["e2e/**", "node_modules/**", "dist/**"],
   },
 });
