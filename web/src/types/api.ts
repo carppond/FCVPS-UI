@@ -537,8 +537,140 @@ export interface UpdateRuleOrderRequest {
 export interface RuleTemplate {
   id: string;
   name: string;
+  /** UI 显示用 emoji（如 🇭🇰）。 */
+  emoji?: string;
+  /** "region" | "app" | "block" | "common"。前端按 tab 分组。 */
+  category?: string;
   description: string;
+  rule_type?: RuleType;
+  mode?: RuleMode;
   content: string;
+  tags?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// M-RULE：规则集（Rule Provider）DTO
+// ---------------------------------------------------------------------------
+
+export type RuleSetBehavior = "domain" | "ipcidr" | "classical";
+export type RuleSetFormat = "yaml" | "text" | "mrs";
+
+export interface RuleSetProvider {
+  id: string;
+  user_id: string;
+  name: string;
+  behavior: RuleSetBehavior;
+  format: RuleSetFormat;
+  url: string;
+  interval_seconds: number;
+  enabled: boolean;
+  last_synced_at?: number;
+  last_sync_status?: string;
+  last_sync_error?: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface CreateRuleSetRequest {
+  name: string;
+  behavior: RuleSetBehavior;
+  format: RuleSetFormat;
+  url: string;
+  interval_seconds?: number;
+  enabled: boolean;
+}
+
+export interface UpdateRuleSetRequest {
+  name?: string;
+  behavior?: RuleSetBehavior;
+  format?: RuleSetFormat;
+  url?: string;
+  interval_seconds?: number;
+  enabled?: boolean;
+}
+
+export interface RuleSetPreset {
+  id: string;
+  name: string;
+  emoji?: string;
+  category: string; // "region" | "app" | "block"
+  behavior: RuleSetBehavior;
+  format: RuleSetFormat;
+  url: string;
+  interval_seconds: number;
+  description?: string;
+}
+
+// ---------------------------------------------------------------------------
+// M-RULE：代理组（Proxy Group）DTO
+// ---------------------------------------------------------------------------
+
+export type ProxyGroupType =
+  | "select"
+  | "url-test"
+  | "fallback"
+  | "load-balance"
+  | "relay";
+
+export interface ProxyGroupCategory {
+  id: string;
+  user_id: string;
+  name: string;
+  type: ProxyGroupType;
+  icon?: string;
+  sort_order: number;
+  test_url?: string;
+  test_interval?: number;
+  filter?: string;
+  include_all: boolean;
+  member_proxies: string[];
+  member_groups: string[];
+  created_at: number;
+  updated_at: number;
+}
+
+export interface CreateProxyGroupRequest {
+  name: string;
+  type: ProxyGroupType;
+  icon?: string;
+  sort_order?: number;
+  test_url?: string;
+  test_interval?: number;
+  filter?: string;
+  include_all?: boolean;
+  member_proxies?: string[];
+  member_groups?: string[];
+}
+
+export interface UpdateProxyGroupRequest {
+  name?: string;
+  type?: ProxyGroupType;
+  icon?: string | null;
+  sort_order?: number;
+  test_url?: string | null;
+  test_interval?: number;
+  filter?: string | null;
+  include_all?: boolean;
+  member_proxies?: string[];
+  member_groups?: string[];
+}
+
+export interface ProxyGroupReorderRequest {
+  ids: string[];
+}
+
+export interface ProxyGroupPreset {
+  id: string;
+  name: string;
+  type: ProxyGroupType;
+  icon?: string;
+  test_url?: string;
+  test_interval?: number;
+  filter?: string;
+  include_all: boolean;
+  member_proxies?: string[];
+  member_groups?: string[];
+  description?: string;
 }
 
 // ---------------------------------------------------------------------------

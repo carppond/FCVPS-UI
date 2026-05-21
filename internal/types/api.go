@@ -696,11 +696,181 @@ type RuleOrder struct {
 }
 
 // RuleTemplate 规则预设模板。
+//
+// Emoji / Category / Tags 都是内置模板分类元数据：v1 前端按 Category 分页签
+// （region / app / block / common），用 Emoji 在卡片上做视觉标识，Tags 用于
+// 跨分类搜索。RuleType / Mode 默认 (rules / append)；当模板内容本身是 dns
+// 或 rule-providers YAML 时由后端显式标注。
 type RuleTemplate struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Content     string `json:"content"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Emoji       string   `json:"emoji,omitempty"`
+	Category    string   `json:"category,omitempty"` // "region" | "app" | "block" | "common"
+	Description string   `json:"description"`
+	RuleType    RuleType `json:"rule_type,omitempty"`
+	Mode        RuleMode `json:"mode,omitempty"`
+	Content     string   `json:"content"`
+	Tags        []string `json:"tags,omitempty"`
+}
+
+// ---------------------------------------------------------------------------
+// M-RULE：规则集（Rule Provider）DTO
+// ---------------------------------------------------------------------------
+
+// RuleSetBehavior 规则集匹配类型（mihomo / Clash-Meta 主线一致）。
+type RuleSetBehavior string
+
+const (
+	RuleSetBehaviorDomain    RuleSetBehavior = "domain"
+	RuleSetBehaviorIPCIDR    RuleSetBehavior = "ipcidr"
+	RuleSetBehaviorClassical RuleSetBehavior = "classical"
+)
+
+// RuleSetFormat 规则集文件格式。
+type RuleSetFormat string
+
+const (
+	RuleSetFormatYAML RuleSetFormat = "yaml"
+	RuleSetFormatText RuleSetFormat = "text"
+	RuleSetFormatMRS  RuleSetFormat = "mrs"
+)
+
+// RuleSetProvider 规则集（rule-provider）。
+type RuleSetProvider struct {
+	ID              string          `json:"id"`
+	UserID          string          `json:"user_id"`
+	Name            string          `json:"name"`
+	Behavior        RuleSetBehavior `json:"behavior"`
+	Format          RuleSetFormat   `json:"format"`
+	URL             string          `json:"url"`
+	IntervalSeconds int32           `json:"interval_seconds"`
+	Enabled         bool            `json:"enabled"`
+	LastSyncedAt    int64           `json:"last_synced_at,omitempty"`
+	LastSyncStatus  string          `json:"last_sync_status,omitempty"`
+	LastSyncError   string          `json:"last_sync_error,omitempty"`
+	CreatedAt       int64           `json:"created_at"`
+	UpdatedAt       int64           `json:"updated_at"`
+}
+
+// CreateRuleSetRequest 创建规则集请求。
+type CreateRuleSetRequest struct {
+	Name            string          `json:"name"`
+	Behavior        RuleSetBehavior `json:"behavior"`
+	Format          RuleSetFormat   `json:"format"`
+	URL             string          `json:"url"`
+	IntervalSeconds int32           `json:"interval_seconds,omitempty"`
+	Enabled         bool            `json:"enabled"`
+}
+
+// UpdateRuleSetRequest 修改规则集请求。Enabled 通过指针区分 false 与"不变"。
+type UpdateRuleSetRequest struct {
+	Name            string          `json:"name,omitempty"`
+	Behavior        RuleSetBehavior `json:"behavior,omitempty"`
+	Format          RuleSetFormat   `json:"format,omitempty"`
+	URL             string          `json:"url,omitempty"`
+	IntervalSeconds int32           `json:"interval_seconds,omitempty"`
+	Enabled         *bool           `json:"enabled,omitempty"`
+}
+
+// RuleSetPreset 内置规则集预设（不进 db；GET /api/rule-sets/presets 返回）。
+type RuleSetPreset struct {
+	ID              string          `json:"id"`
+	Name            string          `json:"name"`
+	Emoji           string          `json:"emoji,omitempty"`
+	Category        string          `json:"category"` // "region" | "app" | "block"
+	Behavior        RuleSetBehavior `json:"behavior"`
+	Format          RuleSetFormat   `json:"format"`
+	URL             string          `json:"url"`
+	IntervalSeconds int32           `json:"interval_seconds"`
+	Description     string          `json:"description,omitempty"`
+}
+
+// ---------------------------------------------------------------------------
+// M-RULE：代理组（Proxy Group）DTO
+// ---------------------------------------------------------------------------
+
+// ProxyGroupType 代理组类型（mihomo / Clash-Meta 主线一致）。
+type ProxyGroupType string
+
+const (
+	ProxyGroupSelect      ProxyGroupType = "select"
+	ProxyGroupURLTest     ProxyGroupType = "url-test"
+	ProxyGroupFallback    ProxyGroupType = "fallback"
+	ProxyGroupLoadBalance ProxyGroupType = "load-balance"
+	ProxyGroupRelay       ProxyGroupType = "relay"
+)
+
+// ProxyGroupCategory 用户自定义代理组。
+//
+// MemberProxies / MemberGroups 在 wire 上是字符串数组：前者列出节点名 / 内置
+// 出口（DIRECT / REJECT），后者引用其他组的 id 形成嵌套。include_all=true 时
+// 表示订阅里所有节点全部纳入，再用 filter 正则做二次筛选。
+type ProxyGroupCategory struct {
+	ID            string         `json:"id"`
+	UserID        string         `json:"user_id"`
+	Name          string         `json:"name"`
+	Type          ProxyGroupType `json:"type"`
+	Icon          string         `json:"icon,omitempty"`
+	SortOrder     int32          `json:"sort_order"`
+	TestURL       string         `json:"test_url,omitempty"`
+	TestInterval  int32          `json:"test_interval,omitempty"`
+	Filter        string         `json:"filter,omitempty"`
+	IncludeAll    bool           `json:"include_all"`
+	MemberProxies []string       `json:"member_proxies"`
+	MemberGroups  []string       `json:"member_groups"`
+	CreatedAt     int64          `json:"created_at"`
+	UpdatedAt     int64          `json:"updated_at"`
+}
+
+// CreateProxyGroupRequest 创建代理组请求。
+type CreateProxyGroupRequest struct {
+	Name          string         `json:"name"`
+	Type          ProxyGroupType `json:"type"`
+	Icon          string         `json:"icon,omitempty"`
+	SortOrder     int32          `json:"sort_order,omitempty"`
+	TestURL       string         `json:"test_url,omitempty"`
+	TestInterval  int32          `json:"test_interval,omitempty"`
+	Filter        string         `json:"filter,omitempty"`
+	IncludeAll    bool           `json:"include_all,omitempty"`
+	MemberProxies []string       `json:"member_proxies,omitempty"`
+	MemberGroups  []string       `json:"member_groups,omitempty"`
+}
+
+// UpdateProxyGroupRequest 修改代理组请求。
+//
+// 对于可空字段（Icon / TestURL / Filter / MemberProxies / MemberGroups），
+// 使用指针来区分"清空"和"不变"。SortOrder / TestInterval / IncludeAll 同理。
+type UpdateProxyGroupRequest struct {
+	Name          string         `json:"name,omitempty"`
+	Type          ProxyGroupType `json:"type,omitempty"`
+	Icon          *string        `json:"icon,omitempty"`
+	SortOrder     *int32         `json:"sort_order,omitempty"`
+	TestURL       *string        `json:"test_url,omitempty"`
+	TestInterval  *int32         `json:"test_interval,omitempty"`
+	Filter        *string        `json:"filter,omitempty"`
+	IncludeAll    *bool          `json:"include_all,omitempty"`
+	MemberProxies *[]string      `json:"member_proxies,omitempty"`
+	MemberGroups  *[]string      `json:"member_groups,omitempty"`
+}
+
+// ProxyGroupReorderRequest 批量改 sort_order 请求。
+type ProxyGroupReorderRequest struct {
+	IDs []string `json:"ids"`
+}
+
+// ProxyGroupPreset 内置代理组预设（不进 db；GET /api/proxy-groups/presets 返回）。
+type ProxyGroupPreset struct {
+	ID            string         `json:"id"`
+	Name          string         `json:"name"`
+	Type          ProxyGroupType `json:"type"`
+	Icon          string         `json:"icon,omitempty"`
+	TestURL       string         `json:"test_url,omitempty"`
+	TestInterval  int32          `json:"test_interval,omitempty"`
+	Filter        string         `json:"filter,omitempty"`
+	IncludeAll    bool           `json:"include_all"`
+	MemberProxies []string       `json:"member_proxies,omitempty"`
+	MemberGroups  []string       `json:"member_groups,omitempty"`
+	Description   string         `json:"description,omitempty"`
 }
 
 // ---------------------------------------------------------------------------

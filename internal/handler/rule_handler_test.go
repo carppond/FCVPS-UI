@@ -282,16 +282,33 @@ func TestRuleHandler_Templates(t *testing.T) {
 	}
 	var env ruleEnvelope[[]types.RuleTemplate]
 	_ = json.Unmarshal(rec.Body.Bytes(), &env)
-	if len(env.Data) != 3 {
-		t.Fatalf("want 3 templates, got %d", len(env.Data))
+	// v1.1 起内置模板 ≥ 15 个，覆盖 region / app / block / common 四类。
+	if len(env.Data) < 15 {
+		t.Fatalf("want >= 15 templates, got %d", len(env.Data))
 	}
-	ids := map[string]bool{}
+	ids := map[string]string{}
+	categories := map[string]int{}
 	for _, tpl := range env.Data {
-		ids[tpl.ID] = true
+		ids[tpl.ID] = tpl.Category
+		categories[tpl.Category]++
 	}
-	for _, want := range []string{"cn-direct-foreign-proxy", "global-proxy", "ad-block"} {
-		if !ids[want] {
-			t.Fatalf("missing template %s; got %v", want, env.Data)
+	// 保留兼容旧名 + 必要的新分类代表。
+	wantPresent := []string{
+		"cn-direct-foreign-proxy", "global-proxy",
+		"region-hk", "region-jp", "region-us", "region-sg", "region-tw", "region-kr",
+		"app-ai", "app-streaming", "app-google", "app-microsoft", "app-apple",
+		"app-telegram", "app-gaming",
+		"block-ads", "block-privacy", "fallback-fish",
+	}
+	for _, want := range wantPresent {
+		if _, ok := ids[want]; !ok {
+			t.Fatalf("missing template %s; ids=%v", want, ids)
+		}
+	}
+	// 至少四个分类有内容。
+	for _, cat := range []string{"region", "app", "block", "common"} {
+		if categories[cat] == 0 {
+			t.Fatalf("category %q is empty; categories=%v", cat, categories)
 		}
 	}
 }

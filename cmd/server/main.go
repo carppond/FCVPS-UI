@@ -394,6 +394,19 @@ func run() error {
 	customRuleRepo := storage.NewCustomRuleRepo(db, time.Now)
 	ruleHandler := handler.NewRuleHandler(customRuleRepo, subscriptions, nodeAdapter, log)
 
+	// T-12 follow-up: rule-set (rule-provider) handler + proxy-group handler.
+	// rule-set sync uses the SSRF-safe HTTP client (HEAD-only; allows public
+	// internet egress to reach gh-proxy / jsdelivr / raw.githubusercontent
+	// while keeping internal addresses blocked unless allow_private_networks
+	// is set).
+	ruleSetRepo := storage.NewRuleSetProviderRepo(db, time.Now)
+	ruleSetHTTPClient := safehttp.NewClient(safehttp.Config{
+		AllowPrivate: allowPrivate,
+	}, 10*time.Second)
+	ruleSetHandler := handler.NewRuleSetHandler(ruleSetRepo, ruleSetHTTPClient, log, time.Now)
+	proxyGroupRepo := storage.NewProxyGroupRepo(db, time.Now)
+	proxyGroupHandler := handler.NewProxyGroupHandler(proxyGroupRepo, log)
+
 	// T-26: settings + backup handlers. SettingsHandler exposes
 	// /api/admin/settings and the silent-mode rotate endpoint; it borrows the
 	// same ops.SilentMode instance constructed during the bootstrap above so
@@ -464,6 +477,8 @@ func run() error {
 		ScriptHandler:         scriptHandler,
 		PipelineHandler:       pipelineHandler,
 		RuleHandler:           ruleHandler,
+		RuleSetHandler:        ruleSetHandler,
+		ProxyGroupHandler:     proxyGroupHandler,
 		SettingsHandler:       settingsHandler,
 		BackupHandler:         backupHandler,
 		ShortLinkHandler:      shortlinkHandler,

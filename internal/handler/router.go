@@ -141,6 +141,14 @@ type Deps struct {
 	// RuleHandler hosts /api/rules/* (T-12). nil disables the routes.
 	RuleHandler *RuleHandler
 
+	// RuleSetHandler hosts /api/rule-sets/* (T-12 follow-up). nil disables.
+	// Manages mihomo / Clash-Meta rule-providers (CRUD + sync + presets).
+	RuleSetHandler *RuleSetHandler
+
+	// ProxyGroupHandler hosts /api/proxy-groups/* (T-12 follow-up). nil
+	// disables the routes.
+	ProxyGroupHandler *ProxyGroupHandler
+
 	// TrafficHandler hosts /api/traffic/* (T-18). nil disables the routes.
 	TrafficHandler *TrafficHandler
 
@@ -231,6 +239,8 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountBackupRoutes(mux, deps)
 	mountScriptRoutes(mux, deps)
 	mountRuleRoutes(mux, deps)
+	mountRuleSetRoutes(mux, deps)
+	mountProxyGroupRoutes(mux, deps)
 	mountTrafficRoutes(mux, deps)
 	mountShortLinkRoutes(mux, deps)
 	mountAuditRoutes(mux, deps)
@@ -683,6 +693,63 @@ func mountRuleRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PUT /api/rules/{id}", required(http.HandlerFunc(rh.Update)))
 	mux.Handle("PATCH /api/rules/{id}", required(http.HandlerFunc(rh.Update)))
 	mux.Handle("DELETE /api/rules/{id}", required(http.HandlerFunc(rh.Delete)))
+}
+
+// mountRuleSetRoutes installs the /api/rule-sets/* surface (T-12 follow-up).
+//
+// Endpoints:
+//   - GET    /api/rule-sets               — list with ?keyword + pagination
+//   - POST   /api/rule-sets               — create
+//   - GET    /api/rule-sets/{id}          — read
+//   - PUT    /api/rule-sets/{id}          — update (PATCH alias)
+//   - DELETE /api/rule-sets/{id}          — delete
+//   - POST   /api/rule-sets/{id}/sync     — trigger immediate URL probe
+//   - GET    /api/rule-sets/presets       — built-in catalog (no DB)
+//
+// All endpoints are user-scoped via auth.Required. The presets endpoint
+// is intentionally NOT a literal sub-path of {id} (registered first so
+// net/http picks the literal route).
+func mountRuleSetRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.RuleSetHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	rh := deps.RuleSetHandler
+	mux.Handle("GET /api/rule-sets", required(http.HandlerFunc(rh.List)))
+	mux.Handle("POST /api/rule-sets", required(http.HandlerFunc(rh.Create)))
+	mux.Handle("GET /api/rule-sets/presets", required(http.HandlerFunc(rh.Presets)))
+	mux.Handle("GET /api/rule-sets/{id}", required(http.HandlerFunc(rh.Get)))
+	mux.Handle("PUT /api/rule-sets/{id}", required(http.HandlerFunc(rh.Update)))
+	mux.Handle("PATCH /api/rule-sets/{id}", required(http.HandlerFunc(rh.Update)))
+	mux.Handle("DELETE /api/rule-sets/{id}", required(http.HandlerFunc(rh.Delete)))
+	mux.Handle("POST /api/rule-sets/{id}/sync", required(http.HandlerFunc(rh.Sync)))
+}
+
+// mountProxyGroupRoutes installs the /api/proxy-groups/* surface (T-12
+// follow-up).
+//
+// Endpoints:
+//   - GET    /api/proxy-groups              — list, sort_order ASC
+//   - POST   /api/proxy-groups              — create
+//   - POST   /api/proxy-groups/reorder      — batch reorder by id list
+//   - GET    /api/proxy-groups/presets      — built-in catalog (no DB)
+//   - GET    /api/proxy-groups/{id}         — read
+//   - PUT    /api/proxy-groups/{id}         — update (PATCH alias)
+//   - DELETE /api/proxy-groups/{id}         — delete
+func mountProxyGroupRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.ProxyGroupHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	ph := deps.ProxyGroupHandler
+	mux.Handle("GET /api/proxy-groups", required(http.HandlerFunc(ph.List)))
+	mux.Handle("POST /api/proxy-groups", required(http.HandlerFunc(ph.Create)))
+	mux.Handle("POST /api/proxy-groups/reorder", required(http.HandlerFunc(ph.Reorder)))
+	mux.Handle("GET /api/proxy-groups/presets", required(http.HandlerFunc(ph.Presets)))
+	mux.Handle("GET /api/proxy-groups/{id}", required(http.HandlerFunc(ph.Get)))
+	mux.Handle("PUT /api/proxy-groups/{id}", required(http.HandlerFunc(ph.Update)))
+	mux.Handle("PATCH /api/proxy-groups/{id}", required(http.HandlerFunc(ph.Update)))
+	mux.Handle("DELETE /api/proxy-groups/{id}", required(http.HandlerFunc(ph.Delete)))
 }
 
 // mountShortLinkRoutes installs the T-28 short-link surface:
