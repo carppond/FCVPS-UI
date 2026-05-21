@@ -94,3 +94,7 @@
 ⚠️ **需修改后通过**
 
 阻塞项：3 个 [bug]（install-agent.sh hub_url shell 注入 / DeleteMe 最后 admin / TG webhook & subscription-pipelines 路由未挂）必须修，其余 4 个严重 [bug]（SSRF / JSON body 大小 / Server timeouts / Go std-lib CVE）强烈建议在 v1.0 RC 前合入。无任何 [bug] 需要重构架构 — 全部是局部加固。
+
+## Post-Review Discovery (2026-05-21 manual verification)
+
+**[bug] cmd/server/main.go 启动序列缺 silent_mode 装配** — 真实启动后访问 `/` 返 404 但 system_settings 表无 `silent_mode_prefix`，导致用户根本看不到登录页。修复在 commit `<hash>`。该 bug 是 Code Review round1 漏抓的集成层问题：T-26 实装了 `internal/ops/silent_mode.go`（`EnsureInitial / Generate / Rotate / Current`），但 `cmd/server/main.go` 从未引用该模块，也未把 `deps.SilentPrefix` 喂给 `handler.NewRouter`——middleware 的 InitialPrefix 永远是空串，背景 watcher 要 30 s 后才补上，而 system_settings 表此时还没有 `silent_mode_prefix` 行，所以全程一直跑在 "silent mode disabled" 分支，访问 `/` 命中 net/http ServeMux 的默认 404（裸 `404 page not found\n`），admin 无路径可登录。验证：清掉 `data/shiguang.db*` 重启，新增日志 `SILENT MODE READY entry_url=http://:8080/_app/<prefix>/`；`GET /` → nginx-clone 404 HTML（说明 silent_mode middleware 已生效）；`GET /_app/<prefix>/api/me` → 401（路径白名单通过、auth 在内层拒绝）。教训：Code Review 应包含"模块是否被 wired 进 entry point"的检查项——纯单测无法发现 main.go 漏装的 wire bug。

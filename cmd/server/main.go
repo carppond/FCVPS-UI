@@ -32,6 +32,7 @@ import (
 	"shiguang-vps/internal/logger"
 	"shiguang-vps/internal/nezha"
 	"shiguang-vps/internal/notify"
+	"shiguang-vps/internal/ops"
 	"shiguang-vps/internal/ota"
 	"shiguang-vps/internal/ratelimit"
 	"shiguang-vps/internal/scriptengine"
@@ -135,6 +136,39 @@ func run() error {
 			slog.String("username", username),
 			slog.String("password", plain),
 			slog.String("note", "save this password; it will not be shown again"),
+		)
+	}
+
+	// Silent mode initialization (T-26). EnsureInitial generates the prefix
+	// once on first boot and reuses the persisted value on subsequent boots,
+	// so it must run BEFORE NewRouter — the middleware reads InitialPrefix
+	// synchronously and the background watcher only takes over after the
+	// first poll interval. settingsRepo is constructed here so the silent-
+	// mode manager and downstream consumers (T-18 traffic loops, T-26
+	// settings handler) share a single instance.
+	settingsRepo := storage.NewSettingsRepo(db, time.Now)
+	silentMgr, err := ops.NewSilentMode(ops.SilentModeConfig{
+		Repo:   settingsRepo,
+		Logger: log,
+	})
+	if err != nil {
+		return fmt.Errorf("silent mode init: %w", err)
+	}
+	silentPrefix, err := silentMgr.EnsureInitial(context.Background())
+	if err != nil {
+		return fmt.Errorf("silent mode ensure initial: %w", err)
+	}
+	if silentPrefix != "" {
+		// First-boot bootstrap: print the entry URL exactly once so the
+		// operator knows where to log in. The full prefix is logged here
+		// intentionally — operators must capture it from this single line,
+		// mirroring the ADMIN BOOTSTRAPPED line above. Subsequent boots also
+		// re-emit this so a fresh `docker logs hub` can recover the URL
+		// without touching the DB.
+		log.Warn("SILENT MODE READY",
+			slog.String("entry_url", fmt.Sprintf("http://%s/_app/%s/", cfg.HTTP.Addr, silentPrefix)),
+			slog.String("prefix", silentPrefix),
+			slog.String("note", "this URL is required to reach the login page"),
 		)
 	}
 
@@ -263,13 +297,11 @@ func run() error {
 	if tgBotErr != nil {
 		log.Warn("tg bot disabled", slog.String("err", tgBotErr.Error()))
 	} else {
-		// settingsRepo is created later (T-18 block); construct it here so
-		// the bot handler can read the webhook token without re-opening the
-		// DB. Reordering is safe — settings_repo is a thin wrapper around
-		// the existing *storage.DB pool.
-		tgSettingsRepo := storage.NewSettingsRepo(db, time.Now)
-		tgWebhookHandler = handler.NewTGWebhookHandler(tgBot, tgSettingsRepo, log)
-		tgBotSettingsHandler = handler.NewTGBotSettingsHandler(tgSettingsRepo, notifyChannels, tgBot, log)
+		// Reuse the settingsRepo constructed during the silent-mode
+		// bootstrap above; SettingsRepo is a thin wrapper around the shared
+		// *storage.DB pool so a single instance can fan out to every caller.
+		tgWebhookHandler = handler.NewTGWebhookHandler(tgBot, settingsRepo, log)
+		tgBotSettingsHandler = handler.NewTGBotSettingsHandler(settingsRepo, notifyChannels, tgBot, log)
 	}
 
 	// T-27: OTA service. The hub version + repo can be overridden via env
@@ -297,9 +329,10 @@ func run() error {
 	otaHandler := handler.NewOTAHandler(otaSvc, log)
 
 	// T-18: traffic aggregation, monthly reset, threshold checker and the
-	// 7-day agent_records cleanup. SettingsRepo doubles as the persistence
-	// layer for threshold state + monthly limit + reset-day.
-	settingsRepo := storage.NewSettingsRepo(db, time.Now)
+	// 7-day agent_records cleanup. settingsRepo (constructed alongside the
+	// silent-mode bootstrap above) doubles as the persistence layer for
+	// threshold state + monthly limit + reset-day; reused here to avoid two
+	// instances racing on the same write pool.
 	trafficRepo := storage.NewTrafficRepo(db, time.Now)
 	trafficAggregator, err := traffic.NewAggregator(traffic.AggregatorConfig{
 		AgentRepo:       agentRepo,
@@ -357,6 +390,7 @@ func run() error {
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
+		SilentPrefix:          silentPrefix,
 		AuthManager:           authMgr,
 		TokenStore:            tokens,
 		BruteProtector:        brute,
