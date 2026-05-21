@@ -298,6 +298,35 @@ export interface RotateShareTokenResponse {
   share_token: string;
 }
 
+/**
+ * Subscription download target query parameter.
+ *
+ * Matches the values accepted by the backend ProducerFactory in
+ * `internal/substore/producer_factory.go`. Use this enum when constructing
+ * download URLs so the UI stays in lockstep with the server-side router.
+ */
+export type ClientTarget =
+  | "clash"
+  | "clashmeta"
+  | "clash-verge"
+  | "clash-verge-rev"
+  | "mihomo"
+  | "stash"
+  | "openclash"
+  | "singbox"
+  | "sing-box"
+  | "surge"
+  | "surge-mac"
+  | "surge-ios"
+  | "v2ray"
+  | "v2rayn"
+  | "v2rayng"
+  | "shadowrocket"
+  | "qx"
+  | "quantumult-x"
+  | "loon"
+  | "uri";
+
 export interface CreateSubscriptionRequest {
   name: string;
   type: SubType;

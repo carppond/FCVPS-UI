@@ -70,22 +70,28 @@ func NewSubstoreCompatService(cfg SubstoreCompatConfig) (*SubstoreCompatService,
 // error so 404 leaks no information to a probing client.
 var ErrCompatNotFound = errors.New("substore: compat resource not found")
 
-// DownloadResult bundles the rendered YAML body with a few headers the
-// handler needs to write.
+// DownloadResult bundles the rendered body with a few headers the handler
+// needs to write. ContentType is producer-specific (text/yaml for Clash,
+// application/json for sing-box, text/plain for URI list / Surge).
+//
+// YAMLType is preserved as a legacy alias for ContentType so existing
+// callers and tests continue to compile; new code should read ContentType.
 type DownloadResult struct {
-	Body       []byte
-	TotalNodes int
-	YAMLType   string // always "text/yaml" for now
+	Body        []byte
+	TotalNodes  int
+	ContentType string
+	YAMLType    string // deprecated alias of ContentType, kept for back-compat
 }
 
-// ServeDownload looks up the subscription by token (preferred — direct hit)
-// and renders its current node set as a Clash YAML doc.
+// ServeDownload looks up the subscription by token and renders its current
+// node set in the format requested by target. target falls back to "clash"
+// when empty so the legacy /download/:name?token=... call shape stays valid.
 //
 // If the subscription's last_synced_at is older than sync_interval, an
 // inline best-effort SyncOne is run before rendering. Sync errors do not
 // fail the request — the previous nodes are still served (PRD M-SUB.5
 // "无网时返回上次成功 cache").
-func (s *SubstoreCompatService) ServeDownload(ctx context.Context, name, token string) (*DownloadResult, error) {
+func (s *SubstoreCompatService) ServeDownload(ctx context.Context, name, token, target string) (*DownloadResult, error) {
 	if name == "" || token == "" {
 		return nil, ErrCompatNotFound
 	}
@@ -116,14 +122,16 @@ func (s *SubstoreCompatService) ServeDownload(ctx context.Context, name, token s
 	if err != nil {
 		return nil, fmt.Errorf("list nodes for render: %w", err)
 	}
-	body, err := ProduceClashYAML(nodes, ClashProducerOpts{})
+	producer := (&ProducerFactory{}).Get(target)
+	body, contentType, err := producer.Produce(nodes, ClashProducerOpts{})
 	if err != nil {
-		return nil, fmt.Errorf("render clash yaml: %w", err)
+		return nil, fmt.Errorf("render target %q: %w", target, err)
 	}
 	return &DownloadResult{
-		Body:       body,
-		TotalNodes: len(nodes),
-		YAMLType:   "text/yaml; charset=utf-8",
+		Body:        body,
+		TotalNodes:  len(nodes),
+		ContentType: contentType,
+		YAMLType:    contentType, // legacy alias
 	}, nil
 }
 

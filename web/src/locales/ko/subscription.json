@@ -165,13 +165,28 @@
       "drop_hint": "파이프라인을 여기 드롭 (개발 중)"
     },
     "share": {
-      "title": "sub-store 호환 URL",
-      "url_hint": "클라이언트는 이 URL로 파이프라인 처리된 노드를 가져올 수 있습니다.",
+      "title": "구독 공유",
+      "url_hint": "각 클라이언트에 맞는 출력 형식의 전용 URL을 제공합니다.",
       "copy_success": "클립보드에 복사됨",
       "rotate_title": "공유 토큰 재발급",
       "rotate_confirm": "토큰을 재발급하면 기존 토큰을 사용하는 모든 클라이언트가 즉시 무효화됩니다. 계속할까요?",
       "rotate_success": "새 토큰 발급됨",
-      "qr_alt": "구독 URL QR 코드"
+      "qr_alt": "구독 URL QR 코드",
+      "qr_title": "{{client}}에 스캔하여 가져오기",
+      "deeplink": "원클릭 가져오기",
+      "search_placeholder": "클라이언트 검색…",
+      "platforms": {
+        "all": "전체",
+        "desktop": "데스크톱",
+        "mobile": "모바일",
+        "both": "모든 플랫폼"
+      },
+      "format": {
+        "clash_yaml": "Clash YAML",
+        "singbox_json": "sing-box JSON",
+        "v2ray_uri": "V2Ray URI",
+        "surge_conf": "Surge conf"
+      }
     },
     "delete_confirm": {
       "title": "구독 삭제",

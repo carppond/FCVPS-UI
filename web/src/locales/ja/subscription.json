@@ -165,13 +165,28 @@
       "drop_hint": "ここにパイプラインをドロップ (開発中)"
     },
     "share": {
-      "title": "sub-store 互換 URL",
-      "url_hint": "クライアントはこの URL でパイプライン処理済みノードを取得できます。",
+      "title": "サブスクリプションの共有",
+      "url_hint": "各クライアント向けに最適な出力形式の URL を生成します。",
       "copy_success": "クリップボードへコピーしました",
       "rotate_title": "共有トークンを再生成",
       "rotate_confirm": "再生成すると既存トークンを使用中のクライアントは即座に無効になります。続行しますか？",
       "rotate_success": "新しいトークンを発行しました",
-      "qr_alt": "サブスク URL の QR コード"
+      "qr_alt": "サブスク URL の QR コード",
+      "qr_title": "{{client}} にスキャンしてインポート",
+      "deeplink": "ワンクリック導入",
+      "search_placeholder": "クライアントを検索…",
+      "platforms": {
+        "all": "すべて",
+        "desktop": "デスクトップ",
+        "mobile": "モバイル",
+        "both": "全プラットフォーム"
+      },
+      "format": {
+        "clash_yaml": "Clash YAML",
+        "singbox_json": "sing-box JSON",
+        "v2ray_uri": "V2Ray URI",
+        "surge_conf": "Surge conf"
+      }
     },
     "delete_confirm": {
       "title": "サブスクリプションを削除",

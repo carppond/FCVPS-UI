@@ -165,13 +165,28 @@
       "drop_hint": "Drop a pipeline here (coming soon)"
     },
     "share": {
-      "title": "sub-store compatible URL",
-      "url_hint": "Clients can use this URL to pull pipeline-processed nodes.",
+      "title": "Share subscription",
+      "url_hint": "Each client gets its own URL tuned to the right output format.",
       "copy_success": "Copied to clipboard",
       "rotate_title": "Rotate share token",
       "rotate_confirm": "Rotating the token invalidates the URL for every client that has it. Continue?",
       "rotate_success": "New token issued",
-      "qr_alt": "Subscription URL QR code"
+      "qr_alt": "Subscription URL QR code",
+      "qr_title": "Scan to import into {{client}}",
+      "deeplink": "Import",
+      "search_placeholder": "Search clients…",
+      "platforms": {
+        "all": "All",
+        "desktop": "Desktop",
+        "mobile": "Mobile",
+        "both": "Cross-platform"
+      },
+      "format": {
+        "clash_yaml": "Clash YAML",
+        "singbox_json": "sing-box JSON",
+        "v2ray_uri": "V2Ray URI",
+        "surge_conf": "Surge conf"
+      }
     },
     "delete_confirm": {
       "title": "Delete subscription",

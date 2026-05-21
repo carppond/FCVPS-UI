@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { ClipboardCopy, QrCode, RotateCw } from "lucide-react";
+import { RotateCw, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,25 +15,33 @@ import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { useApiError } from "@/hooks/use-api-error";
 import { useRotateShareTokenMutation } from "@/api/subscription";
+import { ClientCard } from "./client-card";
+import { CLIENT_CATALOG, type ClientPlatform } from "./client-catalog";
 
 interface ShareUrlCardProps {
   subscriptionId: string;
+  subscriptionName: string;
+  /** Base URL `https://.../download/<name>?token=<share_token>` (no target). */
   shareUrl: string;
-  /** Whether the URL is empty (e.g. share_token missing from server). */
+  /** False when share_token is missing — disables every card. */
   available: boolean;
 }
 
+type PlatformFilter = "all" | "desktop" | "mobile";
+
 /**
- * sub-store compatible URL panel.
+ * Multi-client share-URL panel.
  *
- *  - Read-only URL field + copy button.
- *  - QR placeholder (lucide icon over the rendered URL — full QR rendering
- *    can land later via a small SVG generator; the icon clearly communicates
- *    the action).
- *  - Rotate token button gated behind a confirm dialog (irreversible).
+ *  - Filter chips (all / desktop / mobile) + search input across the
+ *    {@link CLIENT_CATALOG}.
+ *  - Grid of ClientCard tiles, one per supported client (target query
+ *    parameter is appended per card so each client receives the right
+ *    producer format).
+ *  - Token rotation control kept at the bottom (irreversible action).
  */
 export function ShareUrlCard({
   subscriptionId,
+  subscriptionName,
   shareUrl,
   available,
 }: ShareUrlCardProps) {
@@ -41,15 +49,22 @@ export function ShareUrlCard({
   const { handle: handleError } = useApiError();
   const rotate = useRotateShareTokenMutation();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
-  const [showQr, setShowQr] = React.useState(false);
+  const [platform, setPlatform] = React.useState<PlatformFilter>("all");
+  const [search, setSearch] = React.useState("");
 
-  const copy = async () => {
-    if (!shareUrl) return;
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(shareUrl);
-    }
-    toast.success(t("subscription:detail.share.copy_success"));
-  };
+  const filtered = React.useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return CLIENT_CATALOG.filter((c) => {
+      if (platform !== "all") {
+        if (c.platform !== platform && c.platform !== "both") return false;
+      }
+      if (!term) return true;
+      return (
+        c.name.toLowerCase().includes(term) ||
+        c.target.toLowerCase().includes(term)
+      );
+    });
+  }, [platform, search]);
 
   const confirmRotate = async () => {
     try {
@@ -64,41 +79,45 @@ export function ShareUrlCard({
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-        <header className="flex items-center justify-between">
+        <header className="flex flex-col gap-1">
           <h3 className="text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)]">
             {t("subscription:detail.share.title")}
           </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowQr((v) => !v)}
-            aria-label={t("subscription:detail.share.qr_alt")}
-          >
-            <QrCode className="h-4 w-4" />
-          </Button>
+          <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+            {t("subscription:detail.share.url_hint")}
+          </p>
         </header>
-        <p className="mt-1 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-          {t("subscription:detail.share.url_hint")}
-        </p>
 
-        <div className="mt-3 flex items-center gap-2">
-          <Input
-            value={available ? shareUrl : ""}
-            readOnly
-            placeholder={available ? "" : "—"}
-            className="font-mono text-[var(--font-size-xs)]"
-          />
-          <Button
-            variant="outline"
-            onClick={copy}
-            disabled={!available}
-          >
-            <ClipboardCopy className="mr-2 h-4 w-4" />
-            {t("common:actions.copy")}
-          </Button>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <PlatformChips value={platform} onChange={setPlatform} />
+          <div className="relative ml-auto flex-1 min-w-[200px] max-w-xs">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-text-tertiary)]" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("subscription:detail.share.search_placeholder")}
+              className="pl-7 text-[var(--font-size-xs)]"
+            />
+          </div>
         </div>
 
-        {showQr && available && <QrPlaceholder url={shareUrl} />}
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((client) => (
+            <ClientCard
+              key={client.id}
+              client={client}
+              baseUrl={shareUrl}
+              subscriptionName={subscriptionName}
+              disabled={!available}
+            />
+          ))}
+        </div>
+
+        {filtered.length === 0 && (
+          <p className="mt-4 text-center text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+            —
+          </p>
+        )}
       </div>
 
       <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
@@ -154,22 +173,39 @@ export function ShareUrlCard({
   );
 }
 
-function QrPlaceholder({ url }: { url: string }) {
-  // Lightweight visual surrogate — the production app can swap this for a
-  // proper QR renderer (e.g. qrcode.react) without changing the public API
-  // of this component.
+function PlatformChips({
+  value,
+  onChange,
+}: {
+  value: PlatformFilter;
+  onChange: (v: PlatformFilter) => void;
+}) {
+  const { t } = useTranslation("subscription");
+  const options: PlatformFilter[] = ["all", "desktop", "mobile"];
   return (
     <div
       className={cn(
-        "mt-3 flex flex-col items-center gap-2 rounded-[var(--radius-md)]",
-        "border border-dashed border-[var(--color-border-strong)]",
-        "bg-[var(--color-bg-elevated)] p-4",
+        "inline-flex rounded-[var(--radius-md)] border border-[var(--color-border)] p-0.5",
+        "bg-[var(--color-bg-elevated)]",
       )}
+      role="tablist"
     >
-      <QrCode className="h-32 w-32 text-[var(--color-text-secondary)]" />
-      <p className="break-all text-center font-mono text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-        {url}
-      </p>
+      {options.map((opt) => (
+        <button
+          key={opt}
+          role="tab"
+          aria-selected={value === opt}
+          onClick={() => onChange(opt)}
+          className={cn(
+            "rounded-[var(--radius-sm)] px-3 py-1 text-[var(--font-size-xs)] transition-colors",
+            value === opt
+              ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)] font-semibold shadow-[var(--shadow-sm)]"
+              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]",
+          )}
+        >
+          {t(`detail.share.platforms.${opt as ClientPlatform | "all"}`)}
+        </button>
+      ))}
     </div>
   );
 }

@@ -165,13 +165,28 @@
       "drop_hint": "拖拽流水线至此（功能开发中）"
     },
     "share": {
-      "title": "sub-store 兼容订阅链接",
-      "url_hint": "客户端可使用此 URL 拉取经流水线处理后的节点。",
+      "title": "订阅分享",
+      "url_hint": "为每个客户端提供专属订阅链接，自动选择匹配的输出格式。",
       "copy_success": "已复制链接到剪贴板",
       "rotate_title": "轮换分享 token",
       "rotate_confirm": "轮换后所有使用旧 token 的客户端将立即失效，确认继续？",
       "rotate_success": "已生成新 token",
-      "qr_alt": "订阅链接二维码"
+      "qr_alt": "订阅链接二维码",
+      "qr_title": "扫码导入到 {{client}}",
+      "deeplink": "一键导入",
+      "search_placeholder": "搜索客户端…",
+      "platforms": {
+        "all": "全部",
+        "desktop": "桌面",
+        "mobile": "移动",
+        "both": "全平台"
+      },
+      "format": {
+        "clash_yaml": "Clash YAML",
+        "singbox_json": "sing-box JSON",
+        "v2ray_uri": "V2Ray URI",
+        "surge_conf": "Surge conf"
+      }
     },
     "delete_confirm": {
       "title": "删除订阅",

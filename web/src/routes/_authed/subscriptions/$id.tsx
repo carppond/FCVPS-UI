@@ -223,6 +223,7 @@ function SubscriptionDetailPage() {
         <TabsContent value="share" className="mt-6">
           <ShareUrlCard
             subscriptionId={id}
+            subscriptionName={data.name}
             shareUrl={shareUrl}
             available={!!data.share_token}
           />

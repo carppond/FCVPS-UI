@@ -35,11 +35,12 @@ func NewSubstoreCompatHandler(svc *substore.SubstoreCompatService, logger *slog.
 func (h *SubstoreCompatHandler) Download(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	token := strings.TrimSpace(r.URL.Query().Get("token"))
+	target := strings.TrimSpace(r.URL.Query().Get("target"))
 	if name == "" || token == "" {
 		h.notFound(w)
 		return
 	}
-	result, err := h.svc.ServeDownload(r.Context(), name, token)
+	result, err := h.svc.ServeDownload(r.Context(), name, token, target)
 	if err != nil {
 		if errors.Is(err, substore.ErrCompatNotFound) {
 			h.notFound(w)
@@ -48,12 +49,17 @@ func (h *SubstoreCompatHandler) Download(w http.ResponseWriter, r *http.Request)
 		if h.logger != nil {
 			h.logger.Error("substore compat download failed",
 				slog.String("name", name),
+				slog.String("target", target),
 				slog.String("err", err.Error()))
 		}
 		h.notFound(w) // silent mode: never reveal 500s to anon clients
 		return
 	}
-	w.Header().Set("Content-Type", result.YAMLType)
+	ct := result.ContentType
+	if ct == "" {
+		ct = result.YAMLType
+	}
+	w.Header().Set("Content-Type", ct)
 	w.Header().Set("X-Total-Nodes", strconv.Itoa(result.TotalNodes))
 	// Disable downstream caches so subsequent token rotations take effect.
 	w.Header().Set("Cache-Control", "no-store")
