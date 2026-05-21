@@ -11,8 +11,18 @@ import i18n from "@/lib/i18n";
 import { applyTheme, getCurrentTheme } from "@/lib/theme";
 // Shared QueryClient singleton (T-7): defaults, retry policy, global error handler.
 import { queryClient } from "@/lib/query-client";
+import { extractSilentPrefixFromURL } from "@/lib/silent-prefix";
 import { router } from "./App";
 import "@/styles/globals.css";
+
+// Capture silent-mode prefix from the entry URL BEFORE the router boots.
+// The hub enforces /_app/<32hex>/<route> for every non-whitelisted request;
+// we cache the prefix in localStorage so every later apiFetch() picks it up
+// transparently via prefixedPath(). We also rewrite the browser URL to the
+// canonical /route path so TanStack Router doesn't try to match the prefixed
+// form. This MUST run before createRoot() to avoid the router racing an
+// initial navigation against the unprefixed routes.
+extractSilentPrefixFromURL();
 
 // Apply the stored theme before paint to avoid flash.
 applyTheme(getCurrentTheme());
