@@ -1,0 +1,223 @@
+{
+  "title": "通知センター",
+  "subtitle": "通知チャネル / イベント購読 / テンプレートを一元管理",
+  "list": {
+    "kinds_header": "対応チャネル",
+    "configured_header": "登録済みチャネル（{{count}}）",
+    "new": "新規",
+    "empty": "まだチャネルがありません。上から種類を選んで作成してください",
+    "add_channel": "チャネルを追加"
+  },
+  "kinds": {
+    "telegram": {
+      "name": "Telegram",
+      "description": "Bot 経由で個人 / グループに送信",
+      "fields": {
+        "bot_token": { "label": "Bot Token", "help": "@BotFather から取得" },
+        "chat_id": { "label": "Chat ID", "help": "個人 ID またはグループ ID（- で始まる）" },
+        "parse_mode": { "label": "本文フォーマット", "help": "HTML または Markdown" }
+      }
+    },
+    "discord": {
+      "name": "Discord",
+      "description": "Webhook 経由でチャンネルに送信",
+      "fields": {
+        "webhook_url": { "label": "Webhook URL" },
+        "username": { "label": "表示名", "help": "任意" }
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Incoming Webhook で送信",
+      "fields": {
+        "webhook_url": { "label": "Webhook URL" },
+        "channel": { "label": "チャンネル", "help": "例：#general（任意）" }
+      }
+    },
+    "email": {
+      "name": "メール",
+      "description": "SMTP でメール通知を送信",
+      "fields": {
+        "smtp_host": { "label": "SMTP ホスト" },
+        "smtp_port": { "label": "SMTP ポート", "help": "通常 465 / 587" },
+        "smtp_user": { "label": "SMTP ユーザー名" },
+        "smtp_password": { "label": "SMTP パスワード", "help": "暗号化保存" },
+        "smtp_tls": { "label": "TLS を使う" },
+        "from": { "label": "送信元" },
+        "to": { "label": "送信先", "help": "カンマ区切り" }
+      }
+    },
+    "bark": {
+      "name": "Bark",
+      "description": "iOS プッシュ（Bark アプリ）",
+      "fields": {
+        "device_key": { "label": "Device Key" },
+        "server_url": { "label": "サーバー URL", "help": "デフォルト https://api.day.app" }
+      }
+    },
+    "gotify": {
+      "name": "Gotify",
+      "description": "セルフホスト通知ゲートウェイ",
+      "fields": {
+        "server_url": { "label": "Gotify URL" },
+        "app_token": { "label": "App Token" }
+      }
+    },
+    "webhook": {
+      "name": "カスタム Webhook",
+      "description": "汎用 HTTP プッシュ",
+      "fields": {
+        "url": { "label": "リクエスト URL" },
+        "method": { "label": "HTTP メソッド", "help": "POST / GET" },
+        "headers": { "label": "ヘッダー", "help": "1 行に key: value" }
+      }
+    },
+    "serverchan": {
+      "name": "Server酱",
+      "description": "Server酱 経由で WeChat に送信",
+      "fields": { "send_key": { "label": "SendKey" } }
+    },
+    "pushdeer": {
+      "name": "PushDeer",
+      "description": "OSS のクロスプラットフォーム通知",
+      "fields": {
+        "push_key": { "label": "PushKey" },
+        "server_url": { "label": "サーバー URL", "help": "任意" }
+      }
+    },
+    "ifttt": {
+      "name": "IFTTT",
+      "description": "Webhook で IFTTT を起動",
+      "fields": {
+        "webhook_key": { "label": "Webhook Key" },
+        "event_name": { "label": "Event 名" }
+      }
+    }
+  },
+  "events": {
+    "node_offline": { "name": "ノードオフライン", "description": "ハートビート連続タイムアウト" },
+    "traffic_threshold": { "name": "トラフィック警告", "description": "閾値超過" },
+    "subscription_sync_failed": { "name": "購読同期失敗", "description": "取得または解析に失敗" },
+    "backup_completed": { "name": "バックアップ完了", "description": "定期またはマニュアルバックアップ完了" },
+    "login_anomaly": { "name": "異常ログイン", "description": "新しい端末 / 異常な IP" },
+    "ota_available": { "name": "新バージョン", "description": "OTA で更新が利用可能" },
+    "script_alert": { "name": "スクリプト警告", "description": "ユーザースクリプトがエラーを通知" }
+  },
+  "card": {
+    "status": { "ok": "稼働中", "failed": "テスト失敗", "untested": "未テスト" },
+    "updated_at": "更新 {{time}}",
+    "enabled": "有効",
+    "disabled": "無効"
+  },
+  "form": {
+    "kind_label": "チャネル種類",
+    "name_label": "チャネル名",
+    "name_placeholder": "例：運用グループ Telegram",
+    "enabled_label": "このチャネルを有効化",
+    "config_section": "チャネル設定",
+    "no_config_needed": "このチャネルには追加設定はありません",
+    "schema_missing": "フィールド定義が取得できません",
+    "events_label": "購読するイベント",
+    "events_hint": "右側のマトリクスでも一括編集できます",
+    "saved": "保存しました",
+    "created": "作成しました",
+    "error": {
+      "name_required": "チャネル名を入力してください",
+      "field_required": "必須です"
+    }
+  },
+  "test": {
+    "button": "テスト",
+    "success": "テストメッセージを送信しました",
+    "failed_with_reason": "テスト失敗：{{reason}}",
+    "unknown_error": "不明なエラー"
+  },
+  "matrix": {
+    "title": "イベント購読マトリクス",
+    "subtitle": "行 = イベント、列 = チャネル。チェックで配信",
+    "save_count": "保存（{{count}}）",
+    "saved": "購読マトリクスを保存しました",
+    "empty": "チャネルを 1 つ以上作成してから設定してください",
+    "col_event": "イベント"
+  },
+  "template": {
+    "title": "メッセージテンプレート",
+    "subtitle": "Go template 構文。空欄でデフォルトを利用",
+    "preview": "プレビュー",
+    "hide_preview": "プレビューを閉じる",
+    "preview_header": "プレビュー（サンプルイベント）",
+    "vars_header": "利用可能な変数",
+    "reset": "デフォルトに戻す"
+  },
+  "history": {
+    "title": "配信履歴",
+    "subtitle": "直近 30 日の配信結果",
+    "load_failed": "履歴の読み込みに失敗しました",
+    "empty_title": "履歴なし",
+    "empty_description": "イベント発生後にここへ表示されます",
+    "all_events": "すべてのイベント",
+    "all_statuses": "すべてのステータス",
+    "col_time": "時刻",
+    "col_event": "イベント",
+    "col_channel": "チャネル",
+    "col_status": "ステータス",
+    "col_detail": "詳細",
+    "channel_unknown": "（チャネルは削除済み）",
+    "status": {
+      "sent": "成功",
+      "failed": "失敗",
+      "pending": "待機中",
+      "skipped_dedupe": "重複スキップ"
+    }
+  },
+  "page": {
+    "filter_label": "種類で絞り込み",
+    "filter_all": "すべて",
+    "delete_confirm_title": "チャネルを削除",
+    "delete_confirm_description": "「{{name}}」を削除しますか？購読も解除されます。元に戻せません",
+    "delete_confirm_submit": "削除",
+    "select_hint": "左側からチャネルを選んでください",
+    "tab_detail": "詳細",
+    "tab_events": "購読",
+    "tab_history": "履歴",
+    "tab_template": "テンプレート"
+  },
+  "telegram_redirect": "Telegram Bot の双方向設定は Bot 設定ページから行えます",
+  "telegram": {
+    "page_title": "Telegram Bot",
+    "page_description": "通知を受信し 5 つのコマンド（/nodes /refresh /agent_restart /traffic /silent）に応答する Bot を設定します",
+    "title": "Bot Webhook 設定",
+    "description": "Telegram は更新をこの URL に POST します。URL にトークンが含まれるため秘匿してください。",
+    "webhook": {
+      "label": "公開 Webhook URL",
+      "hint": "BotFather にコピーするか、「Telegram に登録」ボタンで setWebhook を呼び出します"
+    },
+    "install": {
+      "label": "Telegram setWebhook 対象 URL",
+      "placeholder": "https://your-domain/api/notify/telegram/webhook/<token>",
+      "hint": "Telegram setWebhook API を呼び出します（管理者のみ）。"
+    },
+    "bindings": {
+      "title": "登録済み Chat ID",
+      "empty": "まだチャットが登録されていません。Telegram から「/start <token>」を送信してください。",
+      "enabled": "有効",
+      "disabled": "無効",
+      "no_chats": "登録されたチャットはありません",
+      "hint": "Telegram で「/start <userID>:<channelID>」を送信するとチャットをチャネルに紐づけます。"
+    },
+    "actions": {
+      "rotate": "トークンを再生成",
+      "rotating": "再生成中…",
+      "rotated": "Webhook トークンを再生成しました",
+      "install": "Telegram に登録",
+      "installing": "登録中…",
+      "installed": "Webhook を登録しました",
+      "copy": "コピー",
+      "url_copied": "Webhook URL をコピーしました",
+      "copy_failed": "コピーに失敗しました"
+    },
+    "errors": {
+      "load_failed": "Telegram Bot の状態取得に失敗しました"
+    }
+  }
+}

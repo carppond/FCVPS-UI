@@ -23,11 +23,16 @@ import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/s
 import { Route as AuthedScriptsIndexRouteImport } from './routes/_authed/scripts/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
 import { Route as AuthedPipelinesIndexRouteImport } from './routes/_authed/pipelines/index'
+import { Route as AuthedNotificationsIndexRouteImport } from './routes/_authed/notifications/index'
 import { Route as AuthedNodesIndexRouteImport } from './routes/_authed/nodes/index'
+import { Route as AuthedAgentsIndexRouteImport } from './routes/_authed/agents/index'
 import { Route as AuthedSubscriptionsIdRouteImport } from './routes/_authed/subscriptions/$id'
 import { Route as AuthedScriptsScriptIdRouteImport } from './routes/_authed/scripts/$scriptId'
 import { Route as AuthedProfile2faRouteImport } from './routes/_authed/profile/2fa'
+import { Route as AuthedNotificationsTelegramRouteImport } from './routes/_authed/notifications/telegram'
+import { Route as AuthedNotificationsChannelIdRouteImport } from './routes/_authed/notifications/$channelId'
 import { Route as AuthedNodesNodeIdRouteImport } from './routes/_authed/nodes/$nodeId'
+import { Route as AuthedAgentsAgentIdRouteImport } from './routes/_authed/agents/$agentId'
 import { Route as AuthedAdminUsersRouteImport } from './routes/_authed/admin/users'
 import { Route as AuthedAdminSettingsRouteImport } from './routes/_authed/admin/settings'
 import { Route as AuthedAdminOtaRouteImport } from './routes/_authed/admin/ota'
@@ -102,9 +107,20 @@ const AuthedPipelinesIndexRoute = AuthedPipelinesIndexRouteImport.update({
   path: '/pipelines/',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedNotificationsIndexRoute =
+  AuthedNotificationsIndexRouteImport.update({
+    id: '/notifications/',
+    path: '/notifications/',
+    getParentRoute: () => AuthedRouteRoute,
+  } as any)
 const AuthedNodesIndexRoute = AuthedNodesIndexRouteImport.update({
   id: '/nodes/',
   path: '/nodes/',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedAgentsIndexRoute = AuthedAgentsIndexRouteImport.update({
+  id: '/agents/',
+  path: '/agents/',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedSubscriptionsIdRoute = AuthedSubscriptionsIdRouteImport.update({
@@ -122,9 +138,26 @@ const AuthedProfile2faRoute = AuthedProfile2faRouteImport.update({
   path: '/profile/2fa',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedNotificationsTelegramRoute =
+  AuthedNotificationsTelegramRouteImport.update({
+    id: '/notifications/telegram',
+    path: '/notifications/telegram',
+    getParentRoute: () => AuthedRouteRoute,
+  } as any)
+const AuthedNotificationsChannelIdRoute =
+  AuthedNotificationsChannelIdRouteImport.update({
+    id: '/notifications/$channelId',
+    path: '/notifications/$channelId',
+    getParentRoute: () => AuthedRouteRoute,
+  } as any)
 const AuthedNodesNodeIdRoute = AuthedNodesNodeIdRouteImport.update({
   id: '/nodes/$nodeId',
   path: '/nodes/$nodeId',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedAgentsAgentIdRoute = AuthedAgentsAgentIdRouteImport.update({
+  id: '/agents/$agentId',
+  path: '/agents/$agentId',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedAdminUsersRoute = AuthedAdminUsersRouteImport.update({
@@ -161,11 +194,16 @@ export interface FileRoutesByFullPath {
   '/admin/ota': typeof AuthedAdminOtaRoute
   '/admin/settings': typeof AuthedAdminSettingsRoute
   '/admin/users': typeof AuthedAdminUsersRoute
+  '/agents/$agentId': typeof AuthedAgentsAgentIdRoute
   '/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
+  '/notifications/$channelId': typeof AuthedNotificationsChannelIdRoute
+  '/notifications/telegram': typeof AuthedNotificationsTelegramRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
   '/scripts/$scriptId': typeof AuthedScriptsScriptIdRoute
   '/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
+  '/agents/': typeof AuthedAgentsIndexRoute
   '/nodes/': typeof AuthedNodesIndexRoute
+  '/notifications/': typeof AuthedNotificationsIndexRoute
   '/pipelines/': typeof AuthedPipelinesIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
   '/scripts/': typeof AuthedScriptsIndexRoute
@@ -184,11 +222,16 @@ export interface FileRoutesByTo {
   '/admin/ota': typeof AuthedAdminOtaRoute
   '/admin/settings': typeof AuthedAdminSettingsRoute
   '/admin/users': typeof AuthedAdminUsersRoute
+  '/agents/$agentId': typeof AuthedAgentsAgentIdRoute
   '/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
+  '/notifications/$channelId': typeof AuthedNotificationsChannelIdRoute
+  '/notifications/telegram': typeof AuthedNotificationsTelegramRoute
   '/profile/2fa': typeof AuthedProfile2faRoute
   '/scripts/$scriptId': typeof AuthedScriptsScriptIdRoute
   '/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
+  '/agents': typeof AuthedAgentsIndexRoute
   '/nodes': typeof AuthedNodesIndexRoute
+  '/notifications': typeof AuthedNotificationsIndexRoute
   '/pipelines': typeof AuthedPipelinesIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
   '/scripts': typeof AuthedScriptsIndexRoute
@@ -210,11 +253,16 @@ export interface FileRoutesById {
   '/_authed/admin/ota': typeof AuthedAdminOtaRoute
   '/_authed/admin/settings': typeof AuthedAdminSettingsRoute
   '/_authed/admin/users': typeof AuthedAdminUsersRoute
+  '/_authed/agents/$agentId': typeof AuthedAgentsAgentIdRoute
   '/_authed/nodes/$nodeId': typeof AuthedNodesNodeIdRoute
+  '/_authed/notifications/$channelId': typeof AuthedNotificationsChannelIdRoute
+  '/_authed/notifications/telegram': typeof AuthedNotificationsTelegramRoute
   '/_authed/profile/2fa': typeof AuthedProfile2faRoute
   '/_authed/scripts/$scriptId': typeof AuthedScriptsScriptIdRoute
   '/_authed/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
+  '/_authed/agents/': typeof AuthedAgentsIndexRoute
   '/_authed/nodes/': typeof AuthedNodesIndexRoute
+  '/_authed/notifications/': typeof AuthedNotificationsIndexRoute
   '/_authed/pipelines/': typeof AuthedPipelinesIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
   '/_authed/scripts/': typeof AuthedScriptsIndexRoute
@@ -235,11 +283,16 @@ export interface FileRouteTypes {
     | '/admin/ota'
     | '/admin/settings'
     | '/admin/users'
+    | '/agents/$agentId'
     | '/nodes/$nodeId'
+    | '/notifications/$channelId'
+    | '/notifications/telegram'
     | '/profile/2fa'
     | '/scripts/$scriptId'
     | '/subscriptions/$id'
+    | '/agents/'
     | '/nodes/'
+    | '/notifications/'
     | '/pipelines/'
     | '/profile/'
     | '/scripts/'
@@ -258,11 +311,16 @@ export interface FileRouteTypes {
     | '/admin/ota'
     | '/admin/settings'
     | '/admin/users'
+    | '/agents/$agentId'
     | '/nodes/$nodeId'
+    | '/notifications/$channelId'
+    | '/notifications/telegram'
     | '/profile/2fa'
     | '/scripts/$scriptId'
     | '/subscriptions/$id'
+    | '/agents'
     | '/nodes'
+    | '/notifications'
     | '/pipelines'
     | '/profile'
     | '/scripts'
@@ -283,11 +341,16 @@ export interface FileRouteTypes {
     | '/_authed/admin/ota'
     | '/_authed/admin/settings'
     | '/_authed/admin/users'
+    | '/_authed/agents/$agentId'
     | '/_authed/nodes/$nodeId'
+    | '/_authed/notifications/$channelId'
+    | '/_authed/notifications/telegram'
     | '/_authed/profile/2fa'
     | '/_authed/scripts/$scriptId'
     | '/_authed/subscriptions/$id'
+    | '/_authed/agents/'
     | '/_authed/nodes/'
+    | '/_authed/notifications/'
     | '/_authed/pipelines/'
     | '/_authed/profile/'
     | '/_authed/scripts/'
@@ -401,11 +464,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedPipelinesIndexRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/notifications/': {
+      id: '/_authed/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof AuthedNotificationsIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/nodes/': {
       id: '/_authed/nodes/'
       path: '/nodes'
       fullPath: '/nodes/'
       preLoaderRoute: typeof AuthedNodesIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/agents/': {
+      id: '/_authed/agents/'
+      path: '/agents'
+      fullPath: '/agents/'
+      preLoaderRoute: typeof AuthedAgentsIndexRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/subscriptions/$id': {
@@ -429,11 +506,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedProfile2faRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/notifications/telegram': {
+      id: '/_authed/notifications/telegram'
+      path: '/notifications/telegram'
+      fullPath: '/notifications/telegram'
+      preLoaderRoute: typeof AuthedNotificationsTelegramRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/notifications/$channelId': {
+      id: '/_authed/notifications/$channelId'
+      path: '/notifications/$channelId'
+      fullPath: '/notifications/$channelId'
+      preLoaderRoute: typeof AuthedNotificationsChannelIdRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/nodes/$nodeId': {
       id: '/_authed/nodes/$nodeId'
       path: '/nodes/$nodeId'
       fullPath: '/nodes/$nodeId'
       preLoaderRoute: typeof AuthedNodesNodeIdRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/agents/$agentId': {
+      id: '/_authed/agents/$agentId'
+      path: '/agents/$agentId'
+      fullPath: '/agents/$agentId'
+      preLoaderRoute: typeof AuthedAgentsAgentIdRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/admin/users': {
@@ -474,11 +572,16 @@ interface AuthedRouteRouteChildren {
   AuthedAdminOtaRoute: typeof AuthedAdminOtaRoute
   AuthedAdminSettingsRoute: typeof AuthedAdminSettingsRoute
   AuthedAdminUsersRoute: typeof AuthedAdminUsersRoute
+  AuthedAgentsAgentIdRoute: typeof AuthedAgentsAgentIdRoute
   AuthedNodesNodeIdRoute: typeof AuthedNodesNodeIdRoute
+  AuthedNotificationsChannelIdRoute: typeof AuthedNotificationsChannelIdRoute
+  AuthedNotificationsTelegramRoute: typeof AuthedNotificationsTelegramRoute
   AuthedProfile2faRoute: typeof AuthedProfile2faRoute
   AuthedScriptsScriptIdRoute: typeof AuthedScriptsScriptIdRoute
   AuthedSubscriptionsIdRoute: typeof AuthedSubscriptionsIdRoute
+  AuthedAgentsIndexRoute: typeof AuthedAgentsIndexRoute
   AuthedNodesIndexRoute: typeof AuthedNodesIndexRoute
+  AuthedNotificationsIndexRoute: typeof AuthedNotificationsIndexRoute
   AuthedPipelinesIndexRoute: typeof AuthedPipelinesIndexRoute
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
   AuthedScriptsIndexRoute: typeof AuthedScriptsIndexRoute
@@ -493,11 +596,16 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedAdminOtaRoute: AuthedAdminOtaRoute,
   AuthedAdminSettingsRoute: AuthedAdminSettingsRoute,
   AuthedAdminUsersRoute: AuthedAdminUsersRoute,
+  AuthedAgentsAgentIdRoute: AuthedAgentsAgentIdRoute,
   AuthedNodesNodeIdRoute: AuthedNodesNodeIdRoute,
+  AuthedNotificationsChannelIdRoute: AuthedNotificationsChannelIdRoute,
+  AuthedNotificationsTelegramRoute: AuthedNotificationsTelegramRoute,
   AuthedProfile2faRoute: AuthedProfile2faRoute,
   AuthedScriptsScriptIdRoute: AuthedScriptsScriptIdRoute,
   AuthedSubscriptionsIdRoute: AuthedSubscriptionsIdRoute,
+  AuthedAgentsIndexRoute: AuthedAgentsIndexRoute,
   AuthedNodesIndexRoute: AuthedNodesIndexRoute,
+  AuthedNotificationsIndexRoute: AuthedNotificationsIndexRoute,
   AuthedPipelinesIndexRoute: AuthedPipelinesIndexRoute,
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
   AuthedScriptsIndexRoute: AuthedScriptsIndexRoute,

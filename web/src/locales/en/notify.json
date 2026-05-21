@@ -1,0 +1,246 @@
+{
+  "title": "Notifications",
+  "subtitle": "Manage push channels, event subscriptions and templates in one place",
+  "list": {
+    "kinds_header": "Available kinds",
+    "configured_header": "Your channels ({{count}})",
+    "new": "New",
+    "empty": "No channels yet — pick a kind above to get started",
+    "add_channel": "New channel"
+  },
+  "kinds": {
+    "telegram": {
+      "name": "Telegram",
+      "description": "Push to a Telegram chat or group via a bot",
+      "fields": {
+        "bot_token": { "label": "Bot Token", "help": "Issued by @BotFather" },
+        "chat_id": { "label": "Chat ID", "help": "User or group chat ID (groups start with -)" },
+        "parse_mode": { "label": "Parse mode", "help": "HTML or Markdown" }
+      }
+    },
+    "discord": {
+      "name": "Discord",
+      "description": "Push to a Discord channel via webhook",
+      "fields": {
+        "webhook_url": { "label": "Webhook URL" },
+        "username": { "label": "Display name", "help": "Optional" }
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "Push via Incoming Webhook",
+      "fields": {
+        "webhook_url": { "label": "Webhook URL" },
+        "channel": { "label": "Channel", "help": "e.g. #general (optional)" }
+      }
+    },
+    "email": {
+      "name": "Email",
+      "description": "Send email notifications over SMTP",
+      "fields": {
+        "smtp_host": { "label": "SMTP host" },
+        "smtp_port": { "label": "SMTP port", "help": "Usually 465 / 587" },
+        "smtp_user": { "label": "SMTP username" },
+        "smtp_password": { "label": "SMTP password", "help": "Stored encrypted" },
+        "smtp_tls": { "label": "Use TLS" },
+        "from": { "label": "From" },
+        "to": { "label": "Recipients", "help": "Comma-separated" }
+      }
+    },
+    "bark": {
+      "name": "Bark",
+      "description": "iOS push via the Bark app",
+      "fields": {
+        "device_key": { "label": "Device key" },
+        "server_url": { "label": "Server URL", "help": "Defaults to https://api.day.app" }
+      }
+    },
+    "gotify": {
+      "name": "Gotify",
+      "description": "Self-hosted push gateway",
+      "fields": {
+        "server_url": { "label": "Gotify URL" },
+        "app_token": { "label": "App token" }
+      }
+    },
+    "webhook": {
+      "name": "Custom Webhook",
+      "description": "Generic HTTP push",
+      "fields": {
+        "url": { "label": "Request URL" },
+        "method": { "label": "HTTP method", "help": "POST / GET" },
+        "headers": { "label": "Headers", "help": "One `key: value` per line" }
+      }
+    },
+    "serverchan": {
+      "name": "ServerChan",
+      "description": "Push to WeChat via ServerChan",
+      "fields": {
+        "send_key": { "label": "SendKey" }
+      }
+    },
+    "pushdeer": {
+      "name": "PushDeer",
+      "description": "Cross-platform push (open source)",
+      "fields": {
+        "push_key": { "label": "PushKey" },
+        "server_url": { "label": "Server URL", "help": "Optional self-hosted instance" }
+      }
+    },
+    "ifttt": {
+      "name": "IFTTT",
+      "description": "Trigger IFTTT automations via webhook",
+      "fields": {
+        "webhook_key": { "label": "Webhook key" },
+        "event_name": { "label": "Event name" }
+      }
+    }
+  },
+  "events": {
+    "node_offline": {
+      "name": "Node offline",
+      "description": "Heartbeat timed out N times in a row"
+    },
+    "traffic_threshold": {
+      "name": "Traffic threshold",
+      "description": "Monthly usage crossed the configured threshold"
+    },
+    "subscription_sync_failed": {
+      "name": "Subscription sync failed",
+      "description": "Could not fetch or parse a subscription source"
+    },
+    "backup_completed": {
+      "name": "Backup completed",
+      "description": "Scheduled or manual backup finished"
+    },
+    "login_anomaly": {
+      "name": "Login anomaly",
+      "description": "Sign-in from a new device or unusual IP"
+    },
+    "ota_available": {
+      "name": "Update available",
+      "description": "OTA found a newer version"
+    },
+    "script_alert": {
+      "name": "Script alert",
+      "description": "A user script raised an error or alert"
+    }
+  },
+  "card": {
+    "status": { "ok": "Active", "failed": "Test failed", "untested": "Untested" },
+    "updated_at": "Updated {{time}}",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "form": {
+    "kind_label": "Channel kind",
+    "name_label": "Channel name",
+    "name_placeholder": "e.g. Ops group Telegram",
+    "enabled_label": "Enable this channel",
+    "config_section": "Channel config",
+    "no_config_needed": "No extra config required for this kind",
+    "schema_missing": "Field schema not available",
+    "events_label": "Subscribed events",
+    "events_hint": "Bulk-edit via the matrix on the right",
+    "saved": "Saved",
+    "created": "Created",
+    "error": {
+      "name_required": "Channel name is required",
+      "field_required": "Required"
+    }
+  },
+  "test": {
+    "button": "Test",
+    "success": "Test message delivered",
+    "failed_with_reason": "Test failed: {{reason}}",
+    "unknown_error": "unknown error"
+  },
+  "matrix": {
+    "title": "Event subscriptions",
+    "subtitle": "Rows = events, columns = channels. Check to fan-out.",
+    "save_count": "Save ({{count}})",
+    "saved": "Subscription matrix saved",
+    "empty": "Create at least one channel before subscribing to events",
+    "col_event": "Event"
+  },
+  "template": {
+    "title": "Message template",
+    "subtitle": "Go template syntax; leave empty for the default",
+    "preview": "Preview",
+    "hide_preview": "Hide preview",
+    "preview_header": "Preview (against sample event)",
+    "vars_header": "Variables",
+    "reset": "Reset to default"
+  },
+  "history": {
+    "title": "Delivery history",
+    "subtitle": "Last 30 days of event triggers and push results",
+    "load_failed": "Failed to load history",
+    "empty_title": "No events yet",
+    "empty_description": "Triggered events will appear here once they fire",
+    "all_events": "All events",
+    "all_statuses": "All statuses",
+    "col_time": "Time",
+    "col_event": "Event",
+    "col_channel": "Channel",
+    "col_status": "Status",
+    "col_detail": "Detail",
+    "channel_unknown": "(channel deleted)",
+    "status": {
+      "sent": "Sent",
+      "failed": "Failed",
+      "pending": "Pending",
+      "skipped_dedupe": "Skipped"
+    }
+  },
+  "page": {
+    "filter_label": "Filter by kind",
+    "filter_all": "All kinds",
+    "delete_confirm_title": "Delete channel",
+    "delete_confirm_description": "Delete \"{{name}}\"? Subscriptions tied to it will be removed. This cannot be undone.",
+    "delete_confirm_submit": "Delete",
+    "select_hint": "Select a channel on the left to see its details",
+    "tab_detail": "Details",
+    "tab_events": "Subscriptions",
+    "tab_history": "History",
+    "tab_template": "Template"
+  },
+  "telegram_redirect": "Configure two-way Telegram bot in the Bot Settings page",
+  "telegram": {
+    "page_title": "Telegram Bot",
+    "page_description": "Configure the bot to receive alerts and answer 5 commands (/nodes /refresh /agent_restart /traffic /silent)",
+    "title": "Bot webhook configuration",
+    "description": "Telegram POSTs updates to this URL; it embeds a secret token — keep it private.",
+    "webhook": {
+      "label": "Public webhook URL",
+      "hint": "Copy into BotFather, or click \"Install on Telegram\" to call setWebhook automatically"
+    },
+    "install": {
+      "label": "Telegram setWebhook target URL",
+      "placeholder": "https://your-domain/api/notify/telegram/webhook/<token>",
+      "hint": "Installing calls the Telegram setWebhook API; admin only."
+    },
+    "bindings": {
+      "title": "Bound chat IDs",
+      "empty": "No chats bound yet. Send \"/start <token>\" to the bot from Telegram to bind one.",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "no_chats": "No chats registered yet",
+      "hint": "Users send \"/start <userID>:<channelID>\" in Telegram to bind the current chat to a channel."
+    },
+    "actions": {
+      "rotate": "Rotate token",
+      "rotating": "Rotating…",
+      "rotated": "Webhook token rotated",
+      "install": "Install on Telegram",
+      "installing": "Installing…",
+      "installed": "Webhook installed",
+      "copy": "Copy",
+      "url_copied": "Webhook URL copied",
+      "copy_failed": "Copy failed"
+    },
+    "errors": {
+      "load_failed": "Failed to load Telegram bot status"
+    }
+  }
+}

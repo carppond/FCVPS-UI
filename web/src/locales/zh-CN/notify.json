@@ -1,0 +1,259 @@
+{
+  "title": "通知中心",
+  "subtitle": "统一管理消息推送通道 / 事件订阅 / 模板",
+  "list": {
+    "kinds_header": "支持的渠道类型",
+    "configured_header": "我的通道（{{count}}）",
+    "new": "新建",
+    "empty": "尚未配置任何通道，从上方选一个类型开始",
+    "add_channel": "新建通道"
+  },
+  "kinds": {
+    "telegram": {
+      "name": "Telegram",
+      "description": "通过 Bot 推送到个人 / 群组",
+      "fields": {
+        "bot_token": {
+          "label": "Bot Token",
+          "help": "从 @BotFather 获取"
+        },
+        "chat_id": {
+          "label": "Chat ID",
+          "help": "个人 ID 或群组 ID（以 - 开头）"
+        },
+        "parse_mode": {
+          "label": "消息格式",
+          "help": "HTML 或 Markdown"
+        }
+      }
+    },
+    "discord": {
+      "name": "Discord",
+      "description": "通过 Webhook 推送到频道",
+      "fields": {
+        "webhook_url": { "label": "Webhook URL", "help": "频道集成中获取" },
+        "username": { "label": "显示名称", "help": "可选" }
+      }
+    },
+    "slack": {
+      "name": "Slack",
+      "description": "通过 Incoming Webhook 推送",
+      "fields": {
+        "webhook_url": { "label": "Webhook URL" },
+        "channel": { "label": "频道", "help": "如 #general，可选" }
+      }
+    },
+    "email": {
+      "name": "邮件",
+      "description": "通过 SMTP 发送邮件通知",
+      "fields": {
+        "smtp_host": { "label": "SMTP 主机" },
+        "smtp_port": { "label": "SMTP 端口", "help": "通常 465 / 587" },
+        "smtp_user": { "label": "SMTP 用户名" },
+        "smtp_password": { "label": "SMTP 密码", "help": "加密存储" },
+        "smtp_tls": { "label": "启用 TLS" },
+        "from": { "label": "发件人地址" },
+        "to": { "label": "收件人列表", "help": "多个地址用逗号分隔" }
+      }
+    },
+    "bark": {
+      "name": "Bark",
+      "description": "iOS 推送（Bark App）",
+      "fields": {
+        "device_key": { "label": "Device Key", "help": "Bark App 中的设备码" },
+        "server_url": { "label": "服务器地址", "help": "默认 https://api.day.app，可填自建" }
+      }
+    },
+    "gotify": {
+      "name": "Gotify",
+      "description": "自建消息推送",
+      "fields": {
+        "server_url": { "label": "Gotify 地址" },
+        "app_token": { "label": "应用 Token" }
+      }
+    },
+    "webhook": {
+      "name": "自定义 Webhook",
+      "description": "通用 HTTP 推送",
+      "fields": {
+        "url": { "label": "请求 URL" },
+        "method": { "label": "HTTP 方法", "help": "POST / GET" },
+        "headers": { "label": "请求头", "help": "每行 key: value" }
+      }
+    },
+    "serverchan": {
+      "name": "Server酱",
+      "description": "通过 Server酱 推送到微信",
+      "fields": {
+        "send_key": { "label": "SendKey", "help": "从 Server酱后台获取" }
+      }
+    },
+    "pushdeer": {
+      "name": "PushDeer",
+      "description": "开源跨平台推送",
+      "fields": {
+        "push_key": { "label": "PushKey" },
+        "server_url": { "label": "服务器地址", "help": "可填自建" }
+      }
+    },
+    "ifttt": {
+      "name": "IFTTT",
+      "description": "通过 IFTTT Webhook 触发自动化",
+      "fields": {
+        "webhook_key": { "label": "Webhook Key" },
+        "event_name": { "label": "Event 名称" }
+      }
+    }
+  },
+  "events": {
+    "node_offline": {
+      "name": "节点离线",
+      "description": "节点连续 N 次心跳超时"
+    },
+    "traffic_threshold": {
+      "name": "流量告警",
+      "description": "用量超过阈值百分比"
+    },
+    "subscription_sync_failed": {
+      "name": "订阅同步失败",
+      "description": "订阅源拉取或解析失败"
+    },
+    "backup_completed": {
+      "name": "备份完成",
+      "description": "定时或手动备份执行完成"
+    },
+    "login_anomaly": {
+      "name": "异常登录",
+      "description": "新设备 / 异常 IP 登录"
+    },
+    "ota_available": {
+      "name": "发现新版本",
+      "description": "OTA 检查到可升级版本"
+    },
+    "script_alert": {
+      "name": "脚本告警",
+      "description": "脚本执行抛出错误或主动告警"
+    }
+  },
+  "card": {
+    "status": {
+      "ok": "已激活",
+      "failed": "测试失败",
+      "untested": "未测试"
+    },
+    "updated_at": "更新于 {{time}}",
+    "enabled": "已启用",
+    "disabled": "已禁用"
+  },
+  "form": {
+    "kind_label": "通道类型",
+    "name_label": "通道名称",
+    "name_placeholder": "如：运维群 Telegram",
+    "enabled_label": "启用此通道",
+    "config_section": "渠道配置",
+    "no_config_needed": "该渠道无需额外参数",
+    "schema_missing": "未获取到字段定义",
+    "events_label": "订阅的事件类型",
+    "events_hint": "可在右侧矩阵中批量调整",
+    "saved": "已保存",
+    "created": "已创建",
+    "error": {
+      "name_required": "请填写通道名称",
+      "field_required": "此字段必填"
+    }
+  },
+  "test": {
+    "button": "测试",
+    "success": "测试消息已送达",
+    "failed_with_reason": "测试失败：{{reason}}",
+    "unknown_error": "未知错误"
+  },
+  "matrix": {
+    "title": "事件订阅矩阵",
+    "subtitle": "行=事件 / 列=通道，勾选表示该事件触发时通知该通道",
+    "save_count": "保存（{{count}}）",
+    "saved": "订阅矩阵已保存",
+    "empty": "尚未配置任何通道，先创建通道再来订阅事件",
+    "col_event": "事件"
+  },
+  "template": {
+    "title": "消息模板",
+    "subtitle": "Go template 语法，留空使用默认",
+    "preview": "预览",
+    "hide_preview": "收起预览",
+    "preview_header": "预览（基于样例事件）",
+    "vars_header": "可用变量",
+    "reset": "恢复默认"
+  },
+  "history": {
+    "title": "投递历史",
+    "subtitle": "最近 30 天的事件触发与通道推送结果",
+    "load_failed": "加载失败",
+    "empty_title": "暂无记录",
+    "empty_description": "事件触发后会在此显示推送结果",
+    "all_events": "全部事件",
+    "all_statuses": "全部状态",
+    "col_time": "时间",
+    "col_event": "事件",
+    "col_channel": "通道",
+    "col_status": "状态",
+    "col_detail": "详情",
+    "channel_unknown": "（通道已删除）",
+    "status": {
+      "sent": "成功",
+      "failed": "失败",
+      "pending": "排队中",
+      "skipped_dedupe": "已去重"
+    }
+  },
+  "page": {
+    "filter_label": "类型筛选",
+    "filter_all": "全部类型",
+    "delete_confirm_title": "删除通道",
+    "delete_confirm_description": "确定删除「{{name}}」？将一并清除其事件订阅。此操作不可撤销",
+    "delete_confirm_submit": "删除",
+    "select_hint": "在左侧选择一个通道查看详情",
+    "tab_detail": "通道详情",
+    "tab_events": "事件订阅",
+    "tab_history": "投递历史",
+    "tab_template": "消息模板"
+  },
+  "telegram_redirect": "Telegram Bot 双向交互请到「Bot 设置」页配置",
+  "telegram": {
+    "page_title": "Telegram Bot",
+    "page_description": "配置 Bot 接收通知并响应 5 条命令（/nodes /refresh /agent_restart /traffic /silent）",
+    "title": "Bot Webhook 配置",
+    "description": "Telegram 通过 webhook 将更新推送至此地址；该地址内含 token，请妥善保管",
+    "webhook": {
+      "label": "公共 Webhook 地址",
+      "hint": "复制到 BotFather 或调用「安装到 Telegram」按钮一键设置"
+    },
+    "install": {
+      "label": "Telegram setWebhook 目标地址",
+      "placeholder": "https://your-domain/api/notify/telegram/webhook/<token>",
+      "hint": "点击安装将调用 Telegram setWebhook API；仅管理员可操作"
+    },
+    "bindings": {
+      "title": "已绑定的 Chat ID",
+      "empty": "尚未绑定任何 Chat。在 Telegram 中向 Bot 发送「/start <token>」即可绑定",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "no_chats": "尚未注册 Chat",
+      "hint": "用户在 Telegram 输入「/start <userID>:<channelID>」即可把当前对话绑定到对应通道"
+    },
+    "actions": {
+      "rotate": "重新生成 Token",
+      "rotating": "正在重新生成…",
+      "rotated": "已生成新的 Webhook Token",
+      "install": "安装到 Telegram",
+      "installing": "正在安装…",
+      "installed": "Webhook 已成功安装",
+      "copy": "复制",
+      "url_copied": "Webhook 地址已复制",
+      "copy_failed": "复制失败"
+    },
+    "errors": {
+      "load_failed": "加载 Telegram Bot 状态失败"
+    }
+  }
+}
