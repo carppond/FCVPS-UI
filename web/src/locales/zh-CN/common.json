@@ -43,5 +43,17 @@
   "loading": "加载中…",
   "no_data": "暂无数据",
   "unknown": "未知",
-  "version": "版本"
+  "version": "版本",
+  "pagination": {
+    "total": "共 {{count}} 条"
+  },
+  "aria": {
+    "lang": "切换语言",
+    "actions": "操作",
+    "wizard_steps": "向导步骤",
+    "sparkline": "走势图"
+  },
+  "not_found": {
+    "title": "页面未找到"
+  }
 }

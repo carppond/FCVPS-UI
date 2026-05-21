@@ -289,6 +289,12 @@ export interface SubscriptionDetail extends Subscription {
   nodes: Node[];
   nodes_total: number;
   pipeline_bindings: PipelineBinding[];
+  /** Present only on owner / admin reads (matches internal/types/api.go §SubscriptionDetail). */
+  share_token?: string;
+}
+
+export interface RotateShareTokenResponse {
+  share_token: string;
 }
 
 export interface CreateSubscriptionRequest {

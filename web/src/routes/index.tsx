@@ -1,26 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useAuthStore } from "@/stores/auth-store";
 
 /**
- * Root index "/" — renders welcome content outside of any layout group.
- * Once auth is implemented (T-6), this will redirect authenticated users to /dashboard.
+ * Root index "/" — pure redirect.
+ *
+ * Authenticated users go to `/dashboard`; everyone else lands on `/login`.
+ * No UI is ever rendered here, so there is no user-facing copy to translate.
  */
 export const Route = createFileRoute("/")({
-  component: WelcomePage,
+  beforeLoad: () => {
+    const { token, user } = useAuthStore.getState();
+    if (token && user) {
+      throw redirect({ to: "/dashboard" });
+    }
+    throw redirect({ to: "/login" });
+  },
 });
-
-function WelcomePage() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center bg-[var(--color-bg)]"
-    >
-      <div className="text-center">
-        <h1 className="text-[var(--font-size-2xl)] font-bold text-[var(--color-text-primary)]">
-          Welcome to 拾光VPS
-        </h1>
-        <p className="mt-2 text-[var(--color-text-tertiary)]">
-          Self-hosted VPS panel
-        </p>
-      </div>
-    </div>
-  );
-}

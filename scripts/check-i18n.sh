@@ -82,13 +82,20 @@ fi
 echo "[check-i18n] Checking for hardcoded CJK characters in web/src/..."
 
 # Use perl for portable Unicode matching (works on macOS + Linux).
-# Exclude: locales/ directory, node_modules.
+# Exclude:
+#   - locales/ directory (translation tables)
+#   - node_modules
+#   - native-name whitelist files: language switcher / profile locale select
+#     display their language names in the language's own script (UX convention,
+#     see docs/_dev-cheatsheet.md §i18n native-name 白名单).
 # Strip lines that are purely // comments before checking.
 CJK_HITS=$(
   find "$SRC_DIR" \
     \( -name "*.ts" -o -name "*.tsx" \) \
     -not -path "*/locales/*" \
     -not -path "*/node_modules/*" \
+    -not -path "*/components/layout/lang-switch.tsx" \
+    -not -path "*/components/auth/profile-basic-form.tsx" \
     -print0 \
   | xargs -0 perl -ne '
       # Skip pure single-line // comment lines

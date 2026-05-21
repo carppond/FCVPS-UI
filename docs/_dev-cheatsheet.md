@@ -95,3 +95,30 @@ duration-fast(150ms) / duration-normal(250ms) / duration-slow(350ms) / duration-
 - 禁止硬编码用户可见文案，必须走 i18n `t('namespace.key')`
 - 所有数据驱动组件必须有四态：正常 / 加载（Skeleton）/ 空（EmptyState）/ 错误（ErrorState）
 - 暗色优先，亮色作为辅助主题
+
+## shadcn 兼容尺寸白名单（允许的非阶梯步进）
+
+shadcn/ui 默认组件（button / input / dropdown-menu / tabs 等）会落到一些
+不在主阶梯 (0/0.5/1/1.5/2/3/4/6/8/12/16/20/24) 上的步进。这些是社区惯例的
+4px 倍数子集，我们 **允许** 在 shadcn 派生的 primitives 中保留它们，避免
+逐个 fork 组件源带来的维护成本。
+
+允许的步进（仅限 UI primitives + 这些 primitives 的直接 wrapper）：
+
+- `h-9` / `w-9`  （36px — button/input 默认高度）
+- `h-3.5` / `w-3.5`  （14px — dropdown menu / tabs trigger icon）
+- `h-2.5` / `w-2.5`  （10px — small dot indicator）
+- `py-2.5` / `px-2.5`  （10px — table cell / pill padding）
+- `h-px` / `w-px`  （1px hairline border / separator）
+
+业务组件（非 UI primitive）如果引入了上述步进，应优先用主阶梯重写；只有当
+组件直接消费 shadcn 默认 size 时才豁免，并就近写注释说明理由。
+
+## i18n native-name 白名单
+
+语言切换器（`components/layout/lang-switch.tsx`）与个人资料语言下拉
+（`components/auth/profile-basic-form.tsx`）按 UX 惯例需要用 **目标语言自身的
+书写系统** 显示其名称（"中文（简体）" / "English" / "日本語" / "한국어"）。
+这些 CJK / Hangul 字面量是有意的，`scripts/check-i18n.sh` 通过路径白名单
+（见脚本顶部）豁免；新增同类用法需在源码就近写 `i18n-lint: native-name`
+注释，并在 check 脚本里同步白名单。

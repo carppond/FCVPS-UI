@@ -183,7 +183,7 @@ function NodeRow({
       </Td>
       <Td className="text-right tabular-nums">{node.port}</Td>
       <Td>
-        <LatencyBadge latencyMs={node.reachable ? node.latency_ms : node.latency_ms} />
+        <LatencyBadge latencyMs={node.reachable ? node.latency_ms : -1} />
       </Td>
       <Td>
         <div className="flex flex-wrap gap-1">
@@ -238,9 +238,12 @@ function Pagination({
   onPageChange: (page: number) => void;
   total: number;
 }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex items-center justify-between gap-3 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-      <span className="tabular-nums">total {total}</span>
+      <span className="tabular-nums">
+        {t("common:pagination.total", { count: total })}
+      </span>
       <div className="flex items-center gap-1">
         <Button
           variant="ghost"

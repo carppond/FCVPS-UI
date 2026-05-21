@@ -43,5 +43,17 @@
   "loading": "Loading…",
   "no_data": "No data",
   "unknown": "Unknown",
-  "version": "Version"
+  "version": "Version",
+  "pagination": {
+    "total": "{{count}} total"
+  },
+  "aria": {
+    "lang": "Switch language",
+    "actions": "Actions",
+    "wizard_steps": "Wizard steps",
+    "sparkline": "Trend chart"
+  },
+  "not_found": {
+    "title": "Page not found"
+  }
 }

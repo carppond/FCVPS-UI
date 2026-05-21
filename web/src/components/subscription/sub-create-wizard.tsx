@@ -200,7 +200,7 @@ export function SubCreateWizard({
 // ── Step indicator ──────────────────────────────────────────────────────────
 
 function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
-  const { t } = useTranslation("subscription");
+  const { t } = useTranslation(["subscription", "common"]);
   const labels = [
     t("subscription:wizard.step1"),
     t("subscription:wizard.step2"),
@@ -209,7 +209,7 @@ function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
   return (
     <ol
       className="flex items-center gap-2 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]"
-      aria-label="wizard steps"
+      aria-label={t("common:aria.wizard_steps")}
     >
       {labels.map((label, idx) => {
         const stepNum = (idx + 1) as 1 | 2 | 3;

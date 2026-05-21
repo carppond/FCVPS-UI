@@ -86,11 +86,11 @@ function TotpPage() {
       } catch (err) {
         setHasError(true);
         setCode("");
-        const message =
-          err instanceof ApiError && err.code === "ERR_AUTH_TOTP_INVALID"
-            ? t("auth:totp.error.invalid")
-            : t("auth:totp.error.invalid");
-        toast.error(message);
+        let messageKey = "auth:totp.error.invalid";
+        if (err instanceof ApiError && err.code === "ERR_AUTH_TOTP_EXPIRED") {
+          messageKey = "auth:totp.error.expired";
+        }
+        toast.error(t(messageKey));
       }
     },
     [pendingToken, verifyMutation, setSession, navigate, next, t],

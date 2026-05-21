@@ -160,7 +160,7 @@ function UserRow({
   onForceDisable2FA,
   onDelete,
 }: UserRowProps) {
-  const { t } = useTranslation(["auth"]);
+  const { t } = useTranslation(["auth", "common"]);
   return (
     <tr className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-surface-hover)]">
       <Td className="font-medium text-[var(--color-text-primary)]">
@@ -194,7 +194,7 @@ function UserRow({
       <Td className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="actions">
+            <Button variant="ghost" size="icon" aria-label={t("common:aria.actions")}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

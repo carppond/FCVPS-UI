@@ -63,7 +63,7 @@ export function TemplateEditor({
       minimap: { enabled: false },
       lineNumbers: "on",
       scrollBeyondLastLine: false,
-      fontSize: 13,
+      fontSize: 12,
       tabSize: 2,
       wordWrap: "on",
       automaticLayout: true,
@@ -144,7 +144,7 @@ export function TemplateEditor({
       </header>
 
       <div className="grid grid-cols-1 gap-[var(--spacing-3)] lg:grid-cols-[1fr_180px]">
-        <div className="h-[300px] overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="h-72 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)]">
           <Editor
             height="100%"
             defaultLanguage="plaintext"

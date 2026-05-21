@@ -95,12 +95,18 @@ export function ProfileBasicForm({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="profile-locale">{t("auth:profile.locale_label")}</Label>
+        {/*
+          Native language labels — i18n-lint: native-name.
+          Each option shows the language in its own script (UX convention
+          mirroring Google/GitHub). Intentional CJK / Hangul literals;
+          this file is whitelisted in scripts/check-i18n.sh.
+        */}
         <select
           id="profile-locale"
           className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--font-size-sm)] text-[var(--color-text-primary)]"
           {...form.register("locale")}
         >
-          <option value="zh-CN">中文</option>
+          <option value="zh-CN">中文（简体）</option>
           <option value="en">English</option>
           <option value="ja">日本語</option>
           <option value="ko">한국어</option>

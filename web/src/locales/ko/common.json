@@ -43,5 +43,17 @@
   "loading": "로딩 중…",
   "no_data": "데이터 없음",
   "unknown": "알 수 없음",
-  "version": "버전"
+  "version": "버전",
+  "pagination": {
+    "total": "총 {{count}}건"
+  },
+  "aria": {
+    "lang": "언어 전환",
+    "actions": "작업",
+    "wizard_steps": "마법사 단계",
+    "sparkline": "추세 차트"
+  },
+  "not_found": {
+    "title": "페이지를 찾을 수 없습니다"
+  }
 }

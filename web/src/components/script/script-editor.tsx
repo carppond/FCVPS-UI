@@ -36,7 +36,7 @@ export function ScriptEditor({
       minimap: { enabled: false },
       lineNumbers: "on",
       scrollBeyondLastLine: false,
-      fontSize: 13,
+      fontSize: 12,
       tabSize: 2,
       wordWrap: "on",
       automaticLayout: true,

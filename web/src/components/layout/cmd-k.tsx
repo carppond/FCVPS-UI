@@ -219,7 +219,8 @@ export function CmdK() {
           label="Command Menu"
           loop
           className={cn(
-            "flex max-h-[480px] flex-col",
+            // 30rem = 480px, on the rem-based size scale (token阶梯 audited).
+            "flex max-h-[30rem] flex-col",
             "[&_[cmdk-group-heading]]:px-3",
             "[&_[cmdk-group-heading]]:pt-3",
             "[&_[cmdk-group-heading]]:pb-1",

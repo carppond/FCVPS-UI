@@ -4,12 +4,6 @@
  * Mirrors the Go handler surface declared in internal/handler/subscription_handler.go.
  * Every mutation invalidates the relevant TanStack query key from
  * `queryKeys.subscription` so the list / detail views refetch automatically.
- *
- * Note on `share_token` & `RotateShareTokenResponse`:
- * `web/src/types/api.ts` is generated from the contract and currently omits
- * the share token DTO additions (see internal/types/api.go §SubscriptionDetail).
- * Until the codegen catches up we re-export local supplements below to keep the
- * frontend honest with what the backend already returns.
  */
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
@@ -21,22 +15,15 @@ import type {
   APIResponse,
   CreateSubscriptionRequest,
   PagedResponse,
+  RotateShareTokenResponse,
   Subscription,
-  SubscriptionDetail as SubscriptionDetailBase,
+  SubscriptionDetail,
   SyncResult,
   UpdateSubscriptionRequest,
 } from "@/types/api";
 
-// ─── Supplemental DTOs (pending codegen refresh) ────────────────────────────
-
-/** Extended detail returned by GET /api/subscriptions/:id (includes share_token). */
-export interface SubscriptionDetail extends SubscriptionDetailBase {
-  share_token?: string;
-}
-
-export interface RotateShareTokenResponse {
-  share_token: string;
-}
+// Re-export so callers can keep importing from this module without churn.
+export type { RotateShareTokenResponse, SubscriptionDetail } from "@/types/api";
 
 // ─── Query params ───────────────────────────────────────────────────────────
 

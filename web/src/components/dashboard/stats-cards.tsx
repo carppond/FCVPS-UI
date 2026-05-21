@@ -133,6 +133,7 @@ function AgentsTile() {
 }
 
 function Sparkline({ points }: { points: number[] }) {
+  const { t } = useTranslation("common");
   if (points.length === 0) {
     return <div className="h-8 w-20" aria-hidden />;
   }
@@ -140,7 +141,7 @@ function Sparkline({ points }: { points: number[] }) {
     <div
       className="flex h-8 items-end gap-[2px]"
       role="img"
-      aria-label="sparkline"
+      aria-label={t("common:aria.sparkline")}
     >
       {points.map((v, i) => (
         <span

@@ -102,7 +102,7 @@ export function ScriptList({
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label="actions"
+                        aria-label={t("common:aria.actions")}
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>

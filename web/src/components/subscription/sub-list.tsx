@@ -133,7 +133,7 @@ interface SubRowProps {
 }
 
 function SubRow({ sub, showOwner, onSync, onEdit, onDelete }: SubRowProps) {
-  const { t } = useTranslation(["subscription"]);
+  const { t } = useTranslation(["subscription", "common"]);
   return (
     <tr
       className={cn(
@@ -188,7 +188,7 @@ function SubRow({ sub, showOwner, onSync, onEdit, onDelete }: SubRowProps) {
       <Td className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="actions">
+            <Button variant="ghost" size="icon" aria-label={t("common:aria.actions")}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
