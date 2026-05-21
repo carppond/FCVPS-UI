@@ -11,6 +11,7 @@ import (
 	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/handler/middleware"
 	"shiguang-vps/internal/logger"
+	"shiguang-vps/internal/nezha"
 	"shiguang-vps/internal/ratelimit"
 	"shiguang-vps/internal/storage"
 )
@@ -118,6 +119,30 @@ type Deps struct {
 	// OTAHandler hosts /api/admin/ota/* (T-27). nil disables the routes.
 	OTAHandler *OTAHandler
 
+	// SettingsHandler hosts /api/admin/settings* and silent-mode rotation
+	// (T-26). nil disables the routes.
+	SettingsHandler *SettingsHandler
+
+	// BackupHandler hosts /api/admin/backup and /api/admin/backup/restore
+	// (T-26). nil disables the routes.
+	BackupHandler *BackupHandler
+
+	// NezhaHandler hosts POST /api/v1/nezha/heartbeat + /report (T-17).
+	// nil disables the routes (typical for unit tests that don't exercise
+	// the Nezha compat layer).
+	NezhaHandler *nezha.Handler
+
+	// ScriptHandler hosts /api/scripts/* (T-13 / M-SCRIPT). nil disables
+	// the routes (typical for unit tests that don't exercise the script
+	// engine).
+	ScriptHandler *ScriptHandler
+
+	// RuleHandler hosts /api/rules/* (T-12). nil disables the routes.
+	RuleHandler *RuleHandler
+
+	// TrafficHandler hosts /api/traffic/* (T-18). nil disables the routes.
+	TrafficHandler *TrafficHandler
+
 	// LoginRateLimit is the per-(IP|username) login bucket (5/hour by default).
 	// nil disables.
 	LoginRateLimit *ratelimit.Limiter
@@ -178,13 +203,14 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountTCPingRoutes(mux, deps)
 	mountNotifyRoutes(mux, deps)
 	mountOTARoutes(mux, deps)
+	mountNezhaRoutes(mux, deps)
+	mountSettingsRoutes(mux, deps)
+	mountBackupRoutes(mux, deps)
+	mountScriptRoutes(mux, deps)
+	mountRuleRoutes(mux, deps)
+	mountTrafficRoutes(mux, deps)
 
-	// TODO(T-15): mount rule handlers (/api/rules/*).
-	// TODO(T-17): mount script handlers (/api/scripts/*).
-	// TODO(T-18): mount nezha compat (/api/v1/nezha/*).
-	// TODO(T-21): mount traffic handlers (/api/traffic/*).
 	// TODO(T-25): mount shortlink handlers (/api/shortlinks, GET /s/:code).
-	// TODO(T-26): mount settings + silent-mode rotate (/api/admin/settings/*).
 	// TODO(T-28): mount audit log query (/api/admin/audit).
 
 	return mux
@@ -489,6 +515,119 @@ func mountOTARoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("GET /api/admin/ota/check", requireAdmin(http.HandlerFunc(oh.Check)))
 	mux.Handle("POST /api/admin/ota/apply", requireAdmin(http.HandlerFunc(oh.Apply)))
 	mux.Handle("GET /api/admin/ota/history", requireAdmin(http.HandlerFunc(oh.History)))
+}
+
+// mountNezhaRoutes installs the Nezha agent v2 compatibility endpoints
+// (T-17). Both paths route to the same handler — the alias mirrors the two
+// default URLs Nezha agents post to so an operator does not need to know
+// which our hub prefers. The routes are inside the silent-mode whitelist
+// (see middleware/silent_mode.go silentWhitelist) so they remain reachable
+// regardless of the /_app/<prefix> rotation state; the handler itself does
+// the bearer-secret validation and returns a silent 404 on any auth failure.
+func mountNezhaRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.NezhaHandler == nil {
+		return
+	}
+	h := deps.NezhaHandler
+	mux.Handle("POST /api/v1/nezha/heartbeat", h)
+	mux.Handle("POST /api/v1/nezha/report", h)
+}
+
+// mountScriptRoutes installs /api/scripts/* (T-13 / M-SCRIPT). Every
+// endpoint is user-scoped; cross-user access yields 404 via the repo's
+// user_id filter (information hiding). The /test endpoint is rate-limited
+// implicitly through the global limiter — the script engine's 5s timeout
+// caps any single invocation.
+func mountScriptRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.ScriptHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	sh := deps.ScriptHandler
+	mux.Handle("GET /api/scripts", required(http.HandlerFunc(sh.List)))
+	mux.Handle("POST /api/scripts", required(http.HandlerFunc(sh.Create)))
+	mux.Handle("GET /api/scripts/{id}", required(http.HandlerFunc(sh.Get)))
+	mux.Handle("PUT /api/scripts/{id}", required(http.HandlerFunc(sh.Update)))
+	mux.Handle("PATCH /api/scripts/{id}", required(http.HandlerFunc(sh.Update)))
+	mux.Handle("DELETE /api/scripts/{id}", required(http.HandlerFunc(sh.Delete)))
+	mux.Handle("POST /api/scripts/{id}/test", required(http.HandlerFunc(sh.Test)))
+	mux.Handle("GET /api/scripts/{id}/logs", required(http.HandlerFunc(sh.Logs)))
+}
+
+// mountTrafficRoutes installs the M-TRAFFIC surface (T-18):
+//
+//   - GET /api/traffic/summary    — current-month rolled-up summary
+//   - GET /api/traffic/history    — chart points (range=7d|30d|90d, view=day|month)
+//   - GET /api/traffic/by-agent   — per-agent breakdown for the current month
+//   - PUT /api/traffic/threshold  — admin: configure alert percentages
+//   - PUT /api/traffic/limit      — admin: configure monthly limit (bytes)
+//
+// Read endpoints require a session and scope to the caller. Mutations
+// additionally require role=admin (enforced inside the handler so the route
+// registration stays uniform).
+func mountTrafficRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.TrafficHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	th := deps.TrafficHandler
+	mux.Handle("GET /api/traffic/summary", required(http.HandlerFunc(th.Summary)))
+	mux.Handle("GET /api/traffic/history", required(http.HandlerFunc(th.History)))
+	mux.Handle("GET /api/traffic/by-agent", required(http.HandlerFunc(th.ByAgent)))
+	mux.Handle("PUT /api/traffic/threshold", required(http.HandlerFunc(th.SetThreshold)))
+	// Contract §1 also lists POST /api/traffic/threshold — alias it.
+	mux.Handle("POST /api/traffic/threshold", required(http.HandlerFunc(th.SetThreshold)))
+	mux.Handle("PUT /api/traffic/limit", required(http.HandlerFunc(th.SetLimit)))
+}
+
+// mountSettingsRoutes is a forward-compat stub installed alongside T-17 so
+// the parallel-agent T-26 work can wire the SettingsHandler without
+// re-touching the router skeleton. When SettingsHandler is nil the function
+// is a no-op.
+func mountSettingsRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.SettingsHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	requireAdmin := auth.RequireAdmin(deps.TokenStore)
+	sh := deps.SettingsHandler
+	mux.Handle("GET /api/admin/settings", requireAdmin(http.HandlerFunc(sh.Get)))
+	mux.Handle("PUT /api/admin/settings", requireAdmin(http.HandlerFunc(sh.Update)))
+	mux.Handle("PATCH /api/admin/settings", requireAdmin(http.HandlerFunc(sh.Update)))
+	mux.Handle("POST /api/admin/silent-mode/rotate",
+		requireAdmin(http.HandlerFunc(sh.RotateSilent)))
+}
+
+// mountBackupRoutes is a forward-compat stub installed alongside T-17 so the
+// parallel-agent T-26 work can wire the BackupHandler without re-touching the
+// router skeleton. When BackupHandler is nil the function is a no-op.
+func mountBackupRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.BackupHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	requireAdmin := auth.RequireAdmin(deps.TokenStore)
+	bh := deps.BackupHandler
+	mux.Handle("POST /api/admin/backup", requireAdmin(http.HandlerFunc(bh.Create)))
+	mux.Handle("POST /api/admin/backup/restore",
+		requireAdmin(http.HandlerFunc(bh.Restore)))
+}
+
+// mountRuleRoutes is a forward-compat stub installed alongside T-17 so the
+// parallel-agent T-12 work can wire the RuleHandler without re-touching the
+// router skeleton. When RuleHandler is nil the function is a no-op.
+func mountRuleRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.RuleHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	rh := deps.RuleHandler
+	mux.Handle("GET /api/rules", required(http.HandlerFunc(rh.List)))
+	mux.Handle("POST /api/rules", required(http.HandlerFunc(rh.Create)))
+	mux.Handle("GET /api/rules/templates", required(http.HandlerFunc(rh.Templates)))
+	mux.Handle("POST /api/rules/reorder", required(http.HandlerFunc(rh.Reorder)))
+	mux.Handle("GET /api/rules/{id}", required(http.HandlerFunc(rh.Get)))
+	mux.Handle("PUT /api/rules/{id}", required(http.HandlerFunc(rh.Update)))
+	mux.Handle("PATCH /api/rules/{id}", required(http.HandlerFunc(rh.Update)))
+	mux.Handle("DELETE /api/rules/{id}", required(http.HandlerFunc(rh.Delete)))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads

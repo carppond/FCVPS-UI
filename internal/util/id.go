@@ -2,6 +2,7 @@ package util
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"sync"
@@ -102,6 +103,21 @@ func RandomHex32() string {
 		panic(fmt.Errorf("util.RandomHex32: read random: %w", err))
 	}
 	return hex.EncodeToString(buf[:])
+}
+
+// RandomBase64URL returns a URL-safe base64 string carrying n cryptographically
+// random bytes, padding stripped. Used by the Nezha compat token mint flow
+// (T-17) where we want shorter tokens than RandomHex32 — 16 bytes encodes to
+// 22 characters base64url which mirrors the Nezha agent's own secret format.
+func RandomBase64URL(n int) string {
+	if n <= 0 {
+		return ""
+	}
+	buf := make([]byte, n)
+	if _, err := rand.Read(buf); err != nil {
+		panic(fmt.Errorf("util.RandomBase64URL(%d): read random: %w", n, err))
+	}
+	return base64.RawURLEncoding.EncodeToString(buf)
 }
 
 // RandomBytes returns n cryptographically secure random bytes. Returns an

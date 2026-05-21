@@ -68,6 +68,15 @@ func (h *AgentHandler) List(w http.ResponseWriter, r *http.Request) {
 
 // Create implements POST /api/agents. Generates a fresh token (returned in
 // plaintext for the one-and-only time) and persists sha256(token).
+//
+// Kind selection (T-17):
+//   - "native"       → 32-char hex token (16 random bytes); install_command is
+//                      the curl one-liner for the native agent installer.
+//   - "nezha_compat" → 22-char base64url token (16 random bytes, Nezha-style);
+//                      install_command is a Server-URL hint string; the
+//                      response additionally surfaces install_hint_i18n_key
+//                      so the frontend can render the migration guide.
+//   - "" (default)   → "native".
 func (h *AgentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	traceID := middleware.TraceIDFromContext(r.Context())
 	user := auth.MustUserFromContext(r.Context())
@@ -80,13 +89,27 @@ func (h *AgentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		util.RespondError(w, types.ErrValidationRequiredField, "name required", nil, traceID)
 		return
 	}
-	token := util.RandomHex32()
+	kind := req.Kind
+	if kind == "" {
+		kind = types.AgentKindNative
+	}
+	if kind != types.AgentKindNative && kind != types.AgentKindNezhaCompat {
+		util.RespondError(w, types.ErrValidationInvalidFormat,
+			"kind must be \"native\" or \"nezha_compat\"", nil, traceID)
+		return
+	}
+	var token string
+	if kind == types.AgentKindNezhaCompat {
+		token = util.RandomBase64URL(16) // 22-char base64url, mirrors Nezha
+	} else {
+		token = util.RandomHex32()
+	}
 	rec := storage.AgentRecord{
 		ID:        util.UUIDv7(),
 		UserID:    user.ID,
 		Name:      req.Name,
 		TokenHash: util.SHA256Hex(token),
-		Kind:      "native",
+		Kind:      string(kind),
 		Status:    "offline",
 	}
 	created, err := h.repo.Create(r.Context(), rec)
@@ -97,7 +120,12 @@ func (h *AgentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	resp := types.AgentCreateResponse{
 		Agent:          agentRecordToDTO(created, false, nil),
 		Token:          token,
-		InstallCommand: buildInstallCommand(token, created.Name),
+		InstallCommand: buildInstallCommand(kind, token, created.Name),
+	}
+	if kind == types.AgentKindNezhaCompat {
+		// Frontend renders the migration guide under this i18n key (T-16).
+		// The string itself lives in web/src/locales/<lang>/agent.json.
+		resp.InstallHintI18nKey = "agent.nezha_compat.install_hint"
 	}
 	util.RespondJSON(w, http.StatusCreated, types.APIResponse[types.AgentCreateResponse]{
 		Data:      resp,
@@ -431,7 +459,17 @@ func isAllowedCommand(c string) bool {
 // after a successful POST /api/agents. The actual install-script handler is
 // hosted by T-29; the URL is a placeholder for now and the agent / token are
 // the load-bearing portions.
-func buildInstallCommand(token, name string) string {
+//
+// For kind=nezha_compat the return value is a Server-URL hint instead of an
+// installer one-liner: the operator already has a Nezha agent binary; we just
+// need to tell them what URL to point it at and which token to use.
+func buildInstallCommand(kind types.AgentKind, token, name string) string {
+	if kind == types.AgentKindNezhaCompat {
+		return fmt.Sprintf(
+			`# Set Server = "<hub>/api/v1/nezha" and ClientSecret = "%s" in your existing Nezha agent config (agent.yaml). Agent name on hub: %s`,
+			token, name,
+		)
+	}
 	return fmt.Sprintf(`curl -fsSL <hub>/install-agent.sh | TOKEN=%s AGENT_NAME=%s bash`,
 		token, name)
 }

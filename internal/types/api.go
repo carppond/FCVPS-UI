@@ -767,10 +767,15 @@ type Agent struct {
 }
 
 // AgentCreateResponse 创建 agent 时的响应（含一次性 token）。
+//
+// InstallHintI18nKey 仅在 Kind=="nezha_compat" 时非空。前端用其作为 i18n key
+// 渲染 "Nezha agent 接入指引"（说明把 Server URL 改为 https://<hub>/api/v1/nezha
+// 等）。原 native agent 流程返回空字符串。
 type AgentCreateResponse struct {
 	Agent
-	Token          string `json:"token"`           // 明文 token，仅此一次
-	InstallCommand string `json:"install_command"` // 一键安装命令
+	Token              string `json:"token"`                          // 明文 token，仅此一次
+	InstallCommand     string `json:"install_command"`                // 一键安装命令
+	InstallHintI18nKey string `json:"install_hint_i18n_key,omitempty"` // nezha_compat 时的接入指引 i18n key
 }
 
 // AgentMetric 实时指标快照（来自 agent_records）。
@@ -798,8 +803,13 @@ type AgentMetric struct {
 }
 
 // CreateAgentRequest 创建 agent 请求。
+//
+// Kind 为可选；为空时默认 "native"。当 Kind == "nezha_compat" 时，token 长度
+// 较短（22 字符 base64url，即 16 字节），且响应附带 nezha 接入指引的 i18n key
+// （install_hint_i18n_key），由前端按当前语言渲染。
 type CreateAgentRequest struct {
-	Name string `json:"name"`
+	Name string    `json:"name"`
+	Kind AgentKind `json:"kind,omitempty"`
 }
 
 // UpdateAgentRequest 修改 agent 请求。

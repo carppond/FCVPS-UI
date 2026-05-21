@@ -30,6 +30,7 @@ import (
 	"shiguang-vps/internal/config"
 	"shiguang-vps/internal/handler"
 	"shiguang-vps/internal/logger"
+	"shiguang-vps/internal/nezha"
 	"shiguang-vps/internal/notify"
 	"shiguang-vps/internal/ota"
 	"shiguang-vps/internal/ratelimit"
@@ -178,6 +179,25 @@ func run() error {
 	agentHandler := handler.NewAgentHandler(agentRepo, agentRecordRepo, agentHub, log)
 	agentWSHandler := handler.NewAgentWSHandler(agentHub, agentRepo, agentRecordRepo, log)
 
+	// T-17: Nezha agent v2 compatibility layer. The adapter shares the same
+	// AgentRepo + AgentRecordRepo + EventBus the native WS hub uses so a
+	// nezha_compat agent looks identical to the rest of the system. Routes
+	// (/api/v1/nezha/heartbeat + /report) sit inside the silent-mode
+	// whitelist; auth happens inside the handler (secret → sha256 → repo
+	// lookup).
+	nezhaAdapter := nezha.NewAdapter(nezha.AdapterDeps{
+		AgentRepo:  agentRepo,
+		RecordRepo: agentRecordRepo,
+		EventBus:   agent.NoopEventBus{}, // T-22 will inject the real SSE bus.
+		Logger:     log,
+		Now:        time.Now,
+	})
+	nezhaHandler := nezha.NewHandler(nezha.HandlerConfig{
+		AgentRepo: agentRepo,
+		Adapter:   nezhaAdapter,
+		Logger:    log,
+	})
+
 	// T-22: notification subsystem. Builds the channel registry (5 batch-1
 	// kinds), the SSE event bus and the manager. The cleanup worker is
 	// stopped at shutdown via the returned cancel func.
@@ -243,6 +263,7 @@ func run() error {
 		NotifyHandler:         notifyHandler,
 		StreamHandler:         streamHandler,
 		OTAHandler:            otaHandler,
+		NezhaHandler:          nezhaHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
