@@ -14,6 +14,8 @@
   "form": {
     "section_title": "Edit rule",
     "section_title_new": "New rule",
+    "new_title": "New rule",
+    "edit_title": "Edit rule",
     "name_label": "Name",
     "name_placeholder": "e.g. CN direct",
     "type_label": "Type",
@@ -41,6 +43,7 @@
   },
   "preview": {
     "section_title": "Preview",
+    "button": "Preview",
     "subscription_label": "Target subscription",
     "no_subscription": "Pick a subscription to see the final Clash YAML",
     "rule_count": "{{count}} rule(s) applied",
@@ -53,6 +56,7 @@
   "templates": {
     "dialog_title": "Choose a template",
     "dialog_description": "Pick a preset to seed the form; you can keep editing afterwards",
+    "button": "From template",
     "select": "Use",
     "applied": "Template applied"
   },

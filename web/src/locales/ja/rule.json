@@ -14,6 +14,8 @@
   "form": {
     "section_title": "ルール編集",
     "section_title_new": "新規ルール",
+    "new_title": "新規ルール",
+    "edit_title": "ルール編集",
     "name_label": "名前",
     "name_placeholder": "例：国内直結",
     "type_label": "種類",
@@ -41,6 +43,7 @@
   },
   "preview": {
     "section_title": "プレビュー",
+    "button": "プレビュー",
     "subscription_label": "対象サブスクリプション",
     "no_subscription": "サブスクリプションを選択すると最終的な Clash YAML を表示します",
     "rule_count": "{{count}} 件のルールを適用しました",
@@ -53,6 +56,7 @@
   "templates": {
     "dialog_title": "テンプレート選択",
     "dialog_description": "プリセットをベースとして使用できます",
+    "button": "テンプレートから作成",
     "select": "使用",
     "applied": "テンプレートを反映しました"
   },

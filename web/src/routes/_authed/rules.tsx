@@ -1,20 +1,33 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Plus, Search } from "lucide-react";
+import { Eye, LayoutTemplate, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useDebounce } from "@/hooks/use-debounce";
 import { RuleList } from "@/components/rule/rule-list";
 import { RuleForm } from "@/components/rule/rule-form";
 import { RulePreviewPane } from "@/components/rule/rule-preview-pane";
+import { RuleTemplatesDialog } from "@/components/rule/rule-templates";
 import { useRulesQuery } from "@/api/rule";
 import i18n from "@/lib/i18n";
 import ruleZh from "@/locales/zh-CN/rule.json";
 import ruleEn from "@/locales/en/rule.json";
 import ruleJa from "@/locales/ja/rule.json";
 import ruleKo from "@/locales/ko/rule.json";
-import type { CustomRule } from "@/types/api";
+import type { CustomRule, RuleTemplate } from "@/types/api";
 
 // Lazy-register the "rule" namespace before the route mounts; mirrors the
 // /nodes route's strategy so first-screen bundles stay slim.
@@ -35,15 +48,18 @@ export const Route = createFileRoute("/_authed/rules")({
 });
 
 /**
- * Three-column layout: rule list / edit form / preview.
+ * Rules management page — single-column DataTable + modal-driven editing.
  *
- *  - Left: scrollable, drag-reorder rule list with enable toggle.
- *  - Center: form for the currently selected rule (or "new rule" mode).
- *  - Right: subscription picker + final Clash YAML preview (Monaco read-only).
+ *  - Header: title, search, "templates" trigger, "preview" trigger,
+ *    "new rule" CTA.
+ *  - Body: RuleList (DataTable rows with drag-reorder + enable toggle +
+ *    overflow menu).
+ *  - Dialog: RuleForm (create or edit, depending on `editingRule`).
+ *  - Sheet: RulePreviewPane (subscription picker + Monaco YAML).
  *
- * State is intentionally minimal — every server interaction owns its own
- * cache invalidation via TanStack Query, so the parent route only tracks
- * which rule is selected + the keyword filter.
+ * The previous three-column layout collapsed badly on narrow viewports;
+ * this version keeps the table comfortable at any width and pushes
+ * secondary panes behind modal triggers.
  */
 function RulesPage() {
   const { t } = useTranslation(["rule", "common"]);
@@ -51,8 +67,14 @@ function RulesPage() {
   const [searchInput, setSearchInput] = React.useState("");
   const keyword = useDebounce(searchInput, 250);
 
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [editingRule, setEditingRule] = React.useState<CustomRule | null>(null);
   const [creating, setCreating] = React.useState(false);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
+  const [templateOpen, setTemplateOpen] = React.useState(false);
+  // When the user picks a template from the top-bar dialog we forward it to
+  // the form's default content via this seed.
+  const [templateSeed, setTemplateSeed] =
+    React.useState<RuleTemplate | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useRulesQuery({
     page: 1,
@@ -61,105 +83,143 @@ function RulesPage() {
   });
   const rules = data?.items;
 
-  // Resolve the selected rule object from the current list snapshot. When the
-  // selection disappears (deleted / filtered out) we reset to "no selection".
-  const selectedRule = React.useMemo(() => {
-    if (creating) return null;
-    if (!selectedId) return null;
-    return rules?.find((r) => r.id === selectedId) ?? null;
-  }, [selectedId, rules, creating]);
+  const dialogOpen = creating || editingRule !== null;
 
-  React.useEffect(() => {
-    if (!creating && selectedId && rules && !rules.find((r) => r.id === selectedId)) {
-      setSelectedId(null);
-    }
-  }, [rules, selectedId, creating]);
-
-  const handleSelect = (rule: CustomRule | null) => {
+  const closeDialog = React.useCallback(() => {
     setCreating(false);
-    setSelectedId(rule?.id ?? null);
-  };
+    setEditingRule(null);
+    setTemplateSeed(null);
+  }, []);
 
   const handleNew = () => {
-    setSelectedId(null);
+    setEditingRule(null);
+    setTemplateSeed(null);
     setCreating(true);
   };
 
-  const handleSaved = (rule: CustomRule | null) => {
+  const handleEdit = (rule: CustomRule) => {
     setCreating(false);
-    if (rule) setSelectedId(rule.id);
+    setTemplateSeed(null);
+    setEditingRule(rule);
   };
+
+  const handleSaved = (_rule: CustomRule | null) => {
+    closeDialog();
+  };
+
+  // When the user picks a template, push its content + name into the form
+  // via initialValues. Type defaults to "rules" since every built-in
+  // template targets that section.
+  const formInitialValues = React.useMemo(
+    () =>
+      templateSeed
+        ? {
+            name: templateSeed.name,
+            content: templateSeed.content,
+            type: "rules" as const,
+          }
+        : undefined,
+    [templateSeed],
+  );
 
   return (
     <div className="flex h-[calc(100vh-var(--app-header-height,3.5rem))] flex-col">
+      {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className="border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-6 py-4">
-        <h1 className="text-[var(--font-size-xl)] font-semibold text-[var(--color-text-primary)]">
-          {t("rule:title")}
-        </h1>
-        <p className="mt-1 text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
-          {t("rule:subtitle")}
-        </p>
-      </header>
-
-      <div className="grid min-h-0 flex-1 grid-cols-[20rem,minmax(0,1fr),28rem]">
-        {/* ── Left: list ─────────────────────────────────────────────────── */}
-        <section className="flex min-h-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg)]">
-          <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] p-3">
-            <div className="relative flex-1">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-[var(--font-size-xl)] font-semibold text-[var(--color-text-primary)]">
+              {t("rule:title")}
+            </h1>
+            <p className="mt-1 text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
+              {t("rule:subtitle")}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
               <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-text-tertiary)]" />
               <Input
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder={t("rule:list.search_placeholder")}
-                className="pl-7"
+                className="w-64 pl-7"
               />
             </div>
+            <Button variant="outline" size="sm" onClick={() => setTemplateOpen(true)}>
+              <LayoutTemplate className="h-3.5 w-3.5" />
+              {t("rule:templates.button")}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
+              <Eye className="h-3.5 w-3.5" />
+              {t("rule:preview.button")}
+            </Button>
             <Button size="sm" onClick={handleNew}>
-              <Plus className="mr-1 h-3.5 w-3.5" />
+              <Plus className="h-3.5 w-3.5" />
               {t("rule:list.add_rule")}
             </Button>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <RuleList
-              rules={rules}
-              isLoading={isLoading}
-              isError={isError}
-              errorMessage={error?.message}
-              onRetry={() => void refetch()}
-              selectedId={selectedId}
-              onSelect={handleSelect}
-              onNew={handleNew}
-            />
+        </div>
+      </header>
+
+      {/* ── DataTable body ──────────────────────────────────────────────── */}
+      <main className="flex-1 overflow-y-auto bg-[var(--color-bg)] p-6">
+        <RuleList
+          rules={rules}
+          isLoading={isLoading}
+          isError={isError}
+          errorMessage={error?.message}
+          onRetry={() => void refetch()}
+          onEdit={handleEdit}
+          onNew={handleNew}
+        />
+      </main>
+
+      {/* ── Edit / Create dialog ───────────────────────────────────────── */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              {creating
+                ? t("rule:form.new_title")
+                : t("rule:form.edit_title")}
+            </DialogTitle>
+          </DialogHeader>
+          <RuleForm
+            // Re-key per session so the form fully resets between
+            // sessions — react-hook-form's defaultValues memo doesn't pick
+            // up "null → null" transitions otherwise.
+            key={editingRule?.id ?? templateSeed?.id ?? "new"}
+            rule={editingRule}
+            initialValues={formInitialValues}
+            onSaved={handleSaved}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Preview sheet ──────────────────────────────────────────────── */}
+      <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-3xl">
+          <SheetHeader>
+            <SheetTitle>{t("rule:preview.section_title")}</SheetTitle>
+          </SheetHeader>
+          <div className="flex min-h-0 flex-1 flex-col px-6 pb-6">
+            <RulePreviewPane />
           </div>
-        </section>
+        </SheetContent>
+      </Sheet>
 
-        {/* ── Center: form ───────────────────────────────────────────────── */}
-        <section className="flex min-h-0 flex-col bg-[var(--color-bg-elevated)]">
-          {creating || selectedRule ? (
-            <RuleForm
-              rule={selectedRule}
-              onSaved={handleSaved}
-              onCancel={() => {
-                setCreating(false);
-                setSelectedId(null);
-              }}
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-3 p-12 text-center">
-              <p className="max-w-xs text-[var(--font-size-sm)] leading-relaxed text-[var(--color-text-tertiary)]">
-                {t("rule:form.select_rule_hint")}
-              </p>
-              <Button variant="outline" size="sm" onClick={handleNew}>
-                <Plus className="h-3.5 w-3.5" />
-                {t("rule:list.add_rule")}
-              </Button>
-            </div>
-          )}
-        </section>
-
-        {/* ── Right: preview ─────────────────────────────────────────────── */}
-        <RulePreviewPane />
-      </div>
+      {/* ── Template picker dialog ─────────────────────────────────────── */}
+      <RuleTemplatesDialog
+        open={templateOpen}
+        onOpenChange={setTemplateOpen}
+        onTemplateSelect={(tpl) => {
+          setTemplateOpen(false);
+          setEditingRule(null);
+          setTemplateSeed(tpl);
+          setCreating(true);
+        }}
+      />
     </div>
   );
 }

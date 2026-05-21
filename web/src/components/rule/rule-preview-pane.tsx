@@ -19,10 +19,9 @@ interface RulePreviewPaneProps {
 }
 
 /**
- * Right column of the /rules page. Lets the user pick a subscription and
- * shows the final Clash YAML (base + every enabled rule applied) inside a
- * read-only Monaco editor. A "diff" tab reuses the YamlDiffViewer that the
- * pipeline editor already ships.
+ * Subscription picker + final Clash YAML preview. Designed to live inside
+ * a Sheet (right-side drawer). The host Sheet supplies its own header /
+ * close button, so this component only renders the toolbar + body.
  */
 export function RulePreviewPane({ className }: RulePreviewPaneProps) {
   const { t } = useTranslation(["rule", "common"]);
@@ -59,17 +58,41 @@ export function RulePreviewPane({ className }: RulePreviewPaneProps) {
   };
 
   return (
-    <aside
+    <div
       data-testid="rule-preview-pane"
       className={cn(
-        "flex h-full min-h-0 flex-col border-l border-[var(--color-border)] bg-[var(--color-bg-elevated)]",
+        "flex min-h-0 flex-1 flex-col gap-3",
         className,
       )}
     >
-      <header className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] px-4 py-4">
-        <h2 className="text-[var(--font-size-lg)] font-semibold text-[var(--color-text-primary)]">
-          {t("rule:preview.section_title")}
-        </h2>
+      {/* ── Toolbar: subscription picker + actions ─────────────────────── */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <label
+            htmlFor="rule-preview-sub"
+            className="text-[var(--font-size-xs)] font-medium text-[var(--color-text-tertiary)]"
+          >
+            {t("rule:preview.subscription_label")}
+          </label>
+          <select
+            id="rule-preview-sub"
+            className={cn(
+              "h-9 w-full rounded-[var(--radius-md)] border border-[var(--color-border-strong)]",
+              "bg-[var(--color-surface)] px-3 text-[var(--font-size-sm)] text-[var(--color-text-primary)]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]",
+            )}
+            value={subscriptionId ?? ""}
+            onChange={(e) => setSubscriptionId(e.target.value || null)}
+            data-testid="rule-preview-sub-select"
+          >
+            <option value="">—</option>
+            {subs.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="flex items-center gap-1">
           <Button
             type="button"
@@ -92,28 +115,10 @@ export function RulePreviewPane({ className }: RulePreviewPaneProps) {
             {copied ? t("rule:preview.copied") : t("rule:preview.copy")}
           </Button>
         </div>
-      </header>
-
-      <div className="flex flex-col gap-1.5 border-b border-[var(--color-border)] px-4 py-3">
-        <label className="text-[var(--font-size-xs)] font-medium text-[var(--color-text-tertiary)]">
-          {t("rule:preview.subscription_label")}
-        </label>
-        <select
-          className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--font-size-sm)] text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-          value={subscriptionId ?? ""}
-          onChange={(e) => setSubscriptionId(e.target.value || null)}
-          data-testid="rule-preview-sub-select"
-        >
-          <option value="">—</option>
-          {subs.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col p-4">
+      {/* ── Body ───────────────────────────────────────────────────────── */}
+      <div className="flex min-h-0 flex-1 flex-col">
         {!subscriptionId ? (
           <div className="flex flex-1 items-center justify-center">
             <EmptyState
@@ -180,7 +185,7 @@ export function RulePreviewPane({ className }: RulePreviewPaneProps) {
           </div>
         ) : null}
       </div>
-    </aside>
+    </div>
   );
 }
 

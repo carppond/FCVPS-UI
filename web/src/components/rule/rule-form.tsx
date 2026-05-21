@@ -7,7 +7,6 @@ import { LayoutTemplate, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { useApiError } from "@/hooks/use-api-error";
@@ -34,12 +33,23 @@ interface RuleFormProps {
    */
   rule: CustomRule | null;
   /**
-   * Notifies the parent that an editing session has been committed
-   * (saved or cancelled). Parent uses this to clear selection / re-fetch.
+   * Optional seed values applied when `rule` is null (e.g. a template the
+   * user chose from the top-bar). Ignored in edit mode.
+   */
+  initialValues?: Partial<{
+    name: string;
+    type: RuleType;
+    mode: RuleMode;
+    content: string;
+    enabled: boolean;
+  }>;
+  /**
+   * Notifies the parent that an editing session has been committed. The
+   * parent typically closes the hosting Dialog.
    */
   onSaved?: (rule: CustomRule | null) => void;
   /**
-   * Optional cancel handler. When supplied, a "cancel" button is rendered.
+   * Cancel handler — wired to the footer's Cancel button.
    */
   onCancel?: () => void;
   className?: string;
@@ -67,16 +77,20 @@ function buildSchema(t: (key: string) => string) {
 }
 
 /**
- * Two-mode form (create / edit) for a single custom rule. Layout follows the
- * Swiss / minimalism cheatsheet: vertical sections separated by hairline rules,
- * tabs for the enum fields (type / mode), monospaced textarea for content.
+ * Two-mode form (create / edit) for a single custom rule. Designed to live
+ * inside a Dialog — no internal header / footer chrome, since the host
+ * Dialog already supplies title + close button.
  *
- * The Save button stays enabled even when the form is pristine — the zod
- * schema surfaces any validation issue inline. This avoids the "click does
- * nothing" trap users hit when the button is disabled but they don't know
- * why.
+ * Save / Cancel buttons sit in a sticky footer at the bottom of the form
+ * body so they stay accessible while editing long YAML content.
  */
-export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) {
+export function RuleForm({
+  rule,
+  initialValues,
+  onSaved,
+  onCancel,
+  className,
+}: RuleFormProps) {
   const { t } = useTranslation(["rule", "common"]);
   const { handle: handleError } = useApiError();
   const createMutation = useCreateRuleMutation();
@@ -88,13 +102,13 @@ export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) 
 
   const defaultValues: FormValues = React.useMemo(
     () => ({
-      name: rule?.name ?? "",
-      type: rule?.type ?? "rules",
-      mode: rule?.mode ?? "append",
-      content: rule?.content ?? "",
-      enabled: rule?.enabled ?? true,
+      name: rule?.name ?? initialValues?.name ?? "",
+      type: rule?.type ?? initialValues?.type ?? "rules",
+      mode: rule?.mode ?? initialValues?.mode ?? "append",
+      content: rule?.content ?? initialValues?.content ?? "",
+      enabled: rule?.enabled ?? initialValues?.enabled ?? true,
     }),
-    [rule],
+    [rule, initialValues],
   );
 
   const form = useForm<FormValues>({
@@ -140,8 +154,7 @@ export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) 
     }
   });
 
-  // Cmd/Ctrl + S anywhere inside the form fires Save. Keeps the keyboard-first
-  // promise from the cheatsheet without adding a global hot-key helper.
+  // Cmd/Ctrl + S anywhere inside the form fires Save.
   const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
       e.preventDefault();
@@ -154,33 +167,10 @@ export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) 
       data-testid="rule-form"
       onSubmit={onSubmit}
       onKeyDown={onKeyDown}
-      className={cn("flex h-full min-h-0 flex-col", className)}
+      className={cn("flex min-h-0 flex-col gap-4", className)}
     >
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-6 py-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <h2 className="truncate text-[var(--font-size-lg)] font-semibold text-[var(--color-text-primary)]">
-            {rule ? rule.name || t("rule:form.section_title") : t("rule:form.section_title_new")}
-          </h2>
-          {!rule && (
-            <Badge variant="default" className="shrink-0">
-              {t("rule:form.section_title_new")}
-            </Badge>
-          )}
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setTemplateOpen(true)}
-        >
-          <LayoutTemplate className="h-3.5 w-3.5" />
-          {t("rule:form.use_template")}
-        </Button>
-      </header>
-
-      {/* ── Body ───────────────────────────────────────────────────────── */}
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-4">
+      {/* ── Body ─────────────────────────────────────────────────────────── */}
+      <div className="flex min-h-0 flex-1 flex-col gap-5">
         {/* Name */}
         <section className="flex flex-col gap-2">
           <Label htmlFor="rule-name">{t("rule:form.name_label")}</Label>
@@ -265,15 +255,26 @@ export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) 
         </section>
 
         {/* Content */}
-        <section className="flex min-h-0 flex-1 flex-col gap-2">
-          <Label htmlFor="rule-content">{t("rule:form.content_label")}</Label>
+        <section className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="rule-content">{t("rule:form.content_label")}</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setTemplateOpen(true)}
+            >
+              <LayoutTemplate className="h-3.5 w-3.5" />
+              {t("rule:form.use_template")}
+            </Button>
+          </div>
           <textarea
             id="rule-content"
-            rows={14}
+            rows={12}
             spellCheck={false}
             placeholder={contentPlaceholder(t, currentType)}
             className={cn(
-              "min-h-64 w-full flex-1 resize-none",
+              "w-full resize-y",
               "rounded-[var(--radius-md)] border border-[var(--color-border-strong)]",
               "bg-[var(--color-surface)] px-3 py-2",
               "font-mono text-[var(--font-size-xs)] leading-relaxed text-[var(--color-text-primary)]",
@@ -286,8 +287,8 @@ export function RuleForm({ rule, onSaved, onCancel, className }: RuleFormProps) 
         </section>
       </div>
 
-      {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <footer className="flex items-center justify-between gap-4 border-t border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-6 py-3">
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <footer className="flex items-center justify-between gap-4 border-t border-[var(--color-border)] pt-4">
         <label className="flex cursor-pointer items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-secondary)]">
           <Controller
             control={form.control}

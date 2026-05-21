@@ -14,6 +14,8 @@
   "form": {
     "section_title": "규칙 편집",
     "section_title_new": "새 규칙",
+    "new_title": "새 규칙",
+    "edit_title": "규칙 편집",
     "name_label": "이름",
     "name_placeholder": "예: 국내 직결",
     "type_label": "유형",
@@ -41,6 +43,7 @@
   },
   "preview": {
     "section_title": "미리보기",
+    "button": "미리보기",
     "subscription_label": "대상 구독",
     "no_subscription": "구독을 선택하면 최종 Clash YAML이 표시됩니다",
     "rule_count": "{{count}}개 규칙 적용됨",
@@ -53,6 +56,7 @@
   "templates": {
     "dialog_title": "템플릿 선택",
     "dialog_description": "프리셋을 베이스로 사용한 뒤 수정할 수 있습니다",
+    "button": "템플릿으로 만들기",
     "select": "사용",
     "applied": "템플릿이 적용되었습니다"
   },
