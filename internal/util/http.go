@@ -99,9 +99,10 @@ var errorStatusMap = map[types.ErrorCode]int{
 	types.ErrScriptRuntimeError:     http.StatusUnprocessableEntity,
 
 	// AGENT
-	types.ErrAgentTokenInvalid:   http.StatusNotFound,
-	types.ErrAgentOffline:        http.StatusConflict,
-	types.ErrAgentCommandTimeout: http.StatusRequestTimeout,
+	types.ErrAgentTokenInvalid:       http.StatusNotFound,
+	types.ErrAgentOffline:            http.StatusConflict,
+	types.ErrAgentCommandTimeout:     http.StatusRequestTimeout,
+	types.ErrAgentVersionUnsupported: http.StatusUpgradeRequired, // 426, §1.8
 
 	// INTERNAL
 	types.ErrInternalDatabase: http.StatusInternalServerError,

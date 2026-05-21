@@ -167,6 +167,18 @@ type ByePayload struct {
 	Reason string `json:"reason,omitempty"` // "token_rotated" / "server_shutdown" / "idle_timeout"
 }
 
+// Bye reason 常量（§1.8 协议版本协商裁决）。
+//
+// 协议版本协商失败时 hub 发送 bye{ reason: "version_unsupported" } 后关闭连接，
+// agent 收到此 reason 应停止重连并日志告警 "need upgrade"。
+const (
+	ByeReasonVersionUnsupported = "version_unsupported"
+	ByeReasonServerShutdown     = "server_shutdown"
+	ByeReasonTokenRotated       = "token_rotated"
+	ByeReasonIdleTimeout        = "idle_timeout"
+	ByeReasonAgentDeleted       = "agent_deleted"
+)
+
 // ---------------------------------------------------------------------------
 // 编解码辅助函数（避免 agent 端引入 reflect 依赖）
 // ---------------------------------------------------------------------------

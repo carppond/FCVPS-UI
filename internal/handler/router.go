@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"shiguang-vps/internal/agent"
 	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/handler/middleware"
 	"shiguang-vps/internal/logger"
@@ -89,6 +90,31 @@ type Deps struct {
 	// PipelineHandler hosts /api/pipelines/* (T-19). nil disables the routes.
 	PipelineHandler *PipelineHandler
 
+	// AgentHandler hosts /api/agents/* (T-14). nil disables the routes.
+	AgentHandler *AgentHandler
+
+	// AgentWSHandler hosts GET /api/agent/ws (T-14). nil disables.
+	AgentWSHandler *AgentWSHandler
+
+	// AgentHub is exposed so cmd/server can manage its lifecycle. Not used by
+	// NewRouter directly; the handlers above already capture the hub.
+	AgentHub *agent.Hub
+
+	// NodeHandler hosts /api/nodes/* + /api/subscriptions/{id}/nodes (T-11).
+	// nil disables the routes.
+	NodeHandler *NodeHandler
+
+	// TCPingHandler hosts /api/tcping/* and /api/nodes/{id}/tcping (T-11).
+	// nil disables.
+	TCPingHandler *TCPingHandler
+
+	// NotifyHandler hosts /api/notify/channels/* and /api/notify/events (T-22).
+	// nil disables the routes.
+	NotifyHandler *NotifyHandler
+
+	// StreamHandler hosts GET /api/notify/stream (T-22 SSE). nil disables.
+	StreamHandler *StreamHandler
+
 	// LoginRateLimit is the per-(IP|username) login bucket (5/hour by default).
 	// nil disables.
 	LoginRateLimit *ratelimit.Limiter
@@ -144,15 +170,15 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountSubscriptionRoutes(mux, deps)
 	mountSubstoreCompatRoutes(mux, deps)
 	mountPipelineRoutes(mux, deps)
+	mountAgentRoutes(mux, deps)
+	mountNodeRoutes(mux, deps)
+	mountTCPingRoutes(mux, deps)
+	mountNotifyRoutes(mux, deps)
 
-	// TODO(T-9):  mount node handlers (/api/subscriptions/:id/nodes, /api/nodes/*).
-	// TODO(T-14): mount agent ws + REST handlers (/api/agent/ws, /api/agents/*).
 	// TODO(T-15): mount rule handlers (/api/rules/*).
 	// TODO(T-17): mount script handlers (/api/scripts/*).
 	// TODO(T-18): mount nezha compat (/api/v1/nezha/*).
-	// TODO(T-19): mount tcping handler (POST /api/nodes/tcping).
 	// TODO(T-21): mount traffic handlers (/api/traffic/*).
-	// TODO(T-22): mount notification handlers (/api/notify/*).
 	// TODO(T-25): mount shortlink handlers (/api/shortlinks, GET /s/:code).
 	// TODO(T-26): mount settings + silent-mode rotate (/api/admin/settings/*).
 	// TODO(T-28): mount audit log query (/api/admin/audit).
@@ -331,6 +357,114 @@ func mountPipelineRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PATCH /api/pipelines/{id}", required(http.HandlerFunc(ph.Update)))
 	mux.Handle("DELETE /api/pipelines/{id}", required(http.HandlerFunc(ph.Delete)))
 	mux.Handle("POST /api/pipelines/{id}/run", required(http.HandlerFunc(ph.Run)))
+}
+
+// mountAgentRoutes installs /api/agents/* + /api/agent/ws. The WS endpoint
+// bypasses auth.Required because it authenticates via ?token=<sha256> query
+// param (and is in the silent-mode whitelist). REST endpoints are user-scoped
+// except /api/admin/agents which is admin-only.
+func mountAgentRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.TokenStore == nil {
+		return
+	}
+	if deps.AgentHandler != nil {
+		required := auth.Required(deps.TokenStore)
+		requireAdmin := auth.RequireAdmin(deps.TokenStore)
+		ah := deps.AgentHandler
+
+		mux.Handle("GET /api/agents", required(http.HandlerFunc(ah.List)))
+		mux.Handle("POST /api/agents", required(http.HandlerFunc(ah.Create)))
+		mux.Handle("GET /api/agents/{id}", required(http.HandlerFunc(ah.Get)))
+		mux.Handle("GET /api/agents/{id}/records", required(http.HandlerFunc(ah.Records)))
+		mux.Handle("PATCH /api/agents/{id}", required(http.HandlerFunc(ah.Update)))
+		mux.Handle("PUT /api/agents/{id}", required(http.HandlerFunc(ah.Update)))
+		mux.Handle("DELETE /api/agents/{id}", required(http.HandlerFunc(ah.Delete)))
+		mux.Handle("POST /api/agents/{id}/rotate-token", required(http.HandlerFunc(ah.RotateToken)))
+		mux.Handle("POST /api/agents/{id}/regen-token", required(http.HandlerFunc(ah.RotateToken)))
+		mux.Handle("POST /api/agents/{id}/command", required(http.HandlerFunc(ah.Command)))
+		// Contract §1 line 261 lists POST /api/agents/:id/restart as an admin
+		// helper that proxies to the WS command channel; same shape as
+		// /command but with a fixed payload.
+		mux.Handle("POST /api/agents/{id}/restart", required(http.HandlerFunc(ah.Command)))
+
+		mux.Handle("GET /api/admin/agents", requireAdmin(http.HandlerFunc(ah.AdminList)))
+	}
+	if deps.AgentWSHandler != nil {
+		mux.Handle("GET /api/agent/ws", deps.AgentWSHandler.Handler())
+	}
+}
+
+// mountNodeRoutes installs the M-NODE surface (T-11):
+//
+//   - /api/nodes (list/get/update/delete/copy-uri)
+//   - /api/subscriptions/{id}/nodes (list / manual create)
+//
+// All endpoints require an authenticated session; cross-user access returns
+// 404 via the repo's user_id filter (information hiding, mirrors §5.1.5).
+func mountNodeRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.NodeHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	nh := deps.NodeHandler
+
+	mux.Handle("GET /api/nodes", required(http.HandlerFunc(nh.List)))
+	mux.Handle("GET /api/nodes/{id}", required(http.HandlerFunc(nh.Get)))
+	mux.Handle("PATCH /api/nodes/{id}", required(http.HandlerFunc(nh.Update)))
+	mux.Handle("PUT /api/nodes/{id}", required(http.HandlerFunc(nh.Update)))
+	mux.Handle("DELETE /api/nodes/{id}", required(http.HandlerFunc(nh.Delete)))
+	mux.Handle("POST /api/nodes/{id}/copy-uri", required(http.HandlerFunc(nh.CopyURI)))
+
+	mux.Handle("GET /api/subscriptions/{id}/nodes", required(http.HandlerFunc(nh.ListBySubscription)))
+	mux.Handle("POST /api/subscriptions/{id}/nodes", required(http.HandlerFunc(nh.Create)))
+}
+
+// mountTCPingRoutes installs the TCPing surface (T-11). All endpoints share
+// the same authenticated middleware; per-node persistence runs inside the
+// handler so the route layer stays declarative.
+func mountTCPingRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.TCPingHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	th := deps.TCPingHandler
+
+	mux.Handle("POST /api/tcping/single", required(http.HandlerFunc(th.Single)))
+	mux.Handle("POST /api/tcping/batch", required(http.HandlerFunc(th.Batch)))
+	mux.Handle("POST /api/nodes/{id}/tcping", required(http.HandlerFunc(th.Node)))
+}
+
+// mountNotifyRoutes installs the M-NOTIFY surface (T-22):
+//
+//   - /api/notify/channels (CRUD + test)
+//   - /api/notify/events   (paginated delivery log)
+//   - /api/notify/stream   (SSE; bearer token via query param)
+//
+// All channel endpoints scope to the authenticated user; cross-user access
+// returns 404 via the repo's user_id filter. The stream endpoint
+// authenticates inside the handler so EventSource clients (which cannot set
+// custom headers) work without bespoke middleware.
+func mountNotifyRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.TokenStore == nil {
+		return
+	}
+	if deps.NotifyHandler != nil {
+		required := auth.Required(deps.TokenStore)
+		nh := deps.NotifyHandler
+		mux.Handle("GET /api/notify/channels", required(http.HandlerFunc(nh.ListChannels)))
+		mux.Handle("POST /api/notify/channels", required(http.HandlerFunc(nh.CreateChannel)))
+		mux.Handle("GET /api/notify/channels/{id}", required(http.HandlerFunc(nh.GetChannel)))
+		mux.Handle("PUT /api/notify/channels/{id}", required(http.HandlerFunc(nh.UpdateChannel)))
+		mux.Handle("PATCH /api/notify/channels/{id}", required(http.HandlerFunc(nh.UpdateChannel)))
+		mux.Handle("DELETE /api/notify/channels/{id}", required(http.HandlerFunc(nh.DeleteChannel)))
+		mux.Handle("POST /api/notify/channels/{id}/test", required(http.HandlerFunc(nh.TestChannel)))
+		mux.Handle("GET /api/notify/events", required(http.HandlerFunc(nh.ListEvents)))
+	}
+	if deps.StreamHandler != nil {
+		// SSE auth runs inside the handler (Authorization header OR query
+		// ?token=) so EventSource clients can connect from the browser.
+		mux.Handle("GET /api/notify/stream", http.HandlerFunc(deps.StreamHandler.Stream))
+	}
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads

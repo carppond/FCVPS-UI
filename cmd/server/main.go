@@ -25,10 +25,12 @@ import (
 	"syscall"
 	"time"
 
+	"shiguang-vps/internal/agent"
 	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/config"
 	"shiguang-vps/internal/handler"
 	"shiguang-vps/internal/logger"
+	"shiguang-vps/internal/notify"
 	"shiguang-vps/internal/ratelimit"
 	"shiguang-vps/internal/storage"
 	"shiguang-vps/internal/substore"
@@ -86,6 +88,7 @@ func run() error {
 	users := storage.NewUserRepo(db, time.Now)
 	sessions := storage.NewSessionRepo(db, time.Now)
 	subscriptions := storage.NewSubscriptionRepo(db, time.Now)
+	nodeRepo := storage.NewNodeRepo(db, time.Now)
 	tokens, err := auth.NewTokenStore(auth.TokenStoreConfig{
 		Sessions: sessions, Users: users, TTL: cfg.Session.TTL,
 	})
@@ -120,13 +123,13 @@ func run() error {
 		)
 	}
 
-	// T-8: subscription module wiring. NodeRepo and notification hooks land
-	// in T-11 / T-22; nil stubs let the service start while exposing the
-	// full HTTP surface (sync attempts on URL subscriptions still parse the
-	// upstream body correctly via the in-process pipeline).
+	// T-8 + T-11: subscription module + real node persistence. The
+	// NodeRepoAdapter bridges substore.NodeRepo / NodeFetcher to the concrete
+	// storage.NodeRepo without creating a storage → substore import cycle.
+	nodeAdapter := substore.NewNodeRepoAdapter(nodeRepo)
 	syncService, err := substore.NewSyncService(substore.SyncServiceConfig{
 		Repo:     subscriptions,
-		NodeRepo: substore.NoopNodeRepo{},
+		NodeRepo: nodeAdapter,
 		Logger:   log,
 	})
 	if err != nil {
@@ -134,7 +137,7 @@ func run() error {
 	}
 	compatService, err := substore.NewSubstoreCompatService(substore.SubstoreCompatConfig{
 		Repo:     subscriptions,
-		NodeRepo: substore.NoopNodeRepo{},
+		NodeRepo: nodeAdapter,
 		Sync:     syncService,
 	})
 	if err != nil {
@@ -142,6 +145,49 @@ func run() error {
 	}
 	subHandler := handler.NewSubscriptionHandler(subscriptions, syncService, log)
 	compatHandler := handler.NewSubstoreCompatHandler(compatService, log)
+	nodeHandler := handler.NewNodeHandler(nodeRepo, subscriptions, log)
+	tcpingHandler := handler.NewTCPingHandler(nodeRepo, log)
+
+	// T-14: agent module wiring. The hub owns the live WebSocket sessions; on
+	// startup we mark every pre-existing row offline so stale "online" entries
+	// from a previous crash do not falsely report presence.
+	agentRepo := storage.NewAgentRepo(db, time.Now)
+	agentRecordRepo := storage.NewAgentRecordRepo(db)
+	if err := agentRepo.MarkAllOffline(context.Background()); err != nil {
+		log.Warn("agent repo: mark-all-offline", slog.String("err", err.Error()))
+	}
+	agentHub := agent.NewHub(agent.HubConfig{
+		AgentRepo:  agentRepo,
+		RecordRepo: agentRecordRepo,
+		EventBus:   agent.NoopEventBus{}, // T-22 swaps in the SSE publisher.
+		Logger:     log,
+		Now:        time.Now,
+		HubVersion: agent.ProtocolVersion,
+	})
+	agentHandler := handler.NewAgentHandler(agentRepo, agentRecordRepo, agentHub, log)
+	agentWSHandler := handler.NewAgentWSHandler(agentHub, agentRepo, agentRecordRepo, log)
+
+	// T-22: notification subsystem. Builds the channel registry (5 batch-1
+	// kinds), the SSE event bus and the manager. The cleanup worker is
+	// stopped at shutdown via the returned cancel func.
+	notify.RegisterBuiltins(notify.DefaultRegistry)
+	notifyChannels := storage.NewNotificationChannelRepo(db, time.Now)
+	notifyEvents := storage.NewNotificationEventRepo(db, time.Now)
+	notifyBus := notify.NewEventBus()
+	notifyMgr, err := notify.NewManager(notify.ManagerConfig{
+		ChannelRepo: notifyChannels,
+		EventRepo:   notifyEvents,
+		UserRepo:    users,
+		Registry:    notify.DefaultRegistry,
+		Bus:         notifyBus,
+		Logger:      log,
+		Now:         time.Now,
+	})
+	if err != nil {
+		return fmt.Errorf("notify manager: %w", err)
+	}
+	notifyHandler := handler.NewNotifyHandler(notifyChannels, notifyEvents, notifyMgr, notify.DefaultRegistry, log)
+	streamHandler := handler.NewStreamHandler(tokens, notifyBus, log)
 
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
@@ -154,6 +200,13 @@ func run() error {
 		SessionRepo:           sessions,
 		SubscriptionHandler:   subHandler,
 		SubstoreCompatHandler: compatHandler,
+		AgentHandler:          agentHandler,
+		AgentWSHandler:        agentWSHandler,
+		AgentHub:              agentHub,
+		NodeHandler:           nodeHandler,
+		TCPingHandler:         tcpingHandler,
+		NotifyHandler:         notifyHandler,
+		StreamHandler:         streamHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
@@ -163,6 +216,15 @@ func run() error {
 	defer cancel()
 	deps.Start(rootCtx)
 	defer deps.Shutdown()
+	// T-14: 7-day retention sweep for agent_records. Runs at 24h cadence; a
+	// short kick-off delay defers the first sweep so server startup stays
+	// snappy under load.
+	go runAgentRecordsRetention(rootCtx, agentRecordRepo, log)
+	// T-22: kick off the notification_events retention sweep (30 days).
+	stopNotifyCleanup := notifyMgr.StartCleanup(rootCtx)
+	defer stopNotifyCleanup()
+	// Ensure the hub broadcasts bye{server_shutdown} during graceful exit.
+	defer agentHub.Close()
 
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Addr,
@@ -200,4 +262,48 @@ func run() error {
 		log.Error("http shutdown", slog.String("err", err.Error()))
 	}
 	return nil
+}
+
+// agentRecordsRetention is the 7-day retention window for high-frequency
+// metric samples (PRD M-AGENT.5 + Tech Lead §2.5/2.6).
+const agentRecordsRetention = 7 * 24 * time.Hour
+
+// runAgentRecordsRetention drives the daily DeleteOlderThan sweep. Errors are
+// logged but never fatal — the retention loop should outlive transient DB
+// hiccups.
+func runAgentRecordsRetention(ctx context.Context, repo *storage.AgentRecordRepo, log *slog.Logger) {
+	// Kick off after 5 minutes so cold-start logs are not buried under the
+	// retention cron output.
+	initial := time.NewTimer(5 * time.Minute)
+	defer initial.Stop()
+	select {
+	case <-ctx.Done():
+		return
+	case <-initial.C:
+	}
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+	sweep := func() {
+		sweepCtx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+		defer cancel()
+		n, err := repo.DeleteOlderThan(sweepCtx, time.Now().Add(-agentRecordsRetention))
+		if err != nil {
+			log.Warn("agent records retention: sweep failed",
+				slog.String("err", err.Error()))
+			return
+		}
+		if n > 0 {
+			log.Info("agent records retention: sweep complete",
+				slog.Int64("deleted_rows", n))
+		}
+	}
+	sweep()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			sweep()
+		}
+	}
 }

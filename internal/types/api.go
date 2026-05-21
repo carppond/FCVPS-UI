@@ -224,9 +224,10 @@ const (
 	ErrScriptRuntimeError     ErrorCode = "ERR_SCRIPT_RUNTIME_ERROR"
 
 	// AGENT
-	ErrAgentTokenInvalid   ErrorCode = "ERR_AGENT_TOKEN_INVALID"
-	ErrAgentOffline        ErrorCode = "ERR_AGENT_OFFLINE"
-	ErrAgentCommandTimeout ErrorCode = "ERR_AGENT_COMMAND_TIMEOUT"
+	ErrAgentTokenInvalid       ErrorCode = "ERR_AGENT_TOKEN_INVALID"
+	ErrAgentOffline            ErrorCode = "ERR_AGENT_OFFLINE"
+	ErrAgentCommandTimeout     ErrorCode = "ERR_AGENT_COMMAND_TIMEOUT"
+	ErrAgentVersionUnsupported ErrorCode = "ERR_AGENT_VERSION_UNSUPPORTED" // §1.8: HTTP 426
 
 	// INTERNAL
 	ErrInternalDatabase ErrorCode = "ERR_INTERNAL_DATABASE"
