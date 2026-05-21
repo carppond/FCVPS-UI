@@ -48,12 +48,12 @@ interface SubCreateWizardProps {
 type SourceChoice = SubType;
 type WizardStep = 1 | 2 | 3 | 4;
 
-/** Sentinel for the "skip" radio option in step 4. */
+/** Sentinel for the "skip" checkbox option in step 4. Picking it clears all
+ *  template selections; an empty `selectedTemplates` array is the canonical
+ *  "skip" state. */
 const TEMPLATE_SKIP = "__skip__" as const;
 /** Default template id pre-selected on step 4 (most common need). */
 const DEFAULT_TEMPLATE_ID = "cn-direct-foreign-proxy";
-
-type TemplateChoice = string; // template.id or TEMPLATE_SKIP
 
 interface WizardState {
   step: WizardStep;
@@ -64,7 +64,8 @@ interface WizardState {
   file: File | null;
   tags: string[];
   syncInterval: number; // seconds; 0 = manual only
-  templateChoice: TemplateChoice;
+  /** Multi-select: array of template ids. Empty = "skip" (no rules imported). */
+  selectedTemplates: string[];
 }
 
 const SYNC_INTERVAL_OPTIONS = [
@@ -102,7 +103,7 @@ function initialState(): WizardState {
     file: null,
     tags: [],
     syncInterval: 21600,
-    templateChoice: DEFAULT_TEMPLATE_ID,
+    selectedTemplates: [DEFAULT_TEMPLATE_ID],
   };
 }
 
@@ -222,19 +223,24 @@ export function SubCreateWizard({
         subId = sub.id;
       }
 
-      // Apply the chosen template (if any) — failures here are non-blocking;
-      // the subscription is already persisted.
-      if (state.templateChoice !== TEMPLATE_SKIP) {
-        const tpl = templatesQuery.data?.find(
-          (it) => it.id === state.templateChoice,
-        );
-        if (tpl) {
+      // Apply the chosen templates (if any) — failures here are non-blocking;
+      // the subscription is already persisted. Empty selectedTemplates = skip.
+      if (state.selectedTemplates.length > 0) {
+        const picked = state.selectedTemplates
+          .map((id) => templatesQuery.data?.find((it) => it.id === id))
+          .filter((tpl): tpl is RuleTemplate => Boolean(tpl));
+        if (picked.length > 0) {
           setImportingRules(true);
-          const failed = await importTemplate(tpl, 0);
+          let totalFailed = 0;
+          for (let i = 0; i < picked.length; i++) {
+            totalFailed += await importTemplate(picked[i], i);
+          }
           setImportingRules(false);
-          if (failed > 0) {
+          if (totalFailed > 0) {
             toast.warning(
-              t("subscription:wizard.step4.partial_failure", { failed }),
+              t("subscription:wizard.step4.partial_failure", {
+                failed: totalFailed,
+              }),
             );
           }
         }
@@ -250,7 +256,7 @@ export function SubCreateWizard({
 
   const finishDisabled =
     isPending ||
-    (state.templateChoice !== TEMPLATE_SKIP && templatesQuery.isLoading);
+    (state.selectedTemplates.length > 0 && templatesQuery.isLoading);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && !isPending && onClose()}>
@@ -281,11 +287,11 @@ export function SubCreateWizard({
 
         {state.step === 4 && (
           <StepTemplate
-            value={state.templateChoice}
+            value={state.selectedTemplates}
             templates={templatesQuery.data}
             isLoading={templatesQuery.isLoading}
             existingCount={existingRulesQuery.data?.total ?? 0}
-            onChange={(templateChoice) => set({ templateChoice })}
+            onChange={(selectedTemplates) => set({ selectedTemplates })}
           />
         )}
 
@@ -573,11 +579,12 @@ function StepTagsInterval({
 // ── Step 4: rule template (optional) ────────────────────────────────────────
 
 interface StepTemplateProps {
-  value: TemplateChoice;
+  /** Array of selected template ids; empty = "skip" semantics. */
+  value: string[];
   templates: RuleTemplate[] | undefined;
   isLoading: boolean;
   existingCount: number;
-  onChange: (next: TemplateChoice) => void;
+  onChange: (next: string[]) => void;
 }
 
 /** Tab keys for the category grouping. Templates without a recognised
@@ -625,22 +632,50 @@ function StepTemplate({
   const [activeTab, setActiveTab] =
     React.useState<TemplateCategoryKey>("common");
 
-  // Auto-jump to the tab that owns the current selection so the radio dot is
-  // visible even when the user re-enters step 4 after navigating back.
+  // Empty selection set = the user wants to skip. We mirror this visually by
+  // lighting up the skip card and ensuring the skip / templates rows behave
+  // as mutually exclusive: ticking any template clears skip, and vice-versa.
+  const isSkipMode = value.length === 0;
+
+  // Auto-jump to the tab that owns one of the current selections so the
+  // checkbox is visible even when the user re-enters step 4 after going back.
+  // We pick the first selection's category as the focus tab.
   React.useEffect(() => {
-    if (value === TEMPLATE_SKIP) return;
-    const owner = (templates ?? []).find((tpl) => tpl.id === value);
+    if (value.length === 0) return;
+    const owner = (templates ?? []).find((tpl) => tpl.id === value[0]);
     if (owner) setActiveTab(templateCategory(owner));
   }, [value, templates]);
+
+  const toggleTemplate = (id: string) => {
+    if (value.includes(id)) {
+      onChange(value.filter((x) => x !== id));
+    } else {
+      onChange([...value, id]);
+    }
+  };
+
+  const selectAllInTab = (key: TemplateCategoryKey) => {
+    const ids = byCategory[key].map((tpl) => tpl.id);
+    const merged = Array.from(new Set([...value, ...ids]));
+    onChange(merged);
+  };
+
+  const clearAllInTab = (key: TemplateCategoryKey) => {
+    const ids = new Set(byCategory[key].map((tpl) => tpl.id));
+    onChange(value.filter((x) => !ids.has(x)));
+  };
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <h3 className="text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)]">
           {t("subscription:wizard.step4.title")}
+          <span className="ml-2 text-[var(--font-size-xs)] font-normal text-[var(--color-text-tertiary)]">
+            {t("subscription:wizard.step4.multi_hint")}
+          </span>
         </h3>
         <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-          {t("subscription:wizard.step4.subtitle")}
+          {t("subscription:wizard.step4.subtitle_multi")}
         </p>
       </div>
 
@@ -670,61 +705,85 @@ function StepTemplate({
             ))}
           </TabsList>
 
-          {TEMPLATE_CATEGORY_ORDER.map((key) => (
-            <TabsContent
-              key={key}
-              value={key}
-              className="max-h-[50vh] overflow-y-auto"
-            >
-              <div
-                role="radiogroup"
-                aria-label={t(`subscription:wizard.step4.category.${key}`)}
-                className="flex flex-col gap-2 py-2"
+          {TEMPLATE_CATEGORY_ORDER.map((key) => {
+            const tabIds = byCategory[key].map((tpl) => tpl.id);
+            const tabSelectedCount = tabIds.filter((id) =>
+              value.includes(id),
+            ).length;
+            const allSelected =
+              tabIds.length > 0 && tabSelectedCount === tabIds.length;
+            return (
+              <TabsContent
+                key={key}
+                value={key}
+                className="max-h-[50vh] overflow-y-auto"
               >
-                {byCategory[key].length === 0 ? (
-                  <p className="py-6 text-center text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-                    —
-                  </p>
-                ) : (
-                  byCategory[key].map((tpl) => {
-                    const selected = value === tpl.id;
-                    const count = countRuleLines(tpl.content);
-                    return (
-                      <TemplateOption
-                        key={tpl.id}
-                        id={tpl.id}
-                        emoji={tpl.emoji}
-                        selected={selected}
-                        icon={templateIcon(tpl.id)}
-                        title={tpl.name}
-                        desc={tpl.description}
-                        meta={t("subscription:wizard.step4.rules_count", {
-                          count,
-                        })}
-                        onClick={() => onChange(tpl.id)}
-                      />
-                    );
-                  })
+                {byCategory[key].length > 0 && (
+                  <div className="flex items-center justify-end gap-3 px-1 pt-2 text-[var(--font-size-xs)]">
+                    <button
+                      type="button"
+                      onClick={() => selectAllInTab(key)}
+                      disabled={allSelected}
+                      className="text-[var(--color-primary)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--color-text-tertiary)] disabled:no-underline"
+                    >
+                      {t("subscription:wizard.step4.select_all")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => clearAllInTab(key)}
+                      disabled={tabSelectedCount === 0}
+                      className="text-[var(--color-text-secondary)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--color-text-tertiary)] disabled:no-underline"
+                    >
+                      {t("subscription:wizard.step4.clear_all")}
+                    </button>
+                  </div>
                 )}
-              </div>
-            </TabsContent>
-          ))}
+                <div
+                  role="group"
+                  aria-label={t(`subscription:wizard.step4.category.${key}`)}
+                  className="flex flex-col gap-2 py-2"
+                >
+                  {byCategory[key].length === 0 ? (
+                    <p className="py-6 text-center text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+                      —
+                    </p>
+                  ) : (
+                    byCategory[key].map((tpl) => {
+                      const selected = value.includes(tpl.id);
+                      const count = countRuleLines(tpl.content);
+                      return (
+                        <TemplateOption
+                          key={tpl.id}
+                          id={tpl.id}
+                          emoji={tpl.emoji}
+                          selected={selected}
+                          icon={templateIcon(tpl.id)}
+                          title={tpl.name}
+                          desc={tpl.description}
+                          meta={t("subscription:wizard.step4.rules_count", {
+                            count,
+                          })}
+                          onClick={() => toggleTemplate(tpl.id)}
+                        />
+                      );
+                    })
+                  )}
+                </div>
+              </TabsContent>
+            );
+          })}
         </Tabs>
       )}
 
       {!isLoading && (
-        <div
-          role="radiogroup"
-          aria-label={t("subscription:wizard.step4.skip")}
-          className="flex flex-col gap-2"
-        >
+        <div className="flex flex-col gap-2">
           <TemplateOption
             id={TEMPLATE_SKIP}
-            selected={value === TEMPLATE_SKIP}
+            selected={isSkipMode}
             icon={<SkipForward className="h-5 w-5" />}
             title={t("subscription:wizard.step4.skip")}
             desc={t("subscription:wizard.step4.skip_desc")}
-            onClick={() => onChange(TEMPLATE_SKIP)}
+            onClick={() => onChange([])}
           />
         </div>
       )}
@@ -758,12 +817,12 @@ function TemplateOption({
   return (
     <button
       type="button"
-      role="radio"
+      role="checkbox"
       aria-checked={selected}
       data-testid={`wizard-template-${id}`}
       onClick={onClick}
       className={cn(
-        "flex items-start gap-3 rounded-[var(--radius-lg)] border p-3 text-left",
+        "relative flex items-start gap-3 rounded-[var(--radius-lg)] border p-3 pr-8 text-left",
         "transition-colors duration-[var(--duration-fast)]",
         selected
           ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
@@ -792,6 +851,17 @@ function TemplateOption({
             {meta}
           </span>
         )}
+      </span>
+      <span
+        aria-hidden
+        className={cn(
+          "absolute right-3 top-3 flex h-4 w-4 items-center justify-center rounded-[var(--radius-sm)] border",
+          selected
+            ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
+            : "border-[var(--color-border-strong)] bg-[var(--color-surface)]",
+        )}
+      >
+        {selected && <Check className="h-3 w-3" />}
       </span>
     </button>
   );
