@@ -1,0 +1,6 @@
+packages:
+  - path: "shiguang-vps/internal/types"
+    output_path: "web/src/types/api.generated.ts"
+    type_mappings:
+      time.Time: "string"
+      uuid.UUID: "string"
