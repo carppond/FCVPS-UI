@@ -12,7 +12,9 @@ const TabsList = React.forwardRef<
     ref={ref}
     className={cn(
       "inline-flex h-9 items-center justify-center rounded-[var(--radius-md)]",
+      // 用 surface 做 container 背景，与选中态 primary 形成强反差
       "bg-[var(--color-surface)] p-1 text-[var(--color-text-tertiary)]",
+      "border border-[var(--color-border)]",
       className,
     )}
     {...props}
@@ -32,8 +34,10 @@ const TabsTrigger = React.forwardRef<
       "ring-offset-background transition-colors duration-[var(--duration-fast)]",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
       "disabled:pointer-events-none disabled:opacity-50",
-      "data-[state=active]:bg-[var(--color-bg-elevated)] data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:shadow-[var(--shadow-sm)]",
-      "data-[state=inactive]:text-[var(--color-text-tertiary)] data-[state=inactive]:hover:text-[var(--color-text-secondary)]",
+      // 选中态：用 primary 主色填充 + primary-foreground 文字 + sm 阴影，确保强对比可见
+      "data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-[var(--color-primary-foreground)] data-[state=active]:shadow-[var(--shadow-sm)] data-[state=active]:font-semibold",
+      // 未选中态：tertiary 文字，hover 时 secondary 提示可点击
+      "data-[state=inactive]:text-[var(--color-text-tertiary)] data-[state=inactive]:hover:bg-[var(--color-bg-elevated)] data-[state=inactive]:hover:text-[var(--color-text-secondary)]",
       className,
     )}
     {...props}
