@@ -10,7 +10,17 @@ func TestProduceClashYAML_BasicShape(t *testing.T) {
 		{Name: "n1", Protocol: "vmess", Server: "a.example.com", Port: 443, UUID: "uuid1", Network: "ws", TLS: true},
 		{Name: "n2", Protocol: "ss", Server: "b.example.com", Port: 8388, Method: "aes-256-gcm", Password: "pw"},
 		{Name: "n3", Protocol: "trojan", Server: "c.example.com", Port: 443, Password: "pw", TLS: true},
-		{Name: "n4", Protocol: "vless", Server: "d.example.com", Port: 443, UUID: "uuid4", TLS: true, Reality: true}, // filtered
+		{
+			Name: "n4", Protocol: "vless", Server: "d.example.com", Port: 443,
+			UUID: "uuid4", Network: "tcp", TLS: true, Reality: true,
+			SNI: "www.microsoft.com",
+			Raw: map[string]interface{}{
+				"flow": "xtls-rprx-vision",
+				"fp":   "chrome",
+				"pbk":  "PUBKEY",
+				"sid":  "SHORTID",
+			},
+		},
 		{Name: "n5", Protocol: "hysteria2", Server: "e.example.com", Port: 8443, Password: "pw", TLS: true},
 	}
 	var warned []string
@@ -24,17 +34,20 @@ func TestProduceClashYAML_BasicShape(t *testing.T) {
 		t.Fatalf("ProduceClashYAML: %v", err)
 	}
 	s := string(out)
-	// Expect 4 proxies (n4 dropped).
-	for _, n := range []string{"n1", "n2", "n3", "n5"} {
+	// All 5 proxies must be present — modern Clash forks (mihomo / Verge / Stash)
+	// support reality, so n4 is no longer filtered.
+	for _, n := range []string{"n1", "n2", "n3", "n4", "n5"} {
 		if !strings.Contains(s, "name: "+n) {
 			t.Errorf("missing %s in output:\n%s", n, s)
 		}
 	}
-	if strings.Contains(s, "name: n4") {
-		t.Errorf("n4 (vless+reality) should be filtered")
+	for _, field := range []string{"reality-opts", "public-key", "short-id", "flow", "client-fingerprint", "servername"} {
+		if !strings.Contains(s, field) {
+			t.Errorf("reality node missing %q in output:\n%s", field, s)
+		}
 	}
-	if len(warned) != 1 || !strings.Contains(warned[0], "n4") {
-		t.Errorf("expected one warning about n4, got %v", warned)
+	if len(warned) != 0 {
+		t.Errorf("did not expect warnings, got %v", warned)
 	}
 	// Validate field ordering: name should appear before type before server
 	// before port within each proxy block.

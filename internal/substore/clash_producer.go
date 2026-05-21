@@ -9,8 +9,11 @@ import (
 )
 
 // ProduceClashYAML renders a slice of ParsedNode into a Clash-compatible
-// YAML document. vless+reality nodes are dropped and reported through
-// opts.OnWarning (PRD M-SUB.2).
+// YAML document. The output is mihomo / Clash Meta / Clash Verge Rev /
+// Stash compatible (modern Clash forks); these all support reality, hysteria2,
+// tuic, anytls etc. We do NOT filter reality vless nodes — the older policy
+// of dropping reality was based on the now-defunct original Clash Premium
+// and made real-world subscriptions (lots of reality nodes) come out empty.
 //
 // The output structure is:
 //
@@ -29,12 +32,6 @@ func ProduceClashYAML(nodes []*ParsedNode, opts ClashProducerOpts) ([]byte, erro
 
 	for _, n := range nodes {
 		if n == nil {
-			continue
-		}
-		if n.Protocol == "vless" && n.Reality {
-			if opts.OnWarning != nil {
-				opts.OnWarning(n, "vless+reality is not supported by Clash core; node dropped")
-			}
 			continue
 		}
 		entry, err := nodeToYAML(n)
@@ -78,6 +75,36 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 		_ = setStr(m, "uuid", n.UUID)
 		_ = setStr(m, "network", n.Network)
 		_ = setBool(m, "tls", n.TLS)
+		// vless extras commonly populated by reality / xtls subscriptions.
+		// Source these from Raw because the parser keeps them there verbatim.
+		if flow, ok := stringFromRaw(n.Raw, "flow"); ok {
+			_ = setStr(m, "flow", flow)
+		}
+		if fp, ok := stringFromRaw(n.Raw, "fp", "client-fingerprint"); ok {
+			_ = setStr(m, "client-fingerprint", fp)
+		}
+		if n.SNI != "" {
+			_ = setStr(m, "servername", n.SNI)
+		}
+		// reality-opts: { public-key, short-id, [spider-x] }
+		if n.Reality {
+			realityOpts := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+			if pbk, ok := stringFromRaw(n.Raw, "pbk", "public-key"); ok {
+				_ = util.SetMappingValue(realityOpts, "public-key", pbk)
+			}
+			if sid, ok := stringFromRaw(n.Raw, "sid", "short-id"); ok {
+				_ = util.SetMappingValue(realityOpts, "short-id", sid)
+			}
+			if spx, ok := stringFromRaw(n.Raw, "spx", "spider-x"); ok {
+				_ = util.SetMappingValue(realityOpts, "spider-x", spx)
+			}
+			if len(realityOpts.Content) > 0 {
+				m.Content = append(m.Content,
+					&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "reality-opts"},
+					realityOpts,
+				)
+			}
+		}
 	case "ss", "ssr":
 		_ = setStr(m, "cipher", n.Method)
 		_ = setStr(m, "password", n.Password)
@@ -123,6 +150,21 @@ func setStr(m *yaml.Node, key, value string) error {
 		return nil
 	}
 	return util.SetMappingValue(m, key, value)
+}
+
+// stringFromRaw looks up the first present, non-empty string value among the
+// given alternate keys in the raw bag. Returns (value, true) on hit; ("", false)
+// when no key resolves to a non-empty string. Used to source vless extras
+// (flow / fp / pbk / sid / spx) that the parser keeps under Raw verbatim.
+func stringFromRaw(raw map[string]interface{}, keys ...string) (string, bool) {
+	for _, k := range keys {
+		if v, ok := raw[k]; ok {
+			if s, ok := v.(string); ok && s != "" {
+				return s, true
+			}
+		}
+	}
+	return "", false
 }
 
 func setBool(m *yaml.Node, key string, value bool) error {
