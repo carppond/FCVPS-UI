@@ -1,0 +1,80 @@
+{
+  "title": "ノード",
+  "subtitle": "サブスクリプション横断でノードを管理：レイテンシ計測、タグ編集、手動追加。",
+  "actions": {
+    "tcping_selected": "選択をテスト",
+    "tcping_all": "すべてテスト",
+    "tcping_one": "このノードをテスト",
+    "copy_uri": "URI をコピー",
+    "view_detail": "詳細を表示",
+    "delete_node": "ノードを削除",
+    "edit_tags": "タグを編集",
+    "select_all": "すべて選択",
+    "clear_selection": "選択をクリア"
+  },
+  "columns": {
+    "name": "名前",
+    "protocol": "プロトコル",
+    "server": "サーバー",
+    "port": "ポート",
+    "latency": "レイテンシ",
+    "tags": "タグ",
+    "updated_at": "更新日時",
+    "actions": "操作"
+  },
+  "filters": {
+    "search_placeholder": "名前 / サーバーで検索…",
+    "all_protocols": "すべてのプロトコル",
+    "all_tags": "すべてのタグ",
+    "sort_label": "並び替え",
+    "sort_latency_asc": "レイテンシ（昇順）",
+    "sort_latency_desc": "レイテンシ（降順）",
+    "sort_created_desc": "新しい順",
+    "sort_created_asc": "古い順"
+  },
+  "latency": {
+    "untested": "未測定",
+    "unreachable": "到達不可",
+    "fast": "高速",
+    "moderate": "中程度",
+    "slow": "低速"
+  },
+  "empty": {
+    "title": "ノードがありません",
+    "description": "サブスクリプションを作成または同期するとここに表示されます。",
+    "cta": "サブスクリプションへ"
+  },
+  "error": {
+    "load_failed": "ノードの読み込みに失敗しました",
+    "tcping_failed": "レイテンシ計測に失敗しました",
+    "delete_failed": "ノードの削除に失敗しました",
+    "update_failed": "ノードの更新に失敗しました",
+    "create_failed": "ノードの追加に失敗しました",
+    "copy_failed": "URI のコピーに失敗しました"
+  },
+  "detail": {
+    "metadata_section": "メタデータ",
+    "raw_uri_section": "Raw URI",
+    "latency_section": "レイテンシ履歴",
+    "config_section": "解析設定",
+    "no_uri": "このノードには Raw URI がありません",
+    "copied": "クリップボードにコピーしました"
+  },
+  "form": {
+    "raw_uri_label": "Raw URI",
+    "raw_uri_placeholder": "vless://… または ss://…",
+    "raw_uri_hint": "単一ノード URI を貼り付け（12 プロトコル対応）",
+    "tags_label": "タグ",
+    "tags_placeholder": "Enter で追加",
+    "manual_only_hint": "手動サブスクリプションのみ追加可能"
+  },
+  "batch": {
+    "dialog_title": "バッチレイテンシ計測",
+    "running": "{{done}}/{{total}} を計測中",
+    "completed": "{{total}} ノードを完了",
+    "summary_reachable": "到達可：{{count}}",
+    "summary_unreachable": "到達不可：{{count}}",
+    "limit_exceeded": "一度に最大 200 ノードまで",
+    "select_some_hint": "少なくとも 1 つ選択してください"
+  }
+}

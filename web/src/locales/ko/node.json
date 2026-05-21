@@ -1,0 +1,80 @@
+{
+  "title": "노드",
+  "subtitle": "모든 구독의 노드를 관리: 지연 측정, 태그 편집, 수동 추가.",
+  "actions": {
+    "tcping_selected": "선택 항목 테스트",
+    "tcping_all": "전체 테스트",
+    "tcping_one": "이 노드 테스트",
+    "copy_uri": "URI 복사",
+    "view_detail": "상세 보기",
+    "delete_node": "노드 삭제",
+    "edit_tags": "태그 편집",
+    "select_all": "모두 선택",
+    "clear_selection": "선택 해제"
+  },
+  "columns": {
+    "name": "이름",
+    "protocol": "프로토콜",
+    "server": "서버",
+    "port": "포트",
+    "latency": "지연",
+    "tags": "태그",
+    "updated_at": "업데이트",
+    "actions": "동작"
+  },
+  "filters": {
+    "search_placeholder": "이름/서버 검색…",
+    "all_protocols": "모든 프로토콜",
+    "all_tags": "모든 태그",
+    "sort_label": "정렬",
+    "sort_latency_asc": "지연 (오름차순)",
+    "sort_latency_desc": "지연 (내림차순)",
+    "sort_created_desc": "최신순",
+    "sort_created_asc": "오래된 순"
+  },
+  "latency": {
+    "untested": "미측정",
+    "unreachable": "도달 불가",
+    "fast": "빠름",
+    "moderate": "보통",
+    "slow": "느림"
+  },
+  "empty": {
+    "title": "노드가 없습니다",
+    "description": "구독을 만들거나 동기화하면 여기에 표시됩니다.",
+    "cta": "구독 페이지로"
+  },
+  "error": {
+    "load_failed": "노드 로드 실패",
+    "tcping_failed": "지연 측정 실패",
+    "delete_failed": "노드 삭제 실패",
+    "update_failed": "노드 업데이트 실패",
+    "create_failed": "노드 추가 실패",
+    "copy_failed": "URI 복사 실패"
+  },
+  "detail": {
+    "metadata_section": "메타데이터",
+    "raw_uri_section": "Raw URI",
+    "latency_section": "지연 기록",
+    "config_section": "파싱된 설정",
+    "no_uri": "이 노드에는 Raw URI가 없습니다",
+    "copied": "클립보드에 복사됨"
+  },
+  "form": {
+    "raw_uri_label": "Raw URI",
+    "raw_uri_placeholder": "vless://… 또는 ss://…",
+    "raw_uri_hint": "단일 노드 URI 붙여넣기 (12 프로토콜 지원)",
+    "tags_label": "태그",
+    "tags_placeholder": "Enter로 태그 추가",
+    "manual_only_hint": "수동 구독만 추가 가능"
+  },
+  "batch": {
+    "dialog_title": "배치 지연 측정",
+    "running": "{{done}}/{{total}} 측정 중",
+    "completed": "{{total}} 노드 완료",
+    "summary_reachable": "도달 가능: {{count}}",
+    "summary_unreachable": "도달 불가: {{count}}",
+    "limit_exceeded": "최대 200 노드",
+    "select_some_hint": "하나 이상 선택하세요"
+  }
+}

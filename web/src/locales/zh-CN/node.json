@@ -1,0 +1,80 @@
+{
+  "title": "节点",
+  "subtitle": "管理所有订阅下的节点，测试延迟、编辑标签或手动添加",
+  "actions": {
+    "tcping_selected": "测试所选延迟",
+    "tcping_all": "全部测试",
+    "tcping_one": "测试该节点",
+    "copy_uri": "复制 URI",
+    "view_detail": "查看详情",
+    "delete_node": "删除节点",
+    "edit_tags": "编辑标签",
+    "select_all": "全选",
+    "clear_selection": "清空"
+  },
+  "columns": {
+    "name": "名称",
+    "protocol": "协议",
+    "server": "服务器",
+    "port": "端口",
+    "latency": "延迟",
+    "tags": "标签",
+    "updated_at": "更新时间",
+    "actions": "操作"
+  },
+  "filters": {
+    "search_placeholder": "按名称 / 服务器搜索…",
+    "all_protocols": "全部协议",
+    "all_tags": "全部标签",
+    "sort_label": "排序",
+    "sort_latency_asc": "延迟（升序）",
+    "sort_latency_desc": "延迟（降序）",
+    "sort_created_desc": "新到旧",
+    "sort_created_asc": "旧到新"
+  },
+  "latency": {
+    "untested": "未测",
+    "unreachable": "不可达",
+    "fast": "快",
+    "moderate": "一般",
+    "slow": "慢"
+  },
+  "empty": {
+    "title": "暂无节点",
+    "description": "新建或同步订阅后会自动出现在此处。",
+    "cta": "前往订阅页面"
+  },
+  "error": {
+    "load_failed": "加载节点失败",
+    "tcping_failed": "延迟测试失败",
+    "delete_failed": "删除节点失败",
+    "update_failed": "更新节点失败",
+    "create_failed": "添加节点失败",
+    "copy_failed": "复制 URI 失败"
+  },
+  "detail": {
+    "metadata_section": "元数据",
+    "raw_uri_section": "原始 URI",
+    "latency_section": "延迟历史",
+    "config_section": "解析配置",
+    "no_uri": "该节点没有原始 URI",
+    "copied": "已复制到剪贴板"
+  },
+  "form": {
+    "raw_uri_label": "原始 URI",
+    "raw_uri_placeholder": "vless://… 或 ss://…",
+    "raw_uri_hint": "粘贴单条节点 URI；支持 12 种协议",
+    "tags_label": "标签",
+    "tags_placeholder": "添加标签后按回车",
+    "manual_only_hint": "仅手动类型订阅可添加节点"
+  },
+  "batch": {
+    "dialog_title": "批量延迟测试",
+    "running": "正在测试 {{done}}/{{total}}",
+    "completed": "已完成 {{total}} 个节点",
+    "summary_reachable": "可达：{{count}}",
+    "summary_unreachable": "不可达：{{count}}",
+    "limit_exceeded": "单次最多 200 个节点",
+    "select_some_hint": "请至少选择一个节点"
+  }
+}

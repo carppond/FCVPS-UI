@@ -1,0 +1,80 @@
+{
+  "title": "Nodes",
+  "subtitle": "Manage nodes across subscriptions: probe latency, edit tags, or add manually.",
+  "actions": {
+    "tcping_selected": "Probe selected",
+    "tcping_all": "Probe all",
+    "tcping_one": "Probe this node",
+    "copy_uri": "Copy URI",
+    "view_detail": "View details",
+    "delete_node": "Delete node",
+    "edit_tags": "Edit tags",
+    "select_all": "Select all",
+    "clear_selection": "Clear"
+  },
+  "columns": {
+    "name": "Name",
+    "protocol": "Protocol",
+    "server": "Server",
+    "port": "Port",
+    "latency": "Latency",
+    "tags": "Tags",
+    "updated_at": "Updated",
+    "actions": "Actions"
+  },
+  "filters": {
+    "search_placeholder": "Search by name / server…",
+    "all_protocols": "All protocols",
+    "all_tags": "All tags",
+    "sort_label": "Sort",
+    "sort_latency_asc": "Latency (asc)",
+    "sort_latency_desc": "Latency (desc)",
+    "sort_created_desc": "Newest first",
+    "sort_created_asc": "Oldest first"
+  },
+  "latency": {
+    "untested": "Untested",
+    "unreachable": "Unreachable",
+    "fast": "Fast",
+    "moderate": "Moderate",
+    "slow": "Slow"
+  },
+  "empty": {
+    "title": "No nodes yet",
+    "description": "They appear here after you create or sync a subscription.",
+    "cta": "Go to subscriptions"
+  },
+  "error": {
+    "load_failed": "Failed to load nodes",
+    "tcping_failed": "Latency probe failed",
+    "delete_failed": "Failed to delete node",
+    "update_failed": "Failed to update node",
+    "create_failed": "Failed to add node",
+    "copy_failed": "Failed to copy URI"
+  },
+  "detail": {
+    "metadata_section": "Metadata",
+    "raw_uri_section": "Raw URI",
+    "latency_section": "Latency history",
+    "config_section": "Parsed config",
+    "no_uri": "This node has no raw URI",
+    "copied": "Copied to clipboard"
+  },
+  "form": {
+    "raw_uri_label": "Raw URI",
+    "raw_uri_placeholder": "vless://… or ss://…",
+    "raw_uri_hint": "Paste a single node URI (12 protocols supported)",
+    "tags_label": "Tags",
+    "tags_placeholder": "Press Enter to add a tag",
+    "manual_only_hint": "Only manual subscriptions accept hand-added nodes"
+  },
+  "batch": {
+    "dialog_title": "Batch latency probe",
+    "running": "Testing {{done}}/{{total}}",
+    "completed": "Completed {{total}} nodes",
+    "summary_reachable": "Reachable: {{count}}",
+    "summary_unreachable": "Unreachable: {{count}}",
+    "limit_exceeded": "Maximum 200 nodes per batch",
+    "select_some_hint": "Select at least one node"
+  }
+}
