@@ -603,6 +603,15 @@ export interface Agent {
 export interface AgentCreateResponse extends Agent {
   token: string; // 明文 token，仅此一次
   install_command: string;
+  install_hint_i18n_key?: string; // nezha_compat 时的接入指引 i18n key
+}
+
+// agentListItem (server-side wraps Agent with online + latest_metrics).
+// Lives here so the agent api hooks and list/detail components share a single
+// shape consistent with internal/handler/agent_handler.go.
+export interface AgentListItem extends Agent {
+  online: boolean;
+  latest_metrics?: AgentMetric;
 }
 
 export interface AgentMetric {
@@ -630,6 +639,7 @@ export interface AgentMetric {
 
 export interface CreateAgentRequest {
   name: string;
+  kind?: AgentKind; // 默认 "native"
 }
 
 export interface UpdateAgentRequest {

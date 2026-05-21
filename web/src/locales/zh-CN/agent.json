@@ -1,0 +1,140 @@
+{
+  "title": "探针 Agent",
+  "subtitle": "查看连接到 hub 的探针，下发命令并查看实时指标",
+  "actions": {
+    "create": "添加 Agent",
+    "rotate_token": "轮换 Token",
+    "send_command": "下发命令",
+    "restart": "重启 Agent",
+    "delete": "删除 Agent",
+    "copy_token": "复制 Token",
+    "copy_command": "复制命令",
+    "view_detail": "查看详情",
+    "back_to_list": "返回列表"
+  },
+  "columns": {
+    "name": "名称",
+    "kind": "类型",
+    "status": "状态",
+    "version": "版本",
+    "os_arch": "OS / 架构",
+    "last_seen": "最近心跳",
+    "actions": "操作"
+  },
+  "kind": {
+    "native": "原生",
+    "nezha_compat": "Nezha 兼容"
+  },
+  "status": {
+    "online": "在线",
+    "offline": "离线",
+    "degraded": "降级",
+    "unknown": "未知"
+  },
+  "filters": {
+    "search_placeholder": "按名称搜索…"
+  },
+  "empty": {
+    "title": "暂无 Agent",
+    "description": "点击右上角「添加 Agent」开始接入第一个探针。"
+  },
+  "error": {
+    "load_failed": "加载 Agent 失败",
+    "create_failed": "创建 Agent 失败",
+    "delete_failed": "删除 Agent 失败",
+    "rotate_failed": "轮换 Token 失败",
+    "command_failed": "下发命令失败",
+    "metrics_failed": "加载指标失败"
+  },
+  "detail": {
+    "metadata_section": "元数据",
+    "metrics_section": "实时指标",
+    "history_section": "历史指标",
+    "commands_section": "命令历史",
+    "no_metrics": "暂无指标，等待 Agent 上报",
+    "no_commands": "暂无下发记录",
+    "field_os": "OS",
+    "field_arch": "架构",
+    "field_version": "版本",
+    "field_kind": "类型",
+    "field_public_ip": "公网 IP",
+    "field_last_seen": "最近心跳",
+    "field_created": "创建时间",
+    "field_uptime": "运行时长"
+  },
+  "tabs": {
+    "realtime": "实时",
+    "history": "历史",
+    "metadata": "元数据",
+    "commands": "命令历史"
+  },
+  "range": {
+    "1h": "1 小时",
+    "6h": "6 小时",
+    "24h": "24 小时"
+  },
+  "metric": {
+    "cpu": "CPU",
+    "memory": "内存",
+    "net_in": "下行",
+    "net_out": "上行",
+    "load": "负载",
+    "disk": "磁盘",
+    "conn_tcp": "TCP 连接",
+    "conn_udp": "UDP 连接"
+  },
+  "wizard": {
+    "title": "添加 Agent",
+    "step_1_title": "基础信息",
+    "step_2_title": "凭据生成",
+    "step_3_title": "完成接入",
+    "name_label": "名称",
+    "name_placeholder": "例如：home-server",
+    "name_hint": "用来在列表中识别该探针，可包含字母 / 数字 / 中划线",
+    "kind_label": "类型",
+    "kind_native_desc": "拾光官方 agent（推荐）",
+    "kind_nezha_desc": "兼容现有 Nezha agent",
+    "os_label": "操作系统",
+    "arch_label": "架构",
+    "os_linux": "Linux",
+    "os_darwin": "macOS",
+    "os_windows": "Windows",
+    "arch_amd64": "amd64",
+    "arch_arm64": "arm64",
+    "token_warning": "Token 仅显示一次，请立即复制保存——离开本页后将无法再查看明文。",
+    "token_label": "Agent Token（仅此一次）",
+    "install_label": "一键安装命令",
+    "nezha_hint_title": "Nezha agent 接入指引",
+    "nezha_hint_body": "在已有 Nezha agent 配置中，把 Server 地址改为本 hub 的 /api/v1/nezha 端点，并使用上方 Token 作为 secret。例如：\nServer: https://{{host}}/api/v1/nezha\nSecret: {{token}}",
+    "next": "下一步",
+    "previous": "上一步",
+    "submit": "创建",
+    "finish": "完成",
+    "copied": "已复制到剪贴板"
+  },
+  "rotate_dialog": {
+    "title": "确认轮换 Token？",
+    "description": "旧 Token 将立即失效，已连接的 Agent 会被踢出，需要使用新 Token 重新接入。",
+    "confirm": "立即轮换",
+    "new_token_label": "新 Token（仅此一次）"
+  },
+  "delete_dialog": {
+    "title": "删除 Agent？",
+    "description": "Agent {{name}} 将被永久删除，并清空其所有指标历史。此操作不可撤销。",
+    "confirm": "永久删除"
+  },
+  "command_dialog": {
+    "title": "下发命令",
+    "description": "向 Agent {{name}} 下发一条受信命令，立即通过 WebSocket 通道执行。",
+    "cmd_label": "命令",
+    "cmd_restart": "重启 Agent",
+    "submit": "下发",
+    "queued": "命令已下发（cmd_id: {{id}}）"
+  },
+  "card": {
+    "cpu": "CPU",
+    "memory": "内存",
+    "offline_hint": "Agent 离线，最近一次心跳于 {{when}}",
+    "no_metrics_hint": "暂无最新指标"
+  }
+}

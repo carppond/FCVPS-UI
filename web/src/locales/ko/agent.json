@@ -1,0 +1,140 @@
+{
+  "title": "에이전트",
+  "subtitle": "허브에 연결된 프로브를 확인하고 명령을 전송하며 실시간 지표를 봅니다",
+  "actions": {
+    "create": "에이전트 추가",
+    "rotate_token": "토큰 교체",
+    "send_command": "명령 전송",
+    "restart": "에이전트 재시작",
+    "delete": "에이전트 삭제",
+    "copy_token": "토큰 복사",
+    "copy_command": "명령 복사",
+    "view_detail": "상세 보기",
+    "back_to_list": "목록으로"
+  },
+  "columns": {
+    "name": "이름",
+    "kind": "종류",
+    "status": "상태",
+    "version": "버전",
+    "os_arch": "OS / 아키",
+    "last_seen": "마지막 연결",
+    "actions": "동작"
+  },
+  "kind": {
+    "native": "네이티브",
+    "nezha_compat": "Nezha 호환"
+  },
+  "status": {
+    "online": "온라인",
+    "offline": "오프라인",
+    "degraded": "저하",
+    "unknown": "알 수 없음"
+  },
+  "filters": {
+    "search_placeholder": "이름으로 검색…"
+  },
+  "empty": {
+    "title": "에이전트가 없습니다",
+    "description": "오른쪽 위의 \"에이전트 추가\"로 첫 번째 프로브를 연결하세요."
+  },
+  "error": {
+    "load_failed": "에이전트 목록을 불러오지 못했습니다",
+    "create_failed": "에이전트 생성에 실패했습니다",
+    "delete_failed": "에이전트 삭제에 실패했습니다",
+    "rotate_failed": "토큰 교체에 실패했습니다",
+    "command_failed": "명령 전송에 실패했습니다",
+    "metrics_failed": "지표 로드에 실패했습니다"
+  },
+  "detail": {
+    "metadata_section": "메타데이터",
+    "metrics_section": "실시간 지표",
+    "history_section": "기록",
+    "commands_section": "명령 기록",
+    "no_metrics": "아직 지표가 없습니다 - 에이전트의 보고를 기다리는 중",
+    "no_commands": "전송된 명령이 없습니다",
+    "field_os": "OS",
+    "field_arch": "아키",
+    "field_version": "버전",
+    "field_kind": "종류",
+    "field_public_ip": "공인 IP",
+    "field_last_seen": "마지막 연결",
+    "field_created": "생성",
+    "field_uptime": "가동 시간"
+  },
+  "tabs": {
+    "realtime": "실시간",
+    "history": "기록",
+    "metadata": "메타데이터",
+    "commands": "명령"
+  },
+  "range": {
+    "1h": "1시간",
+    "6h": "6시간",
+    "24h": "24시간"
+  },
+  "metric": {
+    "cpu": "CPU",
+    "memory": "메모리",
+    "net_in": "수신",
+    "net_out": "송신",
+    "load": "부하",
+    "disk": "디스크",
+    "conn_tcp": "TCP 연결",
+    "conn_udp": "UDP 연결"
+  },
+  "wizard": {
+    "title": "에이전트 추가",
+    "step_1_title": "기본 정보",
+    "step_2_title": "자격 증명",
+    "step_3_title": "연결",
+    "name_label": "이름",
+    "name_placeholder": "예: home-server",
+    "name_hint": "목록에서 프로브를 식별하는 데 사용됩니다. 영문/숫자/하이픈만 사용.",
+    "kind_label": "종류",
+    "kind_native_desc": "공식 ShiguangVPS 에이전트 (권장)",
+    "kind_nezha_desc": "기존 Nezha 에이전트 재사용",
+    "os_label": "운영체제",
+    "arch_label": "아키텍처",
+    "os_linux": "Linux",
+    "os_darwin": "macOS",
+    "os_windows": "Windows",
+    "arch_amd64": "amd64",
+    "arch_arm64": "arm64",
+    "token_warning": "토큰은 한 번만 표시됩니다. 지금 복사하세요.",
+    "token_label": "에이전트 토큰 (1회용)",
+    "install_label": "설치 명령",
+    "nezha_hint_title": "Nezha 에이전트 연결 안내",
+    "nezha_hint_body": "기존 Nezha 에이전트 설정에서 Server URL을 이 허브의 /api/v1/nezha 엔드포인트로 변경하고 위 토큰을 secret으로 사용하세요. 예:\nServer: https://{{host}}/api/v1/nezha\nSecret: {{token}}",
+    "next": "다음",
+    "previous": "이전",
+    "submit": "생성",
+    "finish": "완료",
+    "copied": "클립보드에 복사됨"
+  },
+  "rotate_dialog": {
+    "title": "토큰을 교체하시겠습니까?",
+    "description": "이전 토큰은 즉시 무효화되며 연결된 에이전트는 끊깁니다. 새 토큰으로 다시 연결해야 합니다.",
+    "confirm": "지금 교체",
+    "new_token_label": "새 토큰 (1회용)"
+  },
+  "delete_dialog": {
+    "title": "에이전트를 삭제하시겠습니까?",
+    "description": "에이전트 {{name}}와 모든 지표 기록이 영구적으로 삭제됩니다. 되돌릴 수 없습니다.",
+    "confirm": "영구 삭제"
+  },
+  "command_dialog": {
+    "title": "명령 전송",
+    "description": "{{name}}에 WebSocket 채널을 통해 신뢰된 명령을 전송합니다.",
+    "cmd_label": "명령",
+    "cmd_restart": "에이전트 재시작",
+    "submit": "전송",
+    "queued": "명령이 전송되었습니다 (cmd_id: {{id}})"
+  },
+  "card": {
+    "cpu": "CPU",
+    "memory": "메모리",
+    "offline_hint": "오프라인 - 마지막 연결: {{when}}",
+    "no_metrics_hint": "최근 지표 없음"
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "title": "Agents",
+  "subtitle": "Inspect probes connected to the hub, dispatch commands, and watch live metrics",
+  "actions": {
+    "create": "Add agent",
+    "rotate_token": "Rotate token",
+    "send_command": "Send command",
+    "restart": "Restart agent",
+    "delete": "Delete agent",
+    "copy_token": "Copy token",
+    "copy_command": "Copy command",
+    "view_detail": "View detail",
+    "back_to_list": "Back to list"
+  },
+  "columns": {
+    "name": "Name",
+    "kind": "Kind",
+    "status": "Status",
+    "version": "Version",
+    "os_arch": "OS / Arch",
+    "last_seen": "Last seen",
+    "actions": "Actions"
+  },
+  "kind": {
+    "native": "Native",
+    "nezha_compat": "Nezha compat"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "degraded": "Degraded",
+    "unknown": "Unknown"
+  },
+  "filters": {
+    "search_placeholder": "Search by name…"
+  },
+  "empty": {
+    "title": "No agents yet",
+    "description": "Click \"Add agent\" in the header to onboard your first probe."
+  },
+  "error": {
+    "load_failed": "Failed to load agents",
+    "create_failed": "Failed to create agent",
+    "delete_failed": "Failed to delete agent",
+    "rotate_failed": "Failed to rotate token",
+    "command_failed": "Failed to dispatch command",
+    "metrics_failed": "Failed to load metrics"
+  },
+  "detail": {
+    "metadata_section": "Metadata",
+    "metrics_section": "Live metrics",
+    "history_section": "History",
+    "commands_section": "Command history",
+    "no_metrics": "No metrics yet — waiting for the agent to report",
+    "no_commands": "No commands dispatched yet",
+    "field_os": "OS",
+    "field_arch": "Arch",
+    "field_version": "Version",
+    "field_kind": "Kind",
+    "field_public_ip": "Public IP",
+    "field_last_seen": "Last seen",
+    "field_created": "Created",
+    "field_uptime": "Uptime"
+  },
+  "tabs": {
+    "realtime": "Realtime",
+    "history": "History",
+    "metadata": "Metadata",
+    "commands": "Commands"
+  },
+  "range": {
+    "1h": "1h",
+    "6h": "6h",
+    "24h": "24h"
+  },
+  "metric": {
+    "cpu": "CPU",
+    "memory": "Memory",
+    "net_in": "Inbound",
+    "net_out": "Outbound",
+    "load": "Load",
+    "disk": "Disk",
+    "conn_tcp": "TCP conn",
+    "conn_udp": "UDP conn"
+  },
+  "wizard": {
+    "title": "Add agent",
+    "step_1_title": "Basics",
+    "step_2_title": "Credentials",
+    "step_3_title": "Install",
+    "name_label": "Name",
+    "name_placeholder": "e.g. home-server",
+    "name_hint": "Used to identify this probe — letters, digits, and hyphens only.",
+    "kind_label": "Kind",
+    "kind_native_desc": "Official ShiguangVPS agent (recommended)",
+    "kind_nezha_desc": "Reuse an existing Nezha agent",
+    "os_label": "Operating system",
+    "arch_label": "Architecture",
+    "os_linux": "Linux",
+    "os_darwin": "macOS",
+    "os_windows": "Windows",
+    "arch_amd64": "amd64",
+    "arch_arm64": "arm64",
+    "token_warning": "This token is shown once. Copy it now — you cannot retrieve the plaintext value again.",
+    "token_label": "Agent token (one-time)",
+    "install_label": "Install command",
+    "nezha_hint_title": "Nezha agent setup",
+    "nezha_hint_body": "Open the Nezha agent config on your host and point its Server URL to this hub's /api/v1/nezha endpoint, using the token above as the secret. For example:\nServer: https://{{host}}/api/v1/nezha\nSecret: {{token}}",
+    "next": "Next",
+    "previous": "Back",
+    "submit": "Create",
+    "finish": "Done",
+    "copied": "Copied to clipboard"
+  },
+  "rotate_dialog": {
+    "title": "Rotate token?",
+    "description": "The old token is revoked immediately and any connected agent will be kicked. You must re-onboard with the new token.",
+    "confirm": "Rotate now",
+    "new_token_label": "New token (one-time)"
+  },
+  "delete_dialog": {
+    "title": "Delete agent?",
+    "description": "Agent {{name}} and all its metric history will be permanently removed. This cannot be undone.",
+    "confirm": "Delete permanently"
+  },
+  "command_dialog": {
+    "title": "Send command",
+    "description": "Dispatch a trusted command to {{name}} over its live WebSocket channel.",
+    "cmd_label": "Command",
+    "cmd_restart": "Restart agent",
+    "submit": "Send",
+    "queued": "Command dispatched (cmd_id: {{id}})"
+  },
+  "card": {
+    "cpu": "CPU",
+    "memory": "Memory",
+    "offline_hint": "Offline — last seen {{when}}",
+    "no_metrics_hint": "No recent metrics"
+  }
+}

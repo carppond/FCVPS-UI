@@ -136,6 +136,36 @@ func (r *NotificationChannelRepo) ListByUser(ctx context.Context, userID, eventT
 	return out, nil
 }
 
+// ListAllByKind returns every channel of the given kind across every user.
+// The Telegram bot's whitelist resolver (T-24) uses this to map an inbound
+// chat ID to its owning user without a per-user fan-out. Channel counts are
+// modest (≤ a few thousand for v1) so an unbounded scan is acceptable.
+func (r *NotificationChannelRepo) ListAllByKind(ctx context.Context, kind string) ([]NotificationChannelRecord, error) {
+	if kind == "" {
+		return nil, fmt.Errorf("notify channel list-all: empty kind")
+	}
+	rows, err := r.db.Read.QueryContext(ctx,
+		selectNotifyChannelSQL+` WHERE kind = ? ORDER BY created_at ASC`,
+		kind,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list channels by kind: %w", err)
+	}
+	defer rows.Close()
+	out := make([]NotificationChannelRecord, 0, 16)
+	for rows.Next() {
+		rec, err := scanNotifyChannelMulti(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, *rec)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate channels: %w", err)
+	}
+	return out, nil
+}
+
 // List paginates channels for a user, newest first.
 func (r *NotificationChannelRepo) List(ctx context.Context, userID string, opts NotificationChannelListOptions) ([]NotificationChannelRecord, int64, error) {
 	if userID == "" {

@@ -1,0 +1,140 @@
+{
+  "title": "エージェント",
+  "subtitle": "ハブに接続されたプローブを確認し、コマンドを送信してリアルタイム指標を表示します",
+  "actions": {
+    "create": "エージェント追加",
+    "rotate_token": "トークンを更新",
+    "send_command": "コマンド送信",
+    "restart": "エージェント再起動",
+    "delete": "エージェント削除",
+    "copy_token": "トークンをコピー",
+    "copy_command": "コマンドをコピー",
+    "view_detail": "詳細を見る",
+    "back_to_list": "一覧へ戻る"
+  },
+  "columns": {
+    "name": "名前",
+    "kind": "種別",
+    "status": "状態",
+    "version": "バージョン",
+    "os_arch": "OS / アーキ",
+    "last_seen": "最終接続",
+    "actions": "操作"
+  },
+  "kind": {
+    "native": "ネイティブ",
+    "nezha_compat": "Nezha 互換"
+  },
+  "status": {
+    "online": "オンライン",
+    "offline": "オフライン",
+    "degraded": "劣化",
+    "unknown": "不明"
+  },
+  "filters": {
+    "search_placeholder": "名前で検索…"
+  },
+  "empty": {
+    "title": "エージェントがありません",
+    "description": "右上の「エージェント追加」から最初のプローブを登録してください。"
+  },
+  "error": {
+    "load_failed": "エージェントの読み込みに失敗しました",
+    "create_failed": "エージェントの作成に失敗しました",
+    "delete_failed": "エージェントの削除に失敗しました",
+    "rotate_failed": "トークンの更新に失敗しました",
+    "command_failed": "コマンドの送信に失敗しました",
+    "metrics_failed": "指標の読み込みに失敗しました"
+  },
+  "detail": {
+    "metadata_section": "メタデータ",
+    "metrics_section": "リアルタイム指標",
+    "history_section": "履歴",
+    "commands_section": "コマンド履歴",
+    "no_metrics": "指標がまだありません - エージェントからの送信を待っています",
+    "no_commands": "送信されたコマンドはありません",
+    "field_os": "OS",
+    "field_arch": "アーキ",
+    "field_version": "バージョン",
+    "field_kind": "種別",
+    "field_public_ip": "公開 IP",
+    "field_last_seen": "最終接続",
+    "field_created": "作成",
+    "field_uptime": "稼働時間"
+  },
+  "tabs": {
+    "realtime": "リアルタイム",
+    "history": "履歴",
+    "metadata": "メタデータ",
+    "commands": "コマンド"
+  },
+  "range": {
+    "1h": "1時間",
+    "6h": "6時間",
+    "24h": "24時間"
+  },
+  "metric": {
+    "cpu": "CPU",
+    "memory": "メモリ",
+    "net_in": "受信",
+    "net_out": "送信",
+    "load": "負荷",
+    "disk": "ディスク",
+    "conn_tcp": "TCP 接続",
+    "conn_udp": "UDP 接続"
+  },
+  "wizard": {
+    "title": "エージェント追加",
+    "step_1_title": "基本情報",
+    "step_2_title": "認証情報",
+    "step_3_title": "接続",
+    "name_label": "名前",
+    "name_placeholder": "例：home-server",
+    "name_hint": "一覧での識別に使用します。英数字とハイフンのみ。",
+    "kind_label": "種別",
+    "kind_native_desc": "公式 ShiguangVPS agent（推奨）",
+    "kind_nezha_desc": "既存の Nezha agent を再利用",
+    "os_label": "OS",
+    "arch_label": "アーキテクチャ",
+    "os_linux": "Linux",
+    "os_darwin": "macOS",
+    "os_windows": "Windows",
+    "arch_amd64": "amd64",
+    "arch_arm64": "arm64",
+    "token_warning": "このトークンは一度しか表示されません。今すぐコピーしてください。",
+    "token_label": "エージェントトークン（1回限り）",
+    "install_label": "インストールコマンド",
+    "nezha_hint_title": "Nezha agent 接続手順",
+    "nezha_hint_body": "既存の Nezha agent 設定で Server URL をこのハブの /api/v1/nezha エンドポイントに変更し、上記のトークンを secret として使用してください。例:\nServer: https://{{host}}/api/v1/nezha\nSecret: {{token}}",
+    "next": "次へ",
+    "previous": "戻る",
+    "submit": "作成",
+    "finish": "完了",
+    "copied": "クリップボードにコピーしました"
+  },
+  "rotate_dialog": {
+    "title": "トークンを更新しますか？",
+    "description": "旧トークンは直ちに無効化され、接続中のエージェントは切断されます。新しいトークンで再接続が必要です。",
+    "confirm": "今すぐ更新",
+    "new_token_label": "新しいトークン（1回限り）"
+  },
+  "delete_dialog": {
+    "title": "エージェントを削除しますか？",
+    "description": "エージェント {{name}} とそのすべての指標履歴が完全に削除されます。この操作は取り消せません。",
+    "confirm": "完全に削除"
+  },
+  "command_dialog": {
+    "title": "コマンドを送信",
+    "description": "{{name}} の WebSocket チャネル経由で信頼済みコマンドを送信します。",
+    "cmd_label": "コマンド",
+    "cmd_restart": "エージェント再起動",
+    "submit": "送信",
+    "queued": "コマンドを送信しました（cmd_id: {{id}}）"
+  },
+  "card": {
+    "cpu": "CPU",
+    "memory": "メモリ",
+    "offline_hint": "オフライン - 最終接続: {{when}}",
+    "no_metrics_hint": "最近の指標がありません"
+  }
+}

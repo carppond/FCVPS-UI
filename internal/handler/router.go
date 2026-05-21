@@ -147,6 +147,17 @@ type Deps struct {
 	// nil disables.
 	LoginRateLimit *ratelimit.Limiter
 
+	// ShortLinkHandler hosts /api/shortlinks/* + GET /s/{code} (T-28).
+	// nil disables the routes.
+	ShortLinkHandler *ShortLinkHandler
+
+	// AuditHandler hosts GET /api/admin/audit (T-28). nil disables.
+	AuditHandler *AuditHandler
+
+	// InstallScriptHandler hosts GET /install-agent.sh + /dl/agent-*
+	// (T-28). nil disables.
+	InstallScriptHandler *InstallScriptHandler
+
 	// Silent owns the live silent-mode prefix. Internal — populated by
 	// NewRouter when DB is supplied.
 	silent *middleware.SilentMode
@@ -209,9 +220,9 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountScriptRoutes(mux, deps)
 	mountRuleRoutes(mux, deps)
 	mountTrafficRoutes(mux, deps)
-
-	// TODO(T-25): mount shortlink handlers (/api/shortlinks, GET /s/:code).
-	// TODO(T-28): mount audit log query (/api/admin/audit).
+	mountShortLinkRoutes(mux, deps)
+	mountAuditRoutes(mux, deps)
+	mountInstallScriptRoutes(mux, deps)
 
 	return mux
 }
@@ -651,6 +662,65 @@ func mountRuleRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PUT /api/rules/{id}", required(http.HandlerFunc(rh.Update)))
 	mux.Handle("PATCH /api/rules/{id}", required(http.HandlerFunc(rh.Update)))
 	mux.Handle("DELETE /api/rules/{id}", required(http.HandlerFunc(rh.Delete)))
+}
+
+// mountShortLinkRoutes installs the T-28 short-link surface:
+//
+//   - GET    /s/{code}                                     (public 302 redirect)
+//   - GET    /api/shortlinks                               (user-scoped list)
+//   - POST   /api/shortlinks                               (user-scoped create)
+//   - DELETE /api/shortlinks/{fileCode}/{userCode}         (contract §1)
+//   - DELETE /api/shortlinks/{code}                        (combined-code alias)
+//
+// The public /s/{code} endpoint is in the silent-mode whitelist so a
+// shared short link works without an auth gate.
+func mountShortLinkRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.ShortLinkHandler == nil {
+		return
+	}
+	sh := deps.ShortLinkHandler
+	mux.Handle("GET /s/{code}", http.HandlerFunc(sh.Redirect))
+
+	if deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	mux.Handle("GET /api/shortlinks", required(http.HandlerFunc(sh.List)))
+	mux.Handle("POST /api/shortlinks", required(http.HandlerFunc(sh.Create)))
+	mux.Handle("DELETE /api/shortlinks/{fileCode}/{userCode}",
+		required(http.HandlerFunc(sh.Delete)))
+	mux.Handle("DELETE /api/shortlinks/{code}",
+		required(http.HandlerFunc(sh.Delete)))
+}
+
+// mountAuditRoutes installs the T-28 audit query endpoints. Admin-only
+// scope is enforced inside the handler so the user-scoped variant can share
+// the same code path.
+func mountAuditRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.AuditHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	requireAdmin := auth.RequireAdmin(deps.TokenStore)
+	ah := deps.AuditHandler
+	mux.Handle("GET /api/admin/audit", requireAdmin(http.HandlerFunc(ah.List)))
+	// Contract §1 line 308 also exposes /api/audit/logs scoped to the
+	// caller (user_id auto-filtered).
+	mux.Handle("GET /api/audit/logs", required(http.HandlerFunc(ah.List)))
+}
+
+// mountInstallScriptRoutes installs the T-28 agent install endpoints. The
+// install-agent.sh path is intentionally NOT auth-gated — admin posts the
+// pre-shared token in the URL, so anonymous curl can run it. Per §2.9 the
+// silent-mode whitelist must include both /install-agent.sh and /dl/agent-*
+// so deployments behind a custom prefix still serve the script.
+func mountInstallScriptRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.InstallScriptHandler == nil {
+		return
+	}
+	ih := deps.InstallScriptHandler
+	mux.Handle("GET /install-agent.sh", http.HandlerFunc(ih.InstallScript))
+	mux.Handle("GET /dl/{asset}", http.HandlerFunc(ih.AgentDownload))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads
