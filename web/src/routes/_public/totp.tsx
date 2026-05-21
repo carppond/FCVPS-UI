@@ -1,5 +1,10 @@
 import * as React from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { TotpInput, TOTP_CODE_LENGTH } from "@/components/auth/totp-input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +14,25 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useVerifyTotpMutation } from "@/api/auth";
 import type { UserPublicProfile, User } from "@/types/api";
 
+/**
+ * Search params for `/totp`. `next` is forwarded from `/login` so that the
+ * post-TOTP redirect lands on the originally requested route.
+ */
+interface TotpSearch {
+  next?: string;
+}
+
+function sanitizeNext(raw: unknown): string | undefined {
+  if (typeof raw !== "string" || raw.length === 0) return undefined;
+  if (raw.startsWith("//") || raw.includes("://")) return undefined;
+  if (!raw.startsWith("/")) return undefined;
+  return raw;
+}
+
 export const Route = createFileRoute("/_public/totp")({
+  validateSearch: (search: Record<string, unknown>): TotpSearch => ({
+    next: sanitizeNext(search.next),
+  }),
   component: TotpPage,
 });
 
@@ -30,6 +53,7 @@ function profileToUser(profile: UserPublicProfile): User {
 function TotpPage() {
   const { t } = useTranslation(["auth"]);
   const navigate = useNavigate();
+  const { next } = useSearch({ from: "/_public/totp" });
   const pendingToken = useAuthStore((s) => s.twoFactorPending);
   const setSession = useAuthStore((s) => s.setSession);
   const verifyMutation = useVerifyTotpMutation();
@@ -52,7 +76,13 @@ function TotpPage() {
           code: value,
         });
         setSession(profileToUser(data.user), data.access_token);
-        await navigate({ to: "/dashboard" });
+        if (next) {
+          await navigate({ to: next } as unknown as Parameters<
+            typeof navigate
+          >[0]);
+        } else {
+          await navigate({ to: "/dashboard" });
+        }
       } catch (err) {
         setHasError(true);
         setCode("");
@@ -63,7 +93,7 @@ function TotpPage() {
         toast.error(message);
       }
     },
-    [pendingToken, verifyMutation, setSession, navigate, t],
+    [pendingToken, verifyMutation, setSession, navigate, next, t],
   );
 
   const handleSubmit = (e: React.FormEvent) => {

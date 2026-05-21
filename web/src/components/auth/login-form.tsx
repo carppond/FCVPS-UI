@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,9 @@ function profileToUser(profile: UserPublicProfile): User {
 export function LoginForm() {
   const { t } = useTranslation(["auth"]);
   const navigate = useNavigate();
+  // `/login` validates and sanitizes `next` (see `_public/login.tsx`), so the
+  // value here is guaranteed to be a same-origin pathname or undefined.
+  const { next } = useSearch({ from: "/_public/login" });
   const loginMutation = useLoginMutation();
   const setSession = useAuthStore((s) => s.setSession);
   const setTwoFactorPending = useAuthStore((s) => s.setTwoFactorPending);
@@ -80,11 +83,22 @@ export function LoginForm() {
       });
       if (result.kind === "totp_required") {
         setTwoFactorPending(result.payload.pending_token);
-        await navigate({ to: "/totp" });
+        // Forward `next` through the 2FA step so the post-TOTP navigation
+        // still lands on the originally requested page.
+        await navigate({ to: "/totp", search: next ? { next } : undefined });
         return;
       }
       setSession(profileToUser(result.payload.user), result.payload.access_token);
-      await navigate({ to: "/dashboard" });
+      if (next) {
+        // `next` is sanitized in the route's validateSearch and may be any
+        // valid pathname (e.g. dynamic detail routes), so we can't satisfy
+        // the strict literal `to` type — cast through `unknown`.
+        await navigate({ to: next } as unknown as Parameters<
+          typeof navigate
+        >[0]);
+      } else {
+        await navigate({ to: "/dashboard" });
+      }
     } catch (err) {
       const message = errorMessageForLogin(err, t);
       toast.error(message);
