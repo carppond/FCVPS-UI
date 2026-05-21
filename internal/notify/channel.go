@@ -109,16 +109,24 @@ func (r *Registry) List() []string {
 // Tests should use NewRegistry to avoid cross-test pollution.
 var DefaultRegistry = NewRegistry()
 
-// RegisterBuiltins seeds reg with the batch-1 channels: telegram, discord,
-// slack, email, bark. Subsequent tasks register the batch-2 entries; this
-// function is idempotent (Register simply overwrites).
+// RegisterBuiltins seeds reg with all built-in channels: the five batch-1
+// channels (telegram, discord, slack, email, bark) and the five batch-2
+// channels (gotify, webhook, serverchan, pushdeer, ifttt).
+// The function is idempotent (Register simply overwrites).
 func RegisterBuiltins(reg *Registry) {
 	if reg == nil {
 		return
 	}
+	// batch 1
 	reg.Register("telegram", buildTelegram)
 	reg.Register("discord", buildDiscord)
 	reg.Register("slack", buildSlack)
 	reg.Register("email", buildEmail)
 	reg.Register("bark", buildBark)
+	// batch 2
+	reg.Register("gotify", buildGotify)
+	reg.Register("webhook", buildWebhook)
+	reg.Register("serverchan", buildServerChan)
+	reg.Register("pushdeer", buildPushDeer)
+	reg.Register("ifttt", buildIFTTT)
 }
