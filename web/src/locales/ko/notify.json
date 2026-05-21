@@ -22,7 +22,7 @@
       "name": "Discord",
       "description": "Webhook으로 채널에 전송",
       "fields": {
-        "webhook_url": { "label": "Webhook URL" },
+        "webhook_url": { "label": "Webhook URL", "help": "채널 통합 설정에서 가져오기" },
         "username": { "label": "표시 이름", "help": "선택" }
       }
     },
@@ -51,7 +51,7 @@
       "name": "Bark",
       "description": "iOS 푸시 (Bark 앱)",
       "fields": {
-        "device_key": { "label": "Device Key" },
+        "device_key": { "label": "Device Key", "help": "Bark 앱에서 가져온 디바이스 키" },
         "server_url": { "label": "서버 URL", "help": "기본 https://api.day.app" }
       }
     },
@@ -75,7 +75,7 @@
     "serverchan": {
       "name": "Server酱",
       "description": "Server酱을 통한 WeChat 푸시",
-      "fields": { "send_key": { "label": "SendKey" } }
+      "fields": { "send_key": { "label": "SendKey", "help": "Server酱 대시보드에서 가져오기" } }
     },
     "pushdeer": {
       "name": "PushDeer",

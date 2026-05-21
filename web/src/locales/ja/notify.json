@@ -22,7 +22,7 @@
       "name": "Discord",
       "description": "Webhook 経由でチャンネルに送信",
       "fields": {
-        "webhook_url": { "label": "Webhook URL" },
+        "webhook_url": { "label": "Webhook URL", "help": "チャンネル統合設定から取得" },
         "username": { "label": "表示名", "help": "任意" }
       }
     },
@@ -51,7 +51,7 @@
       "name": "Bark",
       "description": "iOS プッシュ（Bark アプリ）",
       "fields": {
-        "device_key": { "label": "Device Key" },
+        "device_key": { "label": "Device Key", "help": "Bark アプリのデバイスキー" },
         "server_url": { "label": "サーバー URL", "help": "デフォルト https://api.day.app" }
       }
     },
@@ -75,7 +75,7 @@
     "serverchan": {
       "name": "Server酱",
       "description": "Server酱 経由で WeChat に送信",
-      "fields": { "send_key": { "label": "SendKey" } }
+      "fields": { "send_key": { "label": "SendKey", "help": "Server酱 ダッシュボードから取得" } }
     },
     "pushdeer": {
       "name": "PushDeer",

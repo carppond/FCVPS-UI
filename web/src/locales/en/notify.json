@@ -22,7 +22,7 @@
       "name": "Discord",
       "description": "Push to a Discord channel via webhook",
       "fields": {
-        "webhook_url": { "label": "Webhook URL" },
+        "webhook_url": { "label": "Webhook URL", "help": "Get it from the channel integration settings" },
         "username": { "label": "Display name", "help": "Optional" }
       }
     },
@@ -51,7 +51,7 @@
       "name": "Bark",
       "description": "iOS push via the Bark app",
       "fields": {
-        "device_key": { "label": "Device key" },
+        "device_key": { "label": "Device key", "help": "Device key from the Bark app" },
         "server_url": { "label": "Server URL", "help": "Defaults to https://api.day.app" }
       }
     },
@@ -76,7 +76,7 @@
       "name": "ServerChan",
       "description": "Push to WeChat via ServerChan",
       "fields": {
-        "send_key": { "label": "SendKey" }
+        "send_key": { "label": "SendKey", "help": "Get it from the ServerChan dashboard" }
       }
     },
     "pushdeer": {

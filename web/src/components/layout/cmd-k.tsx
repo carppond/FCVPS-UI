@@ -46,20 +46,18 @@ import {
 } from "lucide-react";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import i18n from "@/lib/i18n";
 import { useCmdK, useCmdKShortcut, pushRecent, loadRecents } from "@/hooks/use-cmd-k";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useAuthStore } from "@/stores/auth-store";
 import { useUIStore } from "@/stores/ui-store";
+import { useCmdKActions } from "@/components/layout/cmd-k-actions";
 
-// API hooks
+// API hooks (resource search only — action mutations live in cmd-k-actions.ts)
 import { useNodesQuery } from "@/api/node";
-import { useSubscriptionsQuery, useSyncSubscriptionMutation } from "@/api/subscription";
+import { useSubscriptionsQuery } from "@/api/subscription";
 import { useAgentsQuery } from "@/api/agent";
-import { useOtaCheck } from "@/api/ota";
-import { downloadBackup, useRotateSilentMode } from "@/api/settings";
 
 // Locale bundles for the cmdk namespace — eagerly registered the first time the
 // dialog mounts so opening the palette never flashes raw keys.
@@ -108,8 +106,6 @@ const PAGES: PageEntry[] = [
   { id: "page:audit", to: "/audit", icon: <ClipboardList className="h-4 w-4" />, labelKey: "pages.audit", adminOnly: true },
 ];
 
-const LANGS = ["zh-CN", "en", "ja", "ko"] as const;
-
 // ── main component ──────────────────────────────────────────────────────────
 
 export function CmdK() {
@@ -133,9 +129,10 @@ export function CmdK() {
   }, [open]);
 
   const navigate = useNavigate();
-  const { user, token } = useAuthStore();
-  const { theme, setTheme } = useUIStore();
+  const { user } = useAuthStore();
+  const { theme } = useUIStore();
   const isAdmin = user?.role === "admin";
+  const actions = useCmdKActions(close);
 
   // ── resource search (only when query is non-empty) ───────────────────────
   const enabledSearch = debouncedSearch.trim().length >= 1;
@@ -163,21 +160,13 @@ export function CmdK() {
   const subs = enabledSearch ? (subsQ.data?.items ?? []) : [];
   const agents = enabledSearch ? (agentsQ.data?.items ?? []) : [];
 
-  // ── mutations for quick actions ──────────────────────────────────────────
-  const syncOne = useSyncSubscriptionMutation();
-  const otaCheck = useOtaCheck();
-  const rotateSilent = useRotateSilentMode();
-
-  // List of all subs (without keyword) for "sync all".
-  const allSubsQ = useSubscriptionsQuery({ page: 1, pageSize: 200 });
-
   // ── recent entries (re-read each open so navigation elsewhere updates) ──
   const [recents, setRecents] = useState(loadRecents());
   useEffect(() => {
     if (open) setRecents(loadRecents());
   }, [open]);
 
-  // ── handlers ─────────────────────────────────────────────────────────────
+  // ── nav handlers (action / mutation handlers are in `actions`) ───────────
   const goTo = (page: PageEntry) => {
     pushRecent({ id: page.id, label: t(`cmdk:${page.labelKey}`), to: page.to });
     close();
@@ -208,93 +197,6 @@ export function CmdK() {
     pushRecent({ id: "page:agents", label: t("cmdk:pages.agents"), to: "/agents" });
     close();
     void navigate({ to: "/agents" as never });
-  };
-
-  const goToRecent = (entry: ReturnType<typeof loadRecents>[number]) => {
-    if (!entry.to) return;
-    close();
-    void navigate({ to: entry.to as never });
-  };
-
-  const handleCreateSub = () => {
-    close();
-    pushRecent({ id: "action:create_sub", label: t("cmdk:actions.create_subscription"), to: "/subscriptions" });
-    void navigate({ to: "/subscriptions" as never, search: { create: 1 } as never });
-  };
-
-  const handleCreateAgent = () => {
-    close();
-    pushRecent({ id: "action:create_agent", label: t("cmdk:actions.create_agent"), to: "/agents" });
-    void navigate({ to: "/agents" as never, search: { create: 1 } as never });
-  };
-
-  const handleSyncAll = async () => {
-    close();
-    const items = allSubsQ.data?.items ?? [];
-    if (items.length === 0) return;
-    toast.success(t("cmdk:toast.sync_all_started", { count: items.length }));
-    const results = await Promise.allSettled(
-      items.map((s) => syncOne.mutateAsync(s.id)),
-    );
-    const ok = results.filter((r) => r.status === "fulfilled").length;
-    if (ok < items.length) {
-      toast.message(
-        t("cmdk:toast.sync_all_partial", { ok, total: items.length }),
-      );
-    }
-  };
-
-  const handleToggleTheme = () => {
-    const next = theme === "dark" ? "light" : theme === "light" ? "system" : "dark";
-    setTheme(next);
-    toast.success(t("cmdk:toast.theme_changed"));
-    close();
-  };
-
-  const handleToggleLang = async () => {
-    const idx = LANGS.indexOf(i18next.language as (typeof LANGS)[number]);
-    const next = LANGS[(idx + 1) % LANGS.length];
-    await i18next.changeLanguage(next);
-    toast.success(t("cmdk:toast.language_changed"));
-    close();
-  };
-
-  const handleBackup = async () => {
-    close();
-    try {
-      const blob = await downloadBackup(token ?? undefined);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `sgvps-backup-${Date.now()}.tar.gz`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      toast.success(t("cmdk:toast.backup_started"));
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : t("cmdk:toast.sync_all_failed");
-      toast.error(msg);
-    }
-  };
-
-  const handleOtaCheck = async () => {
-    close();
-    try {
-      await otaCheck.mutateAsync();
-      toast.success(t("cmdk:toast.ota_started"));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "OTA failed");
-    }
-  };
-
-  const handleSilentRotate = async () => {
-    close();
-    try {
-      await rotateSilent.mutateAsync();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Rotate failed");
-    }
   };
 
   // ── render ───────────────────────────────────────────────────────────────
@@ -359,7 +261,7 @@ export function CmdK() {
                   <CmdItem
                     key={r.id}
                     value={`recent ${r.id} ${r.label}`}
-                    onSelect={() => goToRecent(r)}
+                    onSelect={() => actions.goToRecent(r)}
                     icon={<RefreshCcw className="h-4 w-4 text-[var(--color-text-tertiary)]" />}
                     label={r.label}
                     hint={r.to}
@@ -386,25 +288,25 @@ export function CmdK() {
             <Command.Group heading={t("cmdk:groups.actions")}>
               <CmdItem
                 value="action new-sub"
-                onSelect={handleCreateSub}
+                onSelect={actions.handleCreateSub}
                 icon={<Plus className="h-4 w-4 text-[var(--color-primary)]" />}
                 label={t("cmdk:actions.create_subscription")}
               />
               <CmdItem
                 value="action new-agent"
-                onSelect={handleCreateAgent}
+                onSelect={actions.handleCreateAgent}
                 icon={<Bot className="h-4 w-4 text-[var(--color-primary)]" />}
                 label={t("cmdk:actions.create_agent")}
               />
               <CmdItem
                 value="action sync-all"
-                onSelect={handleSyncAll}
+                onSelect={actions.handleSyncAll}
                 icon={<RefreshCcw className="h-4 w-4 text-[var(--color-info)]" />}
                 label={t("cmdk:actions.sync_all")}
               />
               <CmdItem
                 value="action toggle-theme"
-                onSelect={handleToggleTheme}
+                onSelect={actions.handleToggleTheme}
                 icon={
                   theme === "dark" ? (
                     <Moon className="h-4 w-4 text-[var(--color-text-secondary)]" />
@@ -417,7 +319,7 @@ export function CmdK() {
               />
               <CmdItem
                 value="action toggle-lang"
-                onSelect={handleToggleLang}
+                onSelect={actions.handleToggleLang}
                 icon={<Globe className="h-4 w-4 text-[var(--color-text-secondary)]" />}
                 label={t("cmdk:actions.toggle_lang")}
                 hint={i18next.language}
@@ -429,19 +331,19 @@ export function CmdK() {
               <Command.Group heading={t("cmdk:groups.admin")}>
                 <CmdItem
                   value="admin backup"
-                  onSelect={handleBackup}
+                  onSelect={actions.handleBackup}
                   icon={<Database className="h-4 w-4 text-[var(--color-info)]" />}
                   label={t("cmdk:admin.backup")}
                 />
                 <CmdItem
                   value="admin ota"
-                  onSelect={handleOtaCheck}
+                  onSelect={actions.handleOtaCheck}
                   icon={<WifiOff className="h-4 w-4 text-[var(--color-warning)]" />}
                   label={t("cmdk:admin.ota_check")}
                 />
                 <CmdItem
                   value="admin silent-rotate"
-                  onSelect={handleSilentRotate}
+                  onSelect={actions.handleSilentRotate}
                   icon={<ShieldAlert className="h-4 w-4 text-[var(--color-error)]" />}
                   label={t("cmdk:admin.silent_rotate")}
                 />
