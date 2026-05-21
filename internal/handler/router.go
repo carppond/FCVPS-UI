@@ -9,6 +9,7 @@ import (
 
 	"shiguang-vps/internal/agent"
 	"shiguang-vps/internal/auth"
+	auditpkg "shiguang-vps/internal/audit"
 	"shiguang-vps/internal/handler/middleware"
 	"shiguang-vps/internal/logger"
 	"shiguang-vps/internal/nezha"
@@ -198,8 +199,9 @@ func NewRouter(deps *Deps) *http.ServeMux {
 		middleware.RateLimit(deps.GlobalRateLimit),
 		silent.Middleware(),
 		middleware.Audit(middleware.AuditConfig{
-			Repo:   deps.AuditRepo,
-			Logger: deps.logger(),
+			Repo:            deps.AuditRepo,
+			Logger:          deps.logger(),
+			ExtractResource: auditpkg.ExtractResource,
 		}),
 	}
 	deps.mux = mux
