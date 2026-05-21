@@ -13,6 +13,9 @@ import {
   Settings,
   Users,
   ClipboardList,
+  Link2,
+  PackageOpen,
+  UserCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuthStore } from "@/stores/auth-store";
@@ -23,8 +26,11 @@ interface NavItem {
   labelKey: string;
 }
 
+// Paths below are validated against routeTree.gen.ts. TanStack Router does
+// not require trailing slashes for index routes (`/agents` matches the
+// `/agents/` index route).
 const USER_NAV_ITEMS: NavItem[] = [
-  { to: "/", icon: <LayoutDashboard className="h-4 w-4" />, labelKey: "nav.dashboard" },
+  { to: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" />, labelKey: "nav.dashboard" },
   { to: "/subscriptions", icon: <BookOpen className="h-4 w-4" />, labelKey: "nav.subscriptions" },
   { to: "/nodes", icon: <Server className="h-4 w-4" />, labelKey: "nav.nodes" },
   { to: "/pipelines", icon: <GitBranch className="h-4 w-4" />, labelKey: "nav.pipelines" },
@@ -33,22 +39,28 @@ const USER_NAV_ITEMS: NavItem[] = [
   { to: "/agents", icon: <Radio className="h-4 w-4" />, labelKey: "nav.agents" },
   { to: "/traffic", icon: <BarChart2 className="h-4 w-4" />, labelKey: "nav.traffic" },
   { to: "/notifications", icon: <Bell className="h-4 w-4" />, labelKey: "nav.notify" },
+  { to: "/shortlinks", icon: <Link2 className="h-4 w-4" />, labelKey: "nav.shortlinks" },
 ];
 
 const ADMIN_NAV_ITEMS: NavItem[] = [
-  { to: "/users", icon: <Users className="h-4 w-4" />, labelKey: "nav.users" },
-  { to: "/audit", icon: <ClipboardList className="h-4 w-4" />, labelKey: "nav.audit" },
+  { to: "/admin/users", icon: <Users className="h-4 w-4" />, labelKey: "nav.users" },
+  { to: "/admin/audit", icon: <ClipboardList className="h-4 w-4" />, labelKey: "nav.audit" },
+  { to: "/admin/ota", icon: <PackageOpen className="h-4 w-4" />, labelKey: "nav.ota" },
+  { to: "/admin/settings", icon: <Settings className="h-4 w-4" />, labelKey: "nav.settings" },
 ];
 
-const SETTINGS_NAV_ITEMS: NavItem[] = [
-  { to: "/settings", icon: <Settings className="h-4 w-4" />, labelKey: "nav.settings" },
+const FOOTER_NAV_ITEMS: NavItem[] = [
+  { to: "/profile", icon: <UserCircle2 className="h-4 w-4" />, labelKey: "nav.profile" },
 ];
 
 function NavLink({ item }: { item: NavItem }) {
   const { t } = useTranslation("common");
   return (
     <Link
-      to={item.to}
+      // Sidebar items mix concrete paths and index-route shorthand
+      // (`/agents` → `/agents/`). TanStack Router resolves both, but the
+      // typed `to` union does not contain shorthand forms, so we cast.
+      to={item.to as unknown as "/"}
       className={cn(
         "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2",
         "text-[var(--font-size-sm)] text-[var(--color-text-secondary)]",
@@ -92,11 +104,11 @@ export function Sidebar() {
       <NavGroup items={USER_NAV_ITEMS} />
 
       {isAdmin && (
-        <NavGroup title={t("nav.users")} items={ADMIN_NAV_ITEMS} />
+        <NavGroup title={t("nav.admin")} items={ADMIN_NAV_ITEMS} />
       )}
 
       <div className="mt-auto">
-        <NavGroup items={SETTINGS_NAV_ITEMS} />
+        <NavGroup items={FOOTER_NAV_ITEMS} />
       </div>
     </nav>
   );

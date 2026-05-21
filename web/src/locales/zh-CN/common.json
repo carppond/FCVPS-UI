@@ -33,7 +33,10 @@
     "settings": "系统设置",
     "users": "用户管理",
     "audit": "审计日志",
-    "profile": "个人资料"
+    "profile": "个人资料",
+    "shortlinks": "短链",
+    "ota": "OTA 升级",
+    "admin": "管理"
   },
   "theme": {
     "light": "亮色",

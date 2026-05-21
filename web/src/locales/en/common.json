@@ -33,7 +33,10 @@
     "settings": "Settings",
     "users": "Users",
     "audit": "Audit Log",
-    "profile": "Profile"
+    "profile": "Profile",
+    "shortlinks": "Short Links",
+    "ota": "OTA Upgrade",
+    "admin": "Admin"
   },
   "theme": {
     "light": "Light",

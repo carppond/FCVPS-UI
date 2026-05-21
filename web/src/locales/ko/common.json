@@ -33,7 +33,10 @@
     "settings": "설정",
     "users": "사용자 관리",
     "audit": "감사 로그",
-    "profile": "프로필"
+    "profile": "프로필",
+    "shortlinks": "단축 링크",
+    "ota": "OTA 업그레이드",
+    "admin": "관리"
   },
   "theme": {
     "light": "라이트",
