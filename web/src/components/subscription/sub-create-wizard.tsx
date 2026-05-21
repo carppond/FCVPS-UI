@@ -637,14 +637,11 @@ function StepTemplate({
   // as mutually exclusive: ticking any template clears skip, and vice-versa.
   const isSkipMode = value.length === 0;
 
-  // Auto-jump to the tab that owns one of the current selections so the
-  // checkbox is visible even when the user re-enters step 4 after going back.
-  // We pick the first selection's category as the focus tab.
-  React.useEffect(() => {
-    if (value.length === 0) return;
-    const owner = (templates ?? []).find((tpl) => tpl.id === value[0]);
-    if (owner) setActiveTab(templateCategory(owner));
-  }, [value, templates]);
+  // Tab switching is intentionally manual in multi-select mode. The previous
+  // auto-jump effect (single-select holdover) made the tab snap back to the
+  // first selection's category every time the user clicked a checkbox in a
+  // different tab — e.g. clicking a "block" template would jerk the view
+  // back to "app" if the user had earlier picked an app template.
 
   const toggleTemplate = (id: string) => {
     if (value.includes(id)) {
