@@ -60,6 +60,16 @@
     "step1": "Choose source",
     "step2": "Fill details",
     "step3": "Tags & interval",
+    "step4": {
+      "indicator": "Rule template",
+      "title": "Rule configuration (optional)",
+      "subtitle": "Pick a template so clients work out of the box, or skip and customise later in /rules.",
+      "skip": "Skip (customise later)",
+      "skip_desc": "Configure manually on the /rules page.",
+      "existing_warning": "You already have {{count}} custom rule(s); selecting a template will append new rules.",
+      "partial_failure": "Subscription created, but {{failed}} rule(s) failed to import.",
+      "rules_count": "Contains {{count}} rules"
+    },
     "next": "Next",
     "back": "Back",
     "finish": "Create",

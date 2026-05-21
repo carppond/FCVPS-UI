@@ -9,10 +9,11 @@ import subEn from "@/locales/en/subscription.json";
 import { SubCreateWizard } from "./sub-create-wizard";
 
 // Stub the subscription API hooks so the wizard can mount without a backend.
-// We capture the mutation payload to assert step 1 → step 3 carries data
+// We capture the mutation payload to assert step 1 → step 4 carries data
 // through correctly.
 const createMutateAsync = vi.fn();
 const uploadMutateAsync = vi.fn();
+const createRuleMutateAsync = vi.fn();
 
 vi.mock("@/api/subscription", async () => {
   const actual = await vi.importActual<typeof import("@/api/subscription")>(
@@ -35,6 +36,38 @@ vi.mock("@/api/subscription", async () => {
   };
 });
 
+// Stub the rule API hooks so step 4 has data without a backend.
+vi.mock("@/api/rule", async () => {
+  const actual = await vi.importActual<typeof import("@/api/rule")>(
+    "@/api/rule",
+  );
+  return {
+    ...actual,
+    useRuleTemplatesQuery: () => ({
+      data: [
+        {
+          id: "cn-direct-foreign-proxy",
+          name: "CN direct + foreign proxy",
+          description: "Mainland direct, others via proxy",
+          content: "DOMAIN-SUFFIX,cn,DIRECT\nGEOIP,CN,DIRECT\nMATCH,Proxy\n",
+        },
+        {
+          id: "global-proxy",
+          name: "Global proxy",
+          description: "Everything via proxy",
+          content: "MATCH,Proxy\n",
+        },
+      ],
+      isLoading: false,
+    }),
+    useRulesQuery: () => ({ data: { items: [], total: 0 }, isLoading: false }),
+    useCreateRuleMutation: () => ({
+      mutateAsync: createRuleMutateAsync,
+      isPending: false,
+    }),
+  };
+});
+
 beforeAll(async () => {
   // Register the subscription namespace so t('subscription:...') resolves.
   if (!i18n.hasResourceBundle("en", "subscription")) {
@@ -46,6 +79,8 @@ beforeAll(async () => {
 beforeEach(() => {
   createMutateAsync.mockReset();
   uploadMutateAsync.mockReset();
+  createRuleMutateAsync.mockReset();
+  createRuleMutateAsync.mockResolvedValue({ id: "rule_1" });
 });
 
 function renderWizard(props?: Partial<React.ComponentProps<typeof SubCreateWizard>>) {
@@ -70,7 +105,7 @@ describe("SubCreateWizard", () => {
     expect(screen.getByTestId("wizard-source-manual")).toBeInTheDocument();
   });
 
-  it("advances from step 1 → step 2 → step 3 and submits a url subscription with carried data", async () => {
+  it("advances from step 1 → step 2 → step 3 → step 4 and submits a url subscription with carried data", async () => {
     const user = userEvent.setup();
     renderWizard();
 
@@ -89,6 +124,12 @@ describe("SubCreateWizard", () => {
     expect(
       screen.getByLabelText(new RegExp(subEn.wizard.tags.label, "i")),
     ).toBeInTheDocument();
+
+    // Advance to step 4 (rule template).
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    // Step 4 indicator should be present.
+    expect(screen.getByTestId("wizard-step-4")).toBeInTheDocument();
 
     // Resolve the create mutation immediately.
     createMutateAsync.mockResolvedValueOnce({ id: "sub_123" });

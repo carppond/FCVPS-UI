@@ -60,6 +60,16 @@
     "step1": "소스 선택",
     "step2": "정보 입력",
     "step3": "태그 및 주기",
+    "step4": {
+      "indicator": "규칙 템플릿",
+      "title": "규칙 구성 (선택)",
+      "subtitle": "템플릿을 선택하면 클라이언트에서 즉시 사용 가능, 나중에 /rules에서 사용자 지정.",
+      "skip": "건너뛰기 (나중에 사용자 지정)",
+      "skip_desc": "/rules 페이지에서 수동으로 구성합니다.",
+      "existing_warning": "이미 {{count}}개의 사용자 정의 규칙이 있습니다. 템플릿을 선택하면 새 규칙이 추가됩니다.",
+      "partial_failure": "구독은 생성되었지만 {{failed}}개의 규칙 가져오기에 실패했습니다.",
+      "rules_count": "{{count}}개의 규칙 포함"
+    },
     "next": "다음",
     "back": "이전",
     "finish": "생성",
