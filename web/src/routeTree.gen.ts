@@ -12,8 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as AuthedRouteRouteImport } from './routes/_authed/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicTotpRouteImport } from './routes/_public/totp'
+import { Route as PublicRecoveryRouteImport } from './routes/_public/recovery'
 import { Route as PublicNotFoundRouteImport } from './routes/_public/not-found'
+import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
+import { Route as AuthedProfile2faRouteImport } from './routes/_authed/profile/2fa'
+import { Route as AuthedAdminUsersRouteImport } from './routes/_authed/admin/users'
 
 const PublicRouteRoute = PublicRouteRouteImport.update({
   id: '/_public',
@@ -28,9 +34,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicTotpRoute = PublicTotpRouteImport.update({
+  id: '/totp',
+  path: '/totp',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicRecoveryRoute = PublicRecoveryRouteImport.update({
+  id: '/recovery',
+  path: '/recovery',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
 const PublicNotFoundRoute = PublicNotFoundRouteImport.update({
   id: '/not-found',
   path: '/not-found',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicLoginRoute = PublicLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => PublicRouteRoute,
 } as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
@@ -38,16 +59,43 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedProfile2faRoute = AuthedProfile2faRouteImport.update({
+  id: '/profile/2fa',
+  path: '/profile/2fa',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedAdminUsersRoute = AuthedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/login': typeof PublicLoginRoute
   '/not-found': typeof PublicNotFoundRoute
+  '/recovery': typeof PublicRecoveryRoute
+  '/totp': typeof PublicTotpRoute
+  '/admin/users': typeof AuthedAdminUsersRoute
+  '/profile/2fa': typeof AuthedProfile2faRoute
+  '/profile/': typeof AuthedProfileIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/login': typeof PublicLoginRoute
   '/not-found': typeof PublicNotFoundRoute
+  '/recovery': typeof PublicRecoveryRoute
+  '/totp': typeof PublicTotpRoute
+  '/admin/users': typeof AuthedAdminUsersRoute
+  '/profile/2fa': typeof AuthedProfile2faRoute
+  '/profile': typeof AuthedProfileIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -55,20 +103,50 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteRouteWithChildren
   '/_public': typeof PublicRouteRouteWithChildren
   '/_authed/dashboard': typeof AuthedDashboardRoute
+  '/_public/login': typeof PublicLoginRoute
   '/_public/not-found': typeof PublicNotFoundRoute
+  '/_public/recovery': typeof PublicRecoveryRoute
+  '/_public/totp': typeof PublicTotpRoute
+  '/_authed/admin/users': typeof AuthedAdminUsersRoute
+  '/_authed/profile/2fa': typeof AuthedProfile2faRoute
+  '/_authed/profile/': typeof AuthedProfileIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/not-found'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/not-found'
+    | '/recovery'
+    | '/totp'
+    | '/admin/users'
+    | '/profile/2fa'
+    | '/profile/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/not-found'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/not-found'
+    | '/recovery'
+    | '/totp'
+    | '/admin/users'
+    | '/profile/2fa'
+    | '/profile'
   id:
     | '__root__'
     | '/'
     | '/_authed'
     | '/_public'
     | '/_authed/dashboard'
+    | '/_public/login'
     | '/_public/not-found'
+    | '/_public/recovery'
+    | '/_public/totp'
+    | '/_authed/admin/users'
+    | '/_authed/profile/2fa'
+    | '/_authed/profile/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,11 +178,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_public/totp': {
+      id: '/_public/totp'
+      path: '/totp'
+      fullPath: '/totp'
+      preLoaderRoute: typeof PublicTotpRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/recovery': {
+      id: '/_public/recovery'
+      path: '/recovery'
+      fullPath: '/recovery'
+      preLoaderRoute: typeof PublicRecoveryRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
     '/_public/not-found': {
       id: '/_public/not-found'
       path: '/not-found'
       fullPath: '/not-found'
       preLoaderRoute: typeof PublicNotFoundRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/login': {
+      id: '/_public/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof PublicLoginRouteImport
       parentRoute: typeof PublicRouteRoute
     }
     '/_authed/dashboard': {
@@ -114,15 +213,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/profile/': {
+      id: '/_authed/profile/'
+      path: '/profile'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof AuthedProfileIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/profile/2fa': {
+      id: '/_authed/profile/2fa'
+      path: '/profile/2fa'
+      fullPath: '/profile/2fa'
+      preLoaderRoute: typeof AuthedProfile2faRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/admin/users': {
+      id: '/_authed/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthedAdminUsersRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
   }
 }
 
 interface AuthedRouteRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedAdminUsersRoute: typeof AuthedAdminUsersRoute
+  AuthedProfile2faRoute: typeof AuthedProfile2faRoute
+  AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
 }
 
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedAdminUsersRoute: AuthedAdminUsersRoute,
+  AuthedProfile2faRoute: AuthedProfile2faRoute,
+  AuthedProfileIndexRoute: AuthedProfileIndexRoute,
 }
 
 const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(
@@ -130,11 +256,17 @@ const AuthedRouteRouteWithChildren = AuthedRouteRoute._addFileChildren(
 )
 
 interface PublicRouteRouteChildren {
+  PublicLoginRoute: typeof PublicLoginRoute
   PublicNotFoundRoute: typeof PublicNotFoundRoute
+  PublicRecoveryRoute: typeof PublicRecoveryRoute
+  PublicTotpRoute: typeof PublicTotpRoute
 }
 
 const PublicRouteRouteChildren: PublicRouteRouteChildren = {
+  PublicLoginRoute: PublicLoginRoute,
   PublicNotFoundRoute: PublicNotFoundRoute,
+  PublicRecoveryRoute: PublicRecoveryRoute,
+  PublicTotpRoute: PublicTotpRoute,
 }
 
 const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(

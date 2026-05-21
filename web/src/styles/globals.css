@@ -251,3 +251,23 @@ pre,
   font-family: var(--font-mono);
   font-feature-settings: "liga" 1;
 }
+
+/* ── TOTP shake animation (200ms error feedback) ────────────────────────── */
+@keyframes totp-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.animate-totp-shake {
+  animation: totp-shake 200ms ease-in-out;
+}

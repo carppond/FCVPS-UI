@@ -38,3 +38,6 @@ web/.pnpm-store/
 
 # Tailwind
 web/src/styles/.tailwindcss/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
