@@ -1,0 +1,54 @@
+{
+  "title": "トラフィック",
+  "subtitle": "今月の使用量、推移、アラートしきい値を確認",
+  "summary": {
+    "this_month": "今月の使用量",
+    "of_limit": "上限",
+    "no_limit": "上限なし",
+    "remaining": "残量",
+    "days_to_reset": "リセットまで {{count}} 日",
+    "usage_percent": "使用率 {{percent}}%",
+    "period": "期間"
+  },
+  "chart": {
+    "title": "推移",
+    "subtitle": "日次 / 月次の切り替え",
+    "view_day": "日次",
+    "view_month": "月次",
+    "range_7d": "直近 7 日",
+    "range_30d": "直近 30 日",
+    "range_90d": "直近 90 日",
+    "series_in": "受信",
+    "series_out": "送信",
+    "series_total": "合計",
+    "empty": "集計データはまだありません。00:30 UTC に初回集計が実行されます"
+  },
+  "by_agent": {
+    "title": "プローブ別内訳",
+    "agent": "プローブ",
+    "used": "使用",
+    "share_percent": "{{percent}}% を占有",
+    "empty": "今月のプローブデータはありません"
+  },
+  "threshold": {
+    "title": "アラートしきい値",
+    "subtitle": "traffic_threshold イベントを購読しているチャネルへ通知されます",
+    "level_80": "80%",
+    "level_90": "90%",
+    "level_100": "100%",
+    "admin_only": "管理者のみ編集可",
+    "save_success": "しきい値を保存しました",
+    "save_failed": "しきい値の保存に失敗しました"
+  },
+  "limit": {
+    "title": "月次上限",
+    "subtitle": "ユーザーごとの月次合計上限（バイト）。0 は無制限",
+    "input_label": "上限（GB）",
+    "save_success": "上限を保存しました",
+    "save_failed": "上限の保存に失敗しました",
+    "admin_only": "管理者のみ編集可"
+  },
+  "error": {
+    "load_failed": "トラフィックデータの取得に失敗しました"
+  }
+}

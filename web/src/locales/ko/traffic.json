@@ -1,0 +1,54 @@
+{
+  "title": "트래픽",
+  "subtitle": "이번 달 사용량, 추세, 알림 임계값 확인",
+  "summary": {
+    "this_month": "이번 달 사용량",
+    "of_limit": "한도",
+    "no_limit": "한도 없음",
+    "remaining": "남은 양",
+    "days_to_reset": "재설정까지 {{count}}일",
+    "usage_percent": "사용률 {{percent}}%",
+    "period": "기간"
+  },
+  "chart": {
+    "title": "추세",
+    "subtitle": "일별 / 월별 보기 전환",
+    "view_day": "일별",
+    "view_month": "월별",
+    "range_7d": "최근 7일",
+    "range_30d": "최근 30일",
+    "range_90d": "최근 90일",
+    "series_in": "수신",
+    "series_out": "송신",
+    "series_total": "합계",
+    "empty": "집계 데이터가 아직 없습니다. 00:30 UTC에 첫 집계가 실행됩니다"
+  },
+  "by_agent": {
+    "title": "프로브별 내역",
+    "agent": "프로브",
+    "used": "사용량",
+    "share_percent": "{{percent}}% 점유",
+    "empty": "이번 달 프로브별 데이터가 없습니다"
+  },
+  "threshold": {
+    "title": "알림 임계값",
+    "subtitle": "traffic_threshold 이벤트를 구독한 채널이 임계값 도달 시 알림을 받습니다",
+    "level_80": "80%",
+    "level_90": "90%",
+    "level_100": "100%",
+    "admin_only": "관리자 전용",
+    "save_success": "임계값이 저장되었습니다",
+    "save_failed": "임계값 저장 실패"
+  },
+  "limit": {
+    "title": "월간 한도",
+    "subtitle": "사용자당 월간 트래픽 한도(바이트). 0은 무제한",
+    "input_label": "한도(GB)",
+    "save_success": "한도가 저장되었습니다",
+    "save_failed": "한도 저장 실패",
+    "admin_only": "관리자 전용"
+  },
+  "error": {
+    "load_failed": "트래픽 데이터 로드 실패"
+  }
+}

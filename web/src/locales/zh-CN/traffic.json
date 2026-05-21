@@ -1,0 +1,54 @@
+{
+  "title": "流量",
+  "subtitle": "查看本月用量、历史趋势与告警阈值",
+  "summary": {
+    "this_month": "本月已用",
+    "of_limit": "限额",
+    "no_limit": "未设限额",
+    "remaining": "剩余",
+    "days_to_reset": "距重置 {{count}} 天",
+    "usage_percent": "使用率 {{percent}}%",
+    "period": "周期"
+  },
+  "chart": {
+    "title": "趋势",
+    "subtitle": "按日 / 按月查看流量分布",
+    "view_day": "按日",
+    "view_month": "按月",
+    "range_7d": "近 7 天",
+    "range_30d": "近 30 天",
+    "range_90d": "近 90 天",
+    "series_in": "入站",
+    "series_out": "出站",
+    "series_total": "总量",
+    "empty": "暂无聚合数据，等待今晚 00:30 的首次汇总"
+  },
+  "by_agent": {
+    "title": "按探针拆分",
+    "agent": "探针",
+    "used": "已用",
+    "share_percent": "占比 {{percent}}%",
+    "empty": "本月暂无探针数据"
+  },
+  "threshold": {
+    "title": "告警阈值",
+    "subtitle": "用量达到阈值后会触发通知（订阅 traffic_threshold 事件的渠道）",
+    "level_80": "80%",
+    "level_90": "90%",
+    "level_100": "100%",
+    "admin_only": "仅管理员可编辑阈值",
+    "save_success": "阈值已保存",
+    "save_failed": "保存阈值失败"
+  },
+  "limit": {
+    "title": "月度限额",
+    "subtitle": "用户每月总流量限额（字节）。0 表示不限",
+    "input_label": "限额（GB）",
+    "save_success": "限额已保存",
+    "save_failed": "保存限额失败",
+    "admin_only": "仅管理员可编辑限额"
+  },
+  "error": {
+    "load_failed": "加载流量数据失败"
+  }
+}

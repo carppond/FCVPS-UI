@@ -1,0 +1,54 @@
+{
+  "title": "Traffic",
+  "subtitle": "Monitor monthly usage, trends and alert thresholds",
+  "summary": {
+    "this_month": "Used this month",
+    "of_limit": "Limit",
+    "no_limit": "No limit",
+    "remaining": "Remaining",
+    "days_to_reset": "{{count}} days until reset",
+    "usage_percent": "Usage {{percent}}%",
+    "period": "Period"
+  },
+  "chart": {
+    "title": "Trend",
+    "subtitle": "Switch between daily and monthly buckets",
+    "view_day": "Daily",
+    "view_month": "Monthly",
+    "range_7d": "Last 7 days",
+    "range_30d": "Last 30 days",
+    "range_90d": "Last 90 days",
+    "series_in": "Inbound",
+    "series_out": "Outbound",
+    "series_total": "Total",
+    "empty": "No aggregated data yet; the first roll-up runs at 00:30 UTC"
+  },
+  "by_agent": {
+    "title": "Per agent breakdown",
+    "agent": "Agent",
+    "used": "Used",
+    "share_percent": "{{percent}}% share",
+    "empty": "No per-agent data for the current month"
+  },
+  "threshold": {
+    "title": "Alert thresholds",
+    "subtitle": "Channels subscribed to traffic_threshold receive notifications when usage crosses each level",
+    "level_80": "80%",
+    "level_90": "90%",
+    "level_100": "100%",
+    "admin_only": "Admins only",
+    "save_success": "Thresholds saved",
+    "save_failed": "Failed to save thresholds"
+  },
+  "limit": {
+    "title": "Monthly limit",
+    "subtitle": "Per-user monthly traffic limit in bytes. 0 means unlimited",
+    "input_label": "Limit (GB)",
+    "save_success": "Limit saved",
+    "save_failed": "Failed to save limit",
+    "admin_only": "Admins only"
+  },
+  "error": {
+    "load_failed": "Failed to load traffic data"
+  }
+}

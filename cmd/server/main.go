@@ -36,6 +36,7 @@ import (
 	"shiguang-vps/internal/ratelimit"
 	"shiguang-vps/internal/storage"
 	"shiguang-vps/internal/substore"
+	"shiguang-vps/internal/traffic"
 )
 
 // hubBinaryVersion is the semver advertised to the OTA checker. Replaced at
@@ -244,6 +245,50 @@ func run() error {
 	}
 	otaHandler := handler.NewOTAHandler(otaSvc, log)
 
+	// T-18: traffic aggregation, monthly reset, threshold checker and the
+	// 7-day agent_records cleanup. SettingsRepo doubles as the persistence
+	// layer for threshold state + monthly limit + reset-day.
+	settingsRepo := storage.NewSettingsRepo(db, time.Now)
+	trafficRepo := storage.NewTrafficRepo(db, time.Now)
+	trafficAggregator, err := traffic.NewAggregator(traffic.AggregatorConfig{
+		AgentRepo:       agentRepo,
+		AgentRecordRepo: agentRecordRepo,
+		TrafficRepo:     trafficRepo,
+		SettingsRepo:    settingsRepo,
+		Logger:          log,
+	})
+	if err != nil {
+		return fmt.Errorf("traffic aggregator: %w", err)
+	}
+	trafficThreshold, err := traffic.NewThreshold(traffic.ThresholdConfig{
+		TrafficRepo:  trafficRepo,
+		SettingsRepo: settingsRepo,
+		Notify:       notifyMgr,
+		Logger:       log,
+	})
+	if err != nil {
+		return fmt.Errorf("traffic threshold: %w", err)
+	}
+	trafficMonthlyReset, err := traffic.NewMonthlyReset(traffic.MonthlyResetConfig{
+		TrafficRepo:  trafficRepo,
+		SettingsRepo: settingsRepo,
+		UserRepo:     users,
+		Threshold:    trafficThreshold,
+		Notify:       notifyMgr,
+		Logger:       log,
+	})
+	if err != nil {
+		return fmt.Errorf("traffic monthly reset: %w", err)
+	}
+	trafficCleanup, err := traffic.NewCleanup(traffic.CleanupConfig{
+		AgentRecordRepo: agentRecordRepo,
+		Logger:          log,
+	})
+	if err != nil {
+		return fmt.Errorf("traffic cleanup: %w", err)
+	}
+	trafficHandler := handler.NewTrafficHandler(trafficRepo, agentRepo, settingsRepo, log)
+
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
@@ -264,6 +309,7 @@ func run() error {
 		StreamHandler:         streamHandler,
 		OTAHandler:            otaHandler,
 		NezhaHandler:          nezhaHandler,
+		TrafficHandler:        trafficHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
@@ -284,6 +330,18 @@ func run() error {
 	// outlive the DB pool (the checker logs would otherwise spam errors).
 	stopOTAChecker := otaSvc.StartChecker(rootCtx)
 	defer stopOTAChecker()
+	// T-18: traffic background workers. Three loops:
+	//   - aggregator at 00:30 UTC rolls yesterday's agent_records.
+	//   - monthly reset at 00:00 UTC fires recap + clears threshold state.
+	//   - cleanup at 03:00 UTC purges agent_records > 7 days.
+	// Each StartDaily returns its own stop func so shutdown deterministically
+	// cancels every goroutine before the DB pool is closed.
+	stopTrafficAggregator := trafficAggregator.StartDaily(rootCtx)
+	defer stopTrafficAggregator()
+	stopMonthlyReset := trafficMonthlyReset.StartDaily(rootCtx)
+	defer stopMonthlyReset()
+	stopTrafficCleanup := trafficCleanup.StartDaily(rootCtx)
+	defer stopTrafficCleanup()
 	// Ensure the hub broadcasts bye{server_shutdown} during graceful exit.
 	defer agentHub.Close()
 
