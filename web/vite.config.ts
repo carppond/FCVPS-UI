@@ -32,7 +32,9 @@ export default defineConfig({
         changeOrigin: true,
       },
       // Short link redirect: /s/<code> → hub redirects to the real subscription.
-      "/s": {
+      // MUST use regex (not "/s" prefix) — a plain "/s" key would also match
+      // "/src/main.tsx" and break the vite SPA module loader.
+      "^/s/[A-Za-z0-9_-]+$": {
         target: "http://localhost:8080",
         changeOrigin: true,
       },
