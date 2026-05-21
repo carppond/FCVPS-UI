@@ -1,0 +1,88 @@
+{
+  "page": {
+    "title": "ダッシュボード",
+    "welcome": "おかえりなさい、{{name}}",
+    "subtitle": "システム全体の概要"
+  },
+  "stats": {
+    "agents": {
+      "title": "オンライン Agent",
+      "online_total": "{{online}} / {{total}}",
+      "offline_count": "{{count}} 個オフライン",
+      "all_online": "すべてオンライン",
+      "empty": "Agent なし"
+    },
+    "nodes": {
+      "title": "ノード総数",
+      "all_reachable": "すべて到達可能",
+      "by_protocol": "プロトコル別",
+      "empty": "ノードなし"
+    },
+    "traffic": {
+      "title": "今月のトラフィック",
+      "used_of_limit": "{{used}} / {{limit}}",
+      "no_limit": "上限なし",
+      "usage_percent": "{{percent}}% 使用",
+      "quota_label": "今月のクォータ"
+    },
+    "alerts": {
+      "title": "未処理アラート",
+      "count_24h": "過去 24 時間で {{count}} 件失敗",
+      "all_clear": "アラートなし",
+      "view_all": "すべて表示"
+    }
+  },
+  "grid": {
+    "traffic": {
+      "title": "トラフィック推移",
+      "subtitle": "過去 30 日"
+    },
+    "agents": {
+      "title": "Agent ステータス",
+      "subtitle": "リアルタイム同期",
+      "online": "オンライン",
+      "offline": "オフライン",
+      "degraded": "異常",
+      "unknown": "不明",
+      "no_agents": "まだ登録されていません",
+      "see_all": "すべて表示"
+    },
+    "events": {
+      "title": "最近のイベント",
+      "subtitle": "監査ログ + 通知",
+      "view_all": "すべて表示",
+      "no_events": "イベントなし",
+      "kind": {
+        "audit": "監査",
+        "notify_sent": "通知送信",
+        "notify_failed": "通知失敗",
+        "agent_status": "Agent 状態",
+        "subscription_sync": "サブスク同期"
+      }
+    },
+    "subs": {
+      "title": "サブスクの状態",
+      "subtitle": "サブスク別",
+      "view_all": "すべて表示",
+      "node_count": "ノード {{count}} 個",
+      "last_synced_relative": "{{relative}}前",
+      "never_synced": "未同期",
+      "no_subs": "サブスクなし",
+      "status": {
+        "success": "正常",
+        "failed": "失敗",
+        "pending": "進行中",
+        "unknown": "不明"
+      }
+    }
+  },
+  "actions": {
+    "create_subscription": "サブスク作成",
+    "go_to_traffic": "トラフィック",
+    "go_to_agents": "Agent 一覧",
+    "go_to_subs": "サブスク一覧"
+  },
+  "error": {
+    "load_failed": "データの読み込みに失敗しました"
+  }
+}

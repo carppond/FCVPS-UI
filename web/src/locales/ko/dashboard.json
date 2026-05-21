@@ -1,0 +1,88 @@
+{
+  "page": {
+    "title": "대시보드",
+    "welcome": "다시 오신 것을 환영합니다, {{name}}",
+    "subtitle": "시스템 전반 개요"
+  },
+  "stats": {
+    "agents": {
+      "title": "온라인 Agent",
+      "online_total": "{{online}} / {{total}}",
+      "offline_count": "{{count}}개 오프라인",
+      "all_online": "모두 온라인",
+      "empty": "Agent 없음"
+    },
+    "nodes": {
+      "title": "전체 노드",
+      "all_reachable": "모두 도달 가능",
+      "by_protocol": "프로토콜별",
+      "empty": "노드 없음"
+    },
+    "traffic": {
+      "title": "이번 달 트래픽",
+      "used_of_limit": "{{used}} / {{limit}}",
+      "no_limit": "제한 없음",
+      "usage_percent": "{{percent}}% 사용",
+      "quota_label": "월간 할당량"
+    },
+    "alerts": {
+      "title": "대기 중 알림",
+      "count_24h": "최근 24시간 {{count}}건 실패",
+      "all_clear": "알림 없음",
+      "view_all": "전체 보기"
+    }
+  },
+  "grid": {
+    "traffic": {
+      "title": "트래픽 추이",
+      "subtitle": "최근 30일"
+    },
+    "agents": {
+      "title": "Agent 상태",
+      "subtitle": "실시간",
+      "online": "온라인",
+      "offline": "오프라인",
+      "degraded": "이상",
+      "unknown": "알 수 없음",
+      "no_agents": "등록된 Agent 없음",
+      "see_all": "전체 보기"
+    },
+    "events": {
+      "title": "최근 이벤트",
+      "subtitle": "감사 로그 + 알림",
+      "view_all": "전체 보기",
+      "no_events": "이벤트 없음",
+      "kind": {
+        "audit": "감사",
+        "notify_sent": "알림 발송",
+        "notify_failed": "알림 실패",
+        "agent_status": "Agent 상태",
+        "subscription_sync": "구독 동기화"
+      }
+    },
+    "subs": {
+      "title": "구독 상태",
+      "subtitle": "구독별",
+      "view_all": "전체 보기",
+      "node_count": "노드 {{count}}개",
+      "last_synced_relative": "{{relative}} 전",
+      "never_synced": "동기화 없음",
+      "no_subs": "구독 없음",
+      "status": {
+        "success": "정상",
+        "failed": "실패",
+        "pending": "진행 중",
+        "unknown": "알 수 없음"
+      }
+    }
+  },
+  "actions": {
+    "create_subscription": "새 구독",
+    "go_to_traffic": "트래픽",
+    "go_to_agents": "Agent 목록",
+    "go_to_subs": "구독 목록"
+  },
+  "error": {
+    "load_failed": "데이터 로드 실패"
+  }
+}

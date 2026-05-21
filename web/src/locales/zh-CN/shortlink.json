@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "短链",
+    "description": "生成并管理可重定向到长 URL 的短链接。",
+    "create": "新建短链"
+  },
+  "list": {
+    "col_code": "短码",
+    "col_target": "目标 URL",
+    "col_created": "创建时间",
+    "col_expires": "过期时间",
+    "col_actions": "操作",
+    "permanent": "永久",
+    "empty_title": "暂无短链",
+    "empty_description": "新建第一个短链以开始分享简洁的 URL。",
+    "create_cta": "立即新建",
+    "error_load": "短链加载失败",
+    "copied": "短链已复制",
+    "copy_failed": "复制到剪贴板失败",
+    "copy_short_url": "复制短链",
+    "deleted": "短链已删除"
+  },
+  "create": {
+    "title": "新建短链",
+    "description": "填写目标 URL 与可选的过期时间。",
+    "target_label": "目标 URL",
+    "target_placeholder": "https://example.com/very/long/url",
+    "expires_label": "过期时间",
+    "expires_hint": "留空即为永久链接。",
+    "error_required": "目标 URL 为必填",
+    "success": "短链已创建"
+  }
+}

@@ -17,6 +17,7 @@ import { Route as PublicRecoveryRouteImport } from './routes/_public/recovery'
 import { Route as PublicNotFoundRouteImport } from './routes/_public/not-found'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
 import { Route as AuthedTrafficRouteImport } from './routes/_authed/traffic'
+import { Route as AuthedShortlinksRouteImport } from './routes/_authed/shortlinks'
 import { Route as AuthedRulesRouteImport } from './routes/_authed/rules'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index'
@@ -36,6 +37,7 @@ import { Route as AuthedAgentsAgentIdRouteImport } from './routes/_authed/agents
 import { Route as AuthedAdminUsersRouteImport } from './routes/_authed/admin/users'
 import { Route as AuthedAdminSettingsRouteImport } from './routes/_authed/admin/settings'
 import { Route as AuthedAdminOtaRouteImport } from './routes/_authed/admin/ota'
+import { Route as AuthedAdminAuditRouteImport } from './routes/_authed/admin/audit'
 import { Route as AuthedPipelinesPipelineIdEditRouteImport } from './routes/_authed/pipelines/$pipelineId/edit'
 
 const PublicRouteRoute = PublicRouteRouteImport.update({
@@ -74,6 +76,11 @@ const PublicLoginRoute = PublicLoginRouteImport.update({
 const AuthedTrafficRoute = AuthedTrafficRouteImport.update({
   id: '/traffic',
   path: '/traffic',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedShortlinksRoute = AuthedShortlinksRouteImport.update({
+  id: '/shortlinks',
+  path: '/shortlinks',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedRulesRoute = AuthedRulesRouteImport.update({
@@ -175,6 +182,11 @@ const AuthedAdminOtaRoute = AuthedAdminOtaRouteImport.update({
   path: '/admin/ota',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedAdminAuditRoute = AuthedAdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
 const AuthedPipelinesPipelineIdEditRoute =
   AuthedPipelinesPipelineIdEditRouteImport.update({
     id: '/pipelines/$pipelineId/edit',
@@ -186,11 +198,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/rules': typeof AuthedRulesRoute
+  '/shortlinks': typeof AuthedShortlinksRoute
   '/traffic': typeof AuthedTrafficRoute
   '/login': typeof PublicLoginRoute
   '/not-found': typeof PublicNotFoundRoute
   '/recovery': typeof PublicRecoveryRoute
   '/totp': typeof PublicTotpRoute
+  '/admin/audit': typeof AuthedAdminAuditRoute
   '/admin/ota': typeof AuthedAdminOtaRoute
   '/admin/settings': typeof AuthedAdminSettingsRoute
   '/admin/users': typeof AuthedAdminUsersRoute
@@ -214,11 +228,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/rules': typeof AuthedRulesRoute
+  '/shortlinks': typeof AuthedShortlinksRoute
   '/traffic': typeof AuthedTrafficRoute
   '/login': typeof PublicLoginRoute
   '/not-found': typeof PublicNotFoundRoute
   '/recovery': typeof PublicRecoveryRoute
   '/totp': typeof PublicTotpRoute
+  '/admin/audit': typeof AuthedAdminAuditRoute
   '/admin/ota': typeof AuthedAdminOtaRoute
   '/admin/settings': typeof AuthedAdminSettingsRoute
   '/admin/users': typeof AuthedAdminUsersRoute
@@ -245,11 +261,13 @@ export interface FileRoutesById {
   '/_public': typeof PublicRouteRouteWithChildren
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/rules': typeof AuthedRulesRoute
+  '/_authed/shortlinks': typeof AuthedShortlinksRoute
   '/_authed/traffic': typeof AuthedTrafficRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/not-found': typeof PublicNotFoundRoute
   '/_public/recovery': typeof PublicRecoveryRoute
   '/_public/totp': typeof PublicTotpRoute
+  '/_authed/admin/audit': typeof AuthedAdminAuditRoute
   '/_authed/admin/ota': typeof AuthedAdminOtaRoute
   '/_authed/admin/settings': typeof AuthedAdminSettingsRoute
   '/_authed/admin/users': typeof AuthedAdminUsersRoute
@@ -275,11 +293,13 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/rules'
+    | '/shortlinks'
     | '/traffic'
     | '/login'
     | '/not-found'
     | '/recovery'
     | '/totp'
+    | '/admin/audit'
     | '/admin/ota'
     | '/admin/settings'
     | '/admin/users'
@@ -303,11 +323,13 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/rules'
+    | '/shortlinks'
     | '/traffic'
     | '/login'
     | '/not-found'
     | '/recovery'
     | '/totp'
+    | '/admin/audit'
     | '/admin/ota'
     | '/admin/settings'
     | '/admin/users'
@@ -333,11 +355,13 @@ export interface FileRouteTypes {
     | '/_public'
     | '/_authed/dashboard'
     | '/_authed/rules'
+    | '/_authed/shortlinks'
     | '/_authed/traffic'
     | '/_public/login'
     | '/_public/not-found'
     | '/_public/recovery'
     | '/_public/totp'
+    | '/_authed/admin/audit'
     | '/_authed/admin/ota'
     | '/_authed/admin/settings'
     | '/_authed/admin/users'
@@ -420,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/traffic'
       fullPath: '/traffic'
       preLoaderRoute: typeof AuthedTrafficRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/shortlinks': {
+      id: '/_authed/shortlinks'
+      path: '/shortlinks'
+      fullPath: '/shortlinks'
+      preLoaderRoute: typeof AuthedShortlinksRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/rules': {
@@ -555,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminOtaRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/admin/audit': {
+      id: '/_authed/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AuthedAdminAuditRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/pipelines/$pipelineId/edit': {
       id: '/_authed/pipelines/$pipelineId/edit'
       path: '/pipelines/$pipelineId/edit'
@@ -568,7 +606,9 @@ declare module '@tanstack/react-router' {
 interface AuthedRouteRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedRulesRoute: typeof AuthedRulesRoute
+  AuthedShortlinksRoute: typeof AuthedShortlinksRoute
   AuthedTrafficRoute: typeof AuthedTrafficRoute
+  AuthedAdminAuditRoute: typeof AuthedAdminAuditRoute
   AuthedAdminOtaRoute: typeof AuthedAdminOtaRoute
   AuthedAdminSettingsRoute: typeof AuthedAdminSettingsRoute
   AuthedAdminUsersRoute: typeof AuthedAdminUsersRoute
@@ -592,7 +632,9 @@ interface AuthedRouteRouteChildren {
 const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedRulesRoute: AuthedRulesRoute,
+  AuthedShortlinksRoute: AuthedShortlinksRoute,
   AuthedTrafficRoute: AuthedTrafficRoute,
+  AuthedAdminAuditRoute: AuthedAdminAuditRoute,
   AuthedAdminOtaRoute: AuthedAdminOtaRoute,
   AuthedAdminSettingsRoute: AuthedAdminSettingsRoute,
   AuthedAdminUsersRoute: AuthedAdminUsersRoute,

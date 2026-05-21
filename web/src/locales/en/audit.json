@@ -1,0 +1,36 @@
+{
+  "page": {
+    "title": "Audit Log",
+    "description": "All write operations performed against the hub, retained for 180 days."
+  },
+  "filter": {
+    "title": "Filters",
+    "user_id": "User ID",
+    "user_id_placeholder": "Leave empty for all users",
+    "action": "Action",
+    "action_placeholder": "e.g. login or create_subscription",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "reset": "Reset"
+  },
+  "table": {
+    "col_time": "Time",
+    "col_user": "User",
+    "col_action": "Action",
+    "col_resource": "Resource",
+    "col_ip": "IP",
+    "col_status": "Status",
+    "col_actions": "Actions",
+    "status_success": "OK",
+    "status_failure": "Fail",
+    "view_payload": "View payload",
+    "payload_title": "Payload preview",
+    "payload_empty": "(no payload captured)",
+    "empty_title": "No audit events match",
+    "empty_description": "Adjust filters or wait for new activity to appear.",
+    "error_load": "Failed to load audit log",
+    "pagination_summary": "Page {{page}} of {{totalPages}} — {{total}} records",
+    "next": "Next"
+  }
+}

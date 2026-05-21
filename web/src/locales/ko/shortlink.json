@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "단축 URL",
+    "description": "긴 URL로 리디렉션되는 단축 URL을 생성하고 관리합니다.",
+    "create": "단축 URL 만들기"
+  },
+  "list": {
+    "col_code": "코드",
+    "col_target": "대상 URL",
+    "col_created": "생성일",
+    "col_expires": "만료일",
+    "col_actions": "작업",
+    "permanent": "영구",
+    "empty_title": "아직 단축 URL이 없습니다",
+    "empty_description": "첫 단축 URL을 만들어 공유를 시작하세요.",
+    "create_cta": "지금 만들기",
+    "error_load": "단축 URL을 불러오지 못했습니다",
+    "copied": "단축 URL이 복사되었습니다",
+    "copy_failed": "클립보드 복사에 실패했습니다",
+    "copy_short_url": "단축 URL 복사",
+    "deleted": "단축 URL이 삭제되었습니다"
+  },
+  "create": {
+    "title": "단축 URL 만들기",
+    "description": "대상 URL과 선택적 만료일을 입력하세요.",
+    "target_label": "대상 URL",
+    "target_placeholder": "https://example.com/very/long/url",
+    "expires_label": "만료 시각",
+    "expires_hint": "비워두면 영구 링크가 됩니다.",
+    "error_required": "대상 URL은 필수입니다",
+    "success": "단축 URL이 생성되었습니다"
+  }
+}

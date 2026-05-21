@@ -1,0 +1,60 @@
+{
+  "placeholder": "페이지, 노드, 구독, Agent, 동작 검색…",
+  "title": "명령 팔레트",
+  "empty": "일치 항목 없음",
+  "loading": "검색 중…",
+  "groups": {
+    "pages": "페이지",
+    "resources": "리소스",
+    "actions": "빠른 작업",
+    "recent": "최근",
+    "admin": "관리자 작업"
+  },
+  "resource_kind": {
+    "node": "노드",
+    "subscription": "구독",
+    "agent": "Agent"
+  },
+  "pages": {
+    "dashboard": "대시보드",
+    "subscriptions": "구독",
+    "nodes": "노드",
+    "pipelines": "파이프라인",
+    "rules": "규칙",
+    "scripts": "스크립트",
+    "agents": "Agent",
+    "traffic": "트래픽",
+    "notifications": "알림",
+    "settings": "시스템 설정",
+    "users": "사용자 관리",
+    "audit": "감사 로그",
+    "profile": "프로필"
+  },
+  "actions": {
+    "create_subscription": "새 구독",
+    "create_agent": "새 Agent",
+    "sync_all": "모든 구독 동기화",
+    "toggle_theme": "테마 전환",
+    "toggle_lang": "언어 전환"
+  },
+  "admin": {
+    "backup": "지금 백업",
+    "ota_check": "OTA 업데이트 확인",
+    "silent_rotate": "사일런트 모드 접두사 갱신"
+  },
+  "toast": {
+    "sync_all_started": "{{count}}개 구독 동기화 시작",
+    "sync_all_partial": "{{ok}}/{{total}}개 성공",
+    "sync_all_failed": "동기화 실패",
+    "ota_started": "OTA 확인 시작",
+    "backup_started": "백업 다운로드 시작",
+    "language_changed": "언어 전환",
+    "theme_changed": "테마 전환"
+  },
+  "hint": {
+    "open": "⌘K / Ctrl+K로 열기",
+    "navigate": "↑↓로 이동",
+    "enter": "Enter로 실행",
+    "esc": "Esc로 닫기"
+  }
+}

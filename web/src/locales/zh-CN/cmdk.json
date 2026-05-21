@@ -1,0 +1,60 @@
+{
+  "placeholder": "搜索页面、节点、订阅、Agent，或动作…",
+  "title": "命令面板",
+  "empty": "无匹配项",
+  "loading": "搜索中…",
+  "groups": {
+    "pages": "页面导航",
+    "resources": "资源搜索",
+    "actions": "快速动作",
+    "recent": "最近访问",
+    "admin": "管理员动作"
+  },
+  "resource_kind": {
+    "node": "节点",
+    "subscription": "订阅",
+    "agent": "Agent"
+  },
+  "pages": {
+    "dashboard": "总览",
+    "subscriptions": "订阅",
+    "nodes": "节点",
+    "pipelines": "算子流水线",
+    "rules": "规则",
+    "scripts": "脚本",
+    "agents": "探针",
+    "traffic": "流量",
+    "notifications": "通知",
+    "settings": "系统设置",
+    "users": "用户管理",
+    "audit": "审计日志",
+    "profile": "个人资料"
+  },
+  "actions": {
+    "create_subscription": "新建订阅",
+    "create_agent": "新建 Agent",
+    "sync_all": "触发所有订阅同步",
+    "toggle_theme": "切换主题",
+    "toggle_lang": "切换语言"
+  },
+  "admin": {
+    "backup": "立即备份",
+    "ota_check": "检查 OTA 更新",
+    "silent_rotate": "轮换静默模式前缀"
+  },
+  "toast": {
+    "sync_all_started": "已对 {{count}} 个订阅触发同步",
+    "sync_all_partial": "{{ok}}/{{total}} 个订阅同步成功",
+    "sync_all_failed": "同步失败",
+    "ota_started": "OTA 检查已触发",
+    "backup_started": "备份已开始下载",
+    "language_changed": "语言已切换",
+    "theme_changed": "主题已切换"
+  },
+  "hint": {
+    "open": "按 ⌘K / Ctrl+K 打开",
+    "navigate": "↑↓ 选择",
+    "enter": "回车确认",
+    "esc": "Esc 关闭"
+  }
+}

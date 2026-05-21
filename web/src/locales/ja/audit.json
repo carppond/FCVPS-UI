@@ -1,0 +1,36 @@
+{
+  "page": {
+    "title": "監査ログ",
+    "description": "Hub に対する全ての書き込み操作を 180 日間保持します。"
+  },
+  "filter": {
+    "title": "フィルター",
+    "user_id": "ユーザー ID",
+    "user_id_placeholder": "空欄で全ユーザーを対象にします",
+    "action": "アクション",
+    "action_placeholder": "例: login / create_subscription",
+    "from": "開始",
+    "to": "終了",
+    "apply": "適用",
+    "reset": "リセット"
+  },
+  "table": {
+    "col_time": "時刻",
+    "col_user": "ユーザー",
+    "col_action": "アクション",
+    "col_resource": "リソース",
+    "col_ip": "IP",
+    "col_status": "ステータス",
+    "col_actions": "操作",
+    "status_success": "成功",
+    "status_failure": "失敗",
+    "view_payload": "ペイロードを表示",
+    "payload_title": "ペイロードプレビュー",
+    "payload_empty": "（ペイロードなし）",
+    "empty_title": "該当する監査ログがありません",
+    "empty_description": "フィルターを調整するか、新しいアクティビティが発生するのを待ってください。",
+    "error_load": "監査ログの読み込みに失敗しました",
+    "pagination_summary": "{{page}} / {{totalPages}} ページ — 全 {{total}} 件",
+    "next": "次へ"
+  }
+}

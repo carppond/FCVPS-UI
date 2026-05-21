@@ -1,0 +1,60 @@
+{
+  "placeholder": "ページ、ノード、サブスク、Agent、動作を検索…",
+  "title": "コマンドパレット",
+  "empty": "一致なし",
+  "loading": "検索中…",
+  "groups": {
+    "pages": "ページ",
+    "resources": "リソース",
+    "actions": "クイック操作",
+    "recent": "最近",
+    "admin": "管理操作"
+  },
+  "resource_kind": {
+    "node": "ノード",
+    "subscription": "サブスク",
+    "agent": "Agent"
+  },
+  "pages": {
+    "dashboard": "ダッシュボード",
+    "subscriptions": "サブスク",
+    "nodes": "ノード",
+    "pipelines": "パイプライン",
+    "rules": "ルール",
+    "scripts": "スクリプト",
+    "agents": "Agent",
+    "traffic": "トラフィック",
+    "notifications": "通知",
+    "settings": "システム設定",
+    "users": "ユーザー管理",
+    "audit": "監査ログ",
+    "profile": "プロファイル"
+  },
+  "actions": {
+    "create_subscription": "サブスク作成",
+    "create_agent": "Agent 作成",
+    "sync_all": "すべてのサブスクを同期",
+    "toggle_theme": "テーマ切替",
+    "toggle_lang": "言語切替"
+  },
+  "admin": {
+    "backup": "今すぐバックアップ",
+    "ota_check": "OTA 更新確認",
+    "silent_rotate": "サイレントモード接頭辞の更新"
+  },
+  "toast": {
+    "sync_all_started": "{{count}} 件のサブスクを同期しました",
+    "sync_all_partial": "{{ok}}/{{total}} 件成功",
+    "sync_all_failed": "同期に失敗しました",
+    "ota_started": "OTA 確認を開始しました",
+    "backup_started": "バックアップを開始しました",
+    "language_changed": "言語を切替えました",
+    "theme_changed": "テーマを切替えました"
+  },
+  "hint": {
+    "open": "⌘K / Ctrl+K で開く",
+    "navigate": "↑↓ で選択",
+    "enter": "Enter で実行",
+    "esc": "Esc で閉じる"
+  }
+}

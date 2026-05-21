@@ -1,0 +1,88 @@
+{
+  "page": {
+    "title": "总览",
+    "welcome": "欢迎回来，{{name}}",
+    "subtitle": "全系统运行概况"
+  },
+  "stats": {
+    "agents": {
+      "title": "在线 Agent",
+      "online_total": "{{online}} / {{total}}",
+      "offline_count": "{{count}} 个离线",
+      "all_online": "全部在线",
+      "empty": "暂无 Agent"
+    },
+    "nodes": {
+      "title": "节点总数",
+      "all_reachable": "全部可达",
+      "by_protocol": "按协议分布",
+      "empty": "暂无节点"
+    },
+    "traffic": {
+      "title": "本月流量",
+      "used_of_limit": "{{used}} / {{limit}}",
+      "no_limit": "未设流量限额",
+      "usage_percent": "已用 {{percent}}%",
+      "quota_label": "本月配额"
+    },
+    "alerts": {
+      "title": "待处理告警",
+      "count_24h": "近 24 小时 {{count}} 条失败",
+      "all_clear": "无告警",
+      "view_all": "查看全部"
+    }
+  },
+  "grid": {
+    "traffic": {
+      "title": "流量趋势",
+      "subtitle": "近 30 天"
+    },
+    "agents": {
+      "title": "Agent 状态",
+      "subtitle": "实时同步",
+      "online": "在线",
+      "offline": "离线",
+      "degraded": "异常",
+      "unknown": "未知",
+      "no_agents": "尚未注册任何 Agent",
+      "see_all": "查看全部"
+    },
+    "events": {
+      "title": "最近事件",
+      "subtitle": "审计日志 + 通知",
+      "view_all": "查看全部",
+      "no_events": "暂无事件",
+      "kind": {
+        "audit": "审计",
+        "notify_sent": "通知已发送",
+        "notify_failed": "通知失败",
+        "agent_status": "Agent 状态变化",
+        "subscription_sync": "订阅同步"
+      }
+    },
+    "subs": {
+      "title": "订阅健康",
+      "subtitle": "按订阅分组",
+      "view_all": "查看全部",
+      "node_count": "节点数 {{count}}",
+      "last_synced_relative": "{{relative}}前",
+      "never_synced": "尚未同步",
+      "no_subs": "暂无订阅",
+      "status": {
+        "success": "正常",
+        "failed": "失败",
+        "pending": "进行中",
+        "unknown": "未知"
+      }
+    }
+  },
+  "actions": {
+    "create_subscription": "新建订阅",
+    "go_to_traffic": "查看流量",
+    "go_to_agents": "查看 Agent",
+    "go_to_subs": "查看订阅"
+  },
+  "error": {
+    "load_failed": "数据加载失败"
+  }
+}

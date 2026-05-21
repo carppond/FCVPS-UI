@@ -1,0 +1,60 @@
+{
+  "placeholder": "Search pages, nodes, subscriptions, agents, or actions…",
+  "title": "Command palette",
+  "empty": "No results",
+  "loading": "Searching…",
+  "groups": {
+    "pages": "Pages",
+    "resources": "Resources",
+    "actions": "Quick actions",
+    "recent": "Recent",
+    "admin": "Admin actions"
+  },
+  "resource_kind": {
+    "node": "Node",
+    "subscription": "Subscription",
+    "agent": "Agent"
+  },
+  "pages": {
+    "dashboard": "Dashboard",
+    "subscriptions": "Subscriptions",
+    "nodes": "Nodes",
+    "pipelines": "Pipelines",
+    "rules": "Rules",
+    "scripts": "Scripts",
+    "agents": "Agents",
+    "traffic": "Traffic",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "users": "Users",
+    "audit": "Audit log",
+    "profile": "Profile"
+  },
+  "actions": {
+    "create_subscription": "New subscription",
+    "create_agent": "New agent",
+    "sync_all": "Sync all subscriptions",
+    "toggle_theme": "Toggle theme",
+    "toggle_lang": "Toggle language"
+  },
+  "admin": {
+    "backup": "Run backup now",
+    "ota_check": "Check OTA update",
+    "silent_rotate": "Rotate silent-mode prefix"
+  },
+  "toast": {
+    "sync_all_started": "Sync triggered for {{count}} subscriptions",
+    "sync_all_partial": "{{ok}}/{{total}} subscriptions synced",
+    "sync_all_failed": "Sync failed",
+    "ota_started": "OTA check triggered",
+    "backup_started": "Backup download started",
+    "language_changed": "Language switched",
+    "theme_changed": "Theme switched"
+  },
+  "hint": {
+    "open": "Press ⌘K / Ctrl+K to open",
+    "navigate": "↑↓ to navigate",
+    "enter": "Enter to run",
+    "esc": "Esc to close"
+  }
+}

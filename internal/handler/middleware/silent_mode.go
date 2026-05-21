@@ -213,7 +213,9 @@ func Mimic404(w http.ResponseWriter) {
 var silentWhitelist = []string{
 	"/healthz",
 	"/s",
+	"/dl",
 	"/download",
+	"/install-agent.sh",
 	"/api/v1/nezha",
 	"/api/notify/telegram/webhook",
 	"/api/agent/ws",

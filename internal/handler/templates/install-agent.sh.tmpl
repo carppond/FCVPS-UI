@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# shiguang-vps agent installer ({{.Version}}).
+#
+# Usage:
+#   curl -fsSL "<hub_url>/_app/<prefix>/install-agent.sh?token=<TOKEN>&hub_url=<HUB>" | bash
+#
+# The script is rendered by the hub at request time — the TOKEN below is
+# already inlined; the script does NOT need any further environment vars.
+set -euo pipefail
+
+TOKEN="{{.Token}}"
+HUB_URL="{{.HubURL}}"
+
+if [[ -z "$TOKEN" ]]; then
+  echo "install-agent.sh: TOKEN is empty — refusing to install" >&2
+  exit 2
+fi
+if [[ -z "$HUB_URL" ]]; then
+  echo "install-agent.sh: HUB_URL is empty — refusing to install" >&2
+  exit 2
+fi
+
+# ── detect os/arch ──────────────────────────────────────────────────────────
+OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+ARCH_RAW="$(uname -m)"
+case "$ARCH_RAW" in
+  x86_64|amd64)     ARCH=amd64 ;;
+  aarch64|arm64)    ARCH=arm64 ;;
+  armv7l|armv7)     ARCH=armv7 ;;
+  *)
+    echo "install-agent.sh: unsupported architecture '$ARCH_RAW'" >&2
+    exit 3
+    ;;
+esac
+
+if [[ "$OS" != "linux" && "$OS" != "darwin" ]]; then
+  echo "install-agent.sh: unsupported OS '$OS' (only linux/darwin)" >&2
+  exit 3
+fi
+
+ASSET="agent-${OS}-${ARCH}"
+TMP_BIN="$(mktemp -t shiguang-agent.XXXXXX)"
+
+# ── download ───────────────────────────────────────────────────────────────
+echo "==> Downloading ${HUB_URL}/dl/${ASSET}"
+curl -fsSL "${HUB_URL}/dl/${ASSET}" -o "$TMP_BIN"
+chmod +x "$TMP_BIN"
+
+# ── install to /usr/local/bin (requires sudo on Linux) ─────────────────────
+TARGET_BIN="/usr/local/bin/shiguang-agent"
+if [[ "$EUID" -eq 0 ]]; then
+  install -m 0755 "$TMP_BIN" "$TARGET_BIN"
+else
+  sudo install -m 0755 "$TMP_BIN" "$TARGET_BIN"
+fi
+rm -f "$TMP_BIN"
+echo "==> Installed ${TARGET_BIN}"
+
+# ── systemd unit (linux only) ──────────────────────────────────────────────
+if [[ "$OS" == "linux" ]] && command -v systemctl >/dev/null 2>&1; then
+  UNIT_PATH="/etc/systemd/system/shiguang-agent.service"
+  UNIT_BODY=$(cat <<UNIT
+[Unit]
+Description=Shiguang VPS Agent
+After=network.target
+
+[Service]
+ExecStart=${TARGET_BIN} -hub-url ${HUB_URL} -token ${TOKEN}
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+)
+  if [[ "$EUID" -eq 0 ]]; then
+    printf '%s\n' "$UNIT_BODY" > "$UNIT_PATH"
+    systemctl daemon-reload
+    systemctl enable --now shiguang-agent
+  else
+    printf '%s\n' "$UNIT_BODY" | sudo tee "$UNIT_PATH" >/dev/null
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now shiguang-agent
+  fi
+  echo "==> shiguang-agent enabled and started via systemd"
+else
+  echo "==> systemd not detected; run '${TARGET_BIN} -hub-url ${HUB_URL} -token ${TOKEN}' manually"
+fi
+
+echo "OK: shiguang-agent installed and running"

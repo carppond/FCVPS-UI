@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "Short Links",
+    "description": "Generate and manage short URLs that redirect to long destinations.",
+    "create": "Create short link"
+  },
+  "list": {
+    "col_code": "Code",
+    "col_target": "Target URL",
+    "col_created": "Created",
+    "col_expires": "Expires",
+    "col_actions": "Actions",
+    "permanent": "Never",
+    "empty_title": "No short links yet",
+    "empty_description": "Create your first short link to start sharing concise URLs.",
+    "create_cta": "Create one now",
+    "error_load": "Failed to load short links",
+    "copied": "Short URL copied",
+    "copy_failed": "Could not copy to clipboard",
+    "copy_short_url": "Copy short URL",
+    "deleted": "Short link deleted"
+  },
+  "create": {
+    "title": "Create short link",
+    "description": "Provide the destination URL and an optional expiry date.",
+    "target_label": "Target URL",
+    "target_placeholder": "https://example.com/very/long/url",
+    "expires_label": "Expires at",
+    "expires_hint": "Leave empty for a permanent link.",
+    "error_required": "Target URL is required",
+    "success": "Short link created"
+  }
+}

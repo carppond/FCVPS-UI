@@ -1,0 +1,88 @@
+{
+  "page": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {{name}}",
+    "subtitle": "System overview"
+  },
+  "stats": {
+    "agents": {
+      "title": "Online Agents",
+      "online_total": "{{online}} / {{total}}",
+      "offline_count": "{{count}} offline",
+      "all_online": "All online",
+      "empty": "No agents"
+    },
+    "nodes": {
+      "title": "Total Nodes",
+      "all_reachable": "All reachable",
+      "by_protocol": "By protocol",
+      "empty": "No nodes"
+    },
+    "traffic": {
+      "title": "Traffic This Month",
+      "used_of_limit": "{{used}} / {{limit}}",
+      "no_limit": "No quota set",
+      "usage_percent": "{{percent}}% used",
+      "quota_label": "Monthly quota"
+    },
+    "alerts": {
+      "title": "Pending Alerts",
+      "count_24h": "{{count}} failures in last 24h",
+      "all_clear": "All clear",
+      "view_all": "View all"
+    }
+  },
+  "grid": {
+    "traffic": {
+      "title": "Traffic Trend",
+      "subtitle": "Last 30 days"
+    },
+    "agents": {
+      "title": "Agent Status",
+      "subtitle": "Live updates",
+      "online": "Online",
+      "offline": "Offline",
+      "degraded": "Degraded",
+      "unknown": "Unknown",
+      "no_agents": "No agents registered yet",
+      "see_all": "See all"
+    },
+    "events": {
+      "title": "Recent Events",
+      "subtitle": "Audit log + notifications",
+      "view_all": "View all",
+      "no_events": "No events",
+      "kind": {
+        "audit": "Audit",
+        "notify_sent": "Notification sent",
+        "notify_failed": "Notification failed",
+        "agent_status": "Agent status",
+        "subscription_sync": "Sync"
+      }
+    },
+    "subs": {
+      "title": "Subscription Health",
+      "subtitle": "Per subscription",
+      "view_all": "View all",
+      "node_count": "{{count}} nodes",
+      "last_synced_relative": "{{relative}} ago",
+      "never_synced": "Never synced",
+      "no_subs": "No subscriptions",
+      "status": {
+        "success": "OK",
+        "failed": "Failed",
+        "pending": "Pending",
+        "unknown": "Unknown"
+      }
+    }
+  },
+  "actions": {
+    "create_subscription": "New subscription",
+    "go_to_traffic": "Open traffic",
+    "go_to_agents": "Open agents",
+    "go_to_subs": "Open subscriptions"
+  },
+  "error": {
+    "load_failed": "Failed to load data"
+  }
+}

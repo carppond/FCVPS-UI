@@ -1,0 +1,36 @@
+{
+  "page": {
+    "title": "审计日志",
+    "description": "记录所有针对 Hub 的写操作，保留 180 天。"
+  },
+  "filter": {
+    "title": "筛选",
+    "user_id": "用户 ID",
+    "user_id_placeholder": "留空查看所有用户",
+    "action": "动作",
+    "action_placeholder": "如 login 或 create_subscription",
+    "from": "起始时间",
+    "to": "截止时间",
+    "apply": "应用",
+    "reset": "重置"
+  },
+  "table": {
+    "col_time": "时间",
+    "col_user": "用户",
+    "col_action": "动作",
+    "col_resource": "资源",
+    "col_ip": "IP",
+    "col_status": "状态",
+    "col_actions": "操作",
+    "status_success": "成功",
+    "status_failure": "失败",
+    "view_payload": "查看 payload",
+    "payload_title": "Payload 预览",
+    "payload_empty": "（未记录 payload）",
+    "empty_title": "未匹配到任何审计记录",
+    "empty_description": "调整筛选条件或等待新活动出现。",
+    "error_load": "审计日志加载失败",
+    "pagination_summary": "第 {{page}} / {{totalPages}} 页 — 共 {{total}} 条",
+    "next": "下一页"
+  }
+}

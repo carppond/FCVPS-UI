@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "短縮 URL",
+    "description": "長い URL へリダイレクトする短縮 URL を作成・管理します。",
+    "create": "新規作成"
+  },
+  "list": {
+    "col_code": "コード",
+    "col_target": "ターゲット URL",
+    "col_created": "作成日",
+    "col_expires": "有効期限",
+    "col_actions": "操作",
+    "permanent": "無期限",
+    "empty_title": "短縮 URL がありません",
+    "empty_description": "最初の短縮 URL を作成して共有を始めましょう。",
+    "create_cta": "今すぐ作成",
+    "error_load": "短縮 URL の読み込みに失敗しました",
+    "copied": "短縮 URL をコピーしました",
+    "copy_failed": "クリップボードへのコピーに失敗しました",
+    "copy_short_url": "短縮 URL をコピー",
+    "deleted": "短縮 URL を削除しました"
+  },
+  "create": {
+    "title": "短縮 URL を作成",
+    "description": "ターゲット URL と任意の有効期限を入力してください。",
+    "target_label": "ターゲット URL",
+    "target_placeholder": "https://example.com/very/long/url",
+    "expires_label": "有効期限",
+    "expires_hint": "空欄の場合は永久リンクになります。",
+    "error_required": "ターゲット URL は必須です",
+    "success": "短縮 URL を作成しました"
+  }
+}

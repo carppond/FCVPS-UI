@@ -1,0 +1,40 @@
+{
+  "_comment": "本文件随 .claude/ 一起分发给目标项目；为 /dev-team 及单角色命令预设安全操作的允许列表，避免子 Agent 派工时反复弹确认。git push / rm -rf / 任意代码执行（npx * / node *）等破坏性或高风险命令仍需逐次确认。",
+  "permissions": {
+    "allow": [
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+
+      "Bash(git init)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git tag *)",
+      "Bash(git stash *)",
+      "Bash(git checkout *)",
+
+      "Bash(npm install)",
+      "Bash(npm ci)",
+      "Bash(npm install --save-dev *)",
+      "Bash(npm install --save *)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run test)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint)",
+
+      "Bash(npx tsc *)",
+      "Bash(npx vitest *)",
+      "Bash(npx jest *)",
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)",
+
+      "Bash(npm audit *)",
+      "Bash(node scripts/check-sync.mjs)",
+
+      "Bash(taskkill *)",
+      "Bash(curl -s http://localhost:*)",
+      "Bash(curl -s http://127.0.0.1:*)"
+    ]
+  }
+}
