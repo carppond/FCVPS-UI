@@ -10,10 +10,15 @@ package types
 
 // APIResponse 是所有 HTTP 接口的统一响应信封。
 // 成功时 code 为空字符串（omitempty 省略），data 携带载荷。
-// 失败时 code 为 ERR_XXX_YYY，data 为空，message 和 details 携带错误信息。
+// 失败时 code 为 ERR_XXX_YYY，data 为零值，message 和 details 携带错误信息。
+//
+// Data 字段不能用 omitempty：空 slice / 空 map 在 omitempty 下会被序列化为
+// 缺失字段，前端 TanStack Query 收到 undefined 会抛 "Query data cannot be
+// undefined" 错误。保持总是输出 "data" 字段（空 slice → [], 空 map → {},
+// 错误响应 → null）让前端契约保持一致。
 type APIResponse[T any] struct {
 	Code      string `json:"code,omitempty"`
-	Data      T      `json:"data,omitempty"`
+	Data      T      `json:"data"`
 	Message   string `json:"message,omitempty"`
 	Details   any    `json:"details,omitempty"`
 	RequestID string `json:"request_id,omitempty"`
