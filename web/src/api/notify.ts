@@ -103,11 +103,22 @@ function buildEventsQuery(params: ListEventsParams): string {
 
 // ─── Channel queries ────────────────────────────────────────────────────────
 
-/** GET /api/notify/channels — list of the current user's configured channels. */
+/** GET /api/notify/channels — list of the current user's configured channels.
+ *  Backend returns PagedResponse<NotificationChannel>; we flatten to .items
+ *  so callers can treat the cached value as a plain array (the page metadata
+ *  isn't used by any caller yet — re-add a paged variant when it is). */
 export function useChannels() {
   return useQuery({
     queryKey: queryKeys.notify.channels(),
-    queryFn: () => apiFetch<NotificationChannel[]>("/api/notify/channels"),
+    queryFn: async () => {
+      const paged = await apiFetch<{
+        items: NotificationChannel[];
+        total: number;
+        page: number;
+        page_size: number;
+      }>("/api/notify/channels");
+      return paged.items ?? [];
+    },
   });
 }
 
@@ -127,7 +138,13 @@ export function useChannel(id: string | undefined) {
       );
       const hit = cached?.find((c) => c.id === id);
       if (hit) return hit;
-      const all = await apiFetch<NotificationChannel[]>("/api/notify/channels");
+      const paged = await apiFetch<{
+        items: NotificationChannel[];
+        total: number;
+        page: number;
+        page_size: number;
+      }>("/api/notify/channels");
+      const all = paged.items ?? [];
       queryClient.setQueryData(queryKeys.notify.channels(), all);
       const found = all.find((c) => c.id === id);
       if (!found) throw new Error(`channel not found: ${id}`);
