@@ -16,11 +16,21 @@ import type {
   UpdateProxyGroupRequest,
 } from "@/types/api";
 
-/** GET /api/proxy-groups — flat list sorted by sort_order ascending. */
+/** GET /api/proxy-groups — flat list sorted by sort_order ascending.
+ *  Backend wraps the list in PagedResponse ({items, total, page, page_size});
+ *  flatten to .items so callers can treat the cached value as a plain array. */
 export function useProxyGroups() {
   return useQuery({
     queryKey: queryKeys.proxyGroup.list(),
-    queryFn: () => apiFetch<ProxyGroupCategory[]>("/api/proxy-groups"),
+    queryFn: async () => {
+      const paged = await apiFetch<{
+        items: ProxyGroupCategory[];
+        total: number;
+        page: number;
+        page_size: number;
+      }>("/api/proxy-groups");
+      return paged.items ?? [];
+    },
   });
 }
 
