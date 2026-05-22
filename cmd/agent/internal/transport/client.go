@@ -437,11 +437,18 @@ func (c *Client) handleBye(env *agentlib.Envelope, conn *websocket.Conn) {
 }
 
 // buildWSURL appends ?token=… to the hub URL, preserving any existing path /
-// query. It does NOT log the token.
+// query. When the user passes only the hub root (`ws://host:port` or
+// `ws://host:port/`), the canonical /api/agent/ws path is auto-attached so
+// the install command stays short — without this the root path hits the
+// silent-mode nginx mimic and the connect fails with "bad handshake".
+// It does NOT log the token.
 func buildWSURL(hubURL, token string) (string, error) {
 	u, err := url.Parse(hubURL)
 	if err != nil {
 		return "", err
+	}
+	if u.Path == "" || u.Path == "/" {
+		u.Path = "/api/agent/ws"
 	}
 	q := u.Query()
 	q.Set("token", token)
