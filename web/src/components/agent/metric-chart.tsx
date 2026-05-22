@@ -13,7 +13,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/cn";
-import { formatBytes } from "@/lib/format";
+import { formatBitrate, formatBytes, formatPercent } from "@/lib/format";
 import type { AgentMetric } from "@/types/api";
 
 export type MetricSeries = "cpu" | "memory" | "net";
@@ -115,12 +115,8 @@ export function MetricChart({
             stroke="var(--color-text-tertiary)"
             fontSize={11}
             tickLine={false}
-            tickFormatter={
-              series === "cpu"
-                ? (v) => `${Math.round(Number(v))}%`
-                : (v) => formatBytes(Number(v))
-            }
-            width={48}
+            tickFormatter={tickFormatterFor(series)}
+            width={56}
           />
           <Tooltip
             contentStyle={{
@@ -130,11 +126,10 @@ export function MetricChart({
               color: "var(--color-text-primary)",
               fontSize: "var(--font-size-sm)",
             }}
-            formatter={(value, name) =>
-              series === "cpu"
-                ? [`${Number(value).toFixed(1)}%`, String(name)]
-                : [formatBytes(Number(value)), String(name)]
-            }
+            formatter={(value, name) => [
+              tooltipFormatterFor(series)(Number(value)),
+              String(name),
+            ]}
           />
           <Legend
             wrapperStyle={{
@@ -198,6 +193,27 @@ interface ChartPoint {
   memUsed?: number;
   netIn?: number;
   netOut?: number;
+}
+
+/**
+ * Y-axis tick formatter per series family. CPU uses integer percent for a
+ * clean axis, memory uses byte units, and net uses byte-rate units (B/s,
+ * KB/s, …) to match what the per-card numbers show.
+ */
+function tickFormatterFor(series: MetricSeries): (v: unknown) => string {
+  if (series === "cpu") return (v) => `${Math.round(Number(v))}%`;
+  if (series === "net") return (v) => formatBitrate(Number(v));
+  return (v) => formatBytes(Number(v));
+}
+
+/**
+ * Tooltip formatter — same family logic as the axis, but with 1 fractional
+ * digit on percent so hover detail matches the surrounding cards.
+ */
+function tooltipFormatterFor(series: MetricSeries): (v: number) => string {
+  if (series === "cpu") return (v) => formatPercent(v);
+  if (series === "net") return (v) => formatBitrate(v);
+  return (v) => formatBytes(v);
 }
 
 function buildPoints(metrics: AgentMetric[], series: MetricSeries): ChartPoint[] {

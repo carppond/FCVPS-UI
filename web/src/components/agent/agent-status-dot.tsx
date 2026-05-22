@@ -36,10 +36,22 @@ export function AgentStatusDot({
         className,
       )}
     >
-      <span
-        aria-hidden
-        className={cn("h-2 w-2 shrink-0 rounded-full", tone.split(" ")[0])}
-      />
+      <span aria-hidden className="relative inline-flex h-2 w-2 shrink-0">
+        {status === "online" && (
+          <span
+            className={cn(
+              "absolute inset-0 animate-ping rounded-full opacity-60",
+              tone.split(" ")[0],
+            )}
+          />
+        )}
+        <span
+          className={cn(
+            "relative inline-flex h-2 w-2 rounded-full",
+            tone.split(" ")[0],
+          )}
+        />
+      </span>
       {withLabel && (
         <span className={cn("font-medium", tone.split(" ")[1])}>
           {t(`status.${status}`)}

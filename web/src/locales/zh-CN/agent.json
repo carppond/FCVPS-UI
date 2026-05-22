@@ -60,7 +60,11 @@
     "field_public_ip": "公网 IP",
     "field_last_seen": "最近心跳",
     "field_created": "创建时间",
-    "field_uptime": "运行时长"
+    "field_uptime": "运行时长",
+    "uptime_day": " 天",
+    "uptime_hour": " 时",
+    "uptime_minute": " 分",
+    "uptime_separator": " "
   },
   "tabs": {
     "realtime": "实时",
@@ -134,6 +138,14 @@
   "card": {
     "cpu": "CPU",
     "memory": "内存",
+    "cpu_label": "CPU",
+    "memory_label": "内存",
+    "disk_label": "磁盘",
+    "network_label": "网络",
+    "upload": "上行",
+    "download": "下行",
+    "warming_up": "采样中…",
+    "no_disk": "磁盘信息暂不可用",
     "offline_hint": "Agent 离线，最近一次心跳于 {{when}}",
     "no_metrics_hint": "暂无最新指标"
   }

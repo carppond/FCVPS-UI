@@ -1,6 +1,14 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ArrowDown,
+  ArrowUp,
+  Cpu,
+  HardDrive,
+  MemoryStick,
+  Wifi,
+} from "lucide-react";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -8,7 +16,13 @@ import {
 } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
-import { formatBytes, formatDate } from "@/lib/format";
+import {
+  formatBitrate,
+  formatBytes,
+  formatPercent,
+  formatRelativeTime,
+  formatUptime,
+} from "@/lib/format";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   useAgentMetricsQuery,
@@ -33,7 +47,7 @@ const RANGES: MetricRange[] = ["1h", "6h", "24h"];
  *
  *   1. realtime  — SSE-driven live charts (CPU / Memory / Net).
  *   2. history   — fetched metrics, toggle 1h / 6h / 24h.
- *   3. metadata  — OS / arch / version / kind / boot_time / capabilities.
+ *   3. metadata  — dashboard-style overview: 4 big cards + metadata grid.
  *   4. commands  — admin-only command history (placeholder until T-26 wires
  *      the audit log filter).
  *
@@ -82,7 +96,8 @@ export function AgentDetailTabs({
         />
       </TabsContent>
 
-      <TabsContent value="metadata">
+      <TabsContent value="metadata" className="flex flex-col gap-4">
+        <OverviewCards agent={agent} />
         <MetadataGrid agent={agent} />
       </TabsContent>
 
@@ -138,9 +153,151 @@ function ToggleButton({
   );
 }
 
+/**
+ * Dashboard-style summary cards: 4 big tiles (CPU / Memory / Disk / Net)
+ * with progress bars where a denominator exists. Mirrors the layout of
+ * agent-card.tsx but with larger numbers, more breathing room, and the
+ * full "12.5 GB / 16 GB" detail on the secondary line.
+ */
+function OverviewCards({ agent }: { agent: AgentListItem }) {
+  const { t } = useTranslation(["agent"]);
+  const m = agent.latest_metrics;
+
+  if (!m) {
+    return (
+      <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
+        {t("agent:detail.no_metrics")}
+      </div>
+    );
+  }
+
+  const cpuPct = clamp(m.cpu_percent, 0, 100);
+  const memPct = m.mem_total > 0 ? clamp((m.mem_used / m.mem_total) * 100, 0, 100) : null;
+  const diskPct = m.disk_total > 0 ? clamp((m.disk_used / m.disk_total) * 100, 0, 100) : null;
+  const isWarmingUp =
+    agent.status === "online" &&
+    m.mem_total > 0 &&
+    m.net_in_speed === 0 &&
+    m.net_out_speed === 0;
+
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <OverviewCard
+        icon={<Cpu className="h-4 w-4" />}
+        label={t("agent:card.cpu_label")}
+        big={formatPercent(cpuPct)}
+        progress={cpuPct}
+      />
+      <OverviewCard
+        icon={<MemoryStick className="h-4 w-4" />}
+        label={t("agent:card.memory_label")}
+        big={memPct === null ? "—" : formatPercent(memPct)}
+        secondary={
+          memPct === null
+            ? undefined
+            : `${formatBytes(Math.min(m.mem_used, m.mem_total))} / ${formatBytes(m.mem_total)}`
+        }
+        progress={memPct ?? undefined}
+      />
+      <OverviewCard
+        icon={<HardDrive className="h-4 w-4" />}
+        label={t("agent:card.disk_label")}
+        big={diskPct === null ? "—" : formatPercent(diskPct)}
+        secondary={
+          diskPct === null
+            ? t("agent:card.no_disk")
+            : `${formatBytes(Math.min(m.disk_used, m.disk_total))} / ${formatBytes(m.disk_total)}`
+        }
+        progress={diskPct ?? undefined}
+      />
+      <OverviewCard
+        icon={<Wifi className="h-4 w-4" />}
+        label={t("agent:card.network_label")}
+        big={
+          isWarmingUp ? (
+            <span className="text-[var(--font-size-sm)] font-normal text-[var(--color-text-tertiary)]">
+              {t("agent:card.warming_up")}
+            </span>
+          ) : (
+            <div className="flex flex-col gap-1 text-[var(--font-size-base)] font-semibold leading-tight">
+              <span className="flex items-center gap-1.5">
+                <ArrowUp className="h-3.5 w-3.5 text-[var(--color-chart-2)]" />
+                {formatBitrate(Math.max(0, m.net_out_speed))}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ArrowDown className="h-3.5 w-3.5 text-[var(--color-chart-1)]" />
+                {formatBitrate(Math.max(0, m.net_in_speed))}
+              </span>
+            </div>
+          )
+        }
+        secondary={
+          isWarmingUp
+            ? undefined
+            : `${t("agent:card.upload")} / ${t("agent:card.download")}`
+        }
+      />
+    </div>
+  );
+}
+
+interface OverviewCardProps {
+  icon: React.ReactNode;
+  label: string;
+  big: React.ReactNode;
+  secondary?: string;
+  progress?: number;
+}
+
+function OverviewCard({
+  icon,
+  label,
+  big,
+  secondary,
+  progress,
+}: OverviewCardProps) {
+  return (
+    <div className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 tabular-nums">
+      <span className="flex items-center gap-1.5 text-[var(--font-size-xs)] uppercase tracking-wide text-[var(--color-text-tertiary)]">
+        {icon}
+        {label}
+      </span>
+      <span className="text-[var(--font-size-2xl)] font-semibold text-[var(--color-text-primary)]">
+        {big}
+      </span>
+      {progress !== undefined && (
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-bg-elevated)]">
+          <div
+            className={cn(
+              "h-full transition-all duration-[var(--duration-fast)]",
+              progress >= 90
+                ? "bg-[var(--color-error)]"
+                : progress >= 75
+                  ? "bg-[var(--color-warning)]"
+                  : "bg-[var(--color-primary)]",
+            )}
+            style={{ width: `${clamp(progress, 0, 100)}%` }}
+          />
+        </div>
+      )}
+      {secondary && (
+        <span className="text-[var(--font-size-xs)] text-[var(--color-text-secondary)]">
+          {secondary}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function MetadataGrid({ agent }: { agent: AgentListItem }) {
   const { t } = useTranslation(["agent", "common"]);
   const m = agent.latest_metrics;
+  const uptimeUnits = {
+    day: t("agent:detail.uptime_day"),
+    hour: t("agent:detail.uptime_hour"),
+    minute: t("agent:detail.uptime_minute"),
+    separator: t("agent:detail.uptime_separator"),
+  };
   const fields: Array<{ label: string; value: React.ReactNode }> = [
     {
       label: t("agent:detail.field_kind"),
@@ -164,25 +321,19 @@ function MetadataGrid({ agent }: { agent: AgentListItem }) {
     },
     {
       label: t("agent:detail.field_last_seen"),
-      value: agent.last_seen_at ? formatDate(agent.last_seen_at) : "—",
+      value: agent.last_seen_at ? formatRelativeTime(agent.last_seen_at) : "—",
     },
     {
       label: t("agent:detail.field_created"),
-      value: formatDate(agent.created_at),
+      value: formatRelativeTime(agent.created_at),
     },
     {
       label: t("agent:detail.field_uptime"),
-      value: m ? formatUptime(m.uptime) : "—",
-    },
-    {
-      label: t("agent:metric.disk"),
-      value: m
-        ? `${formatBytes(m.disk_used)} / ${formatBytes(m.disk_total)}`
-        : "—",
+      value: m ? formatUptime(m.uptime, uptimeUnits) : "—",
     },
   ];
   return (
-    <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {fields.map((f) => (
         <div
           key={f.label}
@@ -209,10 +360,12 @@ function CommandsPlaceholder() {
   );
 }
 
-function formatUptime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds <= 0) return "—";
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${days}d ${hours}h ${minutes}m`;
+function clamp(n: number, min: number, max: number): number {
+  if (!Number.isFinite(n)) {
+    if (typeof console !== "undefined") {
+      console.warn("[agent-detail] non-finite metric value", n);
+    }
+    return min;
+  }
+  return Math.max(min, Math.min(max, n));
 }

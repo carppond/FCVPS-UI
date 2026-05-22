@@ -67,7 +67,18 @@ export function AgentList({
       />
     );
   }
-  const items = data?.items ?? [];
+  // Sort online → degraded → offline so the operator sees live agents first.
+  // Within each status bucket the API ordering (last_seen desc) is preserved.
+  const STATUS_RANK: Record<AgentStatus, number> = {
+    online: 0,
+    degraded: 1,
+    offline: 2,
+  };
+  const items = [...(data?.items ?? [])].sort((a, b) => {
+    const sa = statusOverrides[a.id] ?? a.status;
+    const sb = statusOverrides[b.id] ?? b.status;
+    return (STATUS_RANK[sa] ?? 99) - (STATUS_RANK[sb] ?? 99);
+  });
   if (items.length === 0) {
     return (
       <EmptyState

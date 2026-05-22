@@ -60,7 +60,11 @@
     "field_public_ip": "公開 IP",
     "field_last_seen": "最終接続",
     "field_created": "作成",
-    "field_uptime": "稼働時間"
+    "field_uptime": "稼働時間",
+    "uptime_day": "日",
+    "uptime_hour": "時間",
+    "uptime_minute": "分",
+    "uptime_separator": " "
   },
   "tabs": {
     "realtime": "リアルタイム",
@@ -134,6 +138,14 @@
   "card": {
     "cpu": "CPU",
     "memory": "メモリ",
+    "cpu_label": "CPU",
+    "memory_label": "メモリ",
+    "disk_label": "ディスク",
+    "network_label": "ネットワーク",
+    "upload": "送信",
+    "download": "受信",
+    "warming_up": "サンプリング中…",
+    "no_disk": "ディスク情報を取得できません",
     "offline_hint": "オフライン - 最終接続: {{when}}",
     "no_metrics_hint": "最近の指標がありません"
   }

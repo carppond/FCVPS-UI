@@ -18,17 +18,61 @@ export function formatBytes(bytes: number): string {
   return `${formatNumber(value, { maximumFractionDigits: 1 })} ${BYTE_UNITS[exp]}`;
 }
 
-const BPS_UNITS = ["bps", "Kbps", "Mbps", "Gbps"];
+const BITRATE_UNITS = ["B/s", "KB/s", "MB/s", "GB/s", "TB/s"];
 
 /**
- * Format bits-per-second into a human-readable string.
- * @example formatBitrate(1500000) // "1.5 Mbps"
+ * Format bytes-per-second into a human-readable rate string.
+ * Uses 1024-based binary units (matching mihomo / nload conventions),
+ * which is what users see in most VPS dashboards.
+ * @example formatBitrate(0)        // "0 B/s"
+ * @example formatBitrate(1024)     // "1.0 KB/s"
+ * @example formatBitrate(1572864)  // "1.5 MB/s"
  */
-export function formatBitrate(bps: number): string {
-  if (bps === 0) return "0 bps";
-  const exp = Math.min(Math.floor(Math.log(Math.abs(bps)) / Math.log(1000)), BPS_UNITS.length - 1);
-  const value = bps / Math.pow(1000, exp);
-  return `${formatNumber(value, { maximumFractionDigits: 1 })} ${BPS_UNITS[exp]}`;
+export function formatBitrate(bytesPerSec: number): string {
+  if (!Number.isFinite(bytesPerSec) || bytesPerSec <= 0) return "0 B/s";
+  const exp = Math.min(
+    Math.floor(Math.log(Math.abs(bytesPerSec)) / Math.log(1024)),
+    BITRATE_UNITS.length - 1,
+  );
+  const value = bytesPerSec / Math.pow(1024, exp);
+  // < 1024 (B/s): no fractional digits — bytes are integers by nature
+  // >= 1024: 1 fractional digit
+  const digits = exp === 0 ? 0 : 1;
+  return `${formatNumber(value, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })} ${BITRATE_UNITS[exp]}`;
+}
+
+/**
+ * Format a percentage value (0-100) with a single fractional digit.
+ * Clamps out-of-range values to [0, 100].
+ * @example formatPercent(12.345) // "12.3%"
+ */
+export function formatPercent(value: number): string {
+  if (!Number.isFinite(value)) return "—";
+  const clamped = Math.max(0, Math.min(100, value));
+  return `${formatNumber(clamped, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })}%`;
+}
+
+/**
+ * Format an uptime duration in seconds into a localized "Xd Yh Zm" string.
+ * Picks "30 天 4 小时 15 分" for zh-CN/ja/ko (i18n) and "30d 4h 15m" for en.
+ * Caller passes pre-translated unit suffixes so this stays a pure formatter.
+ */
+export function formatUptime(
+  seconds: number,
+  units: { day: string; hour: string; minute: string; separator?: string },
+): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "—";
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const sep = units.separator ?? " ";
+  return [`${days}${units.day}`, `${hours}${units.hour}`, `${minutes}${units.minute}`].join(sep);
 }
 
 /**
