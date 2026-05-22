@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryClient } from "@/lib/query-client";
-import { prefixedPath } from "@/lib/silent-prefix";
+import { prefixedPath, setPrefix } from "@/lib/silent-prefix";
 import type { SilentModeResponse } from "@/types/api";
 
 // ─── Query keys ──────────────────────────────────────────────────────────────
@@ -11,6 +11,7 @@ import type { SilentModeResponse } from "@/types/api";
 const settingsKeys = {
   all: () => ["settings"] as const,
   map: () => ["settings", "map"] as const,
+  silentStatus: () => ["settings", "silent-mode", "status"] as const,
 };
 
 // SettingsMap mirrors the backend response: a raw key→value map where the
@@ -48,7 +49,9 @@ export function useUpdateSettings() {
  * POST /api/admin/silent-mode/rotate — generates a new 32-hex prefix, purges
  * every active session, and returns the new login URL. The URL is the ONLY
  * surface that ever shows the clear-text prefix — subsequent GET /settings
- * responses mask it again.
+ * responses mask it again. Caller MUST persist the new prefix to localStorage
+ * (we do this in onSuccess) or the next API call from this browser will fail
+ * with the nginx 404 mimic.
  */
 export function useRotateSilentMode() {
   return useMutation({
@@ -56,10 +59,69 @@ export function useRotateSilentMode() {
       apiFetch<SilentModeResponse>("/api/admin/silent-mode/rotate", {
         method: "POST",
       }),
-    onSuccess: () => {
-      // Settings map carries the masked prefix; refresh so the post-rotate
-      // value lines up with the new state.
+    onSuccess: (data) => {
+      // Update local prefix immediately so subsequent requests from this
+      // browser hit the new entry URL.
+      if (data.prefix) {
+        setPrefix(`/_app/${data.prefix}`);
+      }
       queryClient.invalidateQueries({ queryKey: settingsKeys.map() });
+      queryClient.invalidateQueries({ queryKey: settingsKeys.silentStatus() });
+    },
+  });
+}
+
+/**
+ * GET /api/admin/silent-mode/status — polled by the settings page to drive
+ * the on/off switch. Returns enabled + (when enabled) the clear-text prefix
+ * + entry URL so the admin can copy the current URL even after a page reload.
+ */
+export function useSilentModeStatus() {
+  return useQuery({
+    queryKey: settingsKeys.silentStatus(),
+    queryFn: () => apiFetch<SilentModeResponse>("/api/admin/silent-mode/status"),
+  });
+}
+
+/**
+ * POST /api/admin/silent-mode/enable — activates silent mode. Returns the
+ * clear-text prefix + entry URL exactly ONCE in the UI flow (the status
+ * endpoint also exposes it, but the post-enable dialog is the canonical
+ * "copy this URL now" surface). The success handler also writes the prefix
+ * into the current browser's localStorage so the very next request to this
+ * SPA already carries it.
+ */
+export function useEnableSilentMode() {
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<SilentModeResponse>("/api/admin/silent-mode/enable", {
+        method: "POST",
+      }),
+    onSuccess: (data) => {
+      if (data.prefix) {
+        setPrefix(`/_app/${data.prefix}`);
+      }
+      queryClient.invalidateQueries({ queryKey: settingsKeys.map() });
+      queryClient.invalidateQueries({ queryKey: settingsKeys.silentStatus() });
+    },
+  });
+}
+
+/**
+ * POST /api/admin/silent-mode/disable — deactivates silent mode. Clears the
+ * cached localStorage prefix so this browser starts hitting canonical paths
+ * without the /_app/<hex>/ wrapper.
+ */
+export function useDisableSilentMode() {
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<SilentModeResponse>("/api/admin/silent-mode/disable", {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      setPrefix("");
+      queryClient.invalidateQueries({ queryKey: settingsKeys.map() });
+      queryClient.invalidateQueries({ queryKey: settingsKeys.silentStatus() });
     },
   });
 }

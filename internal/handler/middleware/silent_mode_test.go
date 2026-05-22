@@ -20,8 +20,9 @@ func silentLogger() *slog.Logger {
 
 func newSilent(prefix string) *middleware.SilentMode {
 	return middleware.NewSilentMode(middleware.SilentModeConfig{
-		InitialPrefix: prefix,
-		Logger:        silentLogger(),
+		InitialPrefix:  prefix,
+		InitialEnabled: prefix != "",
+		Logger:         silentLogger(),
 	})
 }
 
@@ -47,6 +48,68 @@ func TestSilentMode_Disabled_PassesThrough(t *testing.T) {
 	}
 	if rr.Header().Get("Server") == "nginx/1.18.0" {
 		t.Fatalf("disabled mode should not emit nginx Server header")
+	}
+}
+
+// TestSilentMode_EnabledFalseWithPrefix_PassesThrough verifies the new opt-in
+// invariant: even if the persisted prefix is non-empty, enabled=false makes
+// the middleware a complete no-op (no 404 mimic, no path rewrite).
+func TestSilentMode_EnabledFalseWithPrefix_PassesThrough(t *testing.T) {
+	sm := middleware.NewSilentMode(middleware.SilentModeConfig{
+		InitialPrefix:  testPrefix,
+		InitialEnabled: false,
+		Logger:         silentLogger(),
+	})
+	mw := sm.Middleware()
+	srv := mw(okHandler())
+
+	// Both /api/me (no prefix) AND /_app/<otherprefix>/foo (wrong prefix)
+	// should pass through untouched when enabled=false.
+	for _, path := range []string{"/api/me", "/admin", "/_app/wrongprefix/foo"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		rr := httptest.NewRecorder()
+		srv.ServeHTTP(rr, req)
+		if rr.Code != http.StatusOK {
+			t.Fatalf("disabled mode blocked %q; got %d", path, rr.Code)
+		}
+		if rr.Header().Get("Server") == "nginx/1.18.0" {
+			t.Fatalf("disabled mode emitted nginx Server header for %q", path)
+		}
+	}
+}
+
+// TestSilentMode_SetEnabled_LiveToggle verifies the live-toggle path: the
+// admin enable/disable endpoint flips enabled via SetEnabled and the next
+// request observes the new state without waiting for the watcher poll.
+func TestSilentMode_SetEnabled_LiveToggle(t *testing.T) {
+	sm := newSilent(testPrefix) // enabled=true
+	mw := sm.Middleware()
+	srv := mw(okHandler())
+
+	// Initially enabled — wrong path returns 404.
+	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	rr := httptest.NewRecorder()
+	srv.ServeHTTP(rr, req)
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 before SetEnabled(false); got %d", rr.Code)
+	}
+
+	// Disable live — same request now passes.
+	sm.SetEnabled(false)
+	req = httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	rr = httptest.NewRecorder()
+	srv.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 after SetEnabled(false); got %d", rr.Code)
+	}
+
+	// Re-enable — back to 404 for non-prefixed paths.
+	sm.SetEnabled(true)
+	req = httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	rr = httptest.NewRecorder()
+	srv.ServeHTTP(rr, req)
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 after SetEnabled(true); got %d", rr.Code)
 	}
 }
 

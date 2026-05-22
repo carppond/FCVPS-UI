@@ -21,6 +21,11 @@ import (
 // 32-hex prefix used by the silent mode middleware.
 const silentPrefixSettingKey = "silent_mode_prefix"
 
+// silentEnabledSettingKey is the system_settings row that stores whether
+// silent mode is currently enforced. The prefix row may exist while this
+// flag is false (operators can disable + re-enable without losing the URL).
+const silentEnabledSettingKey = "silent_mode_enabled"
+
 // Deps bundles cross-cutting collaborators the router (and the handlers it
 // mounts) need. Subsequent tasks extend this struct with their own repos
 // and services; T-3 only wires the fields used by /healthz and the
@@ -40,11 +45,19 @@ type Deps struct {
 	// Tests inject a fake clock here.
 	Now func() time.Time
 
-	// SilentPrefix is the initial 32-hex prefix loaded at startup. When
-	// non-empty the silent-mode middleware enforces /_app/<prefix>/ on all
-	// non-whitelisted paths. Subsequent rotations are picked up by the
-	// background watcher (every middleware.SilentModeReloadInterval).
+	// SilentPrefix is the initial 32-hex prefix loaded at startup. The
+	// middleware retains the value across enable/disable cycles so that
+	// re-enabling reuses the same entry URL. Subsequent rotations are
+	// picked up by the background watcher (every
+	// middleware.SilentModeReloadInterval).
 	SilentPrefix string
+
+	// SilentEnabled is the initial "silent mode active" flag loaded at
+	// startup. When false the middleware is a no-op regardless of
+	// SilentPrefix; flipping the flag via the admin enable / disable
+	// endpoints reloads it within one poll cycle (or immediately when the
+	// handler calls SetEnabled).
+	SilentEnabled bool
 
 	// GlobalRateLimit is the per-IP throughput cap used by RateLimit. nil
 	// disables the middleware (useful for tests).
@@ -205,10 +218,12 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	silent := middleware.NewSilentMode(middleware.SilentModeConfig{
-		InitialPrefix: deps.SilentPrefix,
-		Loader:        silentPrefixLoader(deps.DB),
-		Logger:        deps.logger(),
-		Now:           deps.now,
+		InitialPrefix:  deps.SilentPrefix,
+		InitialEnabled: deps.SilentEnabled,
+		Loader:         silentPrefixLoader(deps.DB),
+		EnabledLoader:  silentEnabledLoader(deps.DB),
+		Logger:         deps.logger(),
+		Now:            deps.now,
 	})
 	deps.silent = silent
 	deps.chain = []middleware.Middleware{
@@ -641,6 +656,12 @@ func mountSettingsRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PATCH /api/admin/settings", requireAdmin(http.HandlerFunc(sh.Update)))
 	mux.Handle("POST /api/admin/silent-mode/rotate",
 		requireAdmin(http.HandlerFunc(sh.RotateSilent)))
+	mux.Handle("POST /api/admin/silent-mode/enable",
+		requireAdmin(http.HandlerFunc(sh.EnableSilent)))
+	mux.Handle("POST /api/admin/silent-mode/disable",
+		requireAdmin(http.HandlerFunc(sh.DisableSilent)))
+	mux.Handle("GET /api/admin/silent-mode/status",
+		requireAdmin(http.HandlerFunc(sh.StatusSilent)))
 	// Contract §1 line 307 names the legacy endpoint
 	// POST /api/admin/settings/silent-mode — register it as an alias so the
 	// public contract holds without forcing the UI to know about both spellings.
@@ -865,5 +886,29 @@ func silentPrefixLoader(db *storage.DB) func(ctx context.Context) (string, error
 			return "", err
 		}
 		return value, nil
+	}
+}
+
+// silentEnabledLoader returns a loader closure that reads the
+// silent_mode_enabled flag from system_settings. Missing row → false (fail
+// closed: the middleware should never enforce the prefix when the DB has not
+// explicitly opted in). nil DB yields a nil loader.
+func silentEnabledLoader(db *storage.DB) func(ctx context.Context) (bool, error) {
+	if db == nil || db.Read == nil {
+		return nil
+	}
+	return func(ctx context.Context) (bool, error) {
+		var value string
+		err := db.Read.QueryRowContext(ctx,
+			"SELECT value FROM system_settings WHERE key = ?",
+			silentEnabledSettingKey,
+		).Scan(&value)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return false, nil
+			}
+			return false, err
+		}
+		return value == "true", nil
 	}
 }

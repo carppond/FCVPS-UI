@@ -139,8 +139,9 @@ func TestRouter_GlobalRateLimit_BlocksAfterBurst(t *testing.T) {
 func TestRouter_SilentMode_RoutesPrefixed(t *testing.T) {
 	const prefix = "00112233445566778899aabbccddeeff"
 	deps := &handler.Deps{
-		Logger:       newTestLogger(),
-		SilentPrefix: prefix,
+		Logger:        newTestLogger(),
+		SilentPrefix:  prefix,
+		SilentEnabled: true,
 	}
 	_ = handler.NewRouter(deps)
 	srv := deps.Handler()

@@ -132,6 +132,8 @@ func (h *SettingsHandler) Update(w http.ResponseWriter, r *http.Request) {
 // ops.SilentMode.Rotate flow and returns the freshly generated 32-hex prefix
 // + a paste-ready login URL. The URL is the ONLY place the cleartext prefix
 // is surfaced to the client; subsequent GET /settings returns it masked.
+// Returns 409 when silent mode is currently disabled — admins must Enable
+// first before they can rotate.
 func (h *SettingsHandler) RotateSilent(w http.ResponseWriter, r *http.Request) {
 	traceID := middleware.TraceIDFromContext(r.Context())
 	if h.silent == nil {
@@ -147,6 +149,80 @@ func (h *SettingsHandler) RotateSilent(w http.ResponseWriter, r *http.Request) {
 		Enabled:  true,
 		Prefix:   newPrefix,
 		LoginURL: h.composeLoginURL(r, newPrefix),
+	}
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.SilentModeResponse]{
+		Data: resp, RequestID: traceID,
+	})
+}
+
+// EnableSilent implements POST /api/admin/silent-mode/enable. Idempotent: a
+// second call observes enabled=true and returns the existing prefix without
+// regenerating it. The full prefix + entry URL are returned in the response —
+// this is the ONE place the cleartext prefix surfaces to the client.
+func (h *SettingsHandler) EnableSilent(w http.ResponseWriter, r *http.Request) {
+	traceID := middleware.TraceIDFromContext(r.Context())
+	if h.silent == nil {
+		util.RespondError(w, types.ErrInternalUnknown, "silent mode controller unavailable", nil, traceID)
+		return
+	}
+	prefix, err := h.silent.Enable(r.Context())
+	if err != nil {
+		util.RespondError(w, types.ErrInternalUnknown, err.Error(), nil, traceID)
+		return
+	}
+	resp := types.SilentModeResponse{
+		Enabled:  true,
+		Prefix:   prefix,
+		LoginURL: h.composeLoginURL(r, prefix),
+	}
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.SilentModeResponse]{
+		Data: resp, RequestID: traceID,
+	})
+}
+
+// DisableSilent implements POST /api/admin/silent-mode/disable. Sets the
+// enabled flag to false and asks the live middleware to stop enforcement
+// immediately. The prefix row is preserved so a later Enable reuses it.
+// Sessions are NOT revoked — disabling is not a security event.
+func (h *SettingsHandler) DisableSilent(w http.ResponseWriter, r *http.Request) {
+	traceID := middleware.TraceIDFromContext(r.Context())
+	if h.silent == nil {
+		util.RespondError(w, types.ErrInternalUnknown, "silent mode controller unavailable", nil, traceID)
+		return
+	}
+	if err := h.silent.Disable(r.Context()); err != nil {
+		util.RespondError(w, types.ErrInternalUnknown, err.Error(), nil, traceID)
+		return
+	}
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.SilentModeResponse]{
+		Data: types.SilentModeResponse{Enabled: false}, RequestID: traceID,
+	})
+}
+
+// StatusSilent implements GET /api/admin/silent-mode/status. Surfaces the
+// enabled flag, masked prefix (or full prefix when silent mode is currently
+// enabled — the admin already knows it), and the entry URL. Used by the
+// settings UI to render the switch + the "current entry URL" reminder.
+func (h *SettingsHandler) StatusSilent(w http.ResponseWriter, r *http.Request) {
+	traceID := middleware.TraceIDFromContext(r.Context())
+	if h.silent == nil {
+		util.RespondError(w, types.ErrInternalUnknown, "silent mode controller unavailable", nil, traceID)
+		return
+	}
+	enabled, err := h.silent.IsEnabled(r.Context())
+	if err != nil {
+		util.RespondError(w, types.ErrInternalDatabase, err.Error(), nil, traceID)
+		return
+	}
+	prefix, err := h.silent.Current(r.Context())
+	if err != nil {
+		util.RespondError(w, types.ErrInternalDatabase, err.Error(), nil, traceID)
+		return
+	}
+	resp := types.SilentModeResponse{Enabled: enabled}
+	if enabled && prefix != "" {
+		resp.Prefix = prefix
+		resp.LoginURL = h.composeLoginURL(r, prefix)
 	}
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.SilentModeResponse]{
 		Data: resp, RequestID: traceID,

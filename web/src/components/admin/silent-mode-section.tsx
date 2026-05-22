@@ -12,49 +12,99 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
 import { useApiError } from "@/hooks/use-api-error";
-import { useRotateSilentMode, useSettings } from "@/api/settings";
+import {
+  useDisableSilentMode,
+  useEnableSilentMode,
+  useRotateSilentMode,
+  useSilentModeStatus,
+} from "@/api/settings";
 
 /**
- * Silent-mode prefix admin tile. Displays the current prefix (masked) and
- * exposes a destructive "rotate" action. After rotation succeeds the freshly
- * generated login URL is shown ONCE — closing the post-rotate dialog hides it
- * forever (the GET /settings endpoint never returns the raw prefix again).
+ * Silent-mode admin tile. Drives the new opt-in flow (T-26 follow-up):
+ * - A top-level switch toggles enabled. Enabling pops a one-time dialog
+ *   surfacing the full entry URL the admin must save; disabling pops a
+ *   confirm because the admin is removing a security control.
+ * - When enabled, a sub-section shows the (full, this admin already has
+ *   the URL) entry URL with a copy button and a destructive "rotate"
+ *   action that mints a fresh prefix + force-logs every user.
  *
- * UX notes:
- *  - Confirm dialog explicitly calls out "all users will be force-logged-out"
- *    so admins do not click the button on a whim.
- *  - The URL panel is non-dismissible until the admin clicks "I have saved
- *    this" — mirroring the recovery-codes pattern used elsewhere.
+ * The settings-handler endpoints are the single source of truth; the
+ * localStorage update inside the API hooks keeps this browser in sync so
+ * the admin can keep clicking around without manually copying the URL into
+ * the address bar.
  */
 export function SilentModeSection() {
   const { t } = useTranslation(["settings", "common", "errors"]);
   const { handle: handleError } = useApiError();
 
-  const settings = useSettings();
+  const status = useSilentModeStatus();
+  const enable = useEnableSilentMode();
+  const disable = useDisableSilentMode();
   const rotate = useRotateSilentMode();
 
-  const [confirmOpen, setConfirmOpen] = React.useState(false);
-  const [revealedUrl, setRevealedUrl] = React.useState<string | null>(null);
-  const [hasSaved, setHasSaved] = React.useState(false);
+  // The "enable just succeeded — copy the URL now" dialog. Distinct from
+  // the rotate dialog because the messaging is different ("first-time
+  // setup" vs "you already had a URL, here's the new one").
+  const [postEnableUrl, setPostEnableUrl] = React.useState<string | null>(null);
+  const [postEnableSaved, setPostEnableSaved] = React.useState(false);
 
-  const masked = settings.data?.silent_mode_prefix ?? "—";
+  // The "rotate just succeeded" dialog.
+  const [rotatedUrl, setRotatedUrl] = React.useState<string | null>(null);
+  const [rotatedSaved, setRotatedSaved] = React.useState(false);
 
-  const handleConfirmRotate = async () => {
-    setConfirmOpen(false);
+  // Confirm dialogs.
+  const [confirmDisableOpen, setConfirmDisableOpen] = React.useState(false);
+  const [confirmRotateOpen, setConfirmRotateOpen] = React.useState(false);
+
+  const enabled = status.data?.enabled ?? false;
+  const currentUrl = status.data?.login_url ?? "";
+  const currentPrefix = status.data?.prefix ?? "";
+  // Surface the trailing 8 hex chars so the admin can sanity-check which
+  // URL the hub thinks is live without exposing the whole secret.
+  const maskedPrefix = currentPrefix
+    ? `…${currentPrefix.slice(-8)}`
+    : "—";
+
+  const onToggle = async (next: boolean) => {
+    if (next) {
+      try {
+        const res = await enable.mutateAsync();
+        setPostEnableUrl(res.login_url);
+        setPostEnableSaved(false);
+        toast.success(t("settings:silent_mode.enable_success"));
+      } catch (err) {
+        handleError(err);
+      }
+    } else {
+      setConfirmDisableOpen(true);
+    }
+  };
+
+  const confirmDisable = async () => {
+    setConfirmDisableOpen(false);
+    try {
+      await disable.mutateAsync();
+      toast.success(t("settings:silent_mode.disable_success"));
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const confirmRotate = async () => {
+    setConfirmRotateOpen(false);
     try {
       const res = await rotate.mutateAsync();
-      setRevealedUrl(res.login_url);
-      setHasSaved(false);
+      setRotatedUrl(res.login_url);
+      setRotatedSaved(false);
       toast.success(t("settings:silent_mode.rotate_success"));
     } catch (err) {
       handleError(err);
     }
   };
 
-  const copyUrl = async () => {
-    if (!revealedUrl) return;
+  const copyUrl = async (url: string) => {
     try {
-      await navigator.clipboard.writeText(revealedUrl);
+      await navigator.clipboard.writeText(url);
       toast.success(t("settings:silent_mode.copy_success"));
     } catch {
       toast.error(t("errors:INTERNAL_UNKNOWN"));
@@ -74,36 +124,110 @@ export function SilentModeSection() {
           {t("settings:silent_mode.title")}
         </h2>
         <p className="text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
-          {t("settings:silent_mode.description")}
+          {t("settings:silent_mode.desc")}
         </p>
       </header>
 
-      <div className="flex flex-col gap-2">
-        <span className="text-[var(--font-size-xs)] uppercase tracking-wider text-[var(--color-text-tertiary)]">
-          {t("settings:silent_mode.current_prefix_label")}
-        </span>
-        <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2">
-          <code className="font-mono text-[var(--font-size-base)] text-[var(--color-text-primary)] tabular-nums">
-            {masked}
-          </code>
-          <Button
-            variant="destructive"
-            onClick={() => setConfirmOpen(true)}
-            disabled={rotate.isPending}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            {rotate.isPending
-              ? t("settings:silent_mode.rotate_pending")
-              : t("settings:silent_mode.rotate_button")}
-          </Button>
+      {/* Master switch row. */}
+      <div className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-4 py-3">
+        <div className="flex flex-col gap-1">
+          <span className="text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)]">
+            {enabled
+              ? t("settings:silent_mode.state_enabled", { suffix: maskedPrefix })
+              : t("settings:silent_mode.state_disabled")}
+          </span>
+          <span className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+            {enabled
+              ? t("settings:silent_mode.state_enabled_hint")
+              : t("settings:silent_mode.state_disabled_hint")}
+          </span>
         </div>
-        <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-          {t("settings:silent_mode.current_prefix_hint")}
-        </p>
+        <label className="inline-flex cursor-pointer items-center gap-2">
+          <input
+            type="checkbox"
+            className="h-5 w-5 cursor-pointer rounded-[var(--radius-sm)] border-[var(--color-border-strong)]"
+            checked={enabled}
+            disabled={
+              status.isLoading || enable.isPending || disable.isPending
+            }
+            onChange={(e) => onToggle(e.target.checked)}
+            aria-label={
+              enabled
+                ? t("settings:silent_mode.disable")
+                : t("settings:silent_mode.enable")
+            }
+          />
+          <span className="text-[var(--font-size-sm)] text-[var(--color-text-primary)]">
+            {enabled
+              ? t("settings:silent_mode.disable")
+              : t("settings:silent_mode.enable")}
+          </span>
+        </label>
       </div>
 
-      {/* Confirm dialog — destructive copy + force re-login warning. */}
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      {/* Live entry URL + rotate, only when enabled. */}
+      {enabled && currentUrl && (
+        <div className="flex flex-col gap-2">
+          <span className="text-[var(--font-size-xs)] uppercase tracking-wider text-[var(--color-text-tertiary)]">
+            {t("settings:silent_mode.entry_url_label")}
+          </span>
+          <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 py-2">
+            <code className="flex-1 break-all font-mono text-[var(--font-size-sm)] text-[var(--color-text-primary)]">
+              {currentUrl}
+            </code>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyUrl(currentUrl)}
+            >
+              <Copy className="mr-1 h-4 w-4" />
+              {t("settings:silent_mode.copy_login_url")}
+            </Button>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setConfirmRotateOpen(true)}
+              disabled={rotate.isPending}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              {rotate.isPending
+                ? t("settings:silent_mode.rotate_pending")
+                : t("settings:silent_mode.rotate")}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm disable. */}
+      <Dialog open={confirmDisableOpen} onOpenChange={setConfirmDisableOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[var(--color-warning)]">
+              <ShieldAlert className="h-5 w-5" />
+              {t("settings:silent_mode.disable")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("settings:silent_mode.disable_confirm")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDisableOpen(false)}
+            >
+              {t("common:actions.cancel")}
+            </Button>
+            <Button variant="destructive" onClick={confirmDisable}>
+              {t("settings:silent_mode.disable")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm rotate. */}
+      <Dialog open={confirmRotateOpen} onOpenChange={setConfirmRotateOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-[var(--color-error)]">
@@ -117,19 +241,70 @@ export function SilentModeSection() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setConfirmOpen(false)}
+              onClick={() => setConfirmRotateOpen(false)}
             >
               {t("common:actions.cancel")}
             </Button>
-            <Button variant="destructive" onClick={handleConfirmRotate}>
+            <Button variant="destructive" onClick={confirmRotate}>
               {t("settings:silent_mode.rotate_confirm_submit")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Post-rotate dialog — surfaces the new URL ONCE. */}
-      <Dialog open={revealedUrl !== null}>
+      {/* Post-enable: surface the new URL ONCE. */}
+      <Dialog open={postEnableUrl !== null}>
+        <DialogContent
+          className="max-w-lg"
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              {t("settings:silent_mode.enable_dialog.title")}
+            </DialogTitle>
+            <DialogDescription>
+              {t("settings:silent_mode.enable_dialog.body")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="my-4 flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3">
+            <code className="flex-1 break-all font-mono text-[var(--font-size-sm)] text-[var(--color-text-primary)]">
+              {postEnableUrl ?? ""}
+            </code>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => postEnableUrl && copyUrl(postEnableUrl)}
+            >
+              <Copy className="mr-1 h-4 w-4" />
+              {t("settings:silent_mode.copy_login_url")}
+            </Button>
+          </div>
+
+          <label className="flex items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-primary)]">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded-[var(--radius-sm)] border-[var(--color-border-strong)]"
+              checked={postEnableSaved}
+              onChange={(e) => setPostEnableSaved(e.target.checked)}
+            />
+            {t("common:actions.confirm")}
+          </label>
+
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={() => setPostEnableUrl(null)}
+              disabled={!postEnableSaved}
+            >
+              {t("common:actions.close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post-rotate: surface the rotated URL ONCE. */}
+      <Dialog open={rotatedUrl !== null}>
         <DialogContent
           className="max-w-lg"
           onEscapeKeyDown={(e) => e.preventDefault()}
@@ -146,9 +321,13 @@ export function SilentModeSection() {
 
           <div className="my-4 flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3">
             <code className="flex-1 break-all font-mono text-[var(--font-size-sm)] text-[var(--color-text-primary)]">
-              {revealedUrl ?? ""}
+              {rotatedUrl ?? ""}
             </code>
-            <Button variant="outline" size="sm" onClick={copyUrl}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => rotatedUrl && copyUrl(rotatedUrl)}
+            >
               <Copy className="mr-1 h-4 w-4" />
               {t("settings:silent_mode.copy_login_url")}
             </Button>
@@ -158,16 +337,16 @@ export function SilentModeSection() {
             <input
               type="checkbox"
               className="h-4 w-4 rounded-[var(--radius-sm)] border-[var(--color-border-strong)]"
-              checked={hasSaved}
-              onChange={(e) => setHasSaved(e.target.checked)}
+              checked={rotatedSaved}
+              onChange={(e) => setRotatedSaved(e.target.checked)}
             />
             {t("common:actions.confirm")}
           </label>
 
           <DialogFooter className="mt-4">
             <Button
-              onClick={() => setRevealedUrl(null)}
-              disabled={!hasSaved}
+              onClick={() => setRotatedUrl(null)}
+              disabled={!rotatedSaved}
             >
               {t("common:actions.close")}
             </Button>

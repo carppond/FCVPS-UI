@@ -141,17 +141,17 @@ func run() error {
 		)
 	}
 
-	// Silent mode initialization (T-26). EnsureInitial generates the prefix
-	// once on first boot and reuses the persisted value on subsequent boots,
-	// so it must run BEFORE NewRouter — the middleware reads InitialPrefix
-	// synchronously and the background watcher only takes over after the
-	// first poll interval. settingsRepo is constructed here so the silent-
-	// mode manager and downstream consumers (T-18 traffic loops, T-26
-	// settings handler) share a single instance.
+	// Silent mode initialization (T-26). EnsureInitial seeds the
+	// silent_mode_enabled=false row on first boot so the middleware has a
+	// deterministic default; prefix generation is now lazy (happens on the
+	// admin-driven Enable call). settingsRepo is constructed here so the
+	// silent-mode manager and downstream consumers (T-18 traffic loops,
+	// T-26 settings handler) share a single instance.
 	settingsRepo := storage.NewSettingsRepo(db, time.Now)
 	silentMgr, err := ops.NewSilentMode(ops.SilentModeConfig{
-		Repo:   settingsRepo,
-		Logger: log,
+		Repo:    settingsRepo,
+		Revoker: tokens,
+		Logger:  log,
 	})
 	if err != nil {
 		return fmt.Errorf("silent mode init: %w", err)
@@ -160,18 +160,21 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("silent mode ensure initial: %w", err)
 	}
-	if silentPrefix != "" {
-		// First-boot bootstrap: print the entry URL exactly once so the
-		// operator knows where to log in. The full prefix is logged here
-		// intentionally — operators must capture it from this single line,
-		// mirroring the ADMIN BOOTSTRAPPED line above. Subsequent boots also
-		// re-emit this so a fresh `docker logs hub` can recover the URL
-		// without touching the DB.
+	silentEnabled, err := silentMgr.IsEnabled(context.Background())
+	if err != nil {
+		return fmt.Errorf("silent mode read enabled: %w", err)
+	}
+	if silentEnabled && silentPrefix != "" {
+		// Silent mode is actively enforced — print the entry URL so the
+		// operator can recover the value without touching the DB.
 		log.Warn("SILENT MODE READY",
 			slog.String("entry_url", fmt.Sprintf("http://%s/_app/%s/", cfg.HTTP.Addr, silentPrefix)),
 			slog.String("prefix", silentPrefix),
 			slog.String("note", "this URL is required to reach the login page"),
 		)
+	} else {
+		log.Info("silent_mode disabled (default)",
+			slog.String("note", "enable via Admin → Settings → Silent mode"))
 	}
 
 	// T-8 + T-11: subscription module + real node persistence. The
@@ -456,6 +459,7 @@ func run() error {
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
 		SilentPrefix:          silentPrefix,
+		SilentEnabled:         silentEnabled,
 		AuthManager:           authMgr,
 		TokenStore:            tokens,
 		BruteProtector:        brute,
@@ -492,6 +496,14 @@ func run() error {
 	}
 	mux := handler.NewRouter(deps)
 	_ = mux
+	// Wire the live-middleware appliers now that the router has constructed
+	// the middleware instance. This lets admin enable / disable / rotate
+	// calls take effect on the next request instead of waiting for the 30s
+	// watcher poll.
+	if sm := deps.SilentMode(); sm != nil {
+		silentMgr.SetApplier(sm.SetPrefix)
+		silentMgr.SetEnabledApplier(sm.SetEnabled)
+	}
 	rootCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	deps.Start(rootCtx)

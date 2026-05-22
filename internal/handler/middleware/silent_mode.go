@@ -42,23 +42,29 @@ const nginx404Body = "<html>\r\n" +
 //     SilentModeReloadInterval to refresh the prefix from system_settings.
 //     A returned empty string means "silent mode disabled" — the middleware
 //     becomes a no-op until the next reload sees a value.
-//   - InitialPrefix is the value read at startup; it short-circuits the first
-//     loader poll so the server is correctly configured before accepting
-//     traffic. Pass "" when the value is unknown.
+//   - EnabledLoader is invoked alongside Loader to refresh the enabled flag.
+//     A nil EnabledLoader defaults to "enabled iff prefix != ''" for
+//     backward compatibility with older deployments.
+//   - InitialPrefix / InitialEnabled are the values read at startup; they
+//     short-circuit the first loader poll so the server is correctly
+//     configured before accepting traffic. Pass ""/false when unknown.
 //   - Logger receives reload events (info on change, warn on loader errors).
 //   - Now overrides time.Now for tests.
 type SilentModeConfig struct {
-	InitialPrefix string
-	Loader        func(ctx context.Context) (string, error)
-	Logger        *slog.Logger
-	Now           func() time.Time
+	InitialPrefix  string
+	InitialEnabled bool
+	Loader         func(ctx context.Context) (string, error)
+	EnabledLoader  func(ctx context.Context) (bool, error)
+	Logger         *slog.Logger
+	Now            func() time.Time
 }
 
 // SilentMode owns the live prefix value and exposes the middleware. Use
 // NewSilentMode to construct.
 type SilentMode struct {
-	cfg    SilentModeConfig
-	prefix atomic.Pointer[string]
+	cfg     SilentModeConfig
+	prefix  atomic.Pointer[string]
+	enabled atomic.Bool
 
 	once       sync.Once
 	stopCh     chan struct{}
@@ -76,6 +82,7 @@ func NewSilentMode(cfg SilentModeConfig) *SilentMode {
 	sm := &SilentMode{cfg: cfg, stopCh: make(chan struct{})}
 	initial := cfg.InitialPrefix
 	sm.prefix.Store(&initial)
+	sm.enabled.Store(cfg.InitialEnabled)
 	return sm
 }
 
@@ -100,10 +107,27 @@ func (s *SilentMode) SetPrefix(value string) {
 	s.prefix.Store(&v)
 }
 
+// IsEnabled reports the cached enabled flag (refreshed by the watcher).
+func (s *SilentMode) IsEnabled() bool {
+	if s == nil {
+		return false
+	}
+	return s.enabled.Load()
+}
+
+// SetEnabled overrides the active enabled flag immediately (used by the
+// enable / disable admin endpoints to avoid waiting for the next poll).
+func (s *SilentMode) SetEnabled(value bool) {
+	if s == nil {
+		return
+	}
+	s.enabled.Store(value)
+}
+
 // Start launches the background watcher. Safe to call multiple times; only
 // the first invocation has effect.
 func (s *SilentMode) Start(ctx context.Context) {
-	if s == nil || s.cfg.Loader == nil {
+	if s == nil || (s.cfg.Loader == nil && s.cfg.EnabledLoader == nil) {
 		return
 	}
 	s.once.Do(func() {
@@ -134,39 +158,70 @@ func (s *SilentMode) watch() {
 }
 
 func (s *SilentMode) refresh() {
-	if s.cfg.Loader == nil {
-		return
-	}
-	value, err := s.cfg.Loader(s.watcherCtx)
-	if err != nil {
-		// Missing row is "silent mode disabled" — log at debug, not warn.
-		if !errors.Is(err, sql.ErrNoRows) && s.cfg.Logger != nil {
-			s.cfg.Logger.Warn("silent_mode: prefix reload failed",
-				slog.String("err", err.Error()))
-		}
-		return
-	}
-	current := s.Prefix()
-	if value != current {
-		s.SetPrefix(value)
-		if s.cfg.Logger != nil {
-			masked := value
-			if len(masked) > 8 {
-				masked = masked[:4] + "..." + masked[len(masked)-4:]
+	if s.cfg.Loader != nil {
+		value, err := s.cfg.Loader(s.watcherCtx)
+		if err != nil {
+			// Missing row is "silent mode disabled" — log at debug, not warn.
+			if !errors.Is(err, sql.ErrNoRows) && s.cfg.Logger != nil {
+				s.cfg.Logger.Warn("silent_mode: prefix reload failed",
+					slog.String("err", err.Error()))
 			}
-			s.cfg.Logger.Info("silent_mode: prefix updated",
-				slog.String("prefix_masked", masked))
+		} else {
+			current := s.Prefix()
+			if value != current {
+				s.SetPrefix(value)
+				if s.cfg.Logger != nil {
+					masked := value
+					if len(masked) > 8 {
+						masked = masked[:4] + "..." + masked[len(masked)-4:]
+					}
+					s.cfg.Logger.Info("silent_mode: prefix updated",
+						slog.String("prefix_masked", masked))
+				}
+			}
+		}
+	}
+	if s.cfg.EnabledLoader != nil {
+		on, err := s.cfg.EnabledLoader(s.watcherCtx)
+		if err != nil {
+			if !errors.Is(err, sql.ErrNoRows) && s.cfg.Logger != nil {
+				s.cfg.Logger.Warn("silent_mode: enabled reload failed",
+					slog.String("err", err.Error()))
+			}
+			return
+		}
+		if on != s.enabled.Load() {
+			s.SetEnabled(on)
+			if s.cfg.Logger != nil {
+				s.cfg.Logger.Info("silent_mode: enabled flag updated",
+					slog.Bool("enabled", on))
+			}
 		}
 	}
 }
 
 // Middleware returns the http middleware enforcing the prefix rule.
+//
+// Decision matrix:
+//   - enabled=false                  → no-op, pass through (T-26 opt-in).
+//   - enabled=true + prefix=""       → defensive pass-through + warn log;
+//     this state should never occur (Enable always seeds a prefix), so we
+//     refuse to fall back to "deny all" and lock the operator out.
+//   - enabled=true + prefix set      → enforce /_app/<prefix>/... or 404.
 func (s *SilentMode) Middleware() Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !s.IsEnabled() {
+				next.ServeHTTP(w, r)
+				return
+			}
 			prefix := s.Prefix()
 			if prefix == "" {
-				// Silent mode disabled — everything passes through.
+				// enabled=true but no prefix — log once and pass through so
+				// we never lock the admin out of a misconfigured DB row.
+				if s.cfg.Logger != nil {
+					s.cfg.Logger.Warn("silent_mode: enabled but prefix is empty; passing through")
+				}
 				next.ServeHTTP(w, r)
 				return
 			}

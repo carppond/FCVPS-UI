@@ -105,6 +105,10 @@ func TestSilentMode_RotatePersistsAndAppliesAndRevokes(t *testing.T) {
 		Revoker: rev,
 	})
 
+	// Rotate now requires silent mode to be enabled first.
+	if _, err := sm.Enable(context.Background()); err != nil {
+		t.Fatalf("Enable: %v", err)
+	}
 	newPrefix, err := sm.Rotate(context.Background())
 	if err != nil {
 		t.Fatalf("Rotate: %v", err)
@@ -139,6 +143,9 @@ func TestSilentMode_RotateContinuesWhenRevokerFails(t *testing.T) {
 		Repo:    repo,
 		Revoker: rev,
 	})
+	if _, err := sm.Enable(context.Background()); err != nil {
+		t.Fatalf("Enable: %v", err)
+	}
 	newPrefix, err := sm.Rotate(context.Background())
 	if err != nil {
 		t.Fatalf("Rotate should still succeed: %v", err)
@@ -149,21 +156,113 @@ func TestSilentMode_RotateContinuesWhenRevokerFails(t *testing.T) {
 	}
 }
 
-// TestSilentMode_EnsureInitialIdempotent verifies the boot-time helper only
-// generates a prefix once.
-func TestSilentMode_EnsureInitialIdempotent(t *testing.T) {
+// TestSilentMode_EnsureInitialDoesNotGeneratePrefix asserts the new opt-in
+// behaviour: EnsureInitial seeds the silent_mode_enabled=false row but does
+// NOT mint a prefix. This is the key fix that lets dev restarts preserve the
+// "no entry URL needed" state without regenerating a hidden one on every boot.
+func TestSilentMode_EnsureInitialDoesNotGeneratePrefix(t *testing.T) {
 	t.Parallel()
-	sm, _ := ops.NewSilentMode(ops.SilentModeConfig{Repo: newSettingsRepo(t)})
-	first, err := sm.EnsureInitial(context.Background())
+	repo := newSettingsRepo(t)
+	sm, _ := ops.NewSilentMode(ops.SilentModeConfig{Repo: repo})
+	prefix, err := sm.EnsureInitial(context.Background())
 	if err != nil {
-		t.Fatalf("EnsureInitial 1: %v", err)
+		t.Fatalf("EnsureInitial: %v", err)
 	}
-	second, err := sm.EnsureInitial(context.Background())
+	if prefix != "" {
+		t.Fatalf("EnsureInitial generated a prefix when it should not: %q", prefix)
+	}
+	// Calling again is idempotent (no error, still empty).
+	again, err := sm.EnsureInitial(context.Background())
 	if err != nil {
 		t.Fatalf("EnsureInitial 2: %v", err)
 	}
-	if first != second {
-		t.Fatalf("EnsureInitial not idempotent: %q vs %q", first, second)
+	if again != "" {
+		t.Fatalf("EnsureInitial generated a prefix on second call: %q", again)
+	}
+	// Verify the enabled row defaulted to false.
+	on, err := sm.IsEnabled(context.Background())
+	if err != nil {
+		t.Fatalf("IsEnabled: %v", err)
+	}
+	if on {
+		t.Fatalf("EnsureInitial should leave silent mode disabled, got enabled=true")
+	}
+}
+
+// TestSilentMode_EnableThenDisableRoundTrip exercises the new opt-in flow:
+// Enable mints a prefix + flips the flag; Disable flips the flag back BUT
+// retains the prefix; re-Enable reuses the same prefix (so saved URLs keep
+// working across enable/disable cycles).
+func TestSilentMode_EnableThenDisableRoundTrip(t *testing.T) {
+	t.Parallel()
+	repo := newSettingsRepo(t)
+	var appliedPrefix string
+	var enabledFlips []bool
+	sm, _ := ops.NewSilentMode(ops.SilentModeConfig{
+		Repo:           repo,
+		Applier:        func(p string) { appliedPrefix = p },
+		EnabledApplier: func(b bool) { enabledFlips = append(enabledFlips, b) },
+	})
+
+	// Start disabled.
+	if on, _ := sm.IsEnabled(context.Background()); on {
+		t.Fatalf("initial state should be disabled")
+	}
+
+	// Enable — prefix is generated, flag flips to true.
+	first, err := sm.Enable(context.Background())
+	if err != nil {
+		t.Fatalf("Enable: %v", err)
+	}
+	if !sm.Validate(first) {
+		t.Fatalf("Enable returned invalid prefix %q", first)
+	}
+	if appliedPrefix != first {
+		t.Fatalf("PrefixApplier got %q want %q", appliedPrefix, first)
+	}
+	if len(enabledFlips) != 1 || !enabledFlips[0] {
+		t.Fatalf("EnabledApplier should have been called with true, got %v", enabledFlips)
+	}
+	on, _ := sm.IsEnabled(context.Background())
+	if !on {
+		t.Fatalf("IsEnabled should be true after Enable")
+	}
+
+	// Disable — flag flips back; prefix is preserved.
+	if err := sm.Disable(context.Background()); err != nil {
+		t.Fatalf("Disable: %v", err)
+	}
+	if len(enabledFlips) != 2 || enabledFlips[1] {
+		t.Fatalf("EnabledApplier should have been called with false, got %v", enabledFlips)
+	}
+	on, _ = sm.IsEnabled(context.Background())
+	if on {
+		t.Fatalf("IsEnabled should be false after Disable")
+	}
+	persisted, _ := sm.Current(context.Background())
+	if persisted != first {
+		t.Fatalf("prefix lost on Disable: got %q want %q", persisted, first)
+	}
+
+	// Re-Enable — same prefix is reused.
+	second, err := sm.Enable(context.Background())
+	if err != nil {
+		t.Fatalf("Re-Enable: %v", err)
+	}
+	if second != first {
+		t.Fatalf("Re-Enable produced different prefix: %q vs %q", second, first)
+	}
+}
+
+// TestSilentMode_RotateFailsWhenDisabled guards the invariant that rotation
+// is only meaningful when silent mode is currently active. Asking to rotate
+// while disabled is almost certainly an operator mistake (the new prefix
+// would not be enforced anyway).
+func TestSilentMode_RotateFailsWhenDisabled(t *testing.T) {
+	t.Parallel()
+	sm, _ := ops.NewSilentMode(ops.SilentModeConfig{Repo: newSettingsRepo(t)})
+	if _, err := sm.Rotate(context.Background()); err == nil {
+		t.Fatalf("Rotate should fail when silent mode is disabled")
 	}
 }
 
