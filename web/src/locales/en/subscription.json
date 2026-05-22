@@ -189,7 +189,8 @@
       },
       "shortlink_button": "Short link",
       "shortlink_success": "Short link created and copied",
-      "shortlink_copied": "Copied"
+      "shortlink_copied": "Copied",
+      "shortlink_tooltip": "Generate a short link for this client"
     },
     "delete_confirm": {
       "title": "Delete subscription",

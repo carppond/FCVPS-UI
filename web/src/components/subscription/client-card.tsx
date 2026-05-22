@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { ClipboardCopy, ExternalLink, QrCode } from "lucide-react";
+import { ClipboardCopy, ExternalLink, Link2, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/toast";
+import { useApiError } from "@/hooks/use-api-error";
+import { useCreateShortLink } from "@/api/shortlink";
 import { cn } from "@/lib/cn";
 import {
   buildClientShareUrl,
@@ -42,7 +50,10 @@ export function ClientCard({
   disabled = false,
 }: ClientCardProps) {
   const { t } = useTranslation(["subscription", "common"]);
+  const { handle: handleError } = useApiError();
+  const createShortLink = useCreateShortLink();
   const [qrOpen, setQrOpen] = React.useState(false);
+  const [shortUrl, setShortUrl] = React.useState<string | null>(null);
   const shareUrl = React.useMemo(
     () => buildClientShareUrl(baseUrl, client.target),
     [baseUrl, client.target],
@@ -52,10 +63,15 @@ export function ClientCard({
     [client, shareUrl, subscriptionName],
   );
 
+  // Per-client display URL: the short URL once generated, otherwise the
+  // full target-specific share URL. We keep both in state so the user can
+  // see what was just generated without losing the underlying long URL.
+  const displayUrl = shortUrl ?? shareUrl;
+
   const copy = async () => {
-    if (!shareUrl || disabled) return;
+    if (!displayUrl || disabled) return;
     if (typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(displayUrl);
     }
     toast.success(t("subscription:detail.share.copy_success"));
   };
@@ -65,6 +81,24 @@ export function ClientCard({
     // Use window.location instead of an anchor to maintain the user gesture
     // for OS-level deeplink handlers (Surge / Stash / etc.).
     window.location.href = deeplink;
+  };
+
+  const makeShortLink = async () => {
+    if (!shareUrl || disabled) return;
+    try {
+      const link = await createShortLink.mutateAsync({ target_url: shareUrl });
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
+      const code = `${link.file_code}${link.user_code}`;
+      const short = `${origin}/s/${code}`;
+      setShortUrl(short);
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(short);
+      }
+      toast.success(t("subscription:detail.share.shortlink_success"));
+    } catch (err) {
+      handleError(err);
+    }
   };
 
   return (
@@ -93,48 +127,75 @@ export function ClientCard({
 
       <div
         className={cn(
-          "rounded-[var(--radius-md)] border border-[var(--color-border)]",
-          "bg-[var(--color-bg-elevated)] px-2 py-1.5",
+          "rounded-[var(--radius-md)] border px-2 py-1.5",
+          shortUrl
+            ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
+            : "border-[var(--color-border)] bg-[var(--color-bg-elevated)]",
         )}
       >
-        <p className="truncate font-mono text-[10px] text-[var(--color-text-tertiary)]">
-          {shareUrl || "—"}
+        <p
+          className={cn(
+            "truncate font-mono text-[10px]",
+            shortUrl
+              ? "text-[var(--color-text-primary)]"
+              : "text-[var(--color-text-tertiary)]",
+          )}
+        >
+          {displayUrl || "—"}
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={copy}
-          disabled={disabled || !shareUrl}
-          className="flex-1 min-w-[80px]"
-        >
-          <ClipboardCopy className="mr-1.5 h-3.5 w-3.5" />
-          {t("common:actions.copy")}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setQrOpen(true)}
-          disabled={disabled || !shareUrl}
-          aria-label={t("subscription:detail.share.qr_alt")}
-        >
-          <QrCode className="h-3.5 w-3.5" />
-        </Button>
-        {deeplink && (
+      <TooltipProvider delayDuration={150}>
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
-            variant="default"
+            variant="outline"
             size="sm"
-            onClick={importNow}
-            disabled={disabled}
+            onClick={copy}
+            disabled={disabled || !displayUrl}
             className="flex-1 min-w-[80px]"
           >
-            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-            {t("subscription:detail.share.deeplink")}
+            <ClipboardCopy className="mr-1.5 h-3.5 w-3.5" />
+            {t("common:actions.copy")}
           </Button>
-        )}
-      </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={makeShortLink}
+                disabled={disabled || !shareUrl || createShortLink.isPending}
+                aria-label={t("subscription:detail.share.shortlink_button")}
+              >
+                <Link2 className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {t("subscription:detail.share.shortlink_tooltip")}
+            </TooltipContent>
+          </Tooltip>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setQrOpen(true)}
+            disabled={disabled || !displayUrl}
+            aria-label={t("subscription:detail.share.qr_alt")}
+          >
+            <QrCode className="h-3.5 w-3.5" />
+          </Button>
+          {deeplink && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={importNow}
+              disabled={disabled}
+              className="flex-1 min-w-[80px]"
+            >
+              <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+              {t("subscription:detail.share.deeplink")}
+            </Button>
+          )}
+        </div>
+      </TooltipProvider>
 
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="max-w-sm">
@@ -143,13 +204,13 @@ export function ClientCard({
               {t("subscription:detail.share.qr_title", { client: client.name })}
             </DialogTitle>
             <DialogDescription className="break-all font-mono text-[10px]">
-              {shareUrl}
+              {displayUrl}
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center p-2">
-            {shareUrl && (
+            {displayUrl && (
               <QRCodeSVG
-                value={shareUrl}
+                value={displayUrl}
                 size={224}
                 level="M"
                 bgColor="transparent"

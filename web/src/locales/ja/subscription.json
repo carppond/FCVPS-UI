@@ -189,7 +189,8 @@
       },
       "shortlink_button": "ショートリンク",
       "shortlink_success": "ショートリンクを作成・コピーしました",
-      "shortlink_copied": "コピー済み"
+      "shortlink_copied": "コピー済み",
+      "shortlink_tooltip": "このクライアント専用ショートリンク"
     },
     "delete_confirm": {
       "title": "サブスクリプションを削除",

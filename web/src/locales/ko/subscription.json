@@ -189,7 +189,8 @@
       },
       "shortlink_button": "단축 링크",
       "shortlink_success": "단축 링크 생성 및 복사됨",
-      "shortlink_copied": "복사됨"
+      "shortlink_copied": "복사됨",
+      "shortlink_tooltip": "이 클라이언트 전용 단축 링크"
     },
     "delete_confirm": {
       "title": "구독 삭제",
