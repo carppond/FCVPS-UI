@@ -549,13 +549,17 @@ function StepTagsInterval({
 }: StepTagsIntervalProps) {
   const { t } = useTranslation("subscription");
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
+    // Two-column grid so tags + interval sit side-by-side on the wizard's
+    // max-w-xl dialog — previously stacked vertically, which felt sparse and
+    // pushed Step-4 below the fold. Tags chip column takes 2x width so a few
+    // tags don't wrap; interval is narrow (5-option select).
+    <div className="grid grid-cols-[2fr,1fr] gap-4">
+      <div className="flex flex-col gap-2 min-w-0">
         <Label htmlFor="sub-tags">{t("subscription:wizard.tags.label")}</Label>
         <SubTagInput id="sub-tags" value={tags} onChange={onTagsChange} />
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 min-w-0">
         <Label htmlFor="sub-interval">
           {t("subscription:wizard.sync_interval.label")}
         </Label>
@@ -563,7 +567,7 @@ function StepTagsInterval({
           id="sub-interval"
           value={syncInterval}
           onChange={(e) => onIntervalChange(Number(e.target.value))}
-          className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--font-size-sm)] text-[var(--color-text-primary)]"
+          className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--font-size-sm)] text-[var(--color-text-primary)]"
         >
           {SYNC_INTERVAL_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
