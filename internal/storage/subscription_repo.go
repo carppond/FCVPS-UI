@@ -40,6 +40,11 @@ type SubscriptionRecord struct {
 	ShareToken     string
 	CreatedAt      int64
 	UpdatedAt      int64
+	// NodeCount is the live count of rows in nodes joined on subscription_id.
+	// It is NOT a column in the subscriptions table — every read path computes
+	// it via LEFT JOIN so list/detail responses reflect the real count (avoids
+	// the drift / incremental-sync bookkeeping cost of caching it).
+	NodeCount int32
 }
 
 // SubscriptionListOptions narrows / paginates a List query.
@@ -420,13 +425,28 @@ func (r *SubscriptionRepo) GetRawContent(ctx context.Context, id, userID string)
 
 // selectSubscriptionSQL is the shared SELECT prefix used by every read path.
 // Column order must match scanSubscriptionRow.
-const selectSubscriptionSQL = `SELECT id, user_id, name, type,
-		COALESCE(source_url,''), raw_content, COALESCE(ua,''),
-		sync_interval, COALESCE(last_synced_at,0),
-		COALESCE(last_sync_status,''), COALESCE(last_sync_error,''),
-		COALESCE(expire_at,0), COALESCE(traffic_total,0), COALESCE(traffic_used,0),
-		tags, COALESCE(remark,''), COALESCE(share_token,''),
-		created_at, updated_at FROM subscriptions`
+//
+// node_count is computed in a single grouped sub-query joined once per result
+// row rather than a correlated sub-query, so the cost stays O(N+M) instead of
+// O(N*M) on the (subscriptions, nodes) cartesian. Storing the count in the
+// subscriptions table was considered and rejected — incremental sync would
+// have to maintain the cache on every UpsertBatch / cascade-delete, and any
+// missed bookkeeping shows up as a permanently wrong UI number (see
+// commit history of this fix).
+const selectSubscriptionSQL = `SELECT s.id, s.user_id, s.name, s.type,
+		COALESCE(s.source_url,''), s.raw_content, COALESCE(s.ua,''),
+		s.sync_interval, COALESCE(s.last_synced_at,0),
+		COALESCE(s.last_sync_status,''), COALESCE(s.last_sync_error,''),
+		COALESCE(s.expire_at,0), COALESCE(s.traffic_total,0), COALESCE(s.traffic_used,0),
+		s.tags, COALESCE(s.remark,''), COALESCE(s.share_token,''),
+		s.created_at, s.updated_at,
+		COALESCE(n.cnt, 0) AS node_count
+	FROM subscriptions s
+	LEFT JOIN (
+		SELECT subscription_id, COUNT(*) AS cnt
+		FROM nodes
+		GROUP BY subscription_id
+	) n ON n.subscription_id = s.id`
 
 // scanSubscriptionRow consumes a single QueryRow result.
 func scanSubscriptionRow(row *sql.Row) (*SubscriptionRecord, error) {
@@ -441,6 +461,7 @@ func scanSubscriptionRow(row *sql.Row) (*SubscriptionRecord, error) {
 		&rec.ExpireAt, &rec.TrafficTotal, &rec.TrafficUsed,
 		&tagsJSON, &rec.Remark, &rec.ShareToken,
 		&rec.CreatedAt, &rec.UpdatedAt,
+		&rec.NodeCount,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrSubscriptionNotFound
@@ -471,6 +492,7 @@ func scanSubscriptionRowMulti(rows *sql.Rows) (*SubscriptionRecord, error) {
 		&rec.ExpireAt, &rec.TrafficTotal, &rec.TrafficUsed,
 		&tagsJSON, &rec.Remark, &rec.ShareToken,
 		&rec.CreatedAt, &rec.UpdatedAt,
+		&rec.NodeCount,
 	); err != nil {
 		return nil, fmt.Errorf("scan subscription: %w", err)
 	}

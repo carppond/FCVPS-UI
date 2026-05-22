@@ -484,6 +484,7 @@ func subscriptionRecordToDTO(rec *storage.SubscriptionRecord) types.Subscription
 		TrafficUsed:    rec.TrafficUsed,
 		Tags:           rec.Tags,
 		Remark:         rec.Remark,
+		NodeCount:      rec.NodeCount,
 		CreatedAt:      rec.CreatedAt,
 		UpdatedAt:      rec.UpdatedAt,
 	}

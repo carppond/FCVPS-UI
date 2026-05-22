@@ -238,6 +238,100 @@ func TestSubscriptionRepoDeleteCascadesNodes(t *testing.T) {
 	}
 }
 
+// TestSubscriptionRepoNodeCountReflectsLiveNodes regression-tests the data
+// consistency bug where Subscription.NodeCount was wired through the response
+// DTO but never persisted, so list/detail responses always reported 0. The
+// fix computes the count via LEFT JOIN on every read; this test exercises the
+// JOIN through GetByID + List + post-delete re-read.
+func TestSubscriptionRepoNodeCountReflectsLiveNodes(t *testing.T) {
+	db := newTestDB(t)
+	user := seedUser(t, db, "u-count")
+	subRepo := storage.NewSubscriptionRepo(db, time.Now)
+	nodeRepo := storage.NewNodeRepo(db, time.Now)
+
+	if _, err := subRepo.Create(context.Background(), storage.SubscriptionRecord{
+		ID: "sub-count", UserID: user, Name: "with-nodes",
+		Type: string(types.SubTypeManual),
+	}); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+
+	// Upsert 3 distinct nodes (different (protocol, server, port) so dedupe
+	// treats them as distinct).
+	batch := []storage.NodeUpsertInput{
+		{RawURI: "vmess://a", Protocol: "vmess", Server: "1.1.1.1", Port: 443, Tag: "a", Position: 0},
+		{RawURI: "vmess://b", Protocol: "vmess", Server: "2.2.2.2", Port: 443, Tag: "b", Position: 1},
+		{RawURI: "vmess://c", Protocol: "vmess", Server: "3.3.3.3", Port: 443, Tag: "c", Position: 2},
+	}
+	if _, err := nodeRepo.UpsertBatch(context.Background(), "sub-count", batch); err != nil {
+		t.Fatalf("UpsertBatch: %v", err)
+	}
+
+	// GetByID must now report 3.
+	got, err := subRepo.GetByID(context.Background(), "sub-count", user)
+	if err != nil {
+		t.Fatalf("GetByID after upsert: %v", err)
+	}
+	if got.NodeCount != 3 {
+		t.Fatalf("GetByID NodeCount: want 3, got %d", got.NodeCount)
+	}
+
+	// List must mirror the same count.
+	items, _, err := subRepo.List(context.Background(), user, storage.SubscriptionListOptions{PageSize: 10})
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("List len: want 1, got %d", len(items))
+	}
+	if items[0].NodeCount != 3 {
+		t.Fatalf("List NodeCount: want 3, got %d", items[0].NodeCount)
+	}
+
+	// Delete one node and re-read; count should drop to 2.
+	nodes, err := nodeRepo.ListBySubscription(context.Background(), "sub-count")
+	if err != nil {
+		t.Fatalf("ListBySubscription: %v", err)
+	}
+	if len(nodes) != 3 {
+		t.Fatalf("expected 3 nodes after upsert, got %d", len(nodes))
+	}
+	if err := nodeRepo.Delete(context.Background(), nodes[0].ID, user); err != nil {
+		t.Fatalf("Delete node: %v", err)
+	}
+	got, err = subRepo.GetByID(context.Background(), "sub-count", user)
+	if err != nil {
+		t.Fatalf("GetByID after delete: %v", err)
+	}
+	if got.NodeCount != 2 {
+		t.Fatalf("GetByID NodeCount after delete: want 2, got %d", got.NodeCount)
+	}
+}
+
+// TestSubscriptionRepoNodeCountZeroForNoNodes confirms the LEFT JOIN +
+// COALESCE produces 0 (not NULL / not an error) when a subscription has no
+// nodes. The earlier broken behaviour also returned 0, but for the wrong
+// reason; this guards the JOIN against future regressions where the sub-query
+// might be turned into an INNER JOIN.
+func TestSubscriptionRepoNodeCountZeroForNoNodes(t *testing.T) {
+	db := newTestDB(t)
+	user := seedUser(t, db, "u-zero")
+	repo := storage.NewSubscriptionRepo(db, time.Now)
+	if _, err := repo.Create(context.Background(), storage.SubscriptionRecord{
+		ID: "sub-zero", UserID: user, Name: "empty",
+		Type: string(types.SubTypeManual),
+	}); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	got, err := repo.GetByID(context.Background(), "sub-zero", user)
+	if err != nil {
+		t.Fatalf("GetByID: %v", err)
+	}
+	if got.NodeCount != 0 {
+		t.Fatalf("NodeCount for empty subscription: want 0, got %d", got.NodeCount)
+	}
+}
+
 func TestSubscriptionRepoGetByName(t *testing.T) {
 	db := newTestDB(t)
 	user := seedUser(t, db, "u-name")
