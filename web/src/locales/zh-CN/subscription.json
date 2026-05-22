@@ -186,7 +186,10 @@
         "singbox_json": "sing-box JSON",
         "v2ray_uri": "V2Ray URI",
         "surge_conf": "Surge conf"
-      }
+      },
+      "shortlink_button": "生成短链",
+      "shortlink_success": "短链已生成并复制到剪贴板",
+      "shortlink_copied": "已复制"
     },
     "delete_confirm": {
       "title": "删除订阅",

@@ -186,7 +186,10 @@
         "singbox_json": "sing-box JSON",
         "v2ray_uri": "V2Ray URI",
         "surge_conf": "Surge conf"
-      }
+      },
+      "shortlink_button": "Short link",
+      "shortlink_success": "Short link created and copied",
+      "shortlink_copied": "Copied"
     },
     "delete_confirm": {
       "title": "Delete subscription",

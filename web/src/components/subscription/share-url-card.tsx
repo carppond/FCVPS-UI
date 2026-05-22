@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { RotateCw, Search } from "lucide-react";
+import { Link2, RotateCw, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 import { useApiError } from "@/hooks/use-api-error";
 import { useRotateShareTokenMutation } from "@/api/subscription";
+import { useCreateShortLink } from "@/api/shortlink";
 import { ClientCard } from "./client-card";
 import { CLIENT_CATALOG, type ClientPlatform } from "./client-catalog";
 
@@ -48,9 +49,29 @@ export function ShareUrlCard({
   const { t } = useTranslation(["subscription", "common"]);
   const { handle: handleError } = useApiError();
   const rotate = useRotateShareTokenMutation();
+  const createShortLink = useCreateShortLink();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [platform, setPlatform] = React.useState<PlatformFilter>("all");
   const [search, setSearch] = React.useState("");
+  const [shortLinkUrl, setShortLinkUrl] = React.useState<string | null>(null);
+
+  const generateShortLink = async () => {
+    if (!shareUrl) return;
+    try {
+      const link = await createShortLink.mutateAsync({ target_url: shareUrl });
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
+      const code = `${link.file_code}${link.user_code}`;
+      const short = `${origin}/s/${code}`;
+      setShortLinkUrl(short);
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(short);
+      }
+      toast.success(t("subscription:detail.share.shortlink_success"));
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -90,7 +111,17 @@ export function ShareUrlCard({
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <PlatformChips value={platform} onChange={setPlatform} />
-          <div className="relative ml-auto flex-1 min-w-[200px] max-w-xs">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={generateShortLink}
+            disabled={!available || createShortLink.isPending}
+            className="ml-auto"
+          >
+            <Link2 className="mr-1 h-3.5 w-3.5" />
+            {t("subscription:detail.share.shortlink_button")}
+          </Button>
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-text-tertiary)]" />
             <Input
               value={search}
@@ -100,6 +131,18 @@ export function ShareUrlCard({
             />
           </div>
         </div>
+
+        {shortLinkUrl && (
+          <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-primary)] bg-[var(--color-primary)]/10 px-3 py-2 flex items-center gap-2 text-[var(--font-size-xs)]">
+            <Link2 className="h-3.5 w-3.5 text-[var(--color-primary)]" />
+            <span className="font-mono text-[var(--color-text-primary)] truncate">
+              {shortLinkUrl}
+            </span>
+            <span className="ml-auto text-[var(--color-text-tertiary)]">
+              {t("subscription:detail.share.shortlink_copied")}
+            </span>
+          </div>
+        )}
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((client) => (
