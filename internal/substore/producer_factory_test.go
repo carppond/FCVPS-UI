@@ -137,7 +137,7 @@ func TestProducerInterfaceContentTypes(t *testing.T) {
 		{"v2ray", "text/plain; charset=utf-8"},
 	}
 	for _, c := range cases {
-		_, ct, err := factory.Get(c.target).Produce(sampleNodes(), ClashProducerOpts{})
+		_, ct, err := factory.Get(c.target).Produce(&ClashRenderInput{Nodes: sampleNodes()}, ClashProducerOpts{})
 		if err != nil {
 			t.Fatalf("%s Produce: %v", c.target, err)
 		}

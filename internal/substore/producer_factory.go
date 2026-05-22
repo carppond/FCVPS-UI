@@ -5,11 +5,16 @@ import "strings"
 // Producer is the common interface implemented by every output format
 // (Clash YAML / sing-box JSON / URI list / Surge conf). Callers obtain a
 // Producer via ProducerFactory.Get(target).
+//
+// Each Produce call receives a ClashRenderInput; the Clash producer consumes
+// nodes + custom rules + proxy groups + rule-set providers, while every other
+// target currently only reads input.Nodes (sing-box / Surge routing rule
+// emission is deliberately deferred — see T-fix Clash bug ticket).
 type Producer interface {
-	// Produce renders the nodes into the producer's native format and returns
-	// (body, contentType, err). contentType is the value to write in the
-	// HTTP Content-Type header.
-	Produce(nodes []*ParsedNode, opts ClashProducerOpts) (body []byte, contentType string, err error)
+	// Produce renders the input into the producer's native format and
+	// returns (body, contentType, err). contentType is the value to write in
+	// the HTTP Content-Type header.
+	Produce(input *ClashRenderInput, opts ClashProducerOpts) (body []byte, contentType string, err error)
 }
 
 // ProducerFactory routes a string target ("clash" / "singbox" / ...) to a
@@ -63,11 +68,21 @@ func (ProducerFactory) TargetContentType(target string) string {
 	}
 }
 
+// nodesFromInput is a defensive helper for producers that only consume the
+// node slice. It tolerates a nil input so callers (tests, legacy code paths)
+// can pass &ClashRenderInput{Nodes: ...} without populating the rest.
+func nodesFromInput(input *ClashRenderInput) []*ParsedNode {
+	if input == nil {
+		return nil
+	}
+	return input.Nodes
+}
+
 // clashProducer adapts ProduceClashYAML to the Producer interface.
 type clashProducer struct{}
 
-func (clashProducer) Produce(nodes []*ParsedNode, opts ClashProducerOpts) ([]byte, string, error) {
-	body, err := ProduceClashYAML(nodes, opts)
+func (clashProducer) Produce(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, string, error) {
+	body, err := ProduceClashYAML(input, opts)
 	if err != nil {
 		return nil, "", err
 	}
@@ -75,10 +90,12 @@ func (clashProducer) Produce(nodes []*ParsedNode, opts ClashProducerOpts) ([]byt
 }
 
 // singboxProducer adapts ProduceSingboxJSON to the Producer interface.
+// Routing rule emission (rules / proxy-groups equivalent) is deferred;
+// callers see only the outbounds array for now.
 type singboxProducer struct{}
 
-func (singboxProducer) Produce(nodes []*ParsedNode, opts ClashProducerOpts) ([]byte, string, error) {
-	body, err := ProduceSingboxJSON(nodes, opts)
+func (singboxProducer) Produce(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, string, error) {
+	body, err := ProduceSingboxJSON(nodesFromInput(input), opts)
 	if err != nil {
 		return nil, "", err
 	}
@@ -88,19 +105,21 @@ func (singboxProducer) Produce(nodes []*ParsedNode, opts ClashProducerOpts) ([]b
 // uriListProducer adapts ProduceURIList to the Producer interface.
 type uriListProducer struct{}
 
-func (uriListProducer) Produce(nodes []*ParsedNode, opts ClashProducerOpts) ([]byte, string, error) {
-	body, err := ProduceURIList(nodes, opts)
+func (uriListProducer) Produce(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, string, error) {
+	body, err := ProduceURIList(nodesFromInput(input), opts)
 	if err != nil {
 		return nil, "", err
 	}
 	return body, "text/plain; charset=utf-8", nil
 }
 
-// surgeProducer adapts ProduceSurgeConf to the Producer interface.
+// surgeProducer adapts ProduceSurgeConf to the Producer interface. Rule
+// emission for Surge is intentionally deferred (Surge syntax is conf-section
+// based and differs significantly from Clash YAML).
 type surgeProducer struct{}
 
-func (surgeProducer) Produce(nodes []*ParsedNode, opts ClashProducerOpts) ([]byte, string, error) {
-	body, err := ProduceSurgeConf(nodes, opts)
+func (surgeProducer) Produce(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, string, error) {
+	body, err := ProduceSurgeConf(nodesFromInput(input), opts)
 	if err != nil {
 		return nil, "", err
 	}

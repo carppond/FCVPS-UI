@@ -1,36 +1,44 @@
 package substore
 
 import (
+	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 
 	"shiguang-vps/internal/util"
 )
 
-// ProduceClashYAML renders a slice of ParsedNode into a Clash-compatible
-// YAML document. The output is mihomo / Clash Meta / Clash Verge Rev /
-// Stash compatible (modern Clash forks); these all support reality, hysteria2,
-// tuic, anytls etc. We do NOT filter reality vless nodes — the older policy
-// of dropping reality was based on the now-defunct original Clash Premium
-// and made real-world subscriptions (lots of reality nodes) come out empty.
+// ProduceClashYAML renders a ClashRenderInput into a Clash-compatible YAML
+// document. Output is mihomo / Clash Meta / Clash Verge Rev / Stash compatible
+// (modern Clash forks); these all support reality, hysteria2, tuic, anytls,
+// rule-set providers, etc.
 //
-// The output structure is:
+// The output document always carries four top-level keys so a client that
+// imports the file can immediately route traffic:
 //
-//	proxies:
-//	  - name: ...
-//	    type: ...
-//	    ...
+//	proxies:        [ ... ]    # node list (always emitted, even when empty)
+//	proxy-groups:   [ ... ]    # at least one fallback "🚀 节点选择" group
+//	rule-providers: { ... }    # one entry per enabled RuleSetRecord
+//	rules:          [ ... ]    # custom_rules applied via rule_injector + MATCH
 //
-// Field ordering within each proxy entry is canonical (name/type/server/port
-// first) via util.ReorderProxyNode.
-func ProduceClashYAML(nodes []*ParsedNode, opts ClashProducerOpts) ([]byte, error) {
+// Bug-fix note (T-fix Clash): previously the producer emitted only `proxies:`.
+// Clients (Clash Verge, mihomo) would import the file but see no rules, no
+// groups, no rule-sets — effectively the subscription rendered useless.
+// ProduceClashYAML now assembles the full document so the same /download
+// endpoint delivers a config the client can run as-is.
+func ProduceClashYAML(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, error) {
+	if input == nil {
+		input = &ClashRenderInput{}
+	}
 	root := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
-	proxiesKey := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "proxies"}
-	proxiesVal := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
-	root.Content = append(root.Content, proxiesKey, proxiesVal)
 
-	for _, n := range nodes {
+	// proxies: — always first so the rest of the doc can reference node names.
+	proxiesVal := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+	proxyNames := make([]string, 0, len(input.Nodes))
+	for _, n := range input.Nodes {
 		if n == nil {
 			continue
 		}
@@ -43,8 +51,277 @@ func ProduceClashYAML(nodes []*ParsedNode, opts ClashProducerOpts) ([]byte, erro
 		}
 		ordered := util.ReorderProxyNode(entry)
 		proxiesVal.Content = append(proxiesVal.Content, ordered)
+		proxyNames = append(proxyNames, n.Name)
 	}
+	root.Content = append(root.Content,
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "proxies"},
+		proxiesVal,
+	)
+
+	// Preview / legacy mode: emit just `proxies:` so a downstream caller
+	// (rule editor preview) can layer rule_injector output on top of a clean
+	// base. Skip both seeding and custom-rule injection here.
+	if opts.ProxiesOnly {
+		return util.MarshalIndent(root)
+	}
+
+	// proxy-groups: — render user config; fall back to a sane default that
+	// references every proxy so the implicit MATCH rule below can resolve.
+	groupsVal := buildProxyGroups(input.ProxyGroups, proxyNames)
+	root.Content = append(root.Content,
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "proxy-groups"},
+		groupsVal,
+	)
+
+	// rule-providers: — only emitted when the user has at least one enabled
+	// rule-set. mihomo tolerates the key being absent but rejects an empty
+	// mapping in some versions, so we skip it instead.
+	if providers := buildRuleProviders(input.RuleSets); providers != nil {
+		root.Content = append(root.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "rule-providers"},
+			providers,
+		)
+	}
+
+	// rules: — start with a single MATCH tail so even an empty input still
+	// produces a config the client can boot. CustomRules of type=rules are
+	// then layered via rule_injector (which honours mode=replace/prepend/append).
+	root.Content = append(root.Content,
+		&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "rules"},
+		defaultMatchRule(),
+	)
+
+	// Apply user-defined custom rules (rules / dns / rule-providers). The
+	// injector mutates a deep copy and returns the new root.
+	if rules := toInjectorRules(input.CustomRules); len(rules) > 0 {
+		mutated, err := Inject(root, rules)
+		if err != nil {
+			return nil, fmt.Errorf("apply custom rules: %w", err)
+		}
+		root = mutated
+	}
+
 	return util.MarshalIndent(root)
+}
+
+// buildProxyGroups turns the user-configured proxy groups into the Clash
+// `proxy-groups:` sequence. When the input is empty, a single default
+// "🚀 节点选择" select group is emitted so any rule that targets a group has a
+// definition to resolve against — without this, mihomo refuses to start with
+// "proxy group not found".
+func buildProxyGroups(records []ProxyGroupRecord, proxyNames []string) *yaml.Node {
+	seq := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+	if len(records) == 0 {
+		seq.Content = append(seq.Content, defaultSelectGroup(proxyNames))
+		return seq
+	}
+	// Sort group-typed entries before plain-node-typed entries when the user
+	// has not specified an explicit sort_order. The Reorder API on the repo
+	// already returns sort_order ASC, so we just preserve insertion order
+	// here.
+	sorted := make([]ProxyGroupRecord, len(records))
+	copy(sorted, records)
+	sort.SliceStable(sorted, func(i, j int) bool {
+		return sorted[i].SortOrder < sorted[j].SortOrder
+	})
+	for _, rec := range sorted {
+		seq.Content = append(seq.Content, proxyGroupToYAML(rec, proxyNames))
+	}
+	return seq
+}
+
+// proxyGroupToYAML renders a single proxy group entry. Field ordering follows
+// the convention used by community templates (name → type → proxies → flags).
+func proxyGroupToYAML(rec ProxyGroupRecord, proxyNames []string) *yaml.Node {
+	m := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+	_ = util.SetMappingValue(m, "name", rec.Name)
+	_ = util.SetMappingValue(m, "type", rec.Type)
+
+	// Resolve members: group references go first (mihomo style) then node
+	// references. Members are intentionally not deduplicated — the user may
+	// want a deliberate repeat (e.g. "DIRECT" appearing twice for emphasis).
+	members := make([]string, 0, 8)
+	if grps := decodeJSONStringArray(rec.MemberGroups); len(grps) > 0 {
+		members = append(members, grps...)
+	}
+	if ps := decodeJSONStringArray(rec.MemberProxies); len(ps) > 0 {
+		members = append(members, ps...)
+	}
+	// Empty members would make Clash reject the file; fall back to DIRECT
+	// rather than fail the whole render.
+	if len(members) == 0 {
+		members = []string{"DIRECT"}
+		// When include_all is set we expand to the full node list later via
+		// the include-all flag; no need to inline node names here.
+		if !rec.IncludeAll && len(proxyNames) > 0 {
+			members = append(members, proxyNames...)
+		}
+	}
+	_ = util.SetMappingValue(m, "proxies", stringsToYAMLSeq(members))
+
+	if rec.IncludeAll {
+		_ = util.SetMappingValue(m, "include-all", true)
+	}
+	if rec.Filter != "" {
+		_ = util.SetMappingValue(m, "filter", rec.Filter)
+	}
+
+	// url-test / fallback / load-balance care about test_url + interval.
+	switch rec.Type {
+	case "url-test", "fallback", "load-balance":
+		url := rec.TestURL
+		if url == "" {
+			url = "http://www.gstatic.com/generate_204"
+		}
+		_ = util.SetMappingValue(m, "url", url)
+		interval := rec.TestInterval
+		if interval <= 0 {
+			interval = 300
+		}
+		_ = util.SetMappingValue(m, "interval", int(interval))
+	}
+
+	if rec.Icon != "" {
+		_ = util.SetMappingValue(m, "icon", rec.Icon)
+	}
+	return m
+}
+
+// defaultSelectGroup builds the fallback "🚀 节点选择" group used when the user
+// has not configured any proxy group of their own. proxies includes DIRECT,
+// REJECT and every parsed node name so a freshly-installed user can route
+// traffic immediately.
+func defaultSelectGroup(proxyNames []string) *yaml.Node {
+	m := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+	_ = util.SetMappingValue(m, "name", "🚀 节点选择")
+	_ = util.SetMappingValue(m, "type", "select")
+	members := make([]string, 0, len(proxyNames)+2)
+	members = append(members, "DIRECT", "REJECT")
+	members = append(members, proxyNames...)
+	_ = util.SetMappingValue(m, "proxies", stringsToYAMLSeq(members))
+	return m
+}
+
+// buildRuleProviders maps RuleSetRecord -> Clash `rule-providers:` mapping.
+// Returns nil when there are zero records so the caller can skip emitting the
+// key altogether.
+func buildRuleProviders(records []RuleSetRecord) *yaml.Node {
+	if len(records) == 0 {
+		return nil
+	}
+	m := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+	// Sort by name for deterministic output (storage already filters to
+	// enabled=true and returns created_at ASC, but a tied set is more
+	// predictable when sorted alphabetically).
+	sorted := make([]RuleSetRecord, len(records))
+	copy(sorted, records)
+	sort.SliceStable(sorted, func(i, j int) bool { return sorted[i].Name < sorted[j].Name })
+	for _, rec := range sorted {
+		entry := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+		_ = util.SetMappingValue(entry, "type", "http")
+		_ = util.SetMappingValue(entry, "url", rec.URL)
+		_ = util.SetMappingValue(entry, "behavior", rec.Behavior)
+		format := rec.Format
+		if format == "" {
+			format = "yaml"
+		}
+		_ = util.SetMappingValue(entry, "format", format)
+		interval := rec.IntervalSeconds
+		if interval <= 0 {
+			interval = 86400
+		}
+		_ = util.SetMappingValue(entry, "interval", int(interval))
+		// `path` is required by mihomo; derive it deterministically from the
+		// rule-set name so repeated downloads point at the same cache file.
+		path := "./rule-sets/" + safeProviderPath(rec.Name) + "." + format
+		_ = util.SetMappingValue(entry, "path", path)
+		_ = util.SetMappingValue(m, rec.Name, entry)
+	}
+	return m
+}
+
+// safeProviderPath sanitises a rule-set name for use as a file path segment.
+// Whitespace and slash characters are collapsed to "-" so an exotic name like
+// "🇨🇳 国内 / mainland" still yields a sensible path.
+func safeProviderPath(name string) string {
+	if name == "" {
+		return "rules"
+	}
+	replacer := strings.NewReplacer(
+		" ", "-",
+		"/", "-",
+		"\\", "-",
+		":", "-",
+		"\t", "-",
+	)
+	return replacer.Replace(name)
+}
+
+// defaultMatchRule returns the single-entry rules sequence "MATCH,🚀 节点选择"
+// which acts as a catch-all when the user has no custom rules of their own.
+// The rule_injector layers any user rules on top of this seed.
+func defaultMatchRule() *yaml.Node {
+	seq := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+	seq.Content = append(seq.Content, &yaml.Node{
+		Kind: yaml.ScalarNode, Tag: "!!str", Value: "MATCH,🚀 节点选择",
+	})
+	return seq
+}
+
+// toInjectorRules converts CustomRuleRecord (storage projection) into the
+// *CustomRule slice rule_injector consumes. Records are already filtered to
+// enabled=true by the caller (storage.CustomRuleRepo.ListEnabled).
+func toInjectorRules(records []CustomRuleRecord) []*CustomRule {
+	if len(records) == 0 {
+		return nil
+	}
+	// Stable sort by Sort ASC so prepend/append semantics are deterministic
+	// even when the caller forgot to order them.
+	sorted := make([]CustomRuleRecord, len(records))
+	copy(sorted, records)
+	sort.SliceStable(sorted, func(i, j int) bool { return sorted[i].Sort < sorted[j].Sort })
+	out := make([]*CustomRule, 0, len(sorted))
+	for _, rec := range sorted {
+		out = append(out, &CustomRule{
+			ID: rec.ID, Name: rec.Name, Type: rec.Type, Mode: rec.Mode,
+			Content: rec.Content, Sort: rec.Sort,
+		})
+	}
+	return out
+}
+
+// decodeJSONStringArray decodes a JSON array string into []string. Empty
+// input or a parse failure both yield a nil slice — at render time we treat
+// "no members" identically to "no JSON". Logging this failure is not the
+// producer's job (the repo / handler already validate JSON on write).
+func decodeJSONStringArray(s string) []string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil
+	}
+	var out []string
+	if err := json.Unmarshal([]byte(s), &out); err != nil {
+		return nil
+	}
+	// Filter empty entries to avoid `- ""` survivors in the rendered YAML.
+	cleaned := out[:0]
+	for _, v := range out {
+		if strings.TrimSpace(v) != "" {
+			cleaned = append(cleaned, v)
+		}
+	}
+	return cleaned
+}
+
+// stringsToYAMLSeq builds a block-style sequence of scalar strings.
+func stringsToYAMLSeq(items []string) *yaml.Node {
+	seq := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+	for _, s := range items {
+		seq.Content = append(seq.Content, &yaml.Node{
+			Kind: yaml.ScalarNode, Tag: "!!str", Value: s,
+		})
+	}
+	return seq
 }
 
 // nodeToYAML converts a ParsedNode into a yaml.Node mapping suitable for the

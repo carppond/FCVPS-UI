@@ -517,7 +517,13 @@ func (h *RuleHandler) renderBaseYAML(ctx context.Context, subID, userID string) 
 	if err != nil {
 		return nil, err
 	}
-	return substore.ProduceClashYAML(nodes, substore.ClashProducerOpts{})
+	// Preview path: we want only the proxies block to feed into the rule
+	// injector, so we do NOT pre-seed proxy-groups / rule-providers /
+	// default MATCH rule here — that's what ApplyToYAML below layers on.
+	return substore.ProduceClashYAML(
+		&substore.ClashRenderInput{Nodes: nodes},
+		substore.ClashProducerOpts{ProxiesOnly: true},
+	)
 }
 
 // nextSort returns the smallest sort value that places a freshly created rule

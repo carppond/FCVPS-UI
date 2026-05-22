@@ -198,10 +198,22 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("sync service: %w", err)
 	}
+	// T-fix Clash: also hand the rule / proxy-group / rule-set repos to the
+	// compat service so the rendered Clash YAML carries the full 4 sections
+	// (proxies + proxy-groups + rule-providers + rules) instead of just
+	// proxies. The repos are created later in the bootstrap for T-12; we
+	// instantiate them up front here so the compat service can consume them.
+	compatCustomRuleRepo := storage.NewCustomRuleRepo(db, time.Now)
+	compatProxyGroupRepo := storage.NewProxyGroupRepo(db, time.Now)
+	compatRuleSetRepo := storage.NewRuleSetProviderRepo(db, time.Now)
 	compatService, err := substore.NewSubstoreCompatService(substore.SubstoreCompatConfig{
-		Repo:     subscriptions,
-		NodeRepo: nodeAdapter,
-		Sync:     syncService,
+		Repo:        subscriptions,
+		NodeRepo:    nodeAdapter,
+		Sync:        syncService,
+		Logger:      log,
+		RuleRepo:    compatCustomRuleRepo,
+		GroupRepo:   compatProxyGroupRepo,
+		RuleSetRepo: compatRuleSetRepo,
 	})
 	if err != nil {
 		return fmt.Errorf("substore compat service: %w", err)
@@ -394,7 +406,9 @@ func run() error {
 
 	// T-12: M-RULE handler. Reuses the substore NodeRepoAdapter from above so
 	// the preview endpoint can re-render Clash YAML against real nodes.
-	customRuleRepo := storage.NewCustomRuleRepo(db, time.Now)
+	// Repos are shared with the compat service (T-fix Clash) so both code
+	// paths see the same write-through state.
+	customRuleRepo := compatCustomRuleRepo
 	ruleHandler := handler.NewRuleHandler(customRuleRepo, subscriptions, nodeAdapter, log)
 
 	// T-12 follow-up: rule-set (rule-provider) handler + proxy-group handler.
@@ -402,12 +416,12 @@ func run() error {
 	// internet egress to reach gh-proxy / jsdelivr / raw.githubusercontent
 	// while keeping internal addresses blocked unless allow_private_networks
 	// is set).
-	ruleSetRepo := storage.NewRuleSetProviderRepo(db, time.Now)
+	ruleSetRepo := compatRuleSetRepo
 	ruleSetHTTPClient := safehttp.NewClient(safehttp.Config{
 		AllowPrivate: allowPrivate,
 	}, 10*time.Second)
 	ruleSetHandler := handler.NewRuleSetHandler(ruleSetRepo, ruleSetHTTPClient, log, time.Now)
-	proxyGroupRepo := storage.NewProxyGroupRepo(db, time.Now)
+	proxyGroupRepo := compatProxyGroupRepo
 	proxyGroupHandler := handler.NewProxyGroupHandler(proxyGroupRepo, log)
 
 	// T-26: settings + backup handlers. SettingsHandler exposes

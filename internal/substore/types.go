@@ -67,4 +67,68 @@ type ClashProducerOpts struct {
 	// (e.g. vless+reality). It is safe to leave nil; warnings are then
 	// silently swallowed.
 	OnWarning func(node *ParsedNode, reason string)
+	// ProxiesOnly skips the auto-seeded proxy-groups / rule-providers /
+	// rules sections. Used by the rule editor preview, which wants a bare
+	// proxies-only base to layer custom rules on top of via the rule
+	// injector — without this the injector would have to fight with the
+	// producer's defaults (e.g. duplicated MATCH lines).
+	ProxiesOnly bool
+}
+
+// ClashRenderInput bundles every domain object the producers need to build a
+// complete Clash YAML document — nodes plus the user-configured custom rules,
+// proxy groups and rule-set providers. The producer factory dispatches on
+// `target`; the Clash producer consumes all four fields, while other targets
+// (sing-box / URI list / Surge) currently use only Nodes.
+//
+// Each Record mirrors the corresponding storage layer projection but is
+// declared here so the substore package stays free of an import edge on
+// internal/storage (storage already depends transitively on substore via the
+// adapter; the reverse would create a cycle).
+type ClashRenderInput struct {
+	Nodes       []*ParsedNode
+	CustomRules []CustomRuleRecord
+	ProxyGroups []ProxyGroupRecord
+	RuleSets    []RuleSetRecord
+}
+
+// CustomRuleRecord mirrors storage.CustomRuleRecord — only the fields the
+// producer / rule-injector touch are kept. Mode is one of
+// "replace" / "prepend" / "append"; Type is "dns" / "rules" / "rule-providers".
+type CustomRuleRecord struct {
+	ID      string
+	Name    string
+	Type    string
+	Mode    string
+	Content string
+	Sort    int32
+}
+
+// ProxyGroupRecord mirrors storage.ProxyGroupCategoryRecord. MemberProxies and
+// MemberGroups carry the JSON-array text exactly as persisted; the producer
+// decodes them lazily at render time so storage stays decoupled from the YAML
+// shape.
+type ProxyGroupRecord struct {
+	ID            string
+	Name          string
+	Type          string // select / url-test / fallback / load-balance / relay
+	Icon          string
+	SortOrder     int32
+	TestURL       string
+	TestInterval  int32
+	Filter        string
+	IncludeAll    bool
+	MemberProxies string // JSON array text
+	MemberGroups  string // JSON array text
+}
+
+// RuleSetRecord mirrors storage.RuleSetProviderRecord. Only the fields the
+// Clash rule-providers section consumes are exposed.
+type RuleSetRecord struct {
+	ID              string
+	Name            string
+	Behavior        string // domain / ipcidr / classical
+	Format          string // yaml / text / mrs
+	URL             string
+	IntervalSeconds int32
 }
