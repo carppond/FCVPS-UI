@@ -53,23 +53,47 @@ function AuthedErrorComponent({
   const isOffline =
     error instanceof ApiError &&
     (error.status === 0 || error.code === "INTERNAL_NETWORK");
+  const isAuthError =
+    error instanceof ApiError &&
+    typeof error.code === "string" &&
+    error.code.startsWith("AUTH_");
+
+  // Only the offline / auth flavours get the friendly "session lost" copy —
+  // every other error is a child-component crash that the user (and us)
+  // need to see literally. Showing "couldn't load your session" for a
+  // proxy-group form crash was actively misleading.
+  const showFriendly = isOffline || isAuthError;
+  const heading = isOffline
+    ? t("auth:guard.offline_title")
+    : isAuthError
+      ? t("auth:guard.error_title")
+      : t("auth:guard.error_title");
+  const body = isOffline
+    ? t("auth:guard.offline_description")
+    : isAuthError
+      ? t("auth:guard.error_description")
+      : null;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] p-6">
-      <div className="w-full max-w-md text-center">
+      <div className="w-full max-w-2xl">
         <h2 className="text-[var(--font-size-xl)] font-semibold text-[var(--color-text-primary)]">
-          {isOffline
-            ? t("auth:guard.offline_title")
-            : t("auth:guard.error_title")}
+          {heading}
         </h2>
-        <p className="mt-2 text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
-          {isOffline
-            ? t("auth:guard.offline_description")
-            : t("auth:guard.error_description")}
-        </p>
-        <Button className="mt-6" onClick={reset}>
-          {t("common:actions.retry")}
-        </Button>
+        {body ? (
+          <p className="mt-2 text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
+            {body}
+          </p>
+        ) : null}
+        {!showFriendly ? (
+          <pre className="mt-4 max-h-80 overflow-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-left text-[var(--font-size-xs)] font-mono text-[var(--color-text-secondary)]">
+            {error.message || String(error)}
+            {error.stack ? "\n\n" + error.stack : ""}
+          </pre>
+        ) : null}
+        <div className="mt-6">
+          <Button onClick={reset}>{t("common:actions.retry")}</Button>
+        </div>
       </div>
     </div>
   );
