@@ -1,8 +1,11 @@
 package util
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 
 	"shiguang-vps/internal/types"
@@ -157,6 +160,21 @@ func (r *StatusRecorder) Flush() {
 	if f, ok := r.ResponseWriter.(http.Flusher); ok {
 		f.Flush()
 	}
+}
+
+// Hijack forwards to the underlying writer if it implements http.Hijacker.
+// Required for WebSocket upgrades (gorilla/websocket calls Hijack to take
+// over the raw TCP connection). Without this, every WS upgrade through the
+// middleware chain fails with "response does not implement http.Hijacker".
+func (r *StatusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	h, ok := r.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, errors.New("response writer does not implement http.Hijacker")
+	}
+	// Mark the response as written so the request-log middleware doesn't
+	// double-emit a status code on the hijacked connection.
+	r.written = true
+	return h.Hijack()
 }
 
 // MaxJSONBodyBytes caps the size of any JSON request body decoded through
