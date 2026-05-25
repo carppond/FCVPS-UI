@@ -36,7 +36,7 @@ var builtInRuleTemplates = []types.RuleTemplate{
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeAppend,
 		Tags:        []string{"region", "asia", "hk"},
 		Description: "把命中香港 GEOIP 的流量打到 🇭🇰 香港节点 组。",
-		Content: `GEOIP,HK,🇭🇰 香港节点
+		Content: `GEOIP,HK,🇭🇰 香港节点,no-resolve
 `,
 	},
 	{
@@ -44,7 +44,7 @@ var builtInRuleTemplates = []types.RuleTemplate{
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeAppend,
 		Tags:        []string{"region", "asia", "jp"},
 		Description: "把命中日本 GEOIP 的流量打到 🇯🇵 日本节点 组。",
-		Content: `GEOIP,JP,🇯🇵 日本节点
+		Content: `GEOIP,JP,🇯🇵 日本节点,no-resolve
 `,
 	},
 	{
@@ -52,7 +52,7 @@ var builtInRuleTemplates = []types.RuleTemplate{
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeAppend,
 		Tags:        []string{"region", "america", "us"},
 		Description: "把命中美国 GEOIP 的流量打到 🇺🇸 美国节点 组。",
-		Content: `GEOIP,US,🇺🇸 美国节点
+		Content: `GEOIP,US,🇺🇸 美国节点,no-resolve
 `,
 	},
 	{
@@ -60,7 +60,7 @@ var builtInRuleTemplates = []types.RuleTemplate{
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeAppend,
 		Tags:        []string{"region", "asia", "sg"},
 		Description: "把命中新加坡 GEOIP 的流量打到 🇸🇬 新加坡节点 组。",
-		Content: `GEOIP,SG,🇸🇬 新加坡节点
+		Content: `GEOIP,SG,🇸🇬 新加坡节点,no-resolve
 `,
 	},
 	{
@@ -68,7 +68,7 @@ var builtInRuleTemplates = []types.RuleTemplate{
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeAppend,
 		Tags:        []string{"region", "asia", "tw"},
 		Description: "把命中台湾 GEOIP 的流量打到 🇹🇼 台湾节点 组。",
-		Content: `GEOIP,TW,🇹🇼 台湾节点
+		Content: `GEOIP,TW,🇹🇼 台湾节点,no-resolve
 `,
 	},
 	{
@@ -76,7 +76,7 @@ var builtInRuleTemplates = []types.RuleTemplate{
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeAppend,
 		Tags:        []string{"region", "asia", "kr"},
 		Description: "把命中韩国 GEOIP 的流量打到 🇰🇷 韩国节点 组。",
-		Content: `GEOIP,KR,🇰🇷 韩国节点
+		Content: `GEOIP,KR,🇰🇷 韩国节点,no-resolve
 `,
 	},
 	// ----------------------------------------------------------------------
@@ -85,95 +85,74 @@ var builtInRuleTemplates = []types.RuleTemplate{
 	{
 		ID: "app-ai", Name: "AI 服务", Emoji: "🤖", Category: "app",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
-		Tags:        []string{"app", "ai", "openai", "anthropic"},
-		Description: "OpenAI / Anthropic / Gemini / Copilot 域名走 🤖 AI 服务 组。",
-		Content: `DOMAIN-SUFFIX,openai.com,🤖 AI 服务
-DOMAIN-SUFFIX,anthropic.com,🤖 AI 服务
-DOMAIN-SUFFIX,claude.ai,🤖 AI 服务
-DOMAIN-SUFFIX,googleai.com,🤖 AI 服务
-DOMAIN-SUFFIX,gemini.google.com,🤖 AI 服务
-DOMAIN-SUFFIX,githubcopilot.com,🤖 AI 服务
-RULE-SET,openai,🤖 AI 服务
+		Tags:        []string{"app", "ai", "openai", "anthropic", "gemini", "copilot"},
+		Description: "OpenAI / Anthropic / Bing / Copilot / Gemini 等 AI 服务走 🤖 AI 服务 组。",
+		Content: `RULE-SET,openai,🤖 AI 服务
 RULE-SET,anthropic,🤖 AI 服务
+RULE-SET,bing,🤖 AI 服务
+RULE-SET,copilot,🤖 AI 服务
+RULE-SET,gemini,🤖 AI 服务
 `,
 	},
 	{
 		ID: "app-streaming", Name: "流媒体", Emoji: "📺", Category: "app",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
-		Tags:        []string{"app", "streaming", "netflix", "youtube"},
-		Description: "Netflix / Disney+ / YouTube / Spotify 域名走 📺 流媒体 组。",
-		Content: `DOMAIN-SUFFIX,netflix.com,📺 流媒体
-DOMAIN-SUFFIX,nflxext.com,📺 流媒体
-DOMAIN-SUFFIX,disneyplus.com,📺 流媒体
-DOMAIN-SUFFIX,youtube.com,📺 流媒体
-DOMAIN-SUFFIX,googlevideo.com,📺 流媒体
-DOMAIN-SUFFIX,spotify.com,📺 流媒体
+		Tags:        []string{"app", "streaming", "netflix", "youtube", "disney", "spotify", "tiktok", "bilibili"},
+		Description: "YouTube / Netflix / Disney+ / Spotify / TikTok / Bilibili / Bahamut 等流媒体走 📺 流媒体 组。",
+		Content: `RULE-SET,youtube,📺 流媒体
 RULE-SET,netflix,📺 流媒体
 RULE-SET,disney,📺 流媒体
-RULE-SET,youtube,📺 流媒体
 RULE-SET,spotify,📺 流媒体
+RULE-SET,tiktok,📺 流媒体
+RULE-SET,bilibili,📺 流媒体
+RULE-SET,bahamut,📺 流媒体
 `,
 	},
 	{
 		ID: "app-google", Name: "Google 服务", Emoji: "📢", Category: "app",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
-		Tags:        []string{"app", "google"},
-		Description: "Google 全家桶域名走 📢 Google 组。",
-		Content: `DOMAIN-SUFFIX,google.com,📢 Google
-DOMAIN-SUFFIX,gstatic.com,📢 Google
-DOMAIN-SUFFIX,googleapis.com,📢 Google
-DOMAIN-SUFFIX,googleusercontent.com,📢 Google
-RULE-SET,google,📢 Google
+		Tags:        []string{"app", "google", "youtube"},
+		Description: "Google 全家桶 + YouTube 走 📢 Google 组。",
+		Content: `RULE-SET,google,📢 Google
+RULE-SET,youtube,📢 Google
 `,
 	},
 	{
 		ID: "app-microsoft", Name: "微软服务", Emoji: "Ⓜ️", Category: "app",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
-		Tags:        []string{"app", "microsoft", "azure"},
-		Description: "Office / Azure / Bing / Github 域名走 Ⓜ️ 微软 组。",
-		Content: `DOMAIN-SUFFIX,microsoft.com,Ⓜ️ 微软
-DOMAIN-SUFFIX,office.com,Ⓜ️ 微软
-DOMAIN-SUFFIX,office365.com,Ⓜ️ 微软
-DOMAIN-SUFFIX,azure.com,Ⓜ️ 微软
-DOMAIN-SUFFIX,bing.com,Ⓜ️ 微软
-RULE-SET,microsoft,Ⓜ️ 微软
+		Tags:        []string{"app", "microsoft", "azure", "github", "linkedin"},
+		Description: "Microsoft / GitHub / LinkedIn 走 Ⓜ️ 微软 组。",
+		Content: `RULE-SET,microsoft,Ⓜ️ 微软
+RULE-SET,github,Ⓜ️ 微软
+RULE-SET,linkedin,Ⓜ️ 微软
 `,
 	},
 	{
 		ID: "app-apple", Name: "苹果服务", Emoji: "🍎", Category: "app",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
 		Tags:        []string{"app", "apple", "icloud"},
-		Description: "iCloud / App Store / Apple Music 等域名走 🍎 苹果 组。",
-		Content: `DOMAIN-SUFFIX,apple.com,🍎 苹果
-DOMAIN-SUFFIX,icloud.com,🍎 苹果
-DOMAIN-SUFFIX,mzstatic.com,🍎 苹果
-DOMAIN-SUFFIX,itunes.apple.com,🍎 苹果
-RULE-SET,apple,🍎 苹果
+		Description: "Apple / iCloud 走 🍎 苹果 组。",
+		Content: `RULE-SET,apple,🍎 苹果
+RULE-SET,icloud,🍎 苹果
 `,
 	},
 	{
 		ID: "app-telegram", Name: "Telegram", Emoji: "✈️", Category: "app",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
 		Tags:        []string{"app", "telegram", "im"},
-		Description: "Telegram 域名走 ✈️ Telegram 组。",
-		Content: `DOMAIN-SUFFIX,telegram.org,✈️ Telegram
-DOMAIN-SUFFIX,t.me,✈️ Telegram
-DOMAIN-SUFFIX,telegram.me,✈️ Telegram
-DOMAIN-SUFFIX,telesco.pe,✈️ Telegram
-RULE-SET,telegram,✈️ Telegram
+		Description: "Telegram 走 ✈️ Telegram 组。",
+		Content: `RULE-SET,telegram,✈️ Telegram
 `,
 	},
 	{
 		ID: "app-gaming", Name: "游戏平台", Emoji: "🎮", Category: "app",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
-		Tags:        []string{"app", "gaming", "steam", "epic"},
-		Description: "Steam / Epic / PlayStation / Xbox 域名走 🎮 游戏 组。",
-		Content: `DOMAIN-SUFFIX,steampowered.com,🎮 游戏
-DOMAIN-SUFFIX,steamcommunity.com,🎮 游戏
-DOMAIN-SUFFIX,epicgames.com,🎮 游戏
-DOMAIN-SUFFIX,playstation.net,🎮 游戏
-DOMAIN-SUFFIX,xboxlive.com,🎮 游戏
-RULE-SET,steam,🎮 游戏
+		Tags:        []string{"app", "gaming", "steam", "epic", "ea", "nintendo"},
+		Description: "Steam / Epic / EA / Nintendo 等游戏平台走 🎮 游戏 组。",
+		Content: `RULE-SET,steam,🎮 游戏
+RULE-SET,epic,🎮 游戏
+RULE-SET,ea,🎮 游戏
+RULE-SET,nintendo,🎮 游戏
 `,
 	},
 	// ----------------------------------------------------------------------
@@ -183,19 +162,20 @@ RULE-SET,steam,🎮 游戏
 		ID: "block-ads", Name: "广告拦截", Emoji: "🚫", Category: "block",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
 		Tags:        []string{"block", "ads"},
-		Description: "聚合广告 + 常见 ad-network 域名 REJECT，命中即拦截。",
-		Content: `DOMAIN-KEYWORD,googlesyndication,REJECT
-DOMAIN-KEYWORD,doubleclick,REJECT
-DOMAIN-SUFFIX,googleadservices.com,REJECT
-RULE-SET,category-ads-all,REJECT
+		Description: "聚合广告 + Windows 间谍 / 遥测 REJECT，命中即拦截。",
+		Content: `RULE-SET,category-ads-all,REJECT
+RULE-SET,win-spy,REJECT
+RULE-SET,win-extra,REJECT
 `,
 	},
 	{
 		ID: "block-privacy", Name: "隐私保护", Emoji: "🛡️", Category: "block",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModePrepend,
-		Tags:        []string{"block", "privacy", "tracker"},
-		Description: "追踪 / 分析 / 钓鱼网站域名 REJECT。",
-		Content: `RULE-SET,category-tracker,REJECT
+		Tags:        []string{"block", "privacy", "tracker", "malware", "phishing"},
+		Description: "广告 + 追踪 + 恶意软件 + 钓鱼网站 REJECT。",
+		Content: `RULE-SET,category-ads-all,REJECT
+RULE-SET,tracking,REJECT
+RULE-SET,malware,REJECT
 RULE-SET,phishing,REJECT
 `,
 	},
@@ -206,15 +186,11 @@ RULE-SET,phishing,REJECT
 		ID: "cn-direct-foreign-proxy", Name: "国内直连 + 国外代理", Emoji: "🇨🇳", Category: "common",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeAppend,
 		Tags:        []string{"common", "default", "recommended"},
-		Description: "中国大陆 IP / 域名直连，其余流量走代理。推荐 default 选项。",
-		Content: `DOMAIN-SUFFIX,cn,DIRECT
-DOMAIN-KEYWORD,baidu,DIRECT
-DOMAIN-KEYWORD,taobao,DIRECT
-DOMAIN-KEYWORD,jd,DIRECT
-DOMAIN-KEYWORD,qq,DIRECT
-DOMAIN-KEYWORD,weibo,DIRECT
-RULE-SET,cn-domain,DIRECT
-GEOIP,CN,DIRECT
+		Description: "中国大陆域名 / IP 直连，非中国域名走代理，MATCH 兜底到代理。推荐 default 选项。",
+		Content: `RULE-SET,cn-domain,DIRECT
+RULE-SET,private-domain,DIRECT
+RULE-SET,cn-ip,DIRECT,no-resolve
+GEOIP,CN,DIRECT,no-resolve
 RULE-SET,geolocation-!cn,🚀 节点选择
 MATCH,🚀 节点选择
 `,
@@ -223,12 +199,9 @@ MATCH,🚀 节点选择
 		ID: "global-proxy", Name: "全局代理", Emoji: "🌍", Category: "common",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeReplace,
 		Tags:        []string{"common", "global"},
-		Description: "所有流量都走代理出口，仅本地 / 私网保留直连。",
-		Content: `DOMAIN-SUFFIX,localhost,DIRECT
-IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
-IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
-IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
-IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+		Description: "所有流量都走代理出口，仅私网 / 中国大陆域名保留直连。",
+		Content: `RULE-SET,private-domain,DIRECT
+RULE-SET,cn-domain,DIRECT
 MATCH,🚀 节点选择
 `,
 	},
@@ -236,8 +209,8 @@ MATCH,🚀 节点选择
 		ID: "fallback-fish", Name: "漏网之鱼", Emoji: "🐟", Category: "common",
 		RuleType: types.RuleTypeRules, Mode: types.RuleModeAppend,
 		Tags:        []string{"common", "fallback", "final"},
-		Description: "MATCH 兜底规则：未命中任何规则的流量走 🐟 漏网之鱼 组。",
-		Content: `MATCH,🐟 漏网之鱼
+		Description: "MATCH 兜底规则：未命中任何规则的流量走 🚀 节点选择。",
+		Content: `MATCH,🚀 节点选择
 `,
 	},
 }

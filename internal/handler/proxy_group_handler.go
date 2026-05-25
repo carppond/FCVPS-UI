@@ -294,6 +294,18 @@ var builtInProxyGroupPresets = []types.ProxyGroupPreset{
 		Description: "url-test：自动挑延迟最低的节点。",
 	},
 	{
+		ID: "failover", Name: "🔄 故障转移", Type: types.ProxyGroupFallback,
+		Icon: "🔄", IncludeAll: true,
+		TestURL: "http://www.gstatic.com/generate_204", TestInterval: 300,
+		Description: "fallback：按顺序尝试节点，第一个可用即使用。",
+	},
+	{
+		ID: "load-balance", Name: "🔮 负载均衡", Type: types.ProxyGroupLoadBalance,
+		Icon: "🔮", IncludeAll: true,
+		TestURL: "http://www.gstatic.com/generate_204", TestInterval: 300,
+		Description: "load-balance：将流量分散到多个节点。",
+	},
+	{
 		ID: "region-hk", Name: "🇭🇰 香港节点", Type: types.ProxyGroupURLTest,
 		Icon: "🇭🇰", IncludeAll: true,
 		TestURL: "http://www.gstatic.com/generate_204", TestInterval: 300,

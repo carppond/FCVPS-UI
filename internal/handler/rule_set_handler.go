@@ -342,7 +342,21 @@ func isValidRuleSetFormat(f types.RuleSetFormat) bool {
 //   - app    : 单应用域名集合（openai / google / netflix...）
 //   - block  : 广告 / 追踪 / 钓鱼拦截
 var builtInRuleSetPresets = []types.RuleSetPreset{
-	// ---------- 地区 ----------
+	// ======================================================================
+	// 基础 / 地区（region）
+	// ======================================================================
+	{
+		ID: "private-domain", Name: "私有域名", Emoji: "🏠", Category: "region",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/private.mrs", IntervalSeconds: 86400,
+		Description: "私有域名（localhost / *.local / 内网域名等）。",
+	},
+	{
+		ID: "private-ip", Name: "局域网 IP", Emoji: "🏠", Category: "region",
+		Behavior: types.RuleSetBehaviorIPCIDR, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geoip/private.mrs", IntervalSeconds: 86400,
+		Description: "RFC1918 + 链路本地 + 多播段。",
+	},
 	{
 		ID: "cn-domain", Name: "中国大陆域名", Emoji: "🇨🇳", Category: "region",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
@@ -356,18 +370,20 @@ var builtInRuleSetPresets = []types.RuleSetPreset{
 		Description: "中国大陆 IPv4 / IPv6 段。",
 	},
 	{
-		ID: "geolocation-!cn", Name: "国外网站", Emoji: "🌍", Category: "region",
+		ID: "geolocation-!cn", Name: "非中国域名", Emoji: "🌍", Category: "region",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
 		URL: metaRulesDatBase + "/geosite/geolocation-!cn.mrs", IntervalSeconds: 86400,
-		Description: "国外网站聚合（CN 之外）。",
+		Description: "非中国域名聚合（geolocation-!cn）。",
 	},
 	{
-		ID: "private", Name: "局域网", Emoji: "🏠", Category: "region",
-		Behavior: types.RuleSetBehaviorIPCIDR, Format: types.RuleSetFormatMRS,
-		URL: metaRulesDatBase + "/geoip/private.mrs", IntervalSeconds: 86400,
-		Description: "RFC1918 + 链路本地 + 多播段。",
+		ID: "geolocation-cn", Name: "中国域名", Emoji: "🇨🇳", Category: "region",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/geolocation-cn.mrs", IntervalSeconds: 86400,
+		Description: "中国域名聚合（geolocation-cn）。",
 	},
-	// ---------- 应用 ----------
+	// ======================================================================
+	// AI 服务（app）
+	// ======================================================================
 	{
 		ID: "openai", Name: "OpenAI", Emoji: "🤖", Category: "app",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
@@ -381,17 +397,83 @@ var builtInRuleSetPresets = []types.RuleSetPreset{
 		Description: "Claude / Anthropic API 域名集合。",
 	},
 	{
-		ID: "google", Name: "Google", Emoji: "📢", Category: "app",
+		ID: "bing", Name: "Bing", Emoji: "🤖", Category: "app",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
-		URL: metaRulesDatBase + "/geosite/google.mrs", IntervalSeconds: 86400,
-		Description: "Google 全家桶域名（含 google.com / gstatic.com 等）。",
+		URL: metaRulesDatBase + "/geosite/bing.mrs", IntervalSeconds: 86400,
+		Description: "Bing 搜索（含 Copilot）域名集合。",
 	},
 	{
-		ID: "github", Name: "GitHub", Emoji: "🐙", Category: "app",
+		ID: "copilot", Name: "Copilot", Emoji: "🤖", Category: "app",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
-		URL: metaRulesDatBase + "/geosite/github.mrs", IntervalSeconds: 86400,
-		Description: "GitHub 域名集合。",
+		URL: metaRulesDatBase + "/geosite/copilot.mrs", IntervalSeconds: 86400,
+		Description: "Microsoft / GitHub Copilot 域名集合。",
 	},
+	{
+		ID: "gemini", Name: "Gemini", Emoji: "🤖", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/gemini.mrs", IntervalSeconds: 86400,
+		Description: "Google Gemini AI 域名集合。",
+	},
+	{
+		ID: "meta-ai", Name: "Meta AI", Emoji: "🤖", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/meta.mrs", IntervalSeconds: 86400,
+		Description: "Meta AI (LLaMA) 域名集合。",
+	},
+	// ======================================================================
+	// 社交媒体（app）
+	// ======================================================================
+	{
+		ID: "telegram", Name: "Telegram", Emoji: "✈️", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/telegram.mrs", IntervalSeconds: 86400,
+		Description: "Telegram 域名集合（含 telegram.org / t.me）。",
+	},
+	{
+		ID: "twitter", Name: "Twitter / X", Emoji: "🐦", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/twitter.mrs", IntervalSeconds: 86400,
+		Description: "Twitter (X) 域名集合。",
+	},
+	{
+		ID: "facebook", Name: "Facebook", Emoji: "📘", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/facebook.mrs", IntervalSeconds: 86400,
+		Description: "Facebook 域名集合。",
+	},
+	{
+		ID: "instagram", Name: "Instagram", Emoji: "📷", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/instagram.mrs", IntervalSeconds: 86400,
+		Description: "Instagram 域名集合。",
+	},
+	{
+		ID: "linkedin", Name: "LinkedIn", Emoji: "💼", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/linkedin.mrs", IntervalSeconds: 86400,
+		Description: "LinkedIn 域名集合。",
+	},
+	{
+		ID: "reddit", Name: "Reddit", Emoji: "🔴", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/reddit.mrs", IntervalSeconds: 86400,
+		Description: "Reddit 域名集合。",
+	},
+	{
+		ID: "discord", Name: "Discord", Emoji: "💬", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/discord.mrs", IntervalSeconds: 86400,
+		Description: "Discord 域名集合。",
+	},
+	{
+		ID: "whatsapp", Name: "WhatsApp", Emoji: "📱", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/whatsapp.mrs", IntervalSeconds: 86400,
+		Description: "WhatsApp 域名集合。",
+	},
+	// ======================================================================
+	// 流媒体（app）
+	// ======================================================================
 	{
 		ID: "youtube", Name: "YouTube", Emoji: "📺", Category: "app",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
@@ -417,10 +499,49 @@ var builtInRuleSetPresets = []types.RuleSetPreset{
 		Description: "Spotify 音乐流媒体域名集合。",
 	},
 	{
-		ID: "telegram", Name: "Telegram", Emoji: "✈️", Category: "app",
+		ID: "tiktok", Name: "TikTok", Emoji: "📺", Category: "app",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
-		URL: metaRulesDatBase + "/geosite/telegram.mrs", IntervalSeconds: 86400,
-		Description: "Telegram 域名集合（含 telegram.org / t.me）。",
+		URL: metaRulesDatBase + "/geosite/tiktok.mrs", IntervalSeconds: 86400,
+		Description: "TikTok 短视频域名集合。",
+	},
+	{
+		ID: "bilibili", Name: "Bilibili", Emoji: "📺", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/bilibili.mrs", IntervalSeconds: 86400,
+		Description: "哔哩哔哩域名集合。",
+	},
+	{
+		ID: "bahamut", Name: "巴哈姆特", Emoji: "📺", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/bahamut.mrs", IntervalSeconds: 86400,
+		Description: "巴哈姆特 / 动画疯域名集合。",
+	},
+	{
+		ID: "hbo", Name: "HBO", Emoji: "📺", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/hbo.mrs", IntervalSeconds: 86400,
+		Description: "HBO / HBO Max 流媒体域名集合。",
+	},
+	{
+		ID: "primevideo", Name: "Prime Video", Emoji: "📺", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/primevideo.mrs", IntervalSeconds: 86400,
+		Description: "Amazon Prime Video 流媒体域名集合。",
+	},
+	{
+		ID: "twitch", Name: "Twitch", Emoji: "📺", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/twitch.mrs", IntervalSeconds: 86400,
+		Description: "Twitch 直播平台域名集合。",
+	},
+	// ======================================================================
+	// 科技公司（app）
+	// ======================================================================
+	{
+		ID: "google", Name: "Google", Emoji: "📢", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/google.mrs", IntervalSeconds: 86400,
+		Description: "Google 全家桶域名（含 google.com / gstatic.com 等）。",
 	},
 	{
 		ID: "microsoft", Name: "微软", Emoji: "Ⓜ️", Category: "app",
@@ -429,18 +550,71 @@ var builtInRuleSetPresets = []types.RuleSetPreset{
 		Description: "Microsoft 全家桶（Office / Azure / Bing 等）。",
 	},
 	{
+		ID: "github", Name: "GitHub", Emoji: "🐙", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/github.mrs", IntervalSeconds: 86400,
+		Description: "GitHub 域名集合。",
+	},
+	{
 		ID: "apple", Name: "苹果", Emoji: "🍎", Category: "app",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
 		URL: metaRulesDatBase + "/geosite/apple.mrs", IntervalSeconds: 86400,
 		Description: "Apple 全家桶（iCloud / App Store / Apple Music 等）。",
 	},
 	{
+		ID: "icloud", Name: "iCloud", Emoji: "🍎", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/icloud.mrs", IntervalSeconds: 86400,
+		Description: "iCloud 域名集合。",
+	},
+	{
+		ID: "amazon", Name: "Amazon", Emoji: "📦", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/amazon.mrs", IntervalSeconds: 86400,
+		Description: "Amazon 域名集合（含 AWS）。",
+	},
+	// ======================================================================
+	// 游戏（app）
+	// ======================================================================
+	{
 		ID: "steam", Name: "Steam", Emoji: "🎮", Category: "app",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
 		URL: metaRulesDatBase + "/geosite/steam.mrs", IntervalSeconds: 86400,
 		Description: "Steam 平台域名集合。",
 	},
-	// ---------- 拦截 ----------
+	{
+		ID: "epic", Name: "Epic Games", Emoji: "🎮", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/epicgames.mrs", IntervalSeconds: 86400,
+		Description: "Epic Games 平台域名集合。",
+	},
+	{
+		ID: "ea", Name: "EA Games", Emoji: "🎮", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/ea.mrs", IntervalSeconds: 86400,
+		Description: "EA (Electronic Arts) 域名集合。",
+	},
+	{
+		ID: "nintendo", Name: "Nintendo", Emoji: "🎮", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/nintendo.mrs", IntervalSeconds: 86400,
+		Description: "Nintendo 域名集合。",
+	},
+	{
+		ID: "playstation", Name: "PlayStation", Emoji: "🎮", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/playstation.mrs", IntervalSeconds: 86400,
+		Description: "PlayStation 域名集合。",
+	},
+	{
+		ID: "xbox", Name: "Xbox", Emoji: "🎮", Category: "app",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/xbox.mrs", IntervalSeconds: 86400,
+		Description: "Xbox 域名集合。",
+	},
+	// ======================================================================
+	// 拦截（block）
+	// ======================================================================
 	{
 		ID: "category-ads-all", Name: "广告聚合", Emoji: "🚫", Category: "block",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
@@ -448,15 +622,33 @@ var builtInRuleSetPresets = []types.RuleSetPreset{
 		Description: "聚合广告域名集合（含主流 ad-network）。",
 	},
 	{
-		ID: "category-tracker", Name: "追踪保护", Emoji: "🛡️", Category: "block",
+		ID: "win-spy", Name: "Windows 间谍", Emoji: "🕵️", Category: "block",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/win-spy.mrs", IntervalSeconds: 86400,
+		Description: "Windows 间谍活动域名集合。",
+	},
+	{
+		ID: "win-extra", Name: "Windows 遥测", Emoji: "🕵️", Category: "block",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/win-extra.mrs", IntervalSeconds: 86400,
+		Description: "Windows 额外遥测域名集合。",
+	},
+	{
+		ID: "tracking", Name: "追踪器", Emoji: "🛡️", Category: "block",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
 		URL: metaRulesDatBase + "/geosite/tracker.mrs", IntervalSeconds: 86400,
 		Description: "用户追踪 / 分析平台域名集合。",
 	},
 	{
+		ID: "malware", Name: "恶意软件", Emoji: "☠️", Category: "block",
+		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
+		URL: metaRulesDatBase + "/geosite/malware.mrs", IntervalSeconds: 86400,
+		Description: "恶意软件分发域名集合。",
+	},
+	{
 		ID: "phishing", Name: "钓鱼网站", Emoji: "🎣", Category: "block",
 		Behavior: types.RuleSetBehaviorDomain, Format: types.RuleSetFormatMRS,
-		URL: metaRulesDatBase + "/geosite/category-phishing.mrs", IntervalSeconds: 86400,
+		URL: metaRulesDatBase + "/geosite/phishing.mrs", IntervalSeconds: 86400,
 		Description: "钓鱼 / 诈骗网站域名集合。",
 	},
 }
