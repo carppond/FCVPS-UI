@@ -130,7 +130,7 @@ export function OperatorNode({
         </Badge>
       </button>
 
-      {/* Remove button (visible on hover / focus-within) */}
+      {/* Remove button — inline flex, not absolute, to avoid overlap with Badge */}
       <button
         type="button"
         aria-label={t("pipeline:editor.remove_operator")}
@@ -140,7 +140,7 @@ export function OperatorNode({
           onRemove(operator.id);
         }}
         className={cn(
-          "absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-[var(--radius-sm)]",
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)]",
           "text-[var(--color-text-tertiary)] opacity-0 transition-opacity duration-[var(--duration-fast)]",
           "hover:bg-[var(--color-error-bg)] hover:text-[var(--color-error)]",
           "group-hover:opacity-100 focus-visible:opacity-100",
