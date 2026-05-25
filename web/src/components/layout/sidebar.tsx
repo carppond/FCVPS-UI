@@ -102,7 +102,7 @@ export function Sidebar() {
 
   return (
     <nav
-      className="flex w-60 flex-col gap-4 border-r border-[var(--color-border)] bg-[rgba(15,15,18,0.45)] p-3 backdrop-blur-xl"
+      className="flex w-60 flex-col gap-4 border-r border-[var(--color-border)] bg-[var(--glass-sidebar)] p-3 backdrop-blur-xl"
       style={{ gridArea: "sidebar" }}
     >
       <NavGroup items={USER_NAV_ITEMS} />

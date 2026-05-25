@@ -169,6 +169,12 @@
   --shadow-md: var(--shadow-md-dark);
   --shadow-lg: var(--shadow-lg-dark);
   --shadow-xl: var(--shadow-xl-dark);
+
+  /* Glass surfaces (dark-mode uses black-based translucent) */
+  --glass-sidebar: rgba(15, 15, 18, .45);
+  --glass-topbar: rgba(20, 20, 22, .85);
+  --glass-dialog: rgba(35, 35, 40, .85);
+  --glass-card: rgba(40, 40, 44, .55);
 }
 
 /* ── Light theme ────────────────────────────────────────────────────────── */
@@ -217,6 +223,12 @@
   --color-status-offline: #dc2626;
   --color-status-degraded: #d97706;
   --color-status-unknown: #8a8e98;
+
+  /* Glass surfaces (light-mode needs white-based, not black-based) */
+  --glass-sidebar: rgba(255, 255, 255, .72);
+  --glass-topbar: rgba(255, 255, 255, .78);
+  --glass-dialog: rgba(255, 255, 255, .82);
+  --glass-card: rgba(255, 255, 255, .65);
 
   /* Active shadows */
   --shadow-sm: var(--shadow-sm-light);
