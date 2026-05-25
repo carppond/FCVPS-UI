@@ -1,10 +1,12 @@
 {
   "title": "ノード",
   "subtitle": "サブスクリプション横断でノードを管理：レイテンシ計測、タグ編集、手動追加。",
+  "subtitle_dynamic": "{{total}} ノード · {{online}} オンライン · 平均レイテンシ {{avgLatency}} ms",
   "actions": {
     "tcping_selected": "選択をテスト",
     "tcping_all": "すべてテスト",
     "tcping_one": "このノードをテスト",
+    "batch_tcping": "バッチ TCPing",
     "copy_uri": "URI をコピー",
     "view_detail": "詳細を表示",
     "delete_node": "ノードを削除",
@@ -22,15 +24,29 @@
     "updated_at": "更新日時",
     "actions": "操作"
   },
+  "summary": {
+    "total": "合計",
+    "online": "オンライン",
+    "offline": "オフライン",
+    "avg_latency": "平均レイテンシ",
+    "ms": "ms",
+    "protocols": "プロトコル"
+  },
   "filters": {
-    "search_placeholder": "名前 / サーバーで検索…",
+    "search_placeholder": "検索…",
+    "all": "すべて",
+    "status_online": "オンライン",
+    "status_offline": "オフライン",
     "all_protocols": "すべてのプロトコル",
     "all_tags": "すべてのタグ",
+    "all_subscriptions": "すべてのサブスクリプション",
     "sort_label": "並び替え",
     "sort_latency_asc": "レイテンシ（昇順）",
     "sort_latency_desc": "レイテンシ（降順）",
     "sort_created_desc": "新しい順",
-    "sort_created_asc": "古い順"
+    "sort_created_asc": "古い順",
+    "no_match_title": "一致するノードがありません",
+    "no_match_desc": "検索条件やフィルターを変更してください"
   },
   "latency": {
     "untested": "未測定",

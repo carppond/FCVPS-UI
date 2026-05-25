@@ -1,10 +1,12 @@
 {
   "title": "Nodes",
   "subtitle": "Manage nodes across subscriptions: probe latency, edit tags, or add manually.",
+  "subtitle_dynamic": "{{total}} nodes · {{online}} online · avg latency {{avgLatency}} ms",
   "actions": {
     "tcping_selected": "Probe selected",
     "tcping_all": "Probe all",
     "tcping_one": "Probe this node",
+    "batch_tcping": "Batch TCPing",
     "copy_uri": "Copy URI",
     "view_detail": "View details",
     "delete_node": "Delete node",
@@ -22,15 +24,29 @@
     "updated_at": "Updated",
     "actions": "Actions"
   },
+  "summary": {
+    "total": "Total",
+    "online": "Online",
+    "offline": "Offline",
+    "avg_latency": "Avg Latency",
+    "ms": "ms",
+    "protocols": "Protocols"
+  },
   "filters": {
-    "search_placeholder": "Search by name / server…",
+    "search_placeholder": "Search...",
+    "all": "All",
+    "status_online": "Online",
+    "status_offline": "Offline",
     "all_protocols": "All protocols",
     "all_tags": "All tags",
+    "all_subscriptions": "All subscriptions",
     "sort_label": "Sort",
     "sort_latency_asc": "Latency (asc)",
     "sort_latency_desc": "Latency (desc)",
     "sort_created_desc": "Newest first",
-    "sort_created_asc": "Oldest first"
+    "sort_created_asc": "Oldest first",
+    "no_match_title": "No matching nodes",
+    "no_match_desc": "Try adjusting your search or filters"
   },
   "latency": {
     "untested": "Untested",
