@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>拾光VPS · 订阅详情 · 3 版对比</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#0f0f11;--grad:radial-gradient(ellipse 80% 50% at 70% 0%,#261535 0%,#0f0f11 60%);
+  --s:rgba(255,255,255,.035);--s2:rgba(255,255,255,.06);--s3:rgba(255,255,255,.09);
+  --t:#ededf0;--t2:#9898a5;--t3:#606070;
+  --b:rgba(255,255,255,.06);--bs:rgba(255,255,255,.12);
+  --p:#ff6363;--ps:rgba(255,99,99,.12);
+  --ok:#34d399;--ok-bg:rgba(52,211,153,.12);
+  --warn:#fbbf24;--warn-bg:rgba(251,191,36,.12);
+  --err:#f87171;--err-bg:rgba(248,113,113,.12);
+  --info:#60a5fa;--info-bg:rgba(96,165,250,.12);
+  --r:10px;--rl:14px;
+  --f:'Inter','Noto Sans SC',-apple-system,sans-serif;
+  --fm:'JetBrains Mono',monospace;
+}
+body{margin:0;font-family:var(--f);background:var(--bg);background-image:var(--grad);background-attachment:fixed;color:var(--t);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* 版本切换条 */
+.vbar{position:sticky;top:0;z-index:100;background:rgba(10,10,12,.92);backdrop-filter:blur(20px);padding:10px 24px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--b)}
+.vbar h2{margin:0;font-size:13px;font-weight:600;color:var(--t2);white-space:nowrap}
+.vbar button{font-family:inherit;font-size:11px;font-weight:500;padding:5px 12px;border-radius:6px;border:none;background:transparent;color:var(--t3);cursor:pointer;transition:all .12s}
+.vbar button:hover{background:var(--s2);color:var(--t)}
+.vbar button.on{background:var(--p);color:#fff}
+
+.ver{display:none;padding:20px 28px 60px}
+.ver.active{display:block}
+.vlabel{display:inline-block;background:var(--ps);color:var(--p);font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+
+/* 共用组件 */
+.glass{background:var(--s);backdrop-filter:blur(16px);border:1px solid var(--b);border-radius:var(--rl);overflow:hidden}
+.btn{font-family:inherit;font-size:12px;font-weight:500;padding:7px 14px;border-radius:8px;border:1px solid var(--bs);background:var(--s2);color:var(--t2);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--s3);color:var(--t)}
+.btn.pri{background:var(--p);color:#fff;border-color:var(--p)}
+.badge{font-size:10px;padding:3px 8px;border-radius:5px;font-weight:600;display:inline-block}
+.tag{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--s2);color:var(--t3);font-weight:500;display:inline-block}
+.crumb{font-size:12px;color:var(--t3);margin-bottom:14px}
+.crumb a{color:var(--t3);text-decoration:none}.crumb a:hover{color:var(--t)}
+
+/* 节点小卡（三版共用） */
+.nd{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:all .12s}
+.nd:hover{border-color:var(--bs);background:var(--s3)}
+.nd .top{display:flex;align-items:center;justify-content:space-between}
+.nd .nm{font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd .nm .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.nd .addr{font-size:10px;font-family:var(--fm);color:var(--t3)}
+.nd .btm{display:flex;align-items:center;justify-content:space-between;font-size:10px}
+.lat{padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;font-variant-numeric:tabular-nums}
+.lf{background:var(--ok-bg);color:var(--ok)}.lm{background:var(--warn-bg);color:var(--warn)}.ls{background:var(--err-bg);color:var(--err)}.ln{background:var(--s2);color:var(--t3)}
+
+/* Tab 组件 */
+.tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid var(--b)}
+.tab{font-family:inherit;font-size:13px;font-weight:500;padding:10px 16px;border:none;background:transparent;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s}
+.tab:hover{color:var(--t)}.tab.on{color:var(--p);border-bottom-color:var(--p)}
+.tp{display:none}.tp.active{display:block}
+
+/* 客户端卡 */
+.cc{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:5px;transition:all .12s}
+.cc:hover{border-color:var(--bs);background:var(--s3)}
+.cc .ct{display:flex;align-items:center;justify-content:space-between}
+.cc .cn{font-size:11.5px;font-weight:600}.cc .cf{font-size:9px;padding:1px 5px;border-radius:3px;background:var(--s3);color:var(--t3)}
+.cc .cu{font-size:9px;font-family:var(--fm);color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.03);padding:3px 6px;border-radius:4px}
+.cc .ca{display:flex;gap:3px}
+.cc .ca button{font-family:inherit;font-size:9px;padding:3px 6px;border-radius:4px;border:1px solid var(--b);background:transparent;color:var(--t3);cursor:pointer;flex:1;text-align:center;transition:all .12s}
+.cc .ca button:hover{background:var(--s2);color:var(--t)}
+.cc .ca button.p{background:var(--ps);color:var(--p);border-color:rgba(255,99,99,.2)}
+
+/* 历史行 */
+.hi{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b);font-size:11.5px}
+.hi:last-child{border-bottom:none}
+.hi .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hi .msg{flex:1}.hi .delta{font-size:11px;color:var(--t3)}
+.hi .time{font-size:11px;font-family:var(--fm);color:var(--t3)}
+
+/* ============ V1 特有：英雄区 + Tab ============ */
+.v1-hero{padding:24px 28px;margin-bottom:20px;display:flex;gap:24px;align-items:flex-start}
+.v1-hero .info{flex:1;min-width:0}
+.v1-hero .info h1{margin:0 0 6px;font-size:24px;font-weight:700;letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+.v1-hero .meta{font-size:12px;color:var(--t3);margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.v1-stats{display:flex;gap:0;background:var(--s2);border-radius:10px;overflow:hidden}
+.v1-st{padding:12px 18px;border-right:1px solid var(--b);display:flex;flex-direction:column;gap:2px;min-width:100px}
+.v1-st:last-child{border-right:none}
+.v1-st .k{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);font-weight:600}
+.v1-st .v{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.v1-st .h{font-size:10px;color:var(--t3)}
+.v1-acts{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+
+/* ============ V2 特有：左右分栏 ============ */
+.v2-layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
+.v2-sidebar{display:flex;flex-direction:column;gap:12px}
+.v2-info{padding:20px}
+.v2-info h2{margin:0 0 10px;font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.v2-field{display:flex;flex-direction:column;gap:3px;padding:8px 0;border-bottom:1px solid var(--b)}
+.v2-field:last-child{border-bottom:none}
+.v2-field .k{font-size:10px;text-transform:uppercase;color:var(--t3);font-weight:600;letter-spacing:.3px}
+.v2-field .v{font-size:13px;font-variant-numeric:tabular-nums}
+.v2-actions{padding:16px 20px;border-top:1px solid var(--b);display:flex;flex-direction:column;gap:6px}
+.v2-main{display:flex;flex-direction:column;gap:16px}
+
+/* ============ V3 特有：单栏全展开 ============ */
+.v3-header{padding:24px 28px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.v3-header .left{display:flex;align-items:center;gap:14px}
+.v3-header .left h1{margin:0;font-size:22px;font-weight:700}
+.v3-header .acts{display:flex;gap:6px}
+.v3-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:16px;overflow:hidden}
+.v3-strip .cell{padding:14px 18px;border-right:1px solid var(--b);display:flex;flex-direction:column;gap:2px}
+.v3-strip .cell:last-child{border-right:none}
+.v3-strip .cell .k{font-size:9px;text-transform:uppercase;color:var(--t3);font-weight:600;letter-spacing:.3px}
+.v3-strip .cell .v{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.v3-strip .cell .h{font-size:10px;color:var(--t3)}
+.v3-section{margin-bottom:20px}
+.v3-section h3{margin:0 0 8px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.v3-section h3 .count{font-size:11px;color:var(--t3);font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="vbar">
+  <h2>🎨 订阅详情 · 3 版对比</h2>
+  <button class="on" data-v="1">V1 · 英雄区+Tab</button>
+  <button data-v="2">V2 · 左右分栏</button>
+  <button data-v="3">V3 · 单栏全展开</button>
+  <button data-v="4">V4 · 左栏+右全展开</button>
+</div>
+
+<!-- =============== V1：英雄区 + Tab =============== -->
+<div class="ver active" id="v-1">
+<span class="vlabel">V1 · 顶部英雄卡 + 4 个 Tab 切换</span>
+<div class="crumb"><a href="#">订阅管理</a> <span style="opacity:.4">/</span> <span style="color:var(--t)">测试机场</span></div>
+<div class="glass v1-hero">
+  <div class="info">
+    <h1><span style="width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);display:inline-block"></span> 测试机场 <span class="badge" style="background:var(--info-bg);color:var(--info)">URL</span><span class="badge" style="background:var(--ok-bg);color:var(--ok)">正常</span></h1>
+    <div class="meta"><span>每 6 小时</span><span>·</span><span>2 分钟前</span><span>·</span><span class="tag">hk</span><span class="tag">jp</span><span class="tag">streaming</span></div>
+    <div class="v1-stats">
+      <div class="v1-st"><span class="k">节点</span><span class="v">15</span><span class="h">12 在线</span></div>
+      <div class="v1-st"><span class="k">流量</span><span class="v">98 <span style="font-size:11px;color:var(--t3)">GB</span></span><span class="h">/300 · 33%</span></div>
+      <div class="v1-st"><span class="k">到期</span><span class="v">26 <span style="font-size:11px;color:var(--t3)">天</span></span><span class="h">06-17</span></div>
+      <div class="v1-st"><span class="k">Token</span><span class="v" style="font-size:12px;font-family:var(--fm)">a8f2...c4e1</span><span class="h">复制</span></div>
+    </div>
+  </div>
+  <div class="v1-acts"><button class="btn pri">↻ 同步</button><button class="btn">📋 复制</button><button class="btn">✏️ 编辑</button><button class="btn" style="color:var(--err)">🗑 删除</button></div>
+</div>
+<div class="tabs" id="t1-tabs"><button class="tab on" data-t="t1-nd">🌐 节点 (15)</button><button class="tab" data-t="t1-sh">📋 分享</button><button class="tab" data-t="t1-st">⚙️ 设置</button><button class="tab" data-t="t1-hi">📜 历史</button></div>
+<div class="tp active" id="t1-nd"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px" id="nodes-v1"></div></div>
+<div class="tp" id="t1-sh"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px" id="clients-v1"></div></div>
+<div class="tp" id="t1-st"><div class="glass" style="padding:20px;font-size:13px;color:var(--t2)">⚙️ 设置表单（名称/URL/UA/周期/流量/到期/标签）</div></div>
+<div class="tp" id="t1-hi"><div class="glass" style="padding:20px" id="history-v1"></div></div>
+</div>
+
+<!-- =============== V2：左右分栏 =============== -->
+<div class="ver" id="v-2">
+<span class="vlabel">V2 · 左侧固定信息栏 + 右侧内容区</span>
+<div class="crumb"><a href="#">订阅管理</a> <span style="opacity:.4">/</span> <span style="color:var(--t)">测试机场</span></div>
+<div class="v2-layout">
+  <div class="v2-sidebar">
+    <div class="glass v2-info">
+      <h2><span style="width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);display:inline-block"></span> 测试机场</h2>
+      <div style="display:flex;gap:4px;margin-bottom:12px"><span class="badge" style="background:var(--info-bg);color:var(--info)">URL</span><span class="badge" style="background:var(--ok-bg);color:var(--ok)">正常</span></div>
+      <div class="v2-field"><span class="k">节点</span><span class="v"><strong>15</strong> <span style="color:var(--t3)">(12 在线)</span></span></div>
+      <div class="v2-field"><span class="k">流量</span><span class="v">98 / 300 GB</span><div style="height:3px;background:var(--b);border-radius:2px;margin-top:4px;overflow:hidden"><div style="height:100%;width:33%;background:var(--info);border-radius:2px"></div></div></div>
+      <div class="v2-field"><span class="k">到期</span><span class="v">26 天 · 2026-06-17</span></div>
+      <div class="v2-field"><span class="k">同步</span><span class="v">每 6 小时 · 2 分钟前</span></div>
+      <div class="v2-field"><span class="k">标签</span><div style="display:flex;gap:4px;margin-top:2px"><span class="tag">hk</span><span class="tag">jp</span><span class="tag">streaming</span></div></div>
+      <div class="v2-field"><span class="k">Token</span><span class="v" style="font-family:var(--fm);font-size:11px">a8f2c0...c4e190</span></div>
+      <div class="v2-actions">
+        <button class="btn pri" style="width:100%;justify-content:center">↻ 立即同步</button>
+        <button class="btn" style="width:100%;justify-content:center">📋 复制链接</button>
+        <div style="display:flex;gap:6px"><button class="btn" style="flex:1;justify-content:center">✏️ 编辑</button><button class="btn" style="flex:1;justify-content:center;color:var(--err)">🗑</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="v2-main">
+    <div class="tabs" id="t2-tabs"><button class="tab on" data-t="t2-nd">🌐 节点</button><button class="tab" data-t="t2-sh">📋 分享</button><button class="tab" data-t="t2-hi">📜 历史</button></div>
+    <div class="tp active" id="t2-nd"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px" id="nodes-v2"></div></div>
+    <div class="tp" id="t2-sh"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px" id="clients-v2"></div></div>
+    <div class="tp" id="t2-hi"><div class="glass" style="padding:20px" id="history-v2"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- =============== V3：单栏全展开 =============== -->
+<div class="ver" id="v-3">
+<span class="vlabel">V3 · 单栏全部展开，无 Tab 隐藏</span>
+<div class="crumb"><a href="#">订阅管理</a> <span style="opacity:.4">/</span> <span style="color:var(--t)">测试机场</span></div>
+<div class="glass v3-header">
+  <div class="left">
+    <span style="width:12px;height:12px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);display:inline-block"></span>
+    <h1>测试机场</h1>
+    <span class="badge" style="background:var(--info-bg);color:var(--info)">URL</span>
+    <span class="badge" style="background:var(--ok-bg);color:var(--ok)">正常</span>
+    <span class="tag">hk</span><span class="tag">jp</span><span class="tag">streaming</span>
+  </div>
+  <div class="acts"><button class="btn pri">↻ 同步</button><button class="btn">📋 复制</button><button class="btn">✏️ 编辑</button><button class="btn" style="color:var(--err)">🗑</button></div>
+</div>
+<div class="glass v3-strip">
+  <div class="cell"><span class="k">节点</span><span class="v">15</span><span class="h">12 在线 · 3 离线</span></div>
+  <div class="cell"><span class="k">流量</span><span class="v">98 <span style="font-size:11px;color:var(--t3)">GB</span></span><span class="h">/300 GB · 33%</span></div>
+  <div class="cell"><span class="k">到期</span><span class="v">26 <span style="font-size:11px;color:var(--t3)">天</span></span><span class="h">2026-06-17</span></div>
+  <div class="cell"><span class="k">同步</span><span class="v" style="font-size:13px">2 分钟前</span><span class="h">每 6 小时自动</span></div>
+  <div class="cell"><span class="k">Token</span><span class="v" style="font-size:11px;font-family:var(--fm)">a8f2...c4e1</span><span class="h">复制</span></div>
+</div>
+
+<div class="v3-section">
+  <h3>🌐 节点 <span class="count">(15)</span> <button class="btn" style="margin-left:auto;font-size:11px">⚡ 批量 TCPing</button></h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px" id="nodes-v3"></div>
+</div>
+
+<div class="v3-section">
+  <h3>📋 分享配置 <button class="btn" style="margin-left:auto;font-size:11px">🔄 轮换 Token</button></h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px" id="clients-v3"></div>
+</div>
+
+<div class="v3-section">
+  <h3>📜 同步历史</h3>
+  <div class="glass" style="padding:16px 20px" id="history-v3"></div>
+</div>
+</div>
+
+<!-- =============== V4：V2 左栏 + V3 右全展开 =============== -->
+<div class="ver" id="v-4">
+<span class="vlabel">V4 · 左侧固定信息栏 + 右侧节点/分享/历史全展开</span>
+<div class="crumb"><a href="#">订阅管理</a> <span style="opacity:.4">/</span> <span style="color:var(--t)">测试机场</span></div>
+<div class="v2-layout">
+  <!-- 左栏：固定信息（V2 样式） -->
+  <div class="v2-sidebar">
+    <div class="glass v2-info">
+      <h2><span style="width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);display:inline-block"></span> 测试机场</h2>
+      <div style="display:flex;gap:4px;margin-bottom:12px"><span class="badge" style="background:var(--info-bg);color:var(--info)">URL</span><span class="badge" style="background:var(--ok-bg);color:var(--ok)">正常</span></div>
+      <div class="v2-field"><span class="k">节点</span><span class="v"><strong>15</strong> <span style="color:var(--t3)">(12 在线)</span></span></div>
+      <div class="v2-field"><span class="k">流量</span><span class="v">98 / 300 GB</span><div style="height:3px;background:var(--b);border-radius:2px;margin-top:4px;overflow:hidden"><div style="height:100%;width:33%;background:var(--info);border-radius:2px"></div></div></div>
+      <div class="v2-field"><span class="k">到期</span><span class="v">26 天 · 2026-06-17</span></div>
+      <div class="v2-field"><span class="k">同步</span><span class="v">每 6 小时 · 2 分钟前</span></div>
+      <div class="v2-field"><span class="k">标签</span><div style="display:flex;gap:4px;margin-top:2px"><span class="tag">hk</span><span class="tag">jp</span><span class="tag">streaming</span></div></div>
+      <div class="v2-field"><span class="k">Token</span><span class="v" style="font-family:var(--fm);font-size:11px">a8f2c0...c4e190</span></div>
+      <div class="v2-actions">
+        <button class="btn pri" style="width:100%;justify-content:center">↻ 立即同步</button>
+        <button class="btn" style="width:100%;justify-content:center">📋 复制链接</button>
+        <div style="display:flex;gap:6px"><button class="btn" style="flex:1;justify-content:center">✏️ 编辑</button><button class="btn" style="flex:1;justify-content:center;color:var(--err)">🗑</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧：全展开（V3 样式） -->
+  <div class="v2-main" style="gap:20px">
+    <div class="v3-section" style="margin-bottom:0">
+      <h3>🌐 节点 <span class="count">(15)</span>
+        <button class="btn" style="margin-left:auto;font-size:11px;padding:5px 10px">⚡ TCPing</button>
+      </h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px" id="nodes-v4"></div>
+    </div>
+
+    <div class="v3-section" style="margin-bottom:0">
+      <h3>📋 分享配置
+        <button class="btn" style="margin-left:auto;font-size:11px;color:var(--warn);border-color:rgba(251,191,36,.2)">🔄 轮换 Token</button>
+      </h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px" id="clients-v4"></div>
+    </div>
+
+    <div class="v3-section" style="margin-bottom:0">
+      <h3>📜 同步历史</h3>
+      <div class="glass" style="padding:14px 18px" id="history-v4"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// 版本切换
+document.querySelectorAll('.vbar button').forEach(b=>{b.addEventListener('click',()=>{
+  document.querySelectorAll('.ver').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+b.dataset.v).classList.add('active');
+  document.querySelectorAll('.vbar button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+})});
+
+// Tab 切换（多组）
+document.querySelectorAll('.tabs').forEach(group=>{
+  group.querySelectorAll('.tab').forEach(t=>{t.addEventListener('click',()=>{
+    const id=t.dataset.t;
+    // 找同 parent 下所有 tab-page
+    const prefix=id.split('-')[0]+'-'+id.split('-')[1]; // t1 or t2
+    document.querySelectorAll(`[id^="${prefix.substring(0,2)}"]`).forEach(p=>{if(p.classList.contains('tp'))p.classList.remove('active')});
+    document.getElementById(id)?.classList.add('active');
+    group.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  })});
+});
+
+// 生成节点卡片
+const nodes=[
+  {nm:'reality_香港-hk01',proto:'vless',addr:'1.2.3.4:31841',tags:['HK','reality'],lat:'3 ms',lc:'lf',on:true},
+  {nm:'vless_东京-jp02',proto:'vless',addr:'example.jp:443',tags:['JP'],lat:'48 ms',lc:'lf',on:true},
+  {nm:'trojan_硅谷-us03',proto:'trojan',addr:'us.example.com:8443',tags:['US'],lat:'182 ms',lc:'lm',on:true},
+  {nm:'ss_柏林-de04',proto:'ss',addr:'de.example.com:8388',tags:['DE'],lat:'不可达',lc:'ln',on:false},
+  {nm:'hysteria2_新加坡-sg05',proto:'hy2',addr:'sg.example.com:443',tags:['SG','UDP'],lat:'62 ms',lc:'lf',on:true},
+  {nm:'vmess_大阪-jp06',proto:'vmess',addr:'jp2.example.com:443',tags:['JP'],lat:'55 ms',lc:'lf',on:true},
+];
+function renderNodes(id){
+  document.getElementById(id).innerHTML=nodes.map(n=>`<div class="nd">
+    <div class="top"><div class="nm"><span class="dot" style="background:${n.on?'var(--ok)':'var(--t3)'};${n.on?'box-shadow:0 0 6px var(--ok)':''}"></span>${n.on?n.nm:`<span style="color:var(--t3)">${n.nm}</span>`}</div><span class="badge" style="background:var(--s3);color:var(--t2);font-family:var(--fm);font-size:10px">${n.proto}</span></div>
+    <div class="addr">${n.addr}</div>
+    <div class="btm"><div style="display:flex;gap:4px">${n.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div><span class="lat ${n.lc}">${n.lat}</span></div>
+  </div>`).join('');
+}
+['nodes-v1','nodes-v2','nodes-v3','nodes-v4'].forEach(renderNodes);
+
+// 生成客户端卡片
+const clients=[
+  {name:'mihomo',fmt:'Clash YAML'},{name:'Clash Verge',fmt:'Clash YAML'},{name:'sing-box',fmt:'JSON'},
+  {name:'Shadowrocket',fmt:'V2Ray URI'},{name:'Surge',fmt:'Surge conf'},{name:'Stash',fmt:'Clash YAML'},
+];
+function renderClients(id){
+  document.getElementById(id).innerHTML=clients.map(c=>`<div class="cc">
+    <div class="ct"><span class="cn">${c.name}</span><span class="cf">${c.fmt}</span></div>
+    <div class="cu">http://localhost:5173/download/test?token=a8f2...&target=...</div>
+    <div class="ca"><button class="p">📋 复制</button><button>🔗</button><button>📱</button></div>
+  </div>`).join('');
+}
+['clients-v1','clients-v2','clients-v3','clients-v4'].forEach(renderClients);
+
+// 生成历史
+const hist=[
+  {ok:true,msg:'同步成功 · 15 节点（+2 / -1）',d:'+2/-1',dc:'var(--ok)',t:'2m ago'},
+  {ok:true,msg:'同步成功 · 14 节点（无变化）',d:'±0',dc:'var(--t3)',t:'6h ago'},
+  {ok:false,msg:'部分失败 · 13/15（2 格式错误）',d:'⚠ 2',dc:'var(--warn)',t:'1d ago'},
+  {ok:false,msg:'同步失败 · HTTP 503',d:'✗',dc:'var(--err)',t:'2d ago'},
+];
+function renderHistory(id){
+  document.getElementById(id).innerHTML=hist.map(h=>`<div class="hi">
+    <span class="dot" style="background:${h.ok?'var(--ok)':h.d.includes('✗')?'var(--err)':'var(--warn)'}"></span>
+    <span class="msg">${h.msg}</span><span class="delta" style="color:${h.dc}">${h.d}</span><span class="time">${h.t}</span>
+  </div>`).join('');
+}
+['history-v1','history-v2','history-v3','history-v4'].forEach(renderHistory);
+</script>
+</body>
+</html>

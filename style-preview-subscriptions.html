@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>拾光VPS · 订阅卡片 · 5 版对比</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#0f0f11;--grad:radial-gradient(ellipse 80% 50% at 70% 0%,#261535 0%,#0f0f11 60%);
+  --s:rgba(255,255,255,.035);--s2:rgba(255,255,255,.06);--s3:rgba(255,255,255,.09);
+  --t:#ededf0;--t2:#9898a5;--t3:#606070;
+  --b:rgba(255,255,255,.06);--bs:rgba(255,255,255,.12);
+  --p:#ff6363;--ps:rgba(255,99,99,.12);
+  --ok:#34d399;--ok-bg:rgba(52,211,153,.12);
+  --warn:#fbbf24;--warn-bg:rgba(251,191,36,.12);
+  --err:#f87171;--err-bg:rgba(248,113,113,.12);
+  --info:#60a5fa;--info-bg:rgba(96,165,250,.12);
+  --r:10px;--rl:14px;
+  --f:'Inter','Noto Sans SC',-apple-system,sans-serif;
+  --fm:'JetBrains Mono',monospace;
+}
+body{margin:0;font-family:var(--f);background:var(--bg);background-image:var(--grad);background-attachment:fixed;color:var(--t);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+.ver-bar{position:sticky;top:0;z-index:100;background:rgba(10,10,12,.92);backdrop-filter:blur(20px);padding:10px 24px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--b);flex-wrap:wrap}
+.ver-bar h2{margin:0;font-size:13px;font-weight:600;color:var(--t2);white-space:nowrap}
+.ver-bar button{font-family:inherit;font-size:11px;font-weight:500;padding:5px 12px;border-radius:6px;border:none;background:transparent;color:var(--t3);cursor:pointer;transition:all .12s}
+.ver-bar button:hover{background:var(--s2);color:var(--t)}
+.ver-bar button.on{background:var(--p);color:#fff}
+.page{display:none;padding:24px 32px 60px}
+.page.active{display:block}
+.label{display:inline-block;background:var(--ps);color:var(--p);font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.badge{font-size:10px;padding:3px 8px;border-radius:5px;font-weight:600;display:inline-block}
+.b-url{background:var(--info-bg);color:var(--info)}
+.b-up{background:var(--warn-bg);color:var(--warn)}
+.b-man{background:var(--s3);color:var(--t2)}
+.b-ok{background:var(--ok-bg);color:var(--ok)}
+.b-warn{background:var(--warn-bg);color:var(--warn)}
+.tag{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--s2);color:var(--t3);font-weight:500;display:inline-block}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:2px}
+.abtn{font-family:inherit;font-size:11px;padding:3px 8px;border-radius:5px;border:1px solid var(--b);background:transparent;color:var(--t3);cursor:pointer;transition:all .12s}
+.abtn:hover{background:var(--s2);color:var(--t);border-color:var(--bs)}
+
+/* ============ 方案 1：标准卡片（之前确认过的） ============ */
+.c1{background:var(--s);backdrop-filter:blur(16px);border:1px solid var(--b);border-radius:var(--rl);padding:18px 20px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.c1:hover{border-color:var(--bs);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.c1::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 2px 2px 0}
+.c1.ok::before{background:var(--ok)}.c1.warn::before{background:var(--warn)}
+
+/* ============ 方案 2：顶部渐变条 ============ */
+.c2{background:var(--s);backdrop-filter:blur(16px);border:1px solid var(--b);border-radius:var(--rl);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;overflow:hidden}
+.c2:hover{border-color:var(--bs);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.c2 .top-bar{height:4px;width:100%}
+.c2.ok .top-bar{background:linear-gradient(90deg,var(--ok),var(--info))}.c2.warn .top-bar{background:linear-gradient(90deg,var(--warn),var(--err))}
+.c2 .body{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+
+/* ============ 方案 3：大图标左 + 右信息 ============ */
+.c3{background:var(--s);backdrop-filter:blur(16px);border:1px solid var(--b);border-radius:var(--rl);padding:18px 20px;cursor:pointer;transition:all .15s;display:flex;gap:14px;align-items:flex-start;overflow:hidden}
+.c3:hover{border-color:var(--bs);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.c3 .big-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.c3 .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+
+/* ============ 方案 4：环形进度卡 ============ */
+.c4{background:var(--s);backdrop-filter:blur(16px);border:1px solid var(--b);border-radius:var(--rl);padding:18px 20px;cursor:pointer;transition:all .15s;display:flex;gap:16px;align-items:center;overflow:hidden}
+.c4:hover{border-color:var(--bs);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.c4 .ring{position:relative;width:64px;height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.c4 .ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.c4 .ring .rv{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.c4 .ring .rl{font-size:8px;color:var(--t3);font-weight:600}
+.c4 .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+
+/* ============ 方案 5：极简 hover 展开 ============ */
+.c5{background:var(--s);backdrop-filter:blur(16px);border:1px solid var(--b);border-radius:var(--rl);padding:18px 20px;cursor:pointer;transition:all .2s;overflow:hidden;position:relative}
+.c5:hover{border-color:var(--bs);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.c5 .main-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.c5 .main-row .nm{font-size:15px;font-weight:600}
+.c5 .main-row .right{display:flex;align-items:center;gap:8px}
+.c5 .main-row .big-num{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.c5 .main-row .big-unit{font-size:12px;color:var(--t3);font-weight:500}
+.c5 .detail{max-height:0;opacity:0;overflow:hidden;transition:max-height .25s ease,opacity .2s ease,margin .25s ease;margin-top:0}
+.c5:hover .detail{max-height:120px;opacity:1;margin-top:12px}
+.c5 .detail-inner{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--b)}
+</style>
+</head>
+<body>
+
+<div class="ver-bar">
+  <h2>🎨 订阅卡片 · 5 版对比</h2>
+  <button class="on" data-v="1">1 · 标准</button>
+  <button data-v="2">2 · 渐变条</button>
+  <button data-v="3">3 · 大图标</button>
+  <button data-v="4">4 · 环形进度</button>
+  <button data-v="5">5 · 极简展开</button>
+</div>
+
+<!-- ======== 方案 1：标准卡片 ======== -->
+<div class="page active" id="p-1">
+<span class="label">方案 1 · 标准卡片 — 完整信息 + 左侧状态色条</span>
+<div class="grid">
+  <div class="c1 ok">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px"><div style="font-size:15px;font-weight:600">测试机场</div><div style="display:flex;gap:4px"><span class="badge b-url">URL</span><span class="badge b-ok">正常</span></div></div>
+    <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">15</strong> 节点 (12 在线)</span><span>📊 <strong style="color:var(--t)">98</strong> / 300 GB</span></div>
+    <div class="bar"><i style="width:33%;background:var(--info)"></i></div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap"><span class="tag">hk</span><span class="tag">jp</span><span class="tag">streaming</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)"><span><span class="dot" style="background:var(--ok)"></span> 2 分钟前 · 每 6 小时</span><div style="display:flex;gap:4px"><button class="abtn">↻</button><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+  </div>
+  <div class="c1 ok">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between"><div style="font-size:15px;font-weight:600">自建 Reality</div><div style="display:flex;gap:4px"><span class="badge b-man">手动</span><span class="badge b-ok">正常</span></div></div>
+    <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">5</strong> 节点 (5 在线)</span></div>
+    <div style="display:flex;gap:4px"><span class="tag">reality</span><span class="tag">vless</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)"><span><span class="dot" style="background:var(--t3)"></span> 手动管理</span><div style="display:flex;gap:4px"><button class="abtn">✏️</button><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+  </div>
+  <div class="c1 warn">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between"><div style="font-size:15px;font-weight:600">备用机场</div><div style="display:flex;gap:4px"><span class="badge b-url">URL</span><span class="badge b-warn">异常</span></div></div>
+    <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">8</strong> 节点 (6 在线)</span><span>📊 <strong style="color:var(--t)">44</strong> / 200 GB</span></div>
+    <div class="bar"><i style="width:22%;background:var(--warn)"></i></div>
+    <div style="display:flex;gap:4px"><span class="tag">us</span><span class="tag">backup</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)"><span><span class="dot" style="background:var(--warn)"></span> 12 分钟前 · 部分失败</span><div style="display:flex;gap:4px"><button class="abtn">↻</button><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+  </div>
+  <div class="c1 ok">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between"><div style="font-size:15px;font-weight:600">朋友共享</div><div style="display:flex;gap:4px"><span class="badge b-up">上传</span><span class="badge b-ok">正常</span></div></div>
+    <div style="font-size:12px;color:var(--t2)">🌐 <strong style="color:var(--t)">3</strong> 节点</div>
+    <div style="display:flex;gap:4px"><span class="tag">sg</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)"><span><span class="dot" style="background:var(--ok)"></span> 1 小时前</span><div style="display:flex;gap:4px"><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ======== 方案 2：顶部渐变条 ======== -->
+<div class="page" id="p-2">
+<span class="label">方案 2 · 顶部渐变条 — 状态一眼看，顶部 4px 渐变色带</span>
+<div class="grid">
+  <div class="c2 ok">
+    <div class="top-bar"></div>
+    <div class="body">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">测试机场</div><div style="display:flex;gap:4px"><span class="badge b-url">URL</span><span class="badge b-ok">正常</span></div></div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">15</strong> 节点</span><span>📊 <strong style="color:var(--t)">98</strong>/300 GB</span><span>⏱ 2m ago</span></div>
+      <div class="bar"><i style="width:33%;background:var(--info)"></i></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:4px"><span class="tag">hk</span><span class="tag">jp</span><span class="tag">streaming</span></div><div style="display:flex;gap:4px"><button class="abtn">↻</button><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+    </div>
+  </div>
+  <div class="c2 ok">
+    <div class="top-bar"></div>
+    <div class="body">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">自建 Reality</div><div style="display:flex;gap:4px"><span class="badge b-man">手动</span><span class="badge b-ok">正常</span></div></div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">5</strong> 节点</span><span>📊 不限</span><span>手动</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:4px"><span class="tag">reality</span><span class="tag">vless</span></div><div style="display:flex;gap:4px"><button class="abtn">✏️</button><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+    </div>
+  </div>
+  <div class="c2 warn">
+    <div class="top-bar"></div>
+    <div class="body">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">备用机场</div><div style="display:flex;gap:4px"><span class="badge b-url">URL</span><span class="badge b-warn">异常</span></div></div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">8</strong> 节点</span><span>📊 <strong style="color:var(--t)">44</strong>/200 GB</span><span style="color:var(--warn)">⚠ 部分失败</span></div>
+      <div class="bar"><i style="width:22%;background:var(--warn)"></i></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:4px"><span class="tag">us</span></div><div style="display:flex;gap:4px"><button class="abtn">↻</button><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+    </div>
+  </div>
+  <div class="c2 ok">
+    <div class="top-bar"></div>
+    <div class="body">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">朋友共享</div><div style="display:flex;gap:4px"><span class="badge b-up">上传</span><span class="badge b-ok">正常</span></div></div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">3</strong> 节点</span><span>1h ago</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div><span class="tag">sg</span></div><div style="display:flex;gap:4px"><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ======== 方案 3：大图标 ======== -->
+<div class="page" id="p-3">
+<span class="label">方案 3 · 大图标 — 左侧彩色大圆标 + 右侧信息流</span>
+<div class="grid">
+  <div class="c3">
+    <div class="big-icon" style="background:var(--info-bg)">📦</div>
+    <div class="info">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">测试机场</div><div style="display:flex;gap:4px"><span class="badge b-url">URL</span><span class="badge b-ok">正常</span></div></div>
+      <div style="display:flex;gap:12px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">15</strong> 节点</span><span>📊 <strong style="color:var(--t)">98</strong>/300 GB</span></div>
+      <div class="bar"><i style="width:33%;background:var(--info)"></i></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)"><div style="display:flex;gap:4px"><span class="tag">hk</span><span class="tag">jp</span></div><span>2m ago</span></div>
+    </div>
+  </div>
+  <div class="c3">
+    <div class="big-icon" style="background:var(--ps)">🔧</div>
+    <div class="info">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">自建 Reality</div><div style="display:flex;gap:4px"><span class="badge b-man">手动</span><span class="badge b-ok">正常</span></div></div>
+      <div style="font-size:12px;color:var(--t2)">🌐 <strong style="color:var(--t)">5</strong> 节点 · 不限流量</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)"><div style="display:flex;gap:4px"><span class="tag">reality</span><span class="tag">vless</span></div><span>手动</span></div>
+    </div>
+  </div>
+  <div class="c3">
+    <div class="big-icon" style="background:var(--warn-bg)">⚠️</div>
+    <div class="info">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">备用机场</div><div style="display:flex;gap:4px"><span class="badge b-url">URL</span><span class="badge b-warn">异常</span></div></div>
+      <div style="display:flex;gap:12px;font-size:12px;color:var(--t2)"><span>🌐 <strong style="color:var(--t)">8</strong> 节点</span><span>📊 <strong style="color:var(--t)">44</strong>/200 GB</span></div>
+      <div class="bar"><i style="width:22%;background:var(--warn)"></i></div>
+      <div style="font-size:11px;color:var(--warn)">部分节点解析失败 · 12m ago</div>
+    </div>
+  </div>
+  <div class="c3">
+    <div class="big-icon" style="background:var(--ok-bg)">👋</div>
+    <div class="info">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">朋友共享</div><div style="display:flex;gap:4px"><span class="badge b-up">上传</span><span class="badge b-ok">正常</span></div></div>
+      <div style="font-size:12px;color:var(--t2)">🌐 <strong style="color:var(--t)">3</strong> 节点</div>
+      <div style="font-size:11px;color:var(--t3)"><span class="tag">sg</span> · 1h ago</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ======== 方案 4：环形进度卡 ======== -->
+<div class="page" id="p-4">
+<span class="label">方案 4 · 环形进度 — 左侧环形流量/节点比例 + 右侧信息</span>
+<div class="grid">
+  <div class="c4">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="5"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--info)" stroke-width="5" stroke-dasharray="54 109" stroke-linecap="round" style="filter:drop-shadow(0 0 4px rgba(96,165,250,.3))"/></svg>
+      <span class="rv" style="color:var(--info)">33</span><span class="rl">%</span>
+    </div>
+    <div class="info">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">测试机场</div><span class="badge b-ok">正常</span></div>
+      <div style="display:flex;gap:14px;font-size:12px;color:var(--t2)"><span><span class="badge b-url">URL</span></span><span>🌐 <strong style="color:var(--t)">15</strong></span><span>98/300 GB</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)"><div style="display:flex;gap:4px"><span class="tag">hk</span><span class="tag">jp</span></div><div style="display:flex;gap:4px"><button class="abtn">↻</button><button class="abtn">📋</button><button class="abtn">⋯</button></div></div>
+    </div>
+  </div>
+  <div class="c4">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="5"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--ok)" stroke-width="5" stroke-dasharray="163 0" stroke-linecap="round" style="filter:drop-shadow(0 0 4px rgba(52,211,153,.3))"/></svg>
+      <span class="rv" style="color:var(--ok)">100</span><span class="rl">%</span>
+    </div>
+    <div class="info">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">自建 Reality</div><span class="badge b-ok">正常</span></div>
+      <div style="display:flex;gap:14px;font-size:12px;color:var(--t2)"><span class="badge b-man">手动</span><span>🌐 <strong style="color:var(--t)">5</strong></span><span>不限</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)"><div style="display:flex;gap:4px"><span class="tag">reality</span></div><div style="display:flex;gap:4px"><button class="abtn">✏️</button><button class="abtn">📋</button></div></div>
+    </div>
+  </div>
+  <div class="c4">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="5"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--warn)" stroke-width="5" stroke-dasharray="36 127" stroke-linecap="round" style="filter:drop-shadow(0 0 4px rgba(251,191,36,.3))"/></svg>
+      <span class="rv" style="color:var(--warn)">22</span><span class="rl">%</span>
+    </div>
+    <div class="info">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">备用机场</div><span class="badge b-warn">异常</span></div>
+      <div style="display:flex;gap:14px;font-size:12px;color:var(--t2)"><span class="badge b-url">URL</span><span>🌐 <strong style="color:var(--t)">8</strong></span><span>44/200 GB</span></div>
+      <div style="font-size:11px;color:var(--warn)">部分失败 · 12m ago</div>
+    </div>
+  </div>
+  <div class="c4">
+    <div class="ring">
+      <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="5"/><circle cx="32" cy="32" r="26" fill="none" stroke="var(--ok)" stroke-width="5" stroke-dasharray="163 0" stroke-linecap="round"/></svg>
+      <span class="rv" style="color:var(--ok)">✓</span><span class="rl"></span>
+    </div>
+    <div class="info">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:15px;font-weight:600">朋友共享</div><span class="badge b-ok">正常</span></div>
+      <div style="display:flex;gap:14px;font-size:12px;color:var(--t2)"><span class="badge b-up">上传</span><span>🌐 <strong style="color:var(--t)">3</strong></span></div>
+      <div style="font-size:11px;color:var(--t3)"><span class="tag">sg</span> · 1h ago</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ======== 方案 5：极简 hover 展开 ======== -->
+<div class="page" id="p-5">
+<span class="label">方案 5 · 极简展开 — 默认只看名称+大数字，hover 展开详情</span>
+<div class="grid">
+  <div class="c5">
+    <div class="main-row">
+      <div><div class="nm" style="font-size:15px;font-weight:600">测试机场</div><div style="font-size:11px;color:var(--t3);margin-top:2px"><span class="badge b-url">URL</span> · <span class="dot" style="background:var(--ok)"></span> 正常</div></div>
+      <div class="right"><span class="big-num">15</span><span class="big-unit">节点</span></div>
+    </div>
+    <div class="detail"><div class="detail-inner">
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>12 在线 · 3 离线</span><span>📊 98/300 GB</span><span>⏱ 2m ago</span></div>
+      <div class="bar"><i style="width:33%;background:var(--info)"></i></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:4px"><span class="tag">hk</span><span class="tag">jp</span><span class="tag">streaming</span></div><div style="display:flex;gap:4px"><button class="abtn">↻ 同步</button><button class="abtn">📋 分享</button><button class="abtn">⋯</button></div></div>
+    </div></div>
+  </div>
+  <div class="c5">
+    <div class="main-row">
+      <div><div class="nm" style="font-size:15px;font-weight:600">自建 Reality</div><div style="font-size:11px;color:var(--t3);margin-top:2px"><span class="badge b-man">手动</span> · <span class="dot" style="background:var(--ok)"></span> 正常</div></div>
+      <div class="right"><span class="big-num">5</span><span class="big-unit">节点</span></div>
+    </div>
+    <div class="detail"><div class="detail-inner">
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>全部在线</span><span>不限流量</span><span>手动管理</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:4px"><span class="tag">reality</span><span class="tag">vless</span></div><div style="display:flex;gap:4px"><button class="abtn">✏️ 编辑</button><button class="abtn">📋 分享</button></div></div>
+    </div></div>
+  </div>
+  <div class="c5">
+    <div class="main-row">
+      <div><div class="nm" style="font-size:15px;font-weight:600">备用机场</div><div style="font-size:11px;color:var(--warn);margin-top:2px"><span class="badge b-url">URL</span> · ⚠ 部分失败</div></div>
+      <div class="right"><span class="big-num" style="color:var(--warn)">8</span><span class="big-unit">节点</span></div>
+    </div>
+    <div class="detail"><div class="detail-inner">
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>6 在线 · 2 不可达</span><span>📊 44/200 GB</span><span style="color:var(--warn)">12m ago</span></div>
+      <div class="bar"><i style="width:22%;background:var(--warn)"></i></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:4px"><span class="tag">us</span><span class="tag">backup</span></div><div style="display:flex;gap:4px"><button class="abtn">↻ 重试</button><button class="abtn">📋 分享</button></div></div>
+    </div></div>
+  </div>
+  <div class="c5">
+    <div class="main-row">
+      <div><div class="nm" style="font-size:15px;font-weight:600">朋友共享</div><div style="font-size:11px;color:var(--t3);margin-top:2px"><span class="badge b-up">上传</span> · <span class="dot" style="background:var(--ok)"></span> 正常</div></div>
+      <div class="right"><span class="big-num">3</span><span class="big-unit">节点</span></div>
+    </div>
+    <div class="detail"><div class="detail-inner">
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--t2)"><span>全部在线</span><span>1h ago</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div><span class="tag">sg</span></div><div style="display:flex;gap:4px"><button class="abtn">📋 分享</button></div></div>
+    </div></div>
+  </div>
+</div>
+</div>
+
+<script>
+document.querySelectorAll('.ver-bar button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const v=btn.dataset.v;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('p-'+v).classList.add('active');
+    document.querySelectorAll('.ver-bar button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  });
+});
+</script>
+</body>
+</html>

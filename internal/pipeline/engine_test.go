@@ -58,22 +58,30 @@ func TestEngine_HappyPath(t *testing.T) {
 	}
 }
 
-func TestEngine_RejectsMissingOutput(t *testing.T) {
+func TestEngine_AutoAppendsOutput(t *testing.T) {
+	// No output step — Validate auto-appends default clash output.
 	ast := mustAST(t, opSpec(t, KindFilter, FilterArgs{Expr: ""}))
 	_, err := NewEngine().Run(context.Background(), ast, nil)
-	if !errors.Is(err, ErrOutputRequired) {
-		t.Fatalf("want ErrOutputRequired, got %v", err)
+	if err != nil {
+		t.Fatalf("expected auto-append to succeed, got %v", err)
+	}
+	if ast.Operators[len(ast.Operators)-1].Kind != KindOutput {
+		t.Fatalf("expected output auto-appended at end")
 	}
 }
 
 func TestEngine_RejectsMisplacedOutput(t *testing.T) {
+	// Output placed before filter — Validate auto-moves it to the end.
 	ast := mustAST(t,
 		opSpec(t, KindOutput, OutputArgs{Format: "clash"}),
 		opSpec(t, KindFilter, FilterArgs{}),
 	)
 	_, err := NewEngine().Run(context.Background(), ast, nil)
-	if !errors.Is(err, ErrOutputRequired) {
-		t.Fatalf("want ErrOutputRequired, got %v", err)
+	if err != nil {
+		t.Fatalf("expected auto-fix to succeed, got %v", err)
+	}
+	if ast.Operators[len(ast.Operators)-1].Kind != KindOutput {
+		t.Fatalf("expected output at end")
 	}
 }
 
