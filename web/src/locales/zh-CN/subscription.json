@@ -36,6 +36,38 @@
     "pending": "同步中",
     "never": "从未同步"
   },
+  "list": {
+    "summary": {
+      "total": "订阅总数",
+      "nodes": "节点总数",
+      "traffic": "本月流量",
+      "sync_status": "同步状态",
+      "ok_short": "正常",
+      "err_short": "异常"
+    },
+    "filter": {
+      "all": "全部",
+      "url": "URL",
+      "upload": "上传",
+      "manual": "手动",
+      "status_all": "全部状态",
+      "ok": "正常",
+      "error": "异常"
+    },
+    "empty": {
+      "title": "暂无订阅",
+      "desc": "创建你的第一个订阅，开始拉取节点。",
+      "cta": "新建订阅",
+      "no_match_title": "无匹配结果",
+      "no_match_desc": "尝试更换搜索关键词或筛选条件。"
+    },
+    "card": {
+      "nodes": "节点",
+      "manual_managed": "手动管理",
+      "every": "每"
+    }
+  },
+  "sync_interval_manual": "手动",
   "empty": {
     "title": "暂无订阅",
     "description": "新建第一条订阅以开始拉取节点。",

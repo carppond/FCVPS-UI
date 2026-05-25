@@ -36,6 +36,38 @@
     "pending": "同期中",
     "never": "未同期"
   },
+  "list": {
+    "summary": {
+      "total": "サブスク数",
+      "nodes": "ノード合計",
+      "traffic": "今月のトラフィック",
+      "sync_status": "同期状態",
+      "ok_short": "正常",
+      "err_short": "異常"
+    },
+    "filter": {
+      "all": "すべて",
+      "url": "URL",
+      "upload": "アップロード",
+      "manual": "手動",
+      "status_all": "全状態",
+      "ok": "正常",
+      "error": "エラー"
+    },
+    "empty": {
+      "title": "サブスクリプションがありません",
+      "desc": "最初のサブスクを作成してノードの取得を開始しましょう。",
+      "cta": "新規作成",
+      "no_match_title": "一致するものがありません",
+      "no_match_desc": "別のキーワードまたはフィルターをお試しください。"
+    },
+    "card": {
+      "nodes": "ノード",
+      "manual_managed": "手動管理",
+      "every": "毎"
+    }
+  },
+  "sync_interval_manual": "手動",
   "empty": {
     "title": "サブスクリプションがありません",
     "description": "最初のサブスクリプションを作成して、ノードの取得を開始しましょう。",

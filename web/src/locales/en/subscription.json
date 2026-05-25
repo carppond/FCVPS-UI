@@ -36,6 +36,38 @@
     "pending": "Syncing",
     "never": "Never synced"
   },
+  "list": {
+    "summary": {
+      "total": "Subscriptions",
+      "nodes": "Total nodes",
+      "traffic": "Monthly traffic",
+      "sync_status": "Sync status",
+      "ok_short": "OK",
+      "err_short": "Err"
+    },
+    "filter": {
+      "all": "All",
+      "url": "URL",
+      "upload": "Upload",
+      "manual": "Manual",
+      "status_all": "All status",
+      "ok": "OK",
+      "error": "Error"
+    },
+    "empty": {
+      "title": "No subscriptions yet",
+      "desc": "Create your first subscription to start pulling nodes.",
+      "cta": "New subscription",
+      "no_match_title": "No matches",
+      "no_match_desc": "Try a different keyword or filter."
+    },
+    "card": {
+      "nodes": "nodes",
+      "manual_managed": "Manual",
+      "every": "every"
+    }
+  },
+  "sync_interval_manual": "Manual",
   "empty": {
     "title": "No subscriptions yet",
     "description": "Create your first subscription to start pulling nodes.",

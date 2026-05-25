@@ -36,6 +36,38 @@
     "pending": "동기화 중",
     "never": "동기화 없음"
   },
+  "list": {
+    "summary": {
+      "total": "구독 수",
+      "nodes": "전체 노드",
+      "traffic": "이달 트래픽",
+      "sync_status": "동기화 상태",
+      "ok_short": "정상",
+      "err_short": "오류"
+    },
+    "filter": {
+      "all": "전체",
+      "url": "URL",
+      "upload": "업로드",
+      "manual": "수동",
+      "status_all": "모든 상태",
+      "ok": "정상",
+      "error": "오류"
+    },
+    "empty": {
+      "title": "구독이 없습니다",
+      "desc": "첫 번째 구독을 만들어 노드를 가져오기 시작하세요.",
+      "cta": "새 구독",
+      "no_match_title": "일치하는 항목이 없습니다",
+      "no_match_desc": "다른 키워드나 필터를 시도해 보세요."
+    },
+    "card": {
+      "nodes": "노드",
+      "manual_managed": "수동 관리",
+      "every": "매"
+    }
+  },
+  "sync_interval_manual": "수동",
   "empty": {
     "title": "구독이 없습니다",
     "description": "첫 번째 구독을 만들어 노드를 가져오기 시작하세요.",
