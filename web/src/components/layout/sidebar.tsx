@@ -66,7 +66,7 @@ function NavLink({ item }: { item: NavItem }) {
       // typed `to` union does not contain shorthand forms, so we cast.
       to={item.to as unknown as "/"}
       className={cn(
-        "flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-1.5",
+        "flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2.5",
         "text-[var(--font-size-sm)] font-medium text-[var(--color-text-secondary)]",
         "transition-colors duration-[var(--duration-fast)]",
         "hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]",
@@ -81,7 +81,7 @@ function NavLink({ item }: { item: NavItem }) {
 
 function NavGroup({ title, items }: { title?: string; items: NavItem[] }) {
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex flex-col gap-1">
       {title && (
         <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-disabled)]">
           {title}
