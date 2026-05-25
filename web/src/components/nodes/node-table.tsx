@@ -294,7 +294,7 @@ function Th({ children, className }: { children: React.ReactNode; className?: st
   return (
     <th
       className={cn(
-        "px-4 py-2.5 text-left text-[var(--font-size-xs)] font-medium uppercase tracking-wide",
+        "px-4 py-2.5 text-center text-[var(--font-size-xs)] font-medium uppercase tracking-wide",
         className,
       )}
     >
@@ -307,7 +307,7 @@ function Td({ children, className }: { children: React.ReactNode; className?: st
   return (
     <td
       className={cn(
-        "px-4 py-3 align-middle text-[var(--color-text-primary)]",
+        "px-4 py-3 text-center align-middle text-[var(--color-text-primary)]",
         className,
       )}
     >

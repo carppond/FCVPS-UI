@@ -64,7 +64,9 @@
     "uptime_day": "日",
     "uptime_hour": "時間",
     "uptime_minute": "分",
-    "uptime_separator": " "
+    "uptime_separator": " ",
+    "realtime_trend": "リアルタイム傾向 · 直近 1 時間",
+    "realtime_sample_hint": "30 秒ごとサンプリング"
   },
   "tabs": {
     "realtime": "リアルタイム",

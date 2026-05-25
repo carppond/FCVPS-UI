@@ -40,7 +40,7 @@ export function AppShell({ children }: AppShellProps) {
       <Topbar />
       <Sidebar />
       <main
-        className="overflow-auto bg-[var(--color-bg)] p-6"
+        className="overflow-auto p-6"
         style={MAIN_STYLE}
       >
         {children}

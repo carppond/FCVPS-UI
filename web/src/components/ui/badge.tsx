@@ -4,8 +4,8 @@ import { cn } from "@/lib/cn";
 
 const badgeVariants = cva(
   [
-    "inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5",
-    "text-xs font-medium transition-colors duration-[var(--duration-fast)]",
+    "inline-flex items-center rounded-[var(--radius-sm)] px-[9px] py-[3px]",
+    "text-[11px] leading-[1.4] font-medium transition-colors duration-[var(--duration-fast)]",
     "focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2",
   ],
   {
@@ -14,6 +14,9 @@ const badgeVariants = cva(
         default: "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]",
         secondary: "bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)]",
         destructive: "bg-[var(--color-error-bg)] text-[var(--color-error)]",
+        success: "bg-[var(--color-success-bg)] text-[var(--color-success)]",
+        warning: "bg-[var(--color-warning-bg)] text-[var(--color-warning)]",
+        info: "bg-[var(--color-info-bg)] text-[var(--color-info)]",
         outline:
           "border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] bg-transparent",
       },

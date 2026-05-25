@@ -66,11 +66,11 @@ function NavLink({ item }: { item: NavItem }) {
       // typed `to` union does not contain shorthand forms, so we cast.
       to={item.to as unknown as "/"}
       className={cn(
-        "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2",
-        "text-[var(--font-size-sm)] text-[var(--color-text-secondary)]",
+        "flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-1.5",
+        "text-[var(--font-size-sm)] font-medium text-[var(--color-text-secondary)]",
         "transition-colors duration-[var(--duration-fast)]",
-        "hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]",
-        "[&.active]:bg-[var(--color-surface)] [&.active]:text-[var(--color-text-primary)] [&.active]:font-medium",
+        "hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]",
+        "[&.active]:bg-[var(--color-primary-soft)] [&.active]:text-[var(--color-text-primary)] [&.active]:shadow-[inset_2px_0_0_var(--color-primary)]",
       )}
     >
       {item.icon}
@@ -102,7 +102,7 @@ export function Sidebar() {
 
   return (
     <nav
-      className="flex w-60 flex-col gap-4 border-r border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-3"
+      className="flex w-60 flex-col gap-4 border-r border-[var(--color-border)] bg-[rgba(15,15,18,0.45)] p-3 backdrop-blur-xl"
       style={{ gridArea: "sidebar" }}
     >
       <NavGroup items={USER_NAV_ITEMS} />

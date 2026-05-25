@@ -141,19 +141,19 @@ export function EventHistory({
             <table className="w-full text-[var(--font-size-sm)]">
               <thead className="border-b border-[var(--color-border)] text-[var(--color-text-tertiary)]">
                 <tr>
-                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-left text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
+                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-center text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
                     {t("notify:history.col_time")}
                   </th>
-                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-left text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
+                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-center text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
                     {t("notify:history.col_event")}
                   </th>
-                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-left text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
+                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-center text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
                     {t("notify:history.col_channel")}
                   </th>
-                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-left text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
+                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-center text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
                     {t("notify:history.col_status")}
                   </th>
-                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-left text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
+                  <th className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-center text-[var(--font-size-xs)] font-medium uppercase tracking-wide">
                     {t("notify:history.col_detail")}
                   </th>
                 </tr>

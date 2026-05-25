@@ -46,21 +46,21 @@
   --spacing-20: 80px;
   --spacing-24: 96px;
 
-  /* Border radius */
+  /* Border radius (Raycast scale) */
   --radius-none: 0px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* Shadows — dark mode */
+  /* Shadows — dark mode (Raycast: lighter ambient + bigger soft drop) */
   --shadow-none: none;
-  --shadow-sm-dark: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md-dark: 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg-dark: 0 12px 24px -6px rgba(0, 0, 0, 0.6), 0 4px 8px -4px rgba(0, 0, 0, 0.4);
-  --shadow-xl-dark: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+  --shadow-sm-dark: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md-dark: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-lg-dark: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --shadow-xl-dark: 0 24px 64px rgba(0, 0, 0, 0.5);
   --shadow-inset: inset 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 
   /* Shadows — light mode */
@@ -116,49 +116,53 @@
   --color-neutral-950: #ffffff;
 }
 
-/* ── Dark theme (default) ───────────────────────────────────────────────── */
+/* ── Dark theme (default — Raycast palette) ─────────────────────────────── */
 [data-theme="dark"],
 :root {
-  /* Primary */
-  --color-primary: #00b8d9;
-  --color-primary-hover: #33c8e1;
-  --color-primary-active: #0095af;
-  --color-primary-foreground: #001a1f;
+  /* Primary — red-orange accent */
+  --color-primary: #ff6363;
+  --color-primary-hover: #ff7a7a;
+  --color-primary-active: #e54e4e;
+  --color-primary-foreground: #ffffff;
+  --color-primary-soft: rgba(255, 99, 99, 0.18);
 
-  /* Semantic */
-  --color-success: #22c55e;
-  --color-success-foreground: #04210e;
-  --color-success-bg: #0a2418;
+  /* Semantic — Apple system colors */
+  --color-success: #30d158;
+  --color-success-foreground: #052610;
+  --color-success-bg: rgba(48, 209, 88, 0.18);
 
-  --color-warning: #f59e0b;
+  --color-warning: #ff9f0a;
   --color-warning-foreground: #1f1300;
-  --color-warning-bg: #2a1e08;
+  --color-warning-bg: rgba(255, 159, 10, 0.18);
 
-  --color-error: #ef4444;
+  --color-error: #ff453a;
   --color-error-foreground: #240606;
-  --color-error-bg: #2a1212;
+  --color-error-bg: rgba(255, 69, 58, 0.18);
 
-  --color-info: #3b82f6;
+  --color-info: #0a84ff;
   --color-info-foreground: #050f24;
-  --color-info-bg: #0e1a2e;
+  --color-info-bg: rgba(10, 132, 255, 0.18);
 
-  /* Role colors */
-  --color-bg: #0f1011;
-  --color-bg-elevated: #16181c;
-  --color-surface: #1d2025;
-  --color-surface-hover: #22262c;
-  --color-border: #272a30;
-  --color-border-strong: #3a3d44;
-  --color-text-primary: #e4e6eb;
-  --color-text-secondary: #b4b8c0;
-  --color-text-tertiary: #8a8e98;
-  --color-text-disabled: #5c606a;
+  /* Role colors — translucent surfaces over the radial gradient bg */
+  --color-bg: #1a1a1c;
+  --color-bg-gradient: radial-gradient(ellipse 80% 60% at top right, #3a2150 0%, #1a1a1c 70%);
+  --color-bg-elevated: rgba(80, 80, 86, 0.4);
+  --color-surface: rgba(40, 40, 44, 0.55);
+  --color-surface-hover: rgba(60, 60, 66, 0.5);
+  --color-surface-solid: #28282c;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-border-focus: rgba(255, 99, 99, 0.4);
+  --color-text-primary: #f5f5f7;
+  --color-text-secondary: #a8a8b0;
+  --color-text-tertiary: #8e8e93;
+  --color-text-disabled: #6c6c72;
 
   /* Status */
-  --color-status-online: #22c55e;
-  --color-status-offline: #ef4444;
-  --color-status-degraded: #f59e0b;
-  --color-status-unknown: #8a8e98;
+  --color-status-online: #30d158;
+  --color-status-offline: #ff453a;
+  --color-status-degraded: #ff9f0a;
+  --color-status-unknown: #8e8e93;
 
   /* Active shadows */
   --shadow-sm: var(--shadow-sm-dark);
@@ -169,36 +173,40 @@
 
 /* ── Light theme ────────────────────────────────────────────────────────── */
 [data-theme="light"] {
-  /* Primary */
-  --color-primary: #0095af;
-  --color-primary-hover: #00b8d9;
-  --color-primary-active: #007891;
+  /* Primary — same red-orange accent in light mode */
+  --color-primary: #e63b3b;
+  --color-primary-hover: #ff6363;
+  --color-primary-active: #c02e2e;
   --color-primary-foreground: #ffffff;
+  --color-primary-soft: rgba(230, 59, 59, 0.12);
 
   /* Semantic */
   --color-success: #16a34a;
   --color-success-foreground: #ffffff;
-  --color-success-bg: #dcfce7;
+  --color-success-bg: rgba(22, 163, 74, 0.14);
 
   --color-warning: #d97706;
   --color-warning-foreground: #ffffff;
-  --color-warning-bg: #fef3c7;
+  --color-warning-bg: rgba(217, 119, 6, 0.14);
 
   --color-error: #dc2626;
   --color-error-foreground: #ffffff;
-  --color-error-bg: #fee2e2;
+  --color-error-bg: rgba(220, 38, 38, 0.14);
 
   --color-info: #2563eb;
   --color-info-foreground: #ffffff;
-  --color-info-bg: #dbeafe;
+  --color-info-bg: rgba(37, 99, 235, 0.14);
 
   /* Role colors */
   --color-bg: #f4f5f7;
-  --color-bg-elevated: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-hover: #f4f5f7;
-  --color-border: #e1e4e8;
-  --color-border-strong: #d0d4da;
+  --color-bg-gradient: radial-gradient(ellipse 80% 60% at top right, #ede4f5 0%, #f4f5f7 70%);
+  --color-bg-elevated: rgba(255, 255, 255, 0.85);
+  --color-surface: rgba(255, 255, 255, 0.75);
+  --color-surface-hover: rgba(240, 240, 245, 0.85);
+  --color-surface-solid: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.15);
+  --color-border-focus: rgba(230, 59, 59, 0.4);
   --color-text-primary: #16181c;
   --color-text-secondary: #5c606a;
   --color-text-tertiary: #8a8e98;
@@ -233,7 +241,11 @@ body {
 
 body {
   background-color: var(--color-bg);
+  background-image: var(--color-bg-gradient);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--color-text-primary);
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -280,4 +292,57 @@ pre,
   100% {
     transform: translateX(400%);
   }
+}
+
+/* ── Raycast-style status dot pulse ─────────────────────────────────────── */
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-status-pulse {
+  animation: status-pulse 2s infinite;
+}
+
+/* ── Mini sparkline bars (4-column realtime preview on agent detail) ────── */
+.mini-chart {
+  height: 150px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding-top: 6px;
+}
+.mini-chart > i {
+  flex: 1;
+  background: var(--color-primary);
+  opacity: 0.55;
+  border-radius: 1.5px 1.5px 0 0;
+  display: block;
+  min-height: 2px;
+  transition: opacity 0.15s;
+}
+.mini-chart:hover > i {
+  opacity: 0.85;
+}
+.mini-chart[data-color="warning"] > i {
+  background: var(--color-warning);
+}
+.mini-chart[data-color="info"] > i {
+  background: var(--color-info);
+}
+.mini-chart[data-color="success"] > i {
+  background: var(--color-success);
+}
+
+/* ── Glass-surface utility: translucent surface + blur ──────────────────── */
+.glass-surface {
+  background: var(--color-surface);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
 }

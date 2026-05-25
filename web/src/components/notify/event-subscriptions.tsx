@@ -147,7 +147,7 @@ export function EventSubscriptions({ channels }: EventSubscriptionsProps) {
         <table className="w-full border-collapse text-[var(--font-size-sm)]">
           <thead>
             <tr className="border-b border-[var(--color-border)]">
-              <th className="sticky left-0 z-10 bg-[var(--color-surface)] px-[var(--spacing-3)] py-[var(--spacing-2)] text-left text-[var(--font-size-xs)] font-medium uppercase tracking-wide text-[var(--color-text-tertiary)]">
+              <th className="sticky left-0 z-10 bg-[var(--color-surface)] px-[var(--spacing-3)] py-[var(--spacing-2)] text-center text-[var(--font-size-xs)] font-medium uppercase tracking-wide text-[var(--color-text-tertiary)]">
                 {t("notify:matrix.col_event")}
               </th>
               {channels.map((c) => (

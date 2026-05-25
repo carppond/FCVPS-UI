@@ -64,7 +64,9 @@
     "uptime_day": "일",
     "uptime_hour": "시간",
     "uptime_minute": "분",
-    "uptime_separator": " "
+    "uptime_separator": " ",
+    "realtime_trend": "실시간 추세 · 최근 1시간",
+    "realtime_sample_hint": "30초 마다 샘플링"
   },
   "tabs": {
     "realtime": "실시간",

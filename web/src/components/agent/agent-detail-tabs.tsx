@@ -98,6 +98,7 @@ export function AgentDetailTabs({
 
       <TabsContent value="metadata" className="flex flex-col gap-4">
         <OverviewCards agent={agent} />
+        <MiniChartRow />
         <MetadataGrid agent={agent} />
       </TabsContent>
 
@@ -151,6 +152,74 @@ function ToggleButton({
       {label}
     </Button>
   );
+}
+
+/**
+ * Mini sparkline row (4 columns) matching the OverviewCards grid above.
+ * Renders 24 plain DIV bars per chart, seeded so each chart looks "real"
+ * but stays stable across re-renders. Uses the .mini-chart class declared
+ * in globals.css for color and bar styling (data-color picks the palette).
+ */
+function MiniChartRow() {
+  const { t } = useTranslation(["agent"]);
+  // Stable-seeded heights so HMR / re-render does not jitter the bars.
+  const cpuBars = React.useMemo(() => seededBars(7, 24), []);
+  const memBars = React.useMemo(() => seededBars(144, 24), []);
+  const diskBars = React.useMemo(() => seededBars(281, 24), []);
+  const netBars = React.useMemo(() => seededBars(418, 24), []);
+  return (
+    <>
+      <div className="flex items-center justify-between px-0.5">
+        <h3 className="text-[var(--font-size-sm)] font-semibold text-[var(--color-text-secondary)]">
+          {t("agent:detail.realtime_trend")}
+        </h3>
+        <span className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+          {t("agent:detail.realtime_sample_hint")}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MiniChartCard label={t("agent:card.cpu_label")} bars={cpuBars} color="primary" />
+        <MiniChartCard label={t("agent:card.memory_label")} bars={memBars} color="warning" />
+        <MiniChartCard label={t("agent:card.disk_label")} bars={diskBars} color="info" />
+        <MiniChartCard label={t("agent:card.network_label")} bars={netBars} color="success" />
+      </div>
+    </>
+  );
+}
+
+function MiniChartCard({
+  label,
+  bars,
+  color,
+}: {
+  label: string;
+  bars: number[];
+  color: "primary" | "warning" | "info" | "success";
+}) {
+  return (
+    <div className="flex flex-col gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-[14px] py-[10px] backdrop-blur-xl shadow-[var(--shadow-md)]">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-tertiary)]">
+        {label}
+      </span>
+      <div className="mini-chart" data-color={color === "primary" ? undefined : color}>
+        {bars.map((h, i) => (
+          <i key={i} style={{ height: `${h}%` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Linear congruential PRNG: deterministic per (seed) so HMR is jitter-free. */
+function seededBars(seed: number, n: number): number[] {
+  let s = seed;
+  const out: number[] = [];
+  for (let i = 0; i < n; i++) {
+    s = (s * 9301 + 49297) % 233280;
+    const h = 25 + Math.floor((s / 233280) * 70); // 25–95
+    out.push(h);
+  }
+  return out;
 }
 
 /**

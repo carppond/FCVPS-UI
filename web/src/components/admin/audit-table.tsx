@@ -83,7 +83,7 @@ export function AuditTable({ filter }: AuditTableProps) {
   return (
     <>
       <div className="overflow-hidden rounded-md border border-[var(--color-border-subtle)]">
-        <table className="w-full table-auto text-left text-[var(--font-size-sm)]">
+        <table className="w-full table-auto text-center text-[var(--font-size-sm)]">
           <thead className="bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)]">
             <tr>
               <th className="px-4 py-2 font-medium">{t("audit:table.col_time")}</th>

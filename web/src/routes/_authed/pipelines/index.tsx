@@ -361,7 +361,7 @@ function Th({
 }) {
   return (
     <th
-      className={`px-4 py-2 text-left text-[var(--font-size-xs)] font-medium uppercase tracking-wide ${className}`}
+      className={`px-4 py-2 text-center text-[var(--font-size-xs)] font-medium uppercase tracking-wide ${className}`}
     >
       {children}
     </th>
@@ -375,7 +375,7 @@ function Td({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <td className={`px-4 py-3 align-middle ${className}`}>{children}</td>;
+  return <td className={`px-4 py-3 text-center align-middle ${className}`}>{children}</td>;
 }
 
 function PipelineTableSkeleton() {

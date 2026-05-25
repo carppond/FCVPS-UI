@@ -64,7 +64,9 @@
     "uptime_day": " 天",
     "uptime_hour": " 时",
     "uptime_minute": " 分",
-    "uptime_separator": " "
+    "uptime_separator": " ",
+    "realtime_trend": "实时趋势 · 最近 1 小时",
+    "realtime_sample_hint": "每 30 秒采样"
   },
   "tabs": {
     "realtime": "实时",

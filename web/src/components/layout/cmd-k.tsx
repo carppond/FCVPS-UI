@@ -209,7 +209,7 @@ export function CmdK() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className="max-w-xl gap-0 overflow-hidden p-0"
+        className="max-w-xl gap-0 overflow-hidden p-0 border-white/12 shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
         data-cmdk-root
       >
         <DialogTitle className="sr-only">

@@ -64,7 +64,9 @@
     "uptime_day": "d",
     "uptime_hour": "h",
     "uptime_minute": "m",
-    "uptime_separator": " "
+    "uptime_separator": " ",
+    "realtime_trend": "Realtime trend · last 1 hour",
+    "realtime_sample_hint": "30s sample"
   },
   "tabs": {
     "realtime": "Realtime",

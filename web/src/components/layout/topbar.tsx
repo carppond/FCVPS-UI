@@ -24,7 +24,7 @@ export function Topbar() {
 
   return (
     <header
-      className="flex h-14 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-4"
+      className="flex h-14 items-center justify-between border-b border-[var(--color-border)] bg-[rgba(20,20,22,0.85)] px-4 backdrop-blur-xl"
       style={{ gridArea: "topbar" }}
     >
       {/* Left: logo */}
