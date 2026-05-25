@@ -216,14 +216,16 @@ export function SubCard({
       </div>
 
       {/* ── Row 3: Traffic progress bar ── */}
-      {hasTraffic && (
-        <div className="h-1 w-full overflow-hidden rounded-sm bg-[var(--color-border)]">
+      <div className="h-1 w-full overflow-hidden rounded-sm bg-[var(--color-border)]">
+        {hasTraffic ? (
           <div
             className={cn("h-full rounded-sm transition-all", progressColor(pct))}
             style={{ width: `${pct}%` }}
           />
-        </div>
-      )}
+        ) : (
+          <div className="h-full w-full rounded-sm bg-[var(--color-border)]" />
+        )}
+      </div>
 
       {/* ── Row 4: Tags ── */}
       {sub.tags && sub.tags.length > 0 && (
