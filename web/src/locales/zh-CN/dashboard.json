@@ -2,85 +2,74 @@
   "page": {
     "title": "总览",
     "welcome": "欢迎回来，{{name}}",
-    "subtitle": "全系统运行概况"
+    "subtitle": "系统运行 {{uptime}} · 最后更新 {{lastUpdate}}"
+  },
+  "hero": {
+    "title": "探针状态",
+    "no_agent": "暂无在线探针",
+    "no_agent_hint": "去创建一个",
+    "meta": "{{os}}/{{arch}} · {{version}} · 在线 {{uptime}} · 共 {{total}} 台探针{{allOnline}}",
+    "all_online": "全部在线",
+    "partial_online": "{{online}} 台在线",
+    "net_up": "网络 ↑",
+    "net_down": "网络 ↓",
+    "disk": "磁盘",
+    "connections": "连接数",
+    "cpu": "CPU %",
+    "memory": "内存 %"
   },
   "stats": {
-    "agents": {
-      "title": "在线 Agent",
-      "online_total": "{{online}} / {{total}}",
-      "offline_count": "{{count}} 个离线",
-      "all_online": "全部在线",
-      "empty": "暂无 Agent"
+    "subscriptions": {
+      "title": "订阅",
+      "manage": "管理",
+      "ok_count": "{{count}} 正常",
+      "error_count": "{{count}} 异常",
+      "empty": "暂无订阅"
     },
     "nodes": {
-      "title": "节点总数",
-      "all_reachable": "全部可达",
-      "by_protocol": "按协议分布",
+      "title": "在线节点",
+      "all": "全部",
+      "online_total": "{{online}} / {{total}}",
       "empty": "暂无节点"
     },
     "traffic": {
       "title": "本月流量",
-      "used_of_limit": "{{used}} / {{limit}}",
-      "no_limit": "未设流量限额",
-      "usage_percent": "已用 {{percent}}%",
-      "quota_label": "本月配额"
+      "detail": "详情",
+      "used_of_limit": "/ {{limit}}",
+      "usage_percent": "{{percent}}%",
+      "up_change": "+{{value}}",
+      "empty": "暂无数据"
     },
     "alerts": {
       "title": "待处理告警",
-      "count_24h": "近 24 小时 {{count}} 条失败",
+      "view": "查看",
+      "count_detail": "{{detail}}",
       "all_clear": "无告警",
-      "view_all": "查看全部"
+      "empty": "暂无告警"
     }
   },
-  "grid": {
-    "traffic": {
-      "title": "流量趋势",
-      "subtitle": "近 30 天"
-    },
-    "agents": {
-      "title": "Agent 状态",
-      "subtitle": "实时同步",
-      "online": "在线",
-      "offline": "离线",
-      "degraded": "异常",
-      "unknown": "未知",
-      "no_agents": "尚未注册任何 Agent",
-      "see_all": "查看全部"
-    },
-    "events": {
-      "title": "最近事件",
-      "subtitle": "审计日志 + 通知",
-      "view_all": "查看全部",
-      "no_events": "暂无事件",
-      "kind": {
-        "audit": "审计",
-        "notify_sent": "通知已发送",
-        "notify_failed": "通知失败",
-        "agent_status": "Agent 状态变化",
-        "subscription_sync": "订阅同步"
-      }
-    },
-    "subs": {
-      "title": "订阅健康",
-      "subtitle": "按订阅分组",
-      "view_all": "查看全部",
-      "node_count": "节点数 {{count}}",
-      "last_synced_relative": "{{relative}}前",
-      "never_synced": "尚未同步",
-      "no_subs": "暂无订阅",
-      "status": {
-        "success": "正常",
-        "failed": "失败",
-        "pending": "进行中",
-        "unknown": "未知"
-      }
+  "traffic_chart": {
+    "title": "流量趋势",
+    "7d": "7天",
+    "30d": "30天",
+    "90d": "90天",
+    "upload": "上行",
+    "download": "下行"
+  },
+  "events": {
+    "title": "最近事件",
+    "view_all": "全部",
+    "no_events": "暂无事件",
+    "kind": {
+      "audit": "审计",
+      "notify_sent": "通知已发送",
+      "notify_failed": "通知失败",
+      "agent_status": "Agent 状态变化",
+      "subscription_sync": "订阅同步"
     }
   },
   "actions": {
-    "create_subscription": "新建订阅",
-    "go_to_traffic": "查看流量",
-    "go_to_agents": "查看 Agent",
-    "go_to_subs": "查看订阅"
+    "create_subscription": "新建订阅"
   },
   "error": {
     "load_failed": "数据加载失败"

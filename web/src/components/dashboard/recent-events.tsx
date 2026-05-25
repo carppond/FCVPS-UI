@@ -1,76 +1,83 @@
 /**
- * T-29: Recent events panel.
+ * Dashboard v4 — Recent events list panel.
  *
- * Time-line list of the latest 20 events fused from two sources:
- *   - notification events (POST/FAIL deliveries) — owned by T-25.
- *   - audit log entries (left as a backend-side TODO; while the audit API
- *     does not exist yet we degrade gracefully to "notify only" so the panel
- *     still works in dev / staging without bouncing on 404).
- *
- * Each row renders an icon coloured by status + relative timestamp + i18n
- * label. The "view all" link jumps to /audit (admin) or /notifications
- * depending on the user role.
+ * Compact event list in the bottom-right panel showing the latest 6 events
+ * with colored circle icon, message, and relative timestamp.
+ * Icon color is determined by event type/status.
  */
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
-  BellRing,
   CheckCircle2,
-  ChevronRight,
-  Clock,
-  RefreshCcw,
+  Radio,
+  XCircle,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useEvents } from "@/api/notify";
-import { useAuthStore } from "@/stores/auth-store";
 import type { NotificationEvent } from "@/types/api";
 
-interface RecentRow {
+// ── helpers ─────────────────────────────────────────────────────────────────
+
+interface EventRow {
   id: string;
-  /** Unix ms. */
   at: number;
-  kind: "notify_sent" | "notify_failed" | "agent_status" | "subscription_sync" | "audit";
+  icon: React.ReactNode;
+  iconBg: string;
   text: string;
-  to?: string;
 }
 
-function iconFor(kind: RecentRow["kind"]) {
-  switch (kind) {
-    case "notify_sent":
-      return <CheckCircle2 className="h-4 w-4 text-[var(--color-success)]" />;
-    case "notify_failed":
-      return <AlertTriangle className="h-4 w-4 text-[var(--color-error)]" />;
-    case "agent_status":
-      return <BellRing className="h-4 w-4 text-[var(--color-warning)]" />;
-    case "subscription_sync":
-      return <RefreshCcw className="h-4 w-4 text-[var(--color-info)]" />;
-    case "audit":
-    default:
-      return <Clock className="h-4 w-4 text-[var(--color-text-tertiary)]" />;
+function eventToRow(ev: NotificationEvent, t: (k: string) => string): EventRow {
+  const isSent = ev.status === "sent";
+  let icon: React.ReactNode;
+  let iconBg: string;
+  let text: string;
+
+  const evType: string = ev.event_type ?? "";
+
+  if (evType === "subscription_sync_failed") {
+    icon = <XCircle className="h-3 w-3 text-[var(--color-error)]" />;
+    iconBg = "var(--color-error-bg)";
+    text = t("events.kind.notify_failed");
+  } else if (evType === "node_offline") {
+    icon = <AlertTriangle className="h-3 w-3 text-[var(--color-warning)]" />;
+    iconBg = "var(--color-warning-bg)";
+    text = t("events.kind.agent_status");
+  } else if (evType === "ota_available" || evType === "script_alert") {
+    icon = <Radio className="h-3 w-3 text-[var(--color-info)]" />;
+    iconBg = "var(--color-info-bg)";
+    text = t("events.kind.notify_sent");
+  } else if (evType === "backup_completed") {
+    icon = <CheckCircle2 className="h-3 w-3 text-[var(--color-success)]" />;
+    iconBg = "var(--color-success-bg)";
+    text = t("events.kind.subscription_sync");
+  } else if (isSent) {
+    icon = <CheckCircle2 className="h-3 w-3 text-[var(--color-success)]" />;
+    iconBg = "var(--color-success-bg)";
+    text = t("events.kind.notify_sent");
+  } else {
+    icon = <AlertTriangle className="h-3 w-3 text-[var(--color-warning)]" />;
+    iconBg = "var(--color-warning-bg)";
+    text = t("events.kind.notify_failed");
   }
-}
 
-function notifyToRow(ev: NotificationEvent, t: (key: string) => string): RecentRow {
-  const sent = ev.status === "sent";
+  // If there's a message/payload summary, append it
+  const detail = (ev as unknown as Record<string, string>).message ??
+    (ev as unknown as Record<string, string>).summary ?? "";
+  if (detail) text = detail;
+
   return {
-    id: `notify-${ev.id}`,
+    id: `evt-${ev.id}`,
     at: ev.created_at,
-    kind: sent ? "notify_sent" : "notify_failed",
-    text: sent
-      ? t("grid.events.kind.notify_sent")
-      : t("grid.events.kind.notify_failed"),
-    to: "/notifications",
+    icon,
+    iconBg,
+    text,
   };
 }
 
 function relativeTime(ts: number, lang: string): string {
-  // RelativeTimeFormat is universally supported in modern browsers (Chrome 71+,
-  // Safari 14+, Firefox 70+) — falls back to a static string only in jsdom.
   if (typeof Intl === "undefined" || !("RelativeTimeFormat" in Intl)) {
     return new Date(ts).toLocaleString();
   }
@@ -86,78 +93,76 @@ function relativeTime(ts: number, lang: string): string {
   return rtf.format(Math.round(diffMs / day), "day");
 }
 
-/** Latest events panel — fixed at 20 rows max. */
+// ── Main component ──────────────────────────────────────────────────────────
+
 export function RecentEvents() {
   const { t, i18n } = useTranslation("dashboard");
-  const { user } = useAuthStore();
+  const query = useEvents({ page: 1, pageSize: 6 });
 
-  const notify = useEvents({ page: 1, pageSize: 20 });
-
-  const rows = useMemo<RecentRow[]>(() => {
-    const out: RecentRow[] = [];
-    for (const ev of notify.data?.items ?? []) {
-      out.push(notifyToRow(ev, t));
-    }
-    // Sort by timestamp desc then trim. Once the audit API lands we'll merge
-    // its rows here using the same shape.
-    return out.sort((a, b) => b.at - a.at).slice(0, 20);
-  }, [notify.data, t]);
-
-  const allLink = user?.role === "admin" ? "/audit" : "/notifications";
+  const rows = useMemo<EventRow[]>(() => {
+    const items = query.data?.items ?? [];
+    return items
+      .map((ev) => eventToRow(ev, t))
+      .sort((a, b) => b.at - a.at)
+      .slice(0, 6);
+  }, [query.data, t]);
 
   return (
-    <Card className="flex h-full flex-col gap-[var(--spacing-3)] p-[var(--spacing-4)]">
-      <header className="flex items-start justify-between">
-        <div className="flex flex-col">
-          <h3 className="text-[var(--font-size-lg)] font-semibold text-[var(--color-text-primary)]">
-            {t("grid.events.title")}
-          </h3>
-          <span className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-            {t("grid.events.subtitle")}
-          </span>
-        </div>
+    <div className="flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur-2xl">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-[18px] py-3.5">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+          {t("events.title")}
+        </h3>
         <Link
-          to={allLink as unknown as "/"}
-          className="flex items-center gap-1 text-[var(--font-size-xs)] text-[var(--color-primary)] hover:underline"
+          to={"/notifications" as unknown as "/"}
+          className="cursor-pointer text-[11px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]"
         >
-          {t("grid.events.view_all")}
-          <ChevronRight className="h-3 w-3" />
+          {t("events.view_all")} →
         </Link>
-      </header>
+      </div>
 
-      {notify.isLoading ? (
-        <div className="flex flex-col gap-2">
+      {/* Event rows */}
+      {query.isLoading ? (
+        <div className="flex flex-col">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-7 w-full" />
+            <div key={i} className="flex items-center gap-2.5 px-[18px] py-2.5">
+              <Skeleton className="h-6 w-6 rounded-md" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-3 w-12" />
+            </div>
           ))}
         </div>
-      ) : notify.isError ? (
-        <ErrorState message={t("error.load_failed")} />
       ) : rows.length === 0 ? (
-        <EmptyState title={t("grid.events.no_events")} />
+        <div className="p-6">
+          <EmptyState title={t("events.no_events")} />
+        </div>
       ) : (
-        <ul className="flex flex-col">
+        <div>
           {rows.map((row) => (
-            <li
+            <div
               key={row.id}
-              className="flex items-center gap-3 border-b border-[var(--color-border)] py-[var(--spacing-2)] last:border-b-0"
+              className="flex items-center gap-2.5 border-b border-[var(--color-border)] px-[18px] py-2.5 text-[12.5px] transition-colors last:border-b-0 hover:bg-[var(--color-bg-elevated)]"
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-                {iconFor(row.kind)}
+              <span
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md"
+                style={{ background: row.iconBg }}
+              >
+                {row.icon}
               </span>
-              <span className="grow text-[var(--font-size-sm)] text-[var(--color-text-primary)]">
+              <span className="flex-1 truncate text-[var(--color-text-primary)]">
                 {row.text}
               </span>
               <time
-                className="shrink-0 font-mono text-[var(--font-size-xs)] tabular-nums text-[var(--color-text-tertiary)]"
+                className="flex-shrink-0 whitespace-nowrap font-mono text-[10px] text-[var(--color-text-tertiary)]"
                 dateTime={new Date(row.at).toISOString()}
               >
                 {relativeTime(row.at, i18n.language)}
               </time>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }

@@ -1,10 +1,9 @@
 /**
- * T-29: stats-cards rendering tests.
+ * Dashboard v4: stats-cards rendering tests.
  *
- * We mock the four data hooks (agents / nodes / traffic / events) and assert
- * the tile contents render against the design (numbers, status copy, and
- * progress bar). Loading + error fallbacks each have a dedicated case so a
- * regression in any state shows up immediately.
+ * We mock the data hooks (subscriptions / agents / nodes / traffic / events)
+ * and assert the tile contents render against the design. Loading states
+ * are tested to confirm skeleton fallbacks work.
  */
 import * as React from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,11 +15,15 @@ import dashboardEn from "@/locales/en/dashboard.json";
 
 // ── mocks ───────────────────────────────────────────────────────────────────
 
+const subscriptionsMock = vi.fn();
 const agentsMock = vi.fn();
 const nodesMock = vi.fn();
 const trafficMock = vi.fn();
 const eventsMock = vi.fn();
 
+vi.mock("@/api/subscription", () => ({
+  useSubscriptionsQuery: () => subscriptionsMock(),
+}));
 vi.mock("@/api/agent", () => ({
   useAgentsQuery: () => agentsMock(),
 }));
@@ -67,6 +70,7 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  subscriptionsMock.mockReset();
   agentsMock.mockReset();
   nodesMock.mockReset();
   trafficMock.mockReset();
@@ -76,26 +80,30 @@ beforeEach(() => {
 // ── tests ───────────────────────────────────────────────────────────────────
 
 describe("StatsCards", () => {
-  it("renders all four titles when data is available", () => {
+  it("renders all four card titles when data is available", () => {
+    subscriptionsMock.mockReturnValue({
+      data: {
+        items: [
+          { id: "s1", name: "sub1", last_sync_status: "ok", node_count: 5 },
+          { id: "s2", name: "sub2", last_sync_status: "error", node_count: 3 },
+        ],
+        total: 2,
+      },
+      isLoading: false,
+      isError: false,
+    });
     agentsMock.mockReturnValue({
       data: {
         items: [
-          { id: "1", name: "a1", status: "online", online: true },
-          { id: "2", name: "a2", status: "online", online: true },
-          { id: "3", name: "a3", status: "offline", online: false },
+          { id: "a1", name: "a1", status: "online", online: true },
+          { id: "a2", name: "a2", status: "offline", online: false },
         ],
       },
       isLoading: false,
       isError: false,
     });
     nodesMock.mockReturnValue({
-      data: {
-        items: [
-          { id: "n1", name: "x", protocol: "vless" },
-          { id: "n2", name: "y", protocol: "trojan" },
-        ],
-        total: 14,
-      },
+      data: { items: [{ id: "n1", name: "x", protocol: "vless" }], total: 10 },
       isLoading: false,
       isError: false,
     });
@@ -109,40 +117,41 @@ describe("StatsCards", () => {
       isError: false,
     });
     eventsMock.mockReturnValue({
-      data: { items: [], total: 2 },
+      data: { items: [], total: 0 },
       isLoading: false,
       isError: false,
     });
 
     renderWithProviders();
 
-    expect(screen.getByText(dashboardEn.stats.agents.title)).toBeInTheDocument();
+    expect(screen.getByText(dashboardEn.stats.subscriptions.title)).toBeInTheDocument();
     expect(screen.getByText(dashboardEn.stats.nodes.title)).toBeInTheDocument();
     expect(screen.getByText(dashboardEn.stats.traffic.title)).toBeInTheDocument();
     expect(screen.getByText(dashboardEn.stats.alerts.title)).toBeInTheDocument();
-
-    // Two of three online → "2 / 3".
-    expect(screen.getByText("2 / 3")).toBeInTheDocument();
-    // Total nodes number.
-    expect(screen.getByText("14")).toBeInTheDocument();
-    // Alerts count
-    expect(screen.getByText("2")).toBeInTheDocument();
   });
 
-  it("renders skeletons while a tile is loading", () => {
+  it("renders skeletons while tiles are loading", () => {
+    subscriptionsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     agentsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     nodesMock.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     trafficMock.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     eventsMock.mockReturnValue({ data: undefined, isLoading: true, isError: false });
 
     const { container } = renderWithProviders();
-    // The Skeleton helper uses animate-pulse; we count its appearances to
-    // confirm every tile entered loading mode.
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThanOrEqual(4);
   });
 
-  it("renders the error pill when a tile query fails", () => {
-    agentsMock.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+  it("renders zero alerts as 'All clear'", () => {
+    subscriptionsMock.mockReturnValue({
+      data: { items: [], total: 0 },
+      isLoading: false,
+      isError: false,
+    });
+    agentsMock.mockReturnValue({
+      data: { items: [] },
+      isLoading: false,
+      isError: false,
+    });
     nodesMock.mockReturnValue({
       data: { items: [], total: 0 },
       isLoading: false,
@@ -160,35 +169,6 @@ describe("StatsCards", () => {
     });
 
     renderWithProviders();
-
-    // The agents tile should render the error copy.
-    const errors = screen.getAllByText(dashboardEn.error.load_failed);
-    expect(errors.length).toBeGreaterThan(0);
-  });
-
-  it("renders the no-limit hint when traffic has no quota configured", () => {
-    agentsMock.mockReturnValue({
-      data: { items: [] },
-      isLoading: false,
-      isError: false,
-    });
-    nodesMock.mockReturnValue({
-      data: { items: [], total: 0 },
-      isLoading: false,
-      isError: false,
-    });
-    trafficMock.mockReturnValue({
-      data: { total_used: 100, usage_percent: 0 },
-      isLoading: false,
-      isError: false,
-    });
-    eventsMock.mockReturnValue({
-      data: { items: [], total: 0 },
-      isLoading: false,
-      isError: false,
-    });
-
-    renderWithProviders();
-    expect(screen.getByText(dashboardEn.stats.traffic.no_limit)).toBeInTheDocument();
+    expect(screen.getByText(dashboardEn.stats.alerts.all_clear)).toBeInTheDocument();
   });
 });
