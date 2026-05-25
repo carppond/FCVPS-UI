@@ -73,6 +73,13 @@ const META_BY_ID: Readonly<Record<OperatorType, OperatorMeta>> = Object.freeze(
   ),
 );
 
+const FALLBACK_META: OperatorMeta = {
+  id: "output" as OperatorType,
+  iconComponent: Layers,
+  nameKey: "pipeline:operators.unknown.name",
+  descriptionKey: "pipeline:operators.unknown.description",
+};
+
 export function getOperatorMeta(type: OperatorType): OperatorMeta {
-  return META_BY_ID[type];
+  return META_BY_ID[type] ?? FALLBACK_META;
 }
