@@ -190,6 +190,10 @@ type Deps struct {
 	// inspecting / rotating the webhook token. nil disables those routes.
 	TGBotSettingsHandler *TGBotSettingsHandler
 
+	// VpsAssetHandler hosts /api/vps-assets/* (M-ASSET). nil disables the
+	// routes.
+	VpsAssetHandler *VpsAssetHandler
+
 	// Silent owns the live silent-mode prefix. Internal — populated by
 	// NewRouter when DB is supplied.
 	silent *middleware.SilentMode
@@ -261,6 +265,7 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountAuditRoutes(mux, deps)
 	mountInstallScriptRoutes(mux, deps)
 	mountTGWebhookRoutes(mux, deps)
+	mountVpsAssetRoutes(mux, deps)
 
 	return mux
 }
@@ -864,6 +869,31 @@ func mountInstallScriptRoutes(mux *http.ServeMux, deps *Deps) {
 	ih := deps.InstallScriptHandler
 	mux.Handle("GET /install-agent.sh", http.HandlerFunc(ih.InstallScript))
 	mux.Handle("GET /dl/{asset}", http.HandlerFunc(ih.AgentDownload))
+}
+
+// mountVpsAssetRoutes installs the M-ASSET surface:
+//
+//   - GET    /api/vps-assets              — list with filters + pagination
+//   - POST   /api/vps-assets              — create
+//   - GET    /api/vps-assets/summary      — aggregate stats
+//   - GET    /api/vps-assets/{id}         — read
+//   - PUT    /api/vps-assets/{id}         — update
+//   - DELETE /api/vps-assets/{id}         — delete
+//
+// All endpoints are user-scoped via auth.Required.
+func mountVpsAssetRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.VpsAssetHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	vh := deps.VpsAssetHandler
+	mux.Handle("GET /api/vps-assets", required(http.HandlerFunc(vh.List)))
+	mux.Handle("POST /api/vps-assets", required(http.HandlerFunc(vh.Create)))
+	mux.Handle("GET /api/vps-assets/summary", required(http.HandlerFunc(vh.Summary)))
+	mux.Handle("GET /api/vps-assets/{id}", required(http.HandlerFunc(vh.Get)))
+	mux.Handle("PUT /api/vps-assets/{id}", required(http.HandlerFunc(vh.Update)))
+	mux.Handle("PATCH /api/vps-assets/{id}", required(http.HandlerFunc(vh.Update)))
+	mux.Handle("DELETE /api/vps-assets/{id}", required(http.HandlerFunc(vh.Delete)))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads

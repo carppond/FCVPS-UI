@@ -86,6 +86,7 @@ var errorStatusMap = map[types.ErrorCode]int{
 	types.ErrNotFoundScript:       http.StatusNotFound,
 	types.ErrNotFoundAgent:        http.StatusNotFound,
 	types.ErrNotFoundChannel:      http.StatusNotFound,
+	types.ErrNotFoundVpsAsset:     http.StatusNotFound,
 
 	// CONFLICT
 	types.ErrConflictUsername:        http.StatusConflict,

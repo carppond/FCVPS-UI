@@ -20,7 +20,7 @@ import (
 // notify.EventNodeOffline instead of fishing through internal/types.
 type EventType = types.EventType
 
-// Re-export the seven v1 event types for ergonomic access.
+// Re-export the eight v1 event types for ergonomic access.
 const (
 	EventNodeOffline            = types.EventNodeOffline
 	EventTrafficThreshold       = types.EventTrafficThreshold
@@ -29,6 +29,7 @@ const (
 	EventLoginAnomaly           = types.EventLoginAnomaly
 	EventOTAAvailable           = types.EventOTAAvailable
 	EventScriptAlert            = types.EventScriptAlert
+	EventVpsExpiry              = types.EventVpsExpiry
 )
 
 // EventStatus is re-exported for the manager / repo layer.
@@ -132,4 +133,13 @@ type ScriptAlertPayload struct {
 	ScriptName string
 	ErrorMsg   string
 	OccuredAt  int64
+}
+
+// VpsExpiryPayload describes a VPS nearing its expiry date.
+type VpsExpiryPayload struct {
+	VpsID    string
+	VpsName  string
+	Provider string
+	Days     int
+	ExpireAt string
 }

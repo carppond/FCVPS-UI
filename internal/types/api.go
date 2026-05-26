@@ -162,6 +162,7 @@ const (
 	EventLoginAnomaly           EventType = "login_anomaly"
 	EventOTAAvailable           EventType = "ota_available"
 	EventScriptAlert            EventType = "script_alert"
+	EventVpsExpiry              EventType = "vps_expiry"
 )
 
 // EventStatus 通知投递状态。
@@ -213,6 +214,7 @@ const (
 	ErrNotFoundScript       ErrorCode = "ERR_NOT_FOUND_SCRIPT"
 	ErrNotFoundAgent        ErrorCode = "ERR_NOT_FOUND_AGENT"
 	ErrNotFoundChannel      ErrorCode = "ERR_NOT_FOUND_CHANNEL"
+	ErrNotFoundVpsAsset     ErrorCode = "ERR_NOT_FOUND_VPS_ASSET"
 
 	// CONFLICT
 	ErrConflictUsername        ErrorCode = "ERR_CONFLICT_USERNAME"
@@ -1277,4 +1279,147 @@ type SilentModeResponse struct {
 type SSEEvent struct {
 	Kind    string `json:"kind"` // "agent_status" | "notification_event" | "subscription_sync" | "system"
 	Payload any    `json:"payload"`
+}
+
+// ---------------------------------------------------------------------------
+// M-ASSET：VPS 资产管理 DTO
+// ---------------------------------------------------------------------------
+
+// VpsAssetStatus VPS 到期状态。
+type VpsAssetStatus string
+
+const (
+	VpsStatusNormal   VpsAssetStatus = "normal"
+	VpsStatusExpiring VpsAssetStatus = "expiring"
+	VpsStatusExpired  VpsAssetStatus = "expired"
+)
+
+// BillingCycle 计费周期。
+type BillingCycle string
+
+const (
+	BillingMonthly    BillingCycle = "monthly"
+	BillingQuarterly  BillingCycle = "quarterly"
+	BillingSemiAnnual BillingCycle = "semi_annual"
+	BillingAnnual     BillingCycle = "annual"
+	BillingBiennial   BillingCycle = "biennial"
+	BillingTriennial  BillingCycle = "triennial"
+)
+
+// BillingCycleMonths returns the number of months for the billing cycle.
+func (b BillingCycle) Months() int {
+	switch b {
+	case BillingMonthly:
+		return 1
+	case BillingQuarterly:
+		return 3
+	case BillingSemiAnnual:
+		return 6
+	case BillingAnnual:
+		return 12
+	case BillingBiennial:
+		return 24
+	case BillingTriennial:
+		return 36
+	default:
+		return 1
+	}
+}
+
+// VpsAsset VPS 资产信息（含动态计算字段）。
+type VpsAsset struct {
+	ID              string         `json:"id"`
+	UserID          string         `json:"user_id"`
+	Name            string         `json:"name"`
+	IP              string         `json:"ip,omitempty"`
+	SSHPort         int            `json:"ssh_port"`
+	SSHUser         string         `json:"ssh_user,omitempty"`
+	OS              string         `json:"os,omitempty"`
+	Location        string         `json:"location,omitempty"`
+	Provider        string         `json:"provider"`
+	Price           float64        `json:"price"`
+	Currency        string         `json:"currency"`
+	BillingCycle    BillingCycle   `json:"billing_cycle"`
+	Bandwidth       string         `json:"bandwidth,omitempty"`
+	MonthlyTraffic  int            `json:"monthly_traffic"`
+	CPU             string         `json:"cpu,omitempty"`
+	Memory          string         `json:"memory,omitempty"`
+	Disk            string         `json:"disk,omitempty"`
+	ExpireAt        string         `json:"expire_at"`
+	Notes           string         `json:"notes,omitempty"`
+	AgentID         string         `json:"agent_id,omitempty"`
+	Tags            []string       `json:"tags"`
+	CreatedAt       string         `json:"created_at"`
+	UpdatedAt       string         `json:"updated_at"`
+	DaysUntilExpiry int            `json:"days_until_expiry"`
+	Status          VpsAssetStatus `json:"status"`
+}
+
+// CreateVpsAssetRequest 创建 VPS 资产请求。
+type CreateVpsAssetRequest struct {
+	Name           string       `json:"name"`
+	IP             string       `json:"ip,omitempty"`
+	SSHPort        int          `json:"ssh_port,omitempty"`
+	SSHUser        string       `json:"ssh_user,omitempty"`
+	OS             string       `json:"os,omitempty"`
+	Location       string       `json:"location,omitempty"`
+	Provider       string       `json:"provider"`
+	Price          float64      `json:"price"`
+	Currency       string       `json:"currency,omitempty"`
+	BillingCycle   BillingCycle `json:"billing_cycle"`
+	Bandwidth      string       `json:"bandwidth,omitempty"`
+	MonthlyTraffic int          `json:"monthly_traffic,omitempty"`
+	CPU            string       `json:"cpu,omitempty"`
+	Memory         string       `json:"memory,omitempty"`
+	Disk           string       `json:"disk,omitempty"`
+	ExpireAt       string       `json:"expire_at"`
+	Notes          string       `json:"notes,omitempty"`
+	AgentID        string       `json:"agent_id,omitempty"`
+	Tags           []string     `json:"tags,omitempty"`
+}
+
+// UpdateVpsAssetRequest 修改 VPS 资产请求。
+type UpdateVpsAssetRequest struct {
+	Name           string       `json:"name,omitempty"`
+	IP             *string      `json:"ip,omitempty"`
+	SSHPort        *int         `json:"ssh_port,omitempty"`
+	SSHUser        *string      `json:"ssh_user,omitempty"`
+	OS             *string      `json:"os,omitempty"`
+	Location       *string      `json:"location,omitempty"`
+	Provider       string       `json:"provider,omitempty"`
+	Price          *float64     `json:"price,omitempty"`
+	Currency       string       `json:"currency,omitempty"`
+	BillingCycle   BillingCycle `json:"billing_cycle,omitempty"`
+	Bandwidth      *string      `json:"bandwidth,omitempty"`
+	MonthlyTraffic *int         `json:"monthly_traffic,omitempty"`
+	CPU            *string      `json:"cpu,omitempty"`
+	Memory         *string      `json:"memory,omitempty"`
+	Disk           *string      `json:"disk,omitempty"`
+	ExpireAt       string       `json:"expire_at,omitempty"`
+	Notes          *string      `json:"notes,omitempty"`
+	AgentID        *string      `json:"agent_id,omitempty"`
+	Tags           *[]string    `json:"tags,omitempty"`
+}
+
+// VpsAssetSummary VPS 资产汇总统计。
+type VpsAssetSummary struct {
+	Total         int                      `json:"total"`
+	Expiring      int                      `json:"expiring"`
+	Expired       int                      `json:"expired"`
+	MonthlyCost   []VpsAssetMonthlyCost    `json:"monthly_cost"`
+}
+
+// VpsAssetMonthlyCost 按币种分组的月费折算。
+type VpsAssetMonthlyCost struct {
+	Currency    string  `json:"currency"`
+	MonthlyCost float64 `json:"monthly_cost"`
+}
+
+// VpsExpiryPayload VPS 到期通知载荷。
+type VpsExpiryPayload struct {
+	VpsID    string `json:"vps_id"`
+	VpsName  string `json:"vps_name"`
+	Provider string `json:"provider"`
+	Days     int    `json:"days"`
+	ExpireAt string `json:"expire_at"`
 }

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"shiguang-vps/internal/agent"
+	"shiguang-vps/internal/asset"
 	"shiguang-vps/internal/audit"
 	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/config"
@@ -469,6 +470,19 @@ func run() error {
 		Logger: log,
 	})
 
+	// M-ASSET: VPS asset management.
+	vpsAssetRepo := storage.NewVpsAssetRepo(db, time.Now)
+	vpsAssetHandler := handler.NewVpsAssetHandler(vpsAssetRepo, log)
+	expiryChecker, err := asset.NewExpiryChecker(asset.ExpiryCheckerConfig{
+		VpsRepo: vpsAssetRepo,
+		Notify:  notifyMgr,
+		Logger:  log,
+		Now:     time.Now,
+	})
+	if err != nil {
+		return fmt.Errorf("expiry checker: %w", err)
+	}
+
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
@@ -505,6 +519,7 @@ func run() error {
 		InstallScriptHandler:  installScriptHandler,
 		TGWebhookHandler:      tgWebhookHandler,
 		TGBotSettingsHandler:  tgBotSettingsHandler,
+		VpsAssetHandler:       vpsAssetHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
@@ -550,6 +565,9 @@ func run() error {
 	defer stopMonthlyReset()
 	stopTrafficCleanup := trafficCleanup.StartDaily(rootCtx)
 	defer stopTrafficCleanup()
+	// M-ASSET: daily expiry check (VPS near expiry → vps_expiry notification).
+	stopExpiryChecker := expiryChecker.StartDaily(rootCtx)
+	defer stopExpiryChecker()
 	// Ensure the hub broadcasts bye{server_shutdown} during graceful exit.
 	defer agentHub.Close()
 

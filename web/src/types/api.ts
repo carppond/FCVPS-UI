@@ -85,7 +85,8 @@ export type EventType =
   | "backup_completed"
   | "login_anomaly"
   | "ota_available"
-  | "script_alert";
+  | "script_alert"
+  | "vps_expiry";
 
 export type EventStatus = "pending" | "sent" | "failed" | "skipped_dedupe";
 
@@ -1067,6 +1068,112 @@ export interface SilentModeResponse {
   enabled: boolean;
   prefix: string;
   login_url: string;
+}
+
+// ---------------------------------------------------------------------------
+// M-ASSET：VPS 资产管理 DTO
+// ---------------------------------------------------------------------------
+
+export type VpsAssetStatus = "normal" | "expiring" | "expired";
+
+export type BillingCycle =
+  | "monthly"
+  | "quarterly"
+  | "semi_annual"
+  | "annual"
+  | "biennial"
+  | "triennial";
+
+export interface VpsAsset {
+  id: string;
+  user_id: string;
+  name: string;
+  ip?: string;
+  ssh_port: number;
+  ssh_user?: string;
+  os?: string;
+  location?: string;
+  provider: string;
+  price: number;
+  currency: string;
+  billing_cycle: BillingCycle;
+  bandwidth?: string;
+  monthly_traffic: number;
+  cpu?: string;
+  memory?: string;
+  disk?: string;
+  expire_at: string;
+  notes?: string;
+  agent_id?: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  days_until_expiry: number;
+  status: VpsAssetStatus;
+}
+
+export interface CreateVpsAssetRequest {
+  name: string;
+  ip?: string;
+  ssh_port?: number;
+  ssh_user?: string;
+  os?: string;
+  location?: string;
+  provider: string;
+  price: number;
+  currency?: string;
+  billing_cycle: BillingCycle;
+  bandwidth?: string;
+  monthly_traffic?: number;
+  cpu?: string;
+  memory?: string;
+  disk?: string;
+  expire_at: string;
+  notes?: string;
+  agent_id?: string;
+  tags?: string[];
+}
+
+export interface UpdateVpsAssetRequest {
+  name?: string;
+  ip?: string | null;
+  ssh_port?: number;
+  ssh_user?: string | null;
+  os?: string | null;
+  location?: string | null;
+  provider?: string;
+  price?: number;
+  currency?: string;
+  billing_cycle?: BillingCycle;
+  bandwidth?: string | null;
+  monthly_traffic?: number;
+  cpu?: string | null;
+  memory?: string | null;
+  disk?: string | null;
+  expire_at?: string;
+  notes?: string | null;
+  agent_id?: string | null;
+  tags?: string[];
+}
+
+export interface VpsAssetMonthlyCost {
+  currency: string;
+  monthly_cost: number;
+}
+
+export interface VpsAssetSummary {
+  total: number;
+  expiring: number;
+  expired: number;
+  monthly_cost: VpsAssetMonthlyCost[];
+}
+
+export interface VpsExpiryPayload {
+  vps_id: string;
+  vps_name: string;
+  provider: string;
+  days: number;
+  expire_at: string;
 }
 
 // ---------------------------------------------------------------------------
