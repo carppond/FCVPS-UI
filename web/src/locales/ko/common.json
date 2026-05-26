@@ -29,6 +29,7 @@
     "rule_sets": "규칙 세트",
     "proxy_groups": "프록시 그룹",
     "scripts": "스크립트",
+    "vps_assets": "VPS 자산",
     "agents": "에이전트",
     "traffic": "트래픽",
     "notify": "알림",

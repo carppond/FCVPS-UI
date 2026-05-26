@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "@tanstack/react-router";
 import { Search, User as UserIcon, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { LangSwitch } from "@/components/layout/lang-switch";
@@ -29,19 +30,22 @@ export function Topbar() {
     >
       {/* Left: logo */}
       <div className="flex items-center gap-3">
-        <span className="font-semibold text-[var(--color-text-primary)] text-[var(--font-size-lg)]">
+        <Link
+          to="/dashboard"
+          className="font-semibold text-[var(--color-text-primary)] text-[var(--font-size-lg)] transition-opacity hover:opacity-80"
+        >
           {t("app_name")}
-        </span>
+        </Link>
       </div>
 
       {/* Center: Cmd+K hint */}
       <button
-        className="hidden md:flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-[var(--font-size-sm)] text-[var(--color-text-tertiary)] hover:border-[var(--color-border-strong)] transition-colors duration-[var(--duration-fast)]"
+        className="hidden md:flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white/[.03] pl-3 pr-2 py-1.5 text-[13px] text-[var(--color-text-disabled)] hover:border-[var(--color-border-strong)] hover:bg-white/[.05] hover:text-[var(--color-text-tertiary)] transition-all duration-150 min-w-[220px]"
         onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
       >
-        <Search className="h-3.5 w-3.5" />
-        <span>{t("actions.search")}</span>
-        <kbd className="ml-2 text-xs text-[var(--color-text-disabled)] font-mono">⌘K</kbd>
+        <Search className="h-3.5 w-3.5 shrink-0" />
+        <span className="flex-1 text-left">{t("actions.search")}</span>
+        <kbd className="shrink-0 rounded-md border border-[var(--color-border)] bg-white/[.04] px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd>
       </button>
 
       {/* Right: controls */}

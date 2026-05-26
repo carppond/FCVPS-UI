@@ -79,4 +79,11 @@ export const queryKeys = {
     channel: (id: string) => ["notify", "channel", id] as const,
     events: () => ["notify", "events"] as const,
   },
+
+  vpsAsset: {
+    all: () => ["vps-asset"] as const,
+    list: () => ["vps-asset", "list"] as const,
+    detail: (id: string) => ["vps-asset", "detail", id] as const,
+    summary: () => ["vps-asset", "summary"] as const,
+  },
 } as const;

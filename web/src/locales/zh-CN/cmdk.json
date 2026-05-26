@@ -22,6 +22,7 @@
     "pipelines": "算子流水线",
     "rules": "规则",
     "scripts": "脚本",
+    "vps_assets": "VPS 资产",
     "agents": "探针",
     "traffic": "流量",
     "notifications": "通知",

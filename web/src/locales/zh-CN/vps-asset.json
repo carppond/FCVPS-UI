@@ -1,0 +1,106 @@
+{
+  "title": "VPS 资产",
+  "subtitle": "管理你名下所有 VPS 的费用、配置与到期信息",
+  "actions": {
+    "create": "新增 VPS",
+    "edit": "编辑",
+    "delete": "删除",
+    "deploy_agent": "去部署探针",
+    "copy_ip": "复制 IP"
+  },
+  "summary": {
+    "total": "VPS 总数",
+    "monthly_cost": "月费总计",
+    "expiring": "即将到期",
+    "expired": "已到期"
+  },
+  "filter": {
+    "all": "全部",
+    "normal": "正常",
+    "expiring": "即将到期",
+    "expired": "已到期",
+    "search_placeholder": "搜索名称、卖家、IP…",
+    "provider_all": "所有卖家"
+  },
+  "card": {
+    "days": "天",
+    "days_left": "DAYS",
+    "expired_label": "已过期",
+    "agent_online": "在线",
+    "agent_offline": "探针离线",
+    "no_agent": "未配置探针",
+    "vps_may_recycled": "VPS 可能已被回收"
+  },
+  "metrics": {
+    "cpu": "CPU",
+    "memory": "内存",
+    "disk": "磁盘",
+    "network": "网络"
+  },
+  "billing_cycle": {
+    "monthly": "月付",
+    "quarterly": "季付",
+    "semi_annual": "半年付",
+    "annual": "年付",
+    "biennial": "两年付",
+    "triennial": "三年付"
+  },
+  "form": {
+    "title_create": "新增 VPS",
+    "title_edit": "编辑 VPS",
+    "name": "名称",
+    "name_placeholder": "如 hk-vps-01",
+    "provider": "卖家",
+    "provider_placeholder": "如 搬瓦工 / Hetzner",
+    "ip": "IP 地址",
+    "ip_placeholder": "IPv4 或 IPv6",
+    "ssh_port": "SSH 端口",
+    "ssh_user": "SSH 用户名",
+    "os": "操作系统",
+    "os_placeholder": "如 Ubuntu 22.04",
+    "location": "机房位置",
+    "location_placeholder": "如 Hong Kong",
+    "price": "价格",
+    "currency": "货币",
+    "billing_cycle": "计费周期",
+    "bandwidth": "带宽",
+    "bandwidth_placeholder": "如 1Gbps",
+    "monthly_traffic": "月流量 (GB)",
+    "monthly_traffic_placeholder": "0 = 不限",
+    "cpu": "CPU",
+    "cpu_placeholder": "如 2 Core",
+    "memory": "内存",
+    "memory_placeholder": "如 4 GB",
+    "disk": "硬盘",
+    "disk_placeholder": "如 80 GB SSD",
+    "expire_at": "到期日期",
+    "notes": "备注",
+    "notes_placeholder": "可选备注信息",
+    "agent": "关联探针",
+    "agent_none": "不关联",
+    "tags": "标签",
+    "tags_placeholder": "输入后回车添加"
+  },
+  "delete_confirm": {
+    "title": "删除 VPS",
+    "description": "确定删除 \"{{name}}\"？此操作不可撤销，关联的探针不会被删除。",
+    "submit": "确认删除",
+    "success": "VPS 已删除"
+  },
+  "empty": {
+    "title": "暂无 VPS",
+    "desc": "添加你的第一台 VPS，开始集中管理资产",
+    "cta": "新增 VPS"
+  },
+  "error": {
+    "load_failed": "加载 VPS 列表失败",
+    "create_failed": "创建失败",
+    "update_failed": "更新失败",
+    "delete_failed": "删除失败"
+  },
+  "toast": {
+    "created": "VPS 已创建",
+    "updated": "VPS 已更新",
+    "ip_copied": "IP 已复制"
+  }
+}

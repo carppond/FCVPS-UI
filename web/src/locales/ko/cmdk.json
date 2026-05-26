@@ -22,6 +22,7 @@
     "pipelines": "파이프라인",
     "rules": "규칙",
     "scripts": "스크립트",
+    "vps_assets": "VPS 자산",
     "agents": "Agent",
     "traffic": "트래픽",
     "notifications": "알림",

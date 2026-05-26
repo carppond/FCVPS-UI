@@ -114,7 +114,7 @@ export function SilentModeSection() {
   return (
     <section
       aria-labelledby="silent-mode-heading"
-      className="flex flex-col gap-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6"
+      className="flex flex-1 flex-col gap-4 p-8"
     >
       <header className="flex flex-col gap-1">
         <h2

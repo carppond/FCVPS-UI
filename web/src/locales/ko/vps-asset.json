@@ -1,0 +1,106 @@
+{
+  "title": "VPS 자산",
+  "subtitle": "모든 VPS의 비용, 사양, 만료 정보를 한곳에서 관리",
+  "actions": {
+    "create": "VPS 추가",
+    "edit": "편집",
+    "delete": "삭제",
+    "deploy_agent": "에이전트 배포",
+    "copy_ip": "IP 복사"
+  },
+  "summary": {
+    "total": "VPS 총수",
+    "monthly_cost": "월비용 합계",
+    "expiring": "곧 만료",
+    "expired": "만료됨"
+  },
+  "filter": {
+    "all": "전체",
+    "normal": "정상",
+    "expiring": "곧 만료",
+    "expired": "만료됨",
+    "search_placeholder": "이름, 제공자, IP 검색…",
+    "provider_all": "모든 제공자"
+  },
+  "card": {
+    "days": "일",
+    "days_left": "DAYS",
+    "expired_label": "만료됨",
+    "agent_online": "온라인",
+    "agent_offline": "에이전트 오프라인",
+    "no_agent": "에이전트 없음",
+    "vps_may_recycled": "VPS가 회수되었을 수 있습니다"
+  },
+  "metrics": {
+    "cpu": "CPU",
+    "memory": "메모리",
+    "disk": "디스크",
+    "network": "네트워크"
+  },
+  "billing_cycle": {
+    "monthly": "월납",
+    "quarterly": "분기",
+    "semi_annual": "반기",
+    "annual": "연납",
+    "biennial": "2년",
+    "triennial": "3년"
+  },
+  "form": {
+    "title_create": "VPS 추가",
+    "title_edit": "VPS 편집",
+    "name": "이름",
+    "name_placeholder": "예: hk-vps-01",
+    "provider": "제공자",
+    "provider_placeholder": "예: Hetzner",
+    "ip": "IP 주소",
+    "ip_placeholder": "IPv4 또는 IPv6",
+    "ssh_port": "SSH 포트",
+    "ssh_user": "SSH 사용자",
+    "os": "운영체제",
+    "os_placeholder": "예: Ubuntu 22.04",
+    "location": "위치",
+    "location_placeholder": "예: Tokyo",
+    "price": "가격",
+    "currency": "통화",
+    "billing_cycle": "결제 주기",
+    "bandwidth": "대역폭",
+    "bandwidth_placeholder": "예: 1Gbps",
+    "monthly_traffic": "월간 트래픽 (GB)",
+    "monthly_traffic_placeholder": "0 = 무제한",
+    "cpu": "CPU",
+    "cpu_placeholder": "예: 2 Core",
+    "memory": "메모리",
+    "memory_placeholder": "예: 4 GB",
+    "disk": "디스크",
+    "disk_placeholder": "예: 80 GB SSD",
+    "expire_at": "만료일",
+    "notes": "메모",
+    "notes_placeholder": "선택적 메모",
+    "agent": "에이전트 연결",
+    "agent_none": "없음",
+    "tags": "태그",
+    "tags_placeholder": "Enter로 추가"
+  },
+  "delete_confirm": {
+    "title": "VPS 삭제",
+    "description": "\"{{name}}\"을(를) 삭제하시겠습니까? 되돌릴 수 없습니다. 연결된 에이전트는 삭제되지 않습니다.",
+    "submit": "삭제",
+    "success": "VPS 삭제됨"
+  },
+  "empty": {
+    "title": "VPS 없음",
+    "desc": "첫 번째 VPS를 추가하여 자산 관리를 시작하세요",
+    "cta": "VPS 추가"
+  },
+  "error": {
+    "load_failed": "VPS 목록 로드 실패",
+    "create_failed": "생성 실패",
+    "update_failed": "업데이트 실패",
+    "delete_failed": "삭제 실패"
+  },
+  "toast": {
+    "created": "VPS 생성됨",
+    "updated": "VPS 업데이트됨",
+    "ip_copied": "IP 복사됨"
+  }
+}

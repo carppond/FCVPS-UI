@@ -22,6 +22,7 @@ import { Route as AuthedRulesRouteImport } from './routes/_authed/rules'
 import { Route as AuthedRuleSetsRouteImport } from './routes/_authed/rule-sets'
 import { Route as AuthedProxyGroupsRouteImport } from './routes/_authed/proxy-groups'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AuthedVpsAssetsIndexRouteImport } from './routes/_authed/vps-assets/index'
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index'
 import { Route as AuthedScriptsIndexRouteImport } from './routes/_authed/scripts/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
@@ -29,6 +30,7 @@ import { Route as AuthedPipelinesIndexRouteImport } from './routes/_authed/pipel
 import { Route as AuthedNotificationsIndexRouteImport } from './routes/_authed/notifications/index'
 import { Route as AuthedNodesIndexRouteImport } from './routes/_authed/nodes/index'
 import { Route as AuthedAgentsIndexRouteImport } from './routes/_authed/agents/index'
+import { Route as AuthedVpsAssetsNewRouteImport } from './routes/_authed/vps-assets/new'
 import { Route as AuthedSubscriptionsIdRouteImport } from './routes/_authed/subscriptions/$id'
 import { Route as AuthedScriptsScriptIdRouteImport } from './routes/_authed/scripts/$scriptId'
 import { Route as AuthedProfile2faRouteImport } from './routes/_authed/profile/2fa'
@@ -105,6 +107,11 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedVpsAssetsIndexRoute = AuthedVpsAssetsIndexRouteImport.update({
+  id: '/vps-assets/',
+  path: '/vps-assets/',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
 const AuthedSubscriptionsIndexRoute =
   AuthedSubscriptionsIndexRouteImport.update({
     id: '/subscriptions/',
@@ -140,6 +147,11 @@ const AuthedNodesIndexRoute = AuthedNodesIndexRouteImport.update({
 const AuthedAgentsIndexRoute = AuthedAgentsIndexRouteImport.update({
   id: '/agents/',
   path: '/agents/',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
+const AuthedVpsAssetsNewRoute = AuthedVpsAssetsNewRouteImport.update({
+  id: '/vps-assets/new',
+  path: '/vps-assets/new',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
 const AuthedSubscriptionsIdRoute = AuthedSubscriptionsIdRouteImport.update({
@@ -229,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/profile/2fa': typeof AuthedProfile2faRoute
   '/scripts/$scriptId': typeof AuthedScriptsScriptIdRoute
   '/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
+  '/vps-assets/new': typeof AuthedVpsAssetsNewRoute
   '/agents/': typeof AuthedAgentsIndexRoute
   '/nodes/': typeof AuthedNodesIndexRoute
   '/notifications/': typeof AuthedNotificationsIndexRoute
@@ -236,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/profile/': typeof AuthedProfileIndexRoute
   '/scripts/': typeof AuthedScriptsIndexRoute
   '/subscriptions/': typeof AuthedSubscriptionsIndexRoute
+  '/vps-assets/': typeof AuthedVpsAssetsIndexRoute
   '/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -261,6 +275,7 @@ export interface FileRoutesByTo {
   '/profile/2fa': typeof AuthedProfile2faRoute
   '/scripts/$scriptId': typeof AuthedScriptsScriptIdRoute
   '/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
+  '/vps-assets/new': typeof AuthedVpsAssetsNewRoute
   '/agents': typeof AuthedAgentsIndexRoute
   '/nodes': typeof AuthedNodesIndexRoute
   '/notifications': typeof AuthedNotificationsIndexRoute
@@ -268,6 +283,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthedProfileIndexRoute
   '/scripts': typeof AuthedScriptsIndexRoute
   '/subscriptions': typeof AuthedSubscriptionsIndexRoute
+  '/vps-assets': typeof AuthedVpsAssetsIndexRoute
   '/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRoutesById {
@@ -296,6 +312,7 @@ export interface FileRoutesById {
   '/_authed/profile/2fa': typeof AuthedProfile2faRoute
   '/_authed/scripts/$scriptId': typeof AuthedScriptsScriptIdRoute
   '/_authed/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
+  '/_authed/vps-assets/new': typeof AuthedVpsAssetsNewRoute
   '/_authed/agents/': typeof AuthedAgentsIndexRoute
   '/_authed/nodes/': typeof AuthedNodesIndexRoute
   '/_authed/notifications/': typeof AuthedNotificationsIndexRoute
@@ -303,6 +320,7 @@ export interface FileRoutesById {
   '/_authed/profile/': typeof AuthedProfileIndexRoute
   '/_authed/scripts/': typeof AuthedScriptsIndexRoute
   '/_authed/subscriptions/': typeof AuthedSubscriptionsIndexRoute
+  '/_authed/vps-assets/': typeof AuthedVpsAssetsIndexRoute
   '/_authed/pipelines/$pipelineId/edit': typeof AuthedPipelinesPipelineIdEditRoute
 }
 export interface FileRouteTypes {
@@ -330,6 +348,7 @@ export interface FileRouteTypes {
     | '/profile/2fa'
     | '/scripts/$scriptId'
     | '/subscriptions/$id'
+    | '/vps-assets/new'
     | '/agents/'
     | '/nodes/'
     | '/notifications/'
@@ -337,6 +356,7 @@ export interface FileRouteTypes {
     | '/profile/'
     | '/scripts/'
     | '/subscriptions/'
+    | '/vps-assets/'
     | '/pipelines/$pipelineId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -362,6 +382,7 @@ export interface FileRouteTypes {
     | '/profile/2fa'
     | '/scripts/$scriptId'
     | '/subscriptions/$id'
+    | '/vps-assets/new'
     | '/agents'
     | '/nodes'
     | '/notifications'
@@ -369,6 +390,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/scripts'
     | '/subscriptions'
+    | '/vps-assets'
     | '/pipelines/$pipelineId/edit'
   id:
     | '__root__'
@@ -396,6 +418,7 @@ export interface FileRouteTypes {
     | '/_authed/profile/2fa'
     | '/_authed/scripts/$scriptId'
     | '/_authed/subscriptions/$id'
+    | '/_authed/vps-assets/new'
     | '/_authed/agents/'
     | '/_authed/nodes/'
     | '/_authed/notifications/'
@@ -403,6 +426,7 @@ export interface FileRouteTypes {
     | '/_authed/profile/'
     | '/_authed/scripts/'
     | '/_authed/subscriptions/'
+    | '/_authed/vps-assets/'
     | '/_authed/pipelines/$pipelineId/edit'
   fileRoutesById: FileRoutesById
 }
@@ -505,6 +529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/vps-assets/': {
+      id: '/_authed/vps-assets/'
+      path: '/vps-assets'
+      fullPath: '/vps-assets/'
+      preLoaderRoute: typeof AuthedVpsAssetsIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/subscriptions/': {
       id: '/_authed/subscriptions/'
       path: '/subscriptions'
@@ -552,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/agents'
       fullPath: '/agents/'
       preLoaderRoute: typeof AuthedAgentsIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
+    '/_authed/vps-assets/new': {
+      id: '/_authed/vps-assets/new'
+      path: '/vps-assets/new'
+      fullPath: '/vps-assets/new'
+      preLoaderRoute: typeof AuthedVpsAssetsNewRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
     '/_authed/subscriptions/$id': {
@@ -659,6 +697,7 @@ interface AuthedRouteRouteChildren {
   AuthedProfile2faRoute: typeof AuthedProfile2faRoute
   AuthedScriptsScriptIdRoute: typeof AuthedScriptsScriptIdRoute
   AuthedSubscriptionsIdRoute: typeof AuthedSubscriptionsIdRoute
+  AuthedVpsAssetsNewRoute: typeof AuthedVpsAssetsNewRoute
   AuthedAgentsIndexRoute: typeof AuthedAgentsIndexRoute
   AuthedNodesIndexRoute: typeof AuthedNodesIndexRoute
   AuthedNotificationsIndexRoute: typeof AuthedNotificationsIndexRoute
@@ -666,6 +705,7 @@ interface AuthedRouteRouteChildren {
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
   AuthedScriptsIndexRoute: typeof AuthedScriptsIndexRoute
   AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute
+  AuthedVpsAssetsIndexRoute: typeof AuthedVpsAssetsIndexRoute
   AuthedPipelinesPipelineIdEditRoute: typeof AuthedPipelinesPipelineIdEditRoute
 }
 
@@ -687,6 +727,7 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedProfile2faRoute: AuthedProfile2faRoute,
   AuthedScriptsScriptIdRoute: AuthedScriptsScriptIdRoute,
   AuthedSubscriptionsIdRoute: AuthedSubscriptionsIdRoute,
+  AuthedVpsAssetsNewRoute: AuthedVpsAssetsNewRoute,
   AuthedAgentsIndexRoute: AuthedAgentsIndexRoute,
   AuthedNodesIndexRoute: AuthedNodesIndexRoute,
   AuthedNotificationsIndexRoute: AuthedNotificationsIndexRoute,
@@ -694,6 +735,7 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
   AuthedScriptsIndexRoute: AuthedScriptsIndexRoute,
   AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
+  AuthedVpsAssetsIndexRoute: AuthedVpsAssetsIndexRoute,
   AuthedPipelinesPipelineIdEditRoute: AuthedPipelinesPipelineIdEditRoute,
 }
 

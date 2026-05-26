@@ -1,0 +1,106 @@
+{
+  "title": "VPS Assets",
+  "subtitle": "Manage all your VPS fees, specs, and expiry info in one place",
+  "actions": {
+    "create": "Add VPS",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deploy_agent": "Deploy Agent",
+    "copy_ip": "Copy IP"
+  },
+  "summary": {
+    "total": "Total VPS",
+    "monthly_cost": "Monthly Cost",
+    "expiring": "Expiring Soon",
+    "expired": "Expired"
+  },
+  "filter": {
+    "all": "All",
+    "normal": "Normal",
+    "expiring": "Expiring",
+    "expired": "Expired",
+    "search_placeholder": "Search name, provider, IP…",
+    "provider_all": "All Providers"
+  },
+  "card": {
+    "days": "d",
+    "days_left": "DAYS",
+    "expired_label": "EXPIRED",
+    "agent_online": "Online",
+    "agent_offline": "Agent Offline",
+    "no_agent": "No Agent",
+    "vps_may_recycled": "VPS may have been recycled"
+  },
+  "metrics": {
+    "cpu": "CPU",
+    "memory": "MEM",
+    "disk": "DISK",
+    "network": "NET"
+  },
+  "billing_cycle": {
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "semi_annual": "Semi-Annual",
+    "annual": "Annual",
+    "biennial": "Biennial",
+    "triennial": "Triennial"
+  },
+  "form": {
+    "title_create": "Add VPS",
+    "title_edit": "Edit VPS",
+    "name": "Name",
+    "name_placeholder": "e.g. hk-vps-01",
+    "provider": "Provider",
+    "provider_placeholder": "e.g. BandwagonHost / Hetzner",
+    "ip": "IP Address",
+    "ip_placeholder": "IPv4 or IPv6",
+    "ssh_port": "SSH Port",
+    "ssh_user": "SSH User",
+    "os": "OS",
+    "os_placeholder": "e.g. Ubuntu 22.04",
+    "location": "Location",
+    "location_placeholder": "e.g. Hong Kong",
+    "price": "Price",
+    "currency": "Currency",
+    "billing_cycle": "Billing Cycle",
+    "bandwidth": "Bandwidth",
+    "bandwidth_placeholder": "e.g. 1Gbps",
+    "monthly_traffic": "Monthly Traffic (GB)",
+    "monthly_traffic_placeholder": "0 = unlimited",
+    "cpu": "CPU",
+    "cpu_placeholder": "e.g. 2 Core",
+    "memory": "Memory",
+    "memory_placeholder": "e.g. 4 GB",
+    "disk": "Disk",
+    "disk_placeholder": "e.g. 80 GB SSD",
+    "expire_at": "Expiry Date",
+    "notes": "Notes",
+    "notes_placeholder": "Optional notes",
+    "agent": "Link Agent",
+    "agent_none": "None",
+    "tags": "Tags",
+    "tags_placeholder": "Press Enter to add"
+  },
+  "delete_confirm": {
+    "title": "Delete VPS",
+    "description": "Are you sure you want to delete \"{{name}}\"? This cannot be undone. The linked agent will not be removed.",
+    "submit": "Delete",
+    "success": "VPS deleted"
+  },
+  "empty": {
+    "title": "No VPS Yet",
+    "desc": "Add your first VPS to start managing your assets",
+    "cta": "Add VPS"
+  },
+  "error": {
+    "load_failed": "Failed to load VPS list",
+    "create_failed": "Create failed",
+    "update_failed": "Update failed",
+    "delete_failed": "Delete failed"
+  },
+  "toast": {
+    "created": "VPS created",
+    "updated": "VPS updated",
+    "ip_copied": "IP copied"
+  }
+}

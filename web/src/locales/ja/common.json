@@ -29,6 +29,7 @@
     "rule_sets": "ルールセット",
     "proxy_groups": "プロキシグループ",
     "scripts": "スクリプト",
+    "vps_assets": "VPS 資産",
     "agents": "エージェント",
     "traffic": "トラフィック",
     "notify": "通知",

@@ -34,6 +34,7 @@ import zhCNSettings from "@/locales/zh-CN/settings.json";
 import zhCNShortlink from "@/locales/zh-CN/shortlink.json";
 import zhCNSubscription from "@/locales/zh-CN/subscription.json";
 import zhCNTraffic from "@/locales/zh-CN/traffic.json";
+import zhCNVpsAsset from "@/locales/zh-CN/vps-asset.json";
 
 // ── en ───────────────────────────────────────────────────────────────────────
 import enCommon from "@/locales/en/common.json";
@@ -54,6 +55,7 @@ import enSettings from "@/locales/en/settings.json";
 import enShortlink from "@/locales/en/shortlink.json";
 import enSubscription from "@/locales/en/subscription.json";
 import enTraffic from "@/locales/en/traffic.json";
+import enVpsAsset from "@/locales/en/vps-asset.json";
 
 // ── ja ───────────────────────────────────────────────────────────────────────
 import jaCommon from "@/locales/ja/common.json";
@@ -74,6 +76,7 @@ import jaSettings from "@/locales/ja/settings.json";
 import jaShortlink from "@/locales/ja/shortlink.json";
 import jaSubscription from "@/locales/ja/subscription.json";
 import jaTraffic from "@/locales/ja/traffic.json";
+import jaVpsAsset from "@/locales/ja/vps-asset.json";
 
 // ── ko ───────────────────────────────────────────────────────────────────────
 import koCommon from "@/locales/ko/common.json";
@@ -94,6 +97,7 @@ import koSettings from "@/locales/ko/settings.json";
 import koShortlink from "@/locales/ko/shortlink.json";
 import koSubscription from "@/locales/ko/subscription.json";
 import koTraffic from "@/locales/ko/traffic.json";
+import koVpsAsset from "@/locales/ko/vps-asset.json";
 
 const EAGER_NS = [
   "common",
@@ -114,6 +118,7 @@ const EAGER_NS = [
   "shortlink",
   "subscription",
   "traffic",
+  "vps-asset",
 ] as const;
 
 void i18next
@@ -144,6 +149,7 @@ void i18next
         shortlink: zhCNShortlink,
         subscription: zhCNSubscription,
         traffic: zhCNTraffic,
+        "vps-asset": zhCNVpsAsset,
       },
       en: {
         common: enCommon,
@@ -164,6 +170,7 @@ void i18next
         shortlink: enShortlink,
         subscription: enSubscription,
         traffic: enTraffic,
+        "vps-asset": enVpsAsset,
       },
       ja: {
         common: jaCommon,
@@ -184,6 +191,7 @@ void i18next
         shortlink: jaShortlink,
         subscription: jaSubscription,
         traffic: jaTraffic,
+        "vps-asset": jaVpsAsset,
       },
       ko: {
         common: koCommon,
@@ -204,6 +212,7 @@ void i18next
         shortlink: koShortlink,
         subscription: koSubscription,
         traffic: koTraffic,
+        "vps-asset": koVpsAsset,
       },
     },
     detection: {

@@ -84,7 +84,7 @@ export function BackupSection() {
   return (
     <section
       aria-labelledby="backup-heading"
-      className="flex flex-col gap-6 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6"
+      className="flex flex-1 flex-col gap-6 p-8"
     >
       <header className="flex flex-col gap-1">
         <h2

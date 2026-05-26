@@ -29,6 +29,7 @@
     "rule_sets": "Rule Sets",
     "proxy_groups": "Proxy Groups",
     "scripts": "Scripts",
+    "vps_assets": "VPS Assets",
     "agents": "Agents",
     "traffic": "Traffic",
     "notify": "Notifications",

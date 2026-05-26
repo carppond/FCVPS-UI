@@ -22,6 +22,7 @@
     "pipelines": "Pipelines",
     "rules": "Rules",
     "scripts": "Scripts",
+    "vps_assets": "VPS Assets",
     "agents": "Agents",
     "traffic": "Traffic",
     "notifications": "Notifications",

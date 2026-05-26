@@ -18,6 +18,7 @@ import {
   Link2,
   PackageOpen,
   UserCircle2,
+  HardDrive,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAuthStore } from "@/stores/auth-store";
@@ -40,6 +41,7 @@ const USER_NAV_ITEMS: NavItem[] = [
   { to: "/rule-sets", icon: <ShieldCheck className="h-4 w-4" />, labelKey: "nav.rule_sets" },
   { to: "/proxy-groups", icon: <Target className="h-4 w-4" />, labelKey: "nav.proxy_groups" },
   { to: "/scripts", icon: <Code2 className="h-4 w-4" />, labelKey: "nav.scripts" },
+  { to: "/vps-assets", icon: <HardDrive className="h-4 w-4" />, labelKey: "nav.vps_assets" },
   { to: "/agents", icon: <Radio className="h-4 w-4" />, labelKey: "nav.agents" },
   { to: "/traffic", icon: <BarChart2 className="h-4 w-4" />, labelKey: "nav.traffic" },
   { to: "/notifications", icon: <Bell className="h-4 w-4" />, labelKey: "nav.notify" },

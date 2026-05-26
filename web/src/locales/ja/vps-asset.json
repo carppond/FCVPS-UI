@@ -1,0 +1,106 @@
+{
+  "title": "VPS 資産",
+  "subtitle": "全VPSの費用・スペック・期限を一括管理",
+  "actions": {
+    "create": "VPS 追加",
+    "edit": "編集",
+    "delete": "削除",
+    "deploy_agent": "エージェント配置",
+    "copy_ip": "IP コピー"
+  },
+  "summary": {
+    "total": "VPS 合計",
+    "monthly_cost": "月額合計",
+    "expiring": "期限間近",
+    "expired": "期限切れ"
+  },
+  "filter": {
+    "all": "すべて",
+    "normal": "正常",
+    "expiring": "期限間近",
+    "expired": "期限切れ",
+    "search_placeholder": "名前・プロバイダ・IPで検索…",
+    "provider_all": "全プロバイダ"
+  },
+  "card": {
+    "days": "日",
+    "days_left": "DAYS",
+    "expired_label": "期限切れ",
+    "agent_online": "オンライン",
+    "agent_offline": "エージェントオフライン",
+    "no_agent": "エージェント未設定",
+    "vps_may_recycled": "VPSが回収された可能性があります"
+  },
+  "metrics": {
+    "cpu": "CPU",
+    "memory": "メモリ",
+    "disk": "ディスク",
+    "network": "ネット"
+  },
+  "billing_cycle": {
+    "monthly": "月払い",
+    "quarterly": "四半期",
+    "semi_annual": "半年",
+    "annual": "年払い",
+    "biennial": "2年",
+    "triennial": "3年"
+  },
+  "form": {
+    "title_create": "VPS 追加",
+    "title_edit": "VPS 編集",
+    "name": "名前",
+    "name_placeholder": "例: hk-vps-01",
+    "provider": "プロバイダ",
+    "provider_placeholder": "例: Hetzner",
+    "ip": "IPアドレス",
+    "ip_placeholder": "IPv4 または IPv6",
+    "ssh_port": "SSHポート",
+    "ssh_user": "SSHユーザー",
+    "os": "OS",
+    "os_placeholder": "例: Ubuntu 22.04",
+    "location": "ロケーション",
+    "location_placeholder": "例: Tokyo",
+    "price": "価格",
+    "currency": "通貨",
+    "billing_cycle": "課金サイクル",
+    "bandwidth": "帯域幅",
+    "bandwidth_placeholder": "例: 1Gbps",
+    "monthly_traffic": "月間トラフィック (GB)",
+    "monthly_traffic_placeholder": "0 = 無制限",
+    "cpu": "CPU",
+    "cpu_placeholder": "例: 2 Core",
+    "memory": "メモリ",
+    "memory_placeholder": "例: 4 GB",
+    "disk": "ディスク",
+    "disk_placeholder": "例: 80 GB SSD",
+    "expire_at": "有効期限",
+    "notes": "メモ",
+    "notes_placeholder": "任意のメモ",
+    "agent": "エージェント紐付け",
+    "agent_none": "なし",
+    "tags": "タグ",
+    "tags_placeholder": "Enterで追加"
+  },
+  "delete_confirm": {
+    "title": "VPS 削除",
+    "description": "「{{name}}」を削除しますか？この操作は取り消せません。紐付けエージェントは削除されません。",
+    "submit": "削除",
+    "success": "VPS を削除しました"
+  },
+  "empty": {
+    "title": "VPS なし",
+    "desc": "最初のVPSを追加して資産管理を始めましょう",
+    "cta": "VPS 追加"
+  },
+  "error": {
+    "load_failed": "VPSリストの読み込みに失敗",
+    "create_failed": "作成に失敗",
+    "update_failed": "更新に失敗",
+    "delete_failed": "削除に失敗"
+  },
+  "toast": {
+    "created": "VPS を作成しました",
+    "updated": "VPS を更新しました",
+    "ip_copied": "IP をコピーしました"
+  }
+}

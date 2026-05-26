@@ -1,5 +1,5 @@
 /**
- * T-29: Cmd+K command palette (replaces the T-2 placeholder).
+ * T-29: Cmd+K command palette.
  *
  * Five groups, in display order:
  *   1. Recent  — last 5 jumps (localStorage)
@@ -7,14 +7,6 @@
  *   3. Actions — quick mutations (new sub / new agent / sync-all / toggles)
  *   4. Admin   — admin-only ops (backup / OTA check / silent-mode rotate)
  *   5. Resources — debounced cross-collection search (nodes + subs + agents)
- *
- * Keyboard: ↑↓ navigation, Enter selects, Esc closes — all provided by `cmdk`.
- * Cmd+K to toggle is registered globally via `useCmdKShortcut`.
- *
- * The "Resources" group is filled in parallel by `useQueries`-style independent
- * hooks; we deliberately do NOT add a server `/api/search` endpoint per the
- * task brief (frontend-only fan-out is sufficient and avoids a new backend
- * surface).
  */
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,11 +23,13 @@ import {
   Database,
   GitBranch,
   Globe,
+  HardDrive,
   LayoutDashboard,
   Moon,
   Plus,
   Radio,
   RefreshCcw,
+  Search,
   Server,
   Settings,
   Shield,
@@ -54,13 +48,10 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useCmdKActions } from "@/components/layout/cmd-k-actions";
 
-// API hooks (resource search only — action mutations live in cmd-k-actions.ts)
 import { useNodesQuery } from "@/api/node";
 import { useSubscriptionsQuery } from "@/api/subscription";
 import { useAgentsQuery } from "@/api/agent";
 
-// Locale bundles for the cmdk namespace — eagerly registered the first time the
-// dialog mounts so opening the palette never flashes raw keys.
 import zhCNCmdk from "@/locales/zh-CN/cmdk.json";
 import enCmdk from "@/locales/en/cmdk.json";
 import jaCmdk from "@/locales/ja/cmdk.json";
@@ -81,8 +72,6 @@ function ensureCmdkBundles() {
   }
 }
 
-// ── page nav table ──────────────────────────────────────────────────────────
-
 interface PageEntry {
   id: string;
   to: string;
@@ -98,15 +87,14 @@ const PAGES: PageEntry[] = [
   { id: "page:pipelines", to: "/pipelines", icon: <GitBranch className="h-4 w-4" />, labelKey: "pages.pipelines" },
   { id: "page:rules", to: "/rules", icon: <Shield className="h-4 w-4" />, labelKey: "pages.rules" },
   { id: "page:scripts", to: "/scripts", icon: <Code2 className="h-4 w-4" />, labelKey: "pages.scripts" },
+  { id: "page:vps-assets", to: "/vps-assets", icon: <HardDrive className="h-4 w-4" />, labelKey: "pages.vps_assets" },
   { id: "page:agents", to: "/agents", icon: <Radio className="h-4 w-4" />, labelKey: "pages.agents" },
   { id: "page:traffic", to: "/traffic", icon: <BarChart2 className="h-4 w-4" />, labelKey: "pages.traffic" },
   { id: "page:notifications", to: "/notifications", icon: <Bell className="h-4 w-4" />, labelKey: "pages.notifications" },
-  { id: "page:settings", to: "/settings", icon: <Settings className="h-4 w-4" />, labelKey: "pages.settings", adminOnly: true },
-  { id: "page:users", to: "/users", icon: <Users className="h-4 w-4" />, labelKey: "pages.users", adminOnly: true },
-  { id: "page:audit", to: "/audit", icon: <ClipboardList className="h-4 w-4" />, labelKey: "pages.audit", adminOnly: true },
+  { id: "page:settings", to: "/admin/settings", icon: <Settings className="h-4 w-4" />, labelKey: "pages.settings", adminOnly: true },
+  { id: "page:users", to: "/admin/users", icon: <Users className="h-4 w-4" />, labelKey: "pages.users", adminOnly: true },
+  { id: "page:audit", to: "/admin/audit", icon: <ClipboardList className="h-4 w-4" />, labelKey: "pages.audit", adminOnly: true },
 ];
-
-// ── main component ──────────────────────────────────────────────────────────
 
 export function CmdK() {
   const { t, i18n: i18next } = useTranslation(["cmdk", "common"]);
@@ -122,8 +110,6 @@ export function CmdK() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 200);
 
-  // Reset the input each time the palette re-opens so the previous query
-  // does not leak between sessions.
   useEffect(() => {
     if (!open) setSearch("");
   }, [open]);
@@ -134,7 +120,6 @@ export function CmdK() {
   const isAdmin = user?.role === "admin";
   const actions = useCmdKActions(close);
 
-  // ── resource search (only when query is non-empty) ───────────────────────
   const enabledSearch = debouncedSearch.trim().length >= 1;
 
   const nodesQ = useNodesQuery(
@@ -160,13 +145,11 @@ export function CmdK() {
   const subs = enabledSearch ? (subsQ.data?.items ?? []) : [];
   const agents = enabledSearch ? (agentsQ.data?.items ?? []) : [];
 
-  // ── recent entries (re-read each open so navigation elsewhere updates) ──
   const [recents, setRecents] = useState(loadRecents());
   useEffect(() => {
     if (open) setRecents(loadRecents());
   }, [open]);
 
-  // ── nav handlers (action / mutation handlers are in `actions`) ───────────
   const goTo = (page: PageEntry) => {
     pushRecent({ id: page.id, label: t(`cmdk:${page.labelKey}`), to: page.to });
     close();
@@ -177,20 +160,14 @@ export function CmdK() {
     const path = `/nodes/${id}`;
     pushRecent({ id: `node:${id}`, label: name, to: path });
     close();
-    void navigate({
-      to: "/nodes/$nodeId" as never,
-      params: { nodeId: id } as never,
-    });
+    void navigate({ to: "/nodes/$nodeId" as never, params: { nodeId: id } as never });
   };
 
   const goToSub = (id: string, name: string) => {
     const path = `/subscriptions/${id}`;
     pushRecent({ id: `sub:${id}`, label: name, to: path });
     close();
-    void navigate({
-      to: "/subscriptions/$id" as never,
-      params: { id } as never,
-    });
+    void navigate({ to: "/subscriptions/$id" as never, params: { id } as never });
   };
 
   const goToAgentDetail = () => {
@@ -198,8 +175,6 @@ export function CmdK() {
     close();
     void navigate({ to: "/agents" as never });
   };
-
-  // ── render ───────────────────────────────────────────────────────────────
 
   const visiblePages = useMemo(
     () => PAGES.filter((p) => !p.adminOnly || isAdmin),
@@ -209,7 +184,7 @@ export function CmdK() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className="max-w-xl gap-0 overflow-hidden p-0 border-white/12 shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+        className="max-w-[560px] gap-0 overflow-hidden rounded-2xl border-white/[.08] p-0 shadow-[0_32px_80px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]"
         data-cmdk-root
       >
         <DialogTitle className="sr-only">
@@ -219,43 +194,56 @@ export function CmdK() {
           label="Command Menu"
           loop
           className={cn(
-            // 30rem = 480px, on the rem-based size scale (token阶梯 audited).
-            "flex max-h-[30rem] flex-col",
-            "[&_[cmdk-group-heading]]:px-3",
+            "flex max-h-[32rem] flex-col",
+            "[&_[cmdk-group-heading]]:px-4",
             "[&_[cmdk-group-heading]]:pt-3",
-            "[&_[cmdk-group-heading]]:pb-1",
-            "[&_[cmdk-group-heading]]:text-[var(--font-size-xs)]",
-            "[&_[cmdk-group-heading]]:font-medium",
+            "[&_[cmdk-group-heading]]:pb-1.5",
+            "[&_[cmdk-group-heading]]:text-[10px]",
+            "[&_[cmdk-group-heading]]:font-bold",
             "[&_[cmdk-group-heading]]:uppercase",
-            "[&_[cmdk-group-heading]]:tracking-wider",
-            "[&_[cmdk-group-heading]]:text-[var(--color-text-tertiary)]",
+            "[&_[cmdk-group-heading]]:tracking-[.08em]",
+            "[&_[cmdk-group-heading]]:text-[var(--color-text-disabled)]",
           )}
         >
-          <div className="flex items-center border-b border-[var(--color-border)] px-3">
+          {/* Search input */}
+          <div className="flex items-center gap-3 border-b border-[var(--color-border)] px-4">
+            <Search className="h-4 w-4 shrink-0 text-[var(--color-text-tertiary)]" />
             <Command.Input
               value={search}
               onValueChange={setSearch}
               placeholder={bundlesReady ? t("cmdk:placeholder") : "Search…"}
               autoFocus
               className={cn(
-                "h-12 w-full bg-transparent text-[var(--font-size-base)]",
-                "text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]",
+                "h-[52px] w-full bg-transparent text-[15px]",
+                "text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-disabled)]",
               )}
             />
+            <kbd className="shrink-0 rounded-md border border-[var(--color-border)] bg-white/[.04] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-text-disabled)]">
+              ESC
+            </kbd>
           </div>
 
-          <Command.List className="max-h-96 overflow-y-auto p-2">
-            <Command.Empty className="py-8 text-center text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
-              {bundlesReady ? t("cmdk:empty") : "No results"}
+          <Command.List
+            className={cn(
+              "max-h-[26rem] overflow-y-auto px-2 py-2",
+              "[scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,.08)_transparent]",
+              "[&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/[.08]",
+            )}
+          >
+            <Command.Empty className="flex flex-col items-center gap-2 py-10 text-center">
+              <Search className="h-8 w-8 text-[var(--color-text-disabled)]" />
+              <span className="text-[13px] text-[var(--color-text-tertiary)]">
+                {bundlesReady ? t("cmdk:empty") : "No results"}
+              </span>
             </Command.Empty>
 
             {isResourcesLoading && (
-              <Command.Loading className="px-3 py-2 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+              <Command.Loading className="px-4 py-2 text-[11px] text-[var(--color-text-disabled)]">
                 {t("cmdk:loading")}
               </Command.Loading>
             )}
 
-            {/* 1. Recent */}
+            {/* Recent */}
             {recents.length > 0 && (
               <Command.Group heading={t("cmdk:groups.recent")}>
                 {recents.map((r) => (
@@ -263,7 +251,9 @@ export function CmdK() {
                     key={r.id}
                     value={`recent ${r.id} ${r.label}`}
                     onSelect={() => actions.goToRecent(r)}
-                    icon={<RefreshCcw className="h-4 w-4 text-[var(--color-text-tertiary)]" />}
+                    icon={<RefreshCcw className="h-3.5 w-3.5" />}
+                    iconBg="rgba(255,255,255,.04)"
+                    iconColor="var(--color-text-tertiary)"
                     label={r.label}
                     hint={r.to}
                   />
@@ -271,7 +261,7 @@ export function CmdK() {
               </Command.Group>
             )}
 
-            {/* 2. Pages */}
+            {/* Pages */}
             <Command.Group heading={t("cmdk:groups.pages")}>
               {visiblePages.map((p) => (
                 <CmdItem
@@ -279,30 +269,38 @@ export function CmdK() {
                   value={`page ${p.to} ${t(`cmdk:${p.labelKey}`)}`}
                   onSelect={() => goTo(p)}
                   icon={p.icon}
+                  iconBg="rgba(255,255,255,.04)"
+                  iconColor="var(--color-text-secondary)"
                   label={t(`cmdk:${p.labelKey}`)}
                   hint={p.to}
                 />
               ))}
             </Command.Group>
 
-            {/* 3. Actions */}
+            {/* Actions */}
             <Command.Group heading={t("cmdk:groups.actions")}>
               <CmdItem
                 value="action new-sub"
                 onSelect={actions.handleCreateSub}
-                icon={<Plus className="h-4 w-4 text-[var(--color-primary)]" />}
+                icon={<Plus className="h-3.5 w-3.5" />}
+                iconBg="rgba(255,99,99,.1)"
+                iconColor="var(--color-primary)"
                 label={t("cmdk:actions.create_subscription")}
               />
               <CmdItem
                 value="action new-agent"
                 onSelect={actions.handleCreateAgent}
-                icon={<Bot className="h-4 w-4 text-[var(--color-primary)]" />}
+                icon={<Bot className="h-3.5 w-3.5" />}
+                iconBg="rgba(255,99,99,.1)"
+                iconColor="var(--color-primary)"
                 label={t("cmdk:actions.create_agent")}
               />
               <CmdItem
                 value="action sync-all"
                 onSelect={actions.handleSyncAll}
-                icon={<RefreshCcw className="h-4 w-4 text-[var(--color-info)]" />}
+                icon={<RefreshCcw className="h-3.5 w-3.5" />}
+                iconBg="rgba(96,165,250,.1)"
+                iconColor="var(--color-info)"
                 label={t("cmdk:actions.sync_all")}
               />
               <CmdItem
@@ -310,48 +308,58 @@ export function CmdK() {
                 onSelect={actions.handleToggleTheme}
                 icon={
                   theme === "dark" ? (
-                    <Moon className="h-4 w-4 text-[var(--color-text-secondary)]" />
+                    <Moon className="h-3.5 w-3.5" />
                   ) : (
-                    <Sun className="h-4 w-4 text-[var(--color-text-secondary)]" />
+                    <Sun className="h-3.5 w-3.5" />
                   )
                 }
+                iconBg="rgba(255,255,255,.04)"
+                iconColor="var(--color-text-secondary)"
                 label={t("cmdk:actions.toggle_theme")}
                 hint={t(`common:theme.${theme}`)}
               />
               <CmdItem
                 value="action toggle-lang"
                 onSelect={actions.handleToggleLang}
-                icon={<Globe className="h-4 w-4 text-[var(--color-text-secondary)]" />}
+                icon={<Globe className="h-3.5 w-3.5" />}
+                iconBg="rgba(255,255,255,.04)"
+                iconColor="var(--color-text-secondary)"
                 label={t("cmdk:actions.toggle_lang")}
                 hint={i18next.language}
               />
             </Command.Group>
 
-            {/* 4. Admin */}
+            {/* Admin */}
             {isAdmin && (
               <Command.Group heading={t("cmdk:groups.admin")}>
                 <CmdItem
                   value="admin backup"
                   onSelect={actions.handleBackup}
-                  icon={<Database className="h-4 w-4 text-[var(--color-info)]" />}
+                  icon={<Database className="h-3.5 w-3.5" />}
+                  iconBg="rgba(96,165,250,.1)"
+                  iconColor="var(--color-info)"
                   label={t("cmdk:admin.backup")}
                 />
                 <CmdItem
                   value="admin ota"
                   onSelect={actions.handleOtaCheck}
-                  icon={<WifiOff className="h-4 w-4 text-[var(--color-warning)]" />}
+                  icon={<WifiOff className="h-3.5 w-3.5" />}
+                  iconBg="rgba(251,191,36,.1)"
+                  iconColor="var(--color-warning)"
                   label={t("cmdk:admin.ota_check")}
                 />
                 <CmdItem
                   value="admin silent-rotate"
                   onSelect={actions.handleSilentRotate}
-                  icon={<ShieldAlert className="h-4 w-4 text-[var(--color-error)]" />}
+                  icon={<ShieldAlert className="h-3.5 w-3.5" />}
+                  iconBg="rgba(248,113,113,.1)"
+                  iconColor="var(--color-error)"
                   label={t("cmdk:admin.silent_rotate")}
                 />
               </Command.Group>
             )}
 
-            {/* 5. Resources */}
+            {/* Resources */}
             {enabledSearch && (subs.length > 0 || nodes.length > 0 || agents.length > 0) && (
               <Command.Group heading={t("cmdk:groups.resources")}>
                 {subs.slice(0, 5).map((s) => (
@@ -359,9 +367,11 @@ export function CmdK() {
                     key={`sub:${s.id}`}
                     value={`sub ${s.id} ${s.name}`}
                     onSelect={() => goToSub(s.id, s.name)}
-                    icon={<BookOpen className="h-4 w-4 text-[var(--color-text-tertiary)]" />}
+                    icon={<BookOpen className="h-3.5 w-3.5" />}
+                    iconBg="rgba(255,255,255,.04)"
+                    iconColor="var(--color-text-tertiary)"
                     label={s.name}
-                    hint={t("cmdk:resource_kind.subscription")}
+                    badge={t("cmdk:resource_kind.subscription")}
                   />
                 ))}
                 {nodes.slice(0, 5).map((n) => (
@@ -369,9 +379,11 @@ export function CmdK() {
                     key={`node:${n.id}`}
                     value={`node ${n.id} ${n.tag}`}
                     onSelect={() => goToNode(n.id, n.tag)}
-                    icon={<Server className="h-4 w-4 text-[var(--color-text-tertiary)]" />}
+                    icon={<Server className="h-3.5 w-3.5" />}
+                    iconBg="rgba(255,255,255,.04)"
+                    iconColor="var(--color-text-tertiary)"
                     label={n.tag}
-                    hint={t("cmdk:resource_kind.node")}
+                    badge={t("cmdk:resource_kind.node")}
                   />
                 ))}
                 {agents.slice(0, 5).map((a) => (
@@ -379,19 +391,31 @@ export function CmdK() {
                     key={`agent:${a.id}`}
                     value={`agent ${a.id} ${a.name}`}
                     onSelect={() => goToAgentDetail()}
-                    icon={<BellRing className="h-4 w-4 text-[var(--color-text-tertiary)]" />}
+                    icon={<BellRing className="h-3.5 w-3.5" />}
+                    iconBg="rgba(255,255,255,.04)"
+                    iconColor="var(--color-text-tertiary)"
                     label={a.name}
-                    hint={t("cmdk:resource_kind.agent")}
+                    badge={t("cmdk:resource_kind.agent")}
                   />
                 ))}
               </Command.Group>
             )}
           </Command.List>
 
-          <div className="flex items-center justify-between border-t border-[var(--color-border)] px-3 py-2 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-            <span>{t("cmdk:hint.navigate")}</span>
-            <span>
-              {t("cmdk:hint.enter")} · {t("cmdk:hint.esc")}
+          {/* Footer */}
+          <div className="flex items-center justify-between border-t border-[var(--color-border)] px-4 py-2.5">
+            <div className="flex items-center gap-3 text-[10px] text-[var(--color-text-disabled)]">
+              <span className="flex items-center gap-1">
+                <kbd className="rounded border border-[var(--color-border)] bg-white/[.03] px-1 py-0.5 font-mono text-[9px]">↑↓</kbd>
+                {t("cmdk:hint.navigate")}
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="rounded border border-[var(--color-border)] bg-white/[.03] px-1 py-0.5 font-mono text-[9px]">↵</kbd>
+                {t("cmdk:hint.enter")}
+              </span>
+            </div>
+            <span className="text-[10px] text-[var(--color-text-disabled)]">
+              {t("cmdk:hint.esc")}
             </span>
           </div>
         </Command>
@@ -400,32 +424,44 @@ export function CmdK() {
   );
 }
 
-// ── shared item renderer ────────────────────────────────────────────────────
-
 interface CmdItemProps {
   value: string;
   onSelect: () => void;
   icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
   label: string;
   hint?: string;
+  badge?: string;
 }
 
-function CmdItem({ value, onSelect, icon, label, hint }: CmdItemProps) {
+function CmdItem({ value, onSelect, icon, iconBg, iconColor, label, hint, badge }: CmdItemProps) {
   return (
     <Command.Item
       value={value}
       onSelect={onSelect}
       className={cn(
-        "flex cursor-pointer items-center gap-3 rounded-[var(--radius-md)] px-3 py-2",
-        "text-[var(--font-size-sm)] text-[var(--color-text-primary)]",
-        "data-[selected=true]:bg-[var(--color-surface-hover)]",
-        "aria-selected:bg-[var(--color-surface-hover)]",
+        "flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5",
+        "text-[13px] text-[var(--color-text-primary)]",
+        "transition-colors duration-100",
+        "data-[selected=true]:bg-white/[.05]",
+        "aria-selected:bg-white/[.05]",
       )}
     >
-      <span className="flex h-5 w-5 items-center justify-center">{icon}</span>
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+        style={{ background: iconBg, color: iconColor }}
+      >
+        {icon}
+      </span>
       <span className="grow truncate">{label}</span>
+      {badge && (
+        <span className="shrink-0 rounded-md bg-white/[.04] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-disabled)]">
+          {badge}
+        </span>
+      )}
       {hint && (
-        <span className="ml-2 shrink-0 font-mono text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+        <span className="shrink-0 font-mono text-[11px] text-[var(--color-text-disabled)]">
           {hint}
         </span>
       )}

@@ -29,6 +29,7 @@
     "rule_sets": "规则集",
     "proxy_groups": "代理组",
     "scripts": "脚本",
+    "vps_assets": "VPS 资产",
     "agents": "探针",
     "traffic": "流量",
     "notify": "通知",
