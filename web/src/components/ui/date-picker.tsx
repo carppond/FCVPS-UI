@@ -13,7 +13,7 @@ import {
   isToday,
   differenceInCalendarDays,
 } from "date-fns";
-import { zhCN, enUS, ja, ko } from "date-fns/locale";
+import { zhCN, enUS, ja, ko, type Locale } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { cn } from "@/lib/cn";
 import i18n from "@/lib/i18n";

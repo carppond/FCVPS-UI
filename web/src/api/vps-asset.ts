@@ -3,7 +3,6 @@ import { apiFetch } from "@/lib/api-client";
 import { queryClient } from "@/lib/query-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
-  APIResponse,
   CreateVpsAssetRequest,
   PagedResponse,
   UpdateVpsAssetRequest,

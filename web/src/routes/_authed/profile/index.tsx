@@ -5,7 +5,6 @@ import {
   User,
   Lock,
   ShieldCheck,
-  Save,
   KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
