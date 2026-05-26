@@ -33,6 +33,16 @@ Thumbs.db
 *.swp
 *.swo
 
+# Style previews (local HTML mockups)
+style-preview*.html
+
+# Claude Code
+.claude/settings.local.json
+.claude_resumes.txt
+
+# TanStack Router cache
+web/.tanstack/
+
 # pnpm
 web/.pnpm-store/
 
