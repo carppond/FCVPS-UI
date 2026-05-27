@@ -13,7 +13,7 @@ export function useNodesQuery() {
 export function useTcpingMutation() {
   return useMutation({
     mutationFn: (data: TCPingRequest) =>
-      apiFetch<TCPingResponse>("/api/nodes/tcping", {
+      apiFetch<TCPingResponse>("/api/tcping/batch", {
         method: "POST",
         body: JSON.stringify(data),
       }),

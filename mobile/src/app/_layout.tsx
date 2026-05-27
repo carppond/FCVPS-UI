@@ -29,12 +29,13 @@ export default function RootLayout() {
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.textPrimary,
           headerTitleStyle: { fontWeight: "700" },
+          headerBackTitle: "返回",
           contentStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "" }} />
         <Stack.Screen name="subscription/[id]" options={{ title: "订阅详情" }} />
         <Stack.Screen name="subscription/create" options={{ title: "新建订阅", presentation: "modal" }} />
         <Stack.Screen name="shortlinks" options={{ title: "短链" }} />
@@ -53,6 +54,10 @@ export default function RootLayout() {
         <Stack.Screen name="notification/create" options={{ title: "新建通知渠道", presentation: "modal" }} />
         <Stack.Screen name="pipelines" options={{ title: "流水线" }} />
         <Stack.Screen name="scripts" options={{ title: "脚本" }} />
+        <Stack.Screen name="agents-page" options={{ title: "探针" }} />
+        <Stack.Screen name="traffic-page" options={{ title: "流量" }} />
+        <Stack.Screen name="rules-page" options={{ title: "规则" }} />
+        <Stack.Screen name="settings-page" options={{ title: "设置" }} />
       </Stack>
     </QueryClientProvider>
   );

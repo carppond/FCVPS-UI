@@ -29,16 +29,21 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* Profile card */}
-      <View style={styles.profileCard}>
+      <TouchableOpacity
+        style={styles.profileCard}
+        onPress={() => router.push("/profile")}
+        activeOpacity={0.7}
+      >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>
         </View>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.username}>{user?.username}</Text>
           <Text style={styles.email}>{user?.email || "未设置邮箱"}</Text>
           <Text style={styles.roleBadge}>{user?.role?.toUpperCase()}</Text>
         </View>
-      </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.textDisabled} />
+      </TouchableOpacity>
 
       {/* Server info */}
       <View style={styles.section}>
@@ -63,73 +68,6 @@ export default function SettingsScreen() {
           />
         </View>
       </View>
-
-      {/* Features */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>功能</Text>
-        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/rule-sets")} activeOpacity={0.6}>
-          <Ionicons name="layers-outline" size={18} color={colors.textTertiary} />
-          <Text style={styles.rowText}>规则集</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/shortlinks")} activeOpacity={0.6}>
-          <Ionicons name="link-outline" size={18} color={colors.textTertiary} />
-          <Text style={styles.rowText}>短链</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/notifications")} activeOpacity={0.6}>
-          <Ionicons name="notifications-outline" size={18} color={colors.textTertiary} />
-          <Text style={styles.rowText}>通知</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/proxy-groups")} activeOpacity={0.6}>
-          <Ionicons name="git-branch-outline" size={18} color={colors.textTertiary} />
-          <Text style={styles.rowText}>代理组</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/pipelines")} activeOpacity={0.6}>
-          <Ionicons name="git-merge-outline" size={18} color={colors.textTertiary} />
-          <Text style={styles.rowText}>流水线</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/scripts")} activeOpacity={0.6}>
-          <Ionicons name="code-working-outline" size={18} color={colors.textTertiary} />
-          <Text style={styles.rowText}>脚本</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/profile")} activeOpacity={0.6}>
-          <Ionicons name="person-outline" size={18} color={colors.textTertiary} />
-          <Text style={styles.rowText}>个人资料</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Admin (only for admin users) */}
-      {user?.role === "admin" ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>管理</Text>
-          <TouchableOpacity style={styles.navRow} onPress={() => router.push("/admin/users")} activeOpacity={0.6}>
-            <Ionicons name="people-outline" size={18} color={colors.textTertiary} />
-            <Text style={styles.rowText}>用户管理</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navRow} onPress={() => router.push("/admin/audit")} activeOpacity={0.6}>
-            <Ionicons name="document-text-outline" size={18} color={colors.textTertiary} />
-            <Text style={styles.rowText}>审计日志</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navRow} onPress={() => router.push("/admin/settings")} activeOpacity={0.6}>
-            <Ionicons name="settings-outline" size={18} color={colors.textTertiary} />
-            <Text style={styles.rowText}>系统设置</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navRow} onPress={() => router.push("/admin/ota")} activeOpacity={0.6}>
-            <Ionicons name="cloud-download-outline" size={18} color={colors.textTertiary} />
-            <Text style={styles.rowText}>OTA 升级</Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
-          </TouchableOpacity>
-        </View>
-      ) : null}
 
       {/* About */}
       <View style={styles.section}>
@@ -202,7 +140,6 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   switchRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  navRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.sm },
   rowText: { fontSize: fontSize.base, color: colors.textSecondary, flex: 1 },
   logoutBtn: {
     flexDirection: "row",

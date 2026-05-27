@@ -7,7 +7,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
 import { useAuthStore } from "../../stores/auth-store";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
-import type { SubscriptionDetail, SyncResult } from "../../types/api";
+import type { SubscriptionDetail, SyncResult, ShortLink } from "../../types/api";
 
 const TARGETS: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
   { key: "clash", label: "Clash", icon: "flash-outline", color: colors.primary },
@@ -71,6 +71,14 @@ export default function SubscriptionDetailScreen() {
     return `${serverUrl}/download/${name}?token=${token}&target=${encodeURIComponent(target)}`;
   };
 
+  const shortLinkMutation = useMutation({
+    mutationFn: (targetUrl: string) =>
+      apiFetch<ShortLink>("/api/shortlinks", {
+        method: "POST",
+        body: JSON.stringify({ target_url: targetUrl }),
+      }),
+  });
+
   const copyLink = async (target: string, label: string) => {
     const url = getDownloadUrl(target);
     await Clipboard.setStringAsync(url);
@@ -80,6 +88,17 @@ export default function SubscriptionDetailScreen() {
   const shareLink = async (target: string, label: string) => {
     const url = getDownloadUrl(target);
     await Share.share({ message: url, title: `${data?.name} - ${label}` });
+  };
+
+  const createShortLink = async (target: string, label: string) => {
+    const url = getDownloadUrl(target);
+    try {
+      const result = await shortLinkMutation.mutateAsync(url);
+      await Clipboard.setStringAsync(result.short_url);
+      Alert.alert("短链已生成", `${result.short_url}\n\n已复制到剪贴板`);
+    } catch (err: any) {
+      Alert.alert("生成失败", err.message);
+    }
   };
 
   if (isLoading || !data) {
@@ -186,8 +205,16 @@ export default function SubscriptionDetailScreen() {
                 onPress={() => copyLink(t.key, t.label)}
                 activeOpacity={0.6}
               >
-                <Ionicons name="copy-outline" size={14} color={colors.textSecondary} />
+                <Ionicons name="copy-outline" size={12} color={colors.textSecondary} />
                 <Text style={styles.linkBtnText}>复制</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.linkBtn}
+                onPress={() => createShortLink(t.key, t.label)}
+                activeOpacity={0.6}
+              >
+                <Ionicons name="link-outline" size={12} color={colors.primary} />
+                <Text style={[styles.linkBtnText, { color: colors.primary }]}>短链</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.linkBtn}

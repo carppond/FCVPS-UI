@@ -13,9 +13,9 @@ interface NavItem {
 }
 
 const TOOLS: NavItem[] = [
-  { icon: "radio-outline", iconColor: colors.success, iconBg: colors.successBg, label: "探针", route: "/(tabs)/agents" },
-  { icon: "bar-chart-outline", iconColor: colors.info, iconBg: colors.infoBg, label: "流量", route: "/(tabs)/traffic" },
-  { icon: "shield-outline", iconColor: colors.primary, iconBg: colors.primarySoft, label: "规则", route: "/(tabs)/rules" },
+  { icon: "radio-outline", iconColor: colors.success, iconBg: colors.successBg, label: "探针", route: "/agents-page" },
+  { icon: "bar-chart-outline", iconColor: colors.info, iconBg: colors.infoBg, label: "流量", route: "/traffic-page" },
+  { icon: "shield-outline", iconColor: colors.primary, iconBg: colors.primarySoft, label: "规则", route: "/rules-page" },
   { icon: "layers-outline", iconColor: colors.warning, iconBg: colors.warningBg, label: "规则集", route: "/rule-sets" },
   { icon: "git-branch-outline", iconColor: "#a78bfa", iconBg: "rgba(167,139,250,0.08)", label: "代理组", route: "/proxy-groups" },
   { icon: "code-slash-outline", iconColor: colors.info, iconBg: colors.infoBg, label: "流水线", route: "/pipelines" },
@@ -29,7 +29,7 @@ const SERVICES: NavItem[] = [
 
 const ACCOUNT: NavItem[] = [
   { icon: "person-outline", iconColor: colors.info, iconBg: colors.infoBg, label: "个人资料", route: "/profile" },
-  { icon: "settings-outline", iconColor: colors.textSecondary, iconBg: "rgba(0,0,0,0.04)", label: "设置", route: "/(tabs)/settings" },
+  { icon: "settings-outline", iconColor: colors.textSecondary, iconBg: "rgba(0,0,0,0.04)", label: "设置", route: "/settings-page" },
 ];
 
 const ADMIN: NavItem[] = [
