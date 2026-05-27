@@ -13,86 +13,153 @@
       "name": "Telegram",
       "description": "Push to a Telegram chat or group via a bot",
       "fields": {
-        "bot_token": { "label": "Bot Token", "help": "Issued by @BotFather" },
-        "chat_id": { "label": "Chat ID", "help": "User or group chat ID (groups start with -)" },
-        "parse_mode": { "label": "Parse mode", "help": "HTML or Markdown" }
+        "bot_token": {
+          "label": "Bot Token",
+          "help": "Issued by @BotFather"
+        },
+        "chat_id": {
+          "label": "Chat ID",
+          "help": "User or group chat ID (groups start with -)"
+        },
+        "parse_mode": {
+          "label": "Parse mode",
+          "help": "HTML or Markdown"
+        }
       }
     },
     "discord": {
       "name": "Discord",
       "description": "Push to a Discord channel via webhook",
       "fields": {
-        "webhook_url": { "label": "Webhook URL", "help": "Get it from the channel integration settings" },
-        "username": { "label": "Display name", "help": "Optional" }
+        "webhook_url": {
+          "label": "Webhook URL",
+          "help": "Get it from the channel integration settings"
+        },
+        "username": {
+          "label": "Display name",
+          "help": "Optional"
+        }
       }
     },
     "slack": {
       "name": "Slack",
       "description": "Push via Incoming Webhook",
       "fields": {
-        "webhook_url": { "label": "Webhook URL" },
-        "channel": { "label": "Channel", "help": "e.g. #general (optional)" }
+        "webhook_url": {
+          "label": "Webhook URL"
+        },
+        "channel": {
+          "label": "Channel",
+          "help": "e.g. #general (optional)"
+        }
       }
     },
     "email": {
       "name": "Email",
       "description": "Send email notifications over SMTP",
       "fields": {
-        "smtp_host": { "label": "SMTP host" },
-        "smtp_port": { "label": "SMTP port", "help": "Usually 465 / 587" },
-        "smtp_user": { "label": "SMTP username" },
-        "smtp_password": { "label": "SMTP password", "help": "Stored encrypted" },
-        "smtp_tls": { "label": "Use TLS" },
-        "from": { "label": "From" },
-        "to": { "label": "Recipients", "help": "Comma-separated" }
+        "smtp_host": {
+          "label": "SMTP host"
+        },
+        "smtp_port": {
+          "label": "SMTP port",
+          "help": "Usually 465 / 587"
+        },
+        "smtp_user": {
+          "label": "SMTP username"
+        },
+        "smtp_password": {
+          "label": "SMTP password",
+          "help": "Stored encrypted"
+        },
+        "smtp_tls": {
+          "label": "Use TLS"
+        },
+        "from": {
+          "label": "From"
+        },
+        "to": {
+          "label": "Recipients",
+          "help": "Comma-separated"
+        }
       }
     },
     "bark": {
       "name": "Bark",
       "description": "iOS push via the Bark app",
       "fields": {
-        "device_key": { "label": "Device key", "help": "Device key from the Bark app" },
-        "server_url": { "label": "Server URL", "help": "Defaults to https://api.day.app" }
+        "device_key": {
+          "label": "Device key",
+          "help": "Device key from the Bark app"
+        },
+        "server_url": {
+          "label": "Server URL",
+          "help": "Defaults to https://api.day.app"
+        }
       }
     },
     "gotify": {
       "name": "Gotify",
       "description": "Self-hosted push gateway",
       "fields": {
-        "server_url": { "label": "Gotify URL" },
-        "app_token": { "label": "App token" }
+        "server_url": {
+          "label": "Gotify URL"
+        },
+        "app_token": {
+          "label": "App token"
+        }
       }
     },
     "webhook": {
       "name": "Custom Webhook",
       "description": "Generic HTTP push",
       "fields": {
-        "url": { "label": "Request URL" },
-        "method": { "label": "HTTP method", "help": "POST / GET" },
-        "headers": { "label": "Headers", "help": "One `key: value` per line" }
+        "url": {
+          "label": "Request URL"
+        },
+        "method": {
+          "label": "HTTP method",
+          "help": "POST / GET"
+        },
+        "headers": {
+          "label": "Headers",
+          "help": "One `key: value` per line"
+        }
       }
     },
     "serverchan": {
       "name": "ServerChan",
       "description": "Push to WeChat via ServerChan",
       "fields": {
-        "send_key": { "label": "SendKey", "help": "Get it from the ServerChan dashboard" }
+        "send_key": {
+          "label": "SendKey",
+          "help": "Get it from the ServerChan dashboard"
+        }
       }
     },
     "pushdeer": {
       "name": "PushDeer",
       "description": "Cross-platform push (open source)",
       "fields": {
-        "push_key": { "label": "PushKey" },
-        "server_url": { "label": "Server URL", "help": "Optional self-hosted instance" }
+        "push_key": {
+          "label": "PushKey"
+        },
+        "server_url": {
+          "label": "Server URL",
+          "help": "Optional self-hosted instance"
+        }
       }
     },
     "ifttt": {
       "name": "IFTTT",
       "description": "Trigger IFTTT automations via webhook",
       "fields": {
-        "webhook_key": { "label": "Webhook key" },
-        "event_name": { "label": "Event name" }
+        "webhook_key": {
+          "label": "Webhook key"
+        },
+        "event_name": {
+          "label": "Event name"
+        }
       }
     }
   },
@@ -124,10 +191,18 @@
     "script_alert": {
       "name": "Script alert",
       "description": "A user script raised an error or alert"
+    },
+    "vps_expiry": {
+      "name": "VPS Expiring",
+      "description": "Reminder before VPS expiry date"
     }
   },
   "card": {
-    "status": { "ok": "Active", "failed": "Test failed", "untested": "Untested" },
+    "status": {
+      "ok": "Active",
+      "failed": "Test failed",
+      "untested": "Untested"
+    },
     "updated_at": "Updated {{time}}",
     "enabled": "Enabled",
     "disabled": "Disabled"

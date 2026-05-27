@@ -163,7 +163,7 @@ func (h *ShortLinkHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := h.service.Delete(r.Context(), fileCode, userCode, user.ID); err != nil {
 		if errors.Is(err, storage.ErrShortLinkNotFound) {
-			util.RespondError(w, types.ErrNotFoundUser, "short link not found", nil, traceID)
+			util.RespondError(w, types.ErrNotFoundShortLink, "short link not found", nil, traceID)
 			return
 		}
 		util.RespondError(w, types.ErrInternalDatabase, err.Error(), nil, traceID)

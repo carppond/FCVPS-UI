@@ -86,14 +86,18 @@ const PAGES: PageEntry[] = [
   { id: "page:nodes", to: "/nodes", icon: <Server className="h-4 w-4" />, labelKey: "pages.nodes" },
   { id: "page:pipelines", to: "/pipelines", icon: <GitBranch className="h-4 w-4" />, labelKey: "pages.pipelines" },
   { id: "page:rules", to: "/rules", icon: <Shield className="h-4 w-4" />, labelKey: "pages.rules" },
+  { id: "page:rule-sets", to: "/rule-sets", icon: <Shield className="h-4 w-4" />, labelKey: "pages.rule_sets" },
+  { id: "page:proxy-groups", to: "/proxy-groups", icon: <Server className="h-4 w-4" />, labelKey: "pages.proxy_groups" },
   { id: "page:scripts", to: "/scripts", icon: <Code2 className="h-4 w-4" />, labelKey: "pages.scripts" },
   { id: "page:vps-assets", to: "/vps-assets", icon: <HardDrive className="h-4 w-4" />, labelKey: "pages.vps_assets" },
   { id: "page:agents", to: "/agents", icon: <Radio className="h-4 w-4" />, labelKey: "pages.agents" },
   { id: "page:traffic", to: "/traffic", icon: <BarChart2 className="h-4 w-4" />, labelKey: "pages.traffic" },
   { id: "page:notifications", to: "/notifications", icon: <Bell className="h-4 w-4" />, labelKey: "pages.notifications" },
+  { id: "page:shortlinks", to: "/shortlinks", icon: <Globe className="h-4 w-4" />, labelKey: "pages.shortlinks" },
   { id: "page:settings", to: "/admin/settings", icon: <Settings className="h-4 w-4" />, labelKey: "pages.settings", adminOnly: true },
   { id: "page:users", to: "/admin/users", icon: <Users className="h-4 w-4" />, labelKey: "pages.users", adminOnly: true },
   { id: "page:audit", to: "/admin/audit", icon: <ClipboardList className="h-4 w-4" />, labelKey: "pages.audit", adminOnly: true },
+  { id: "page:ota", to: "/admin/ota", icon: <WifiOff className="h-4 w-4" />, labelKey: "pages.ota", adminOnly: true },
 ];
 
 export function CmdK() {

@@ -13,98 +13,196 @@
       "name": "Telegram",
       "description": "봇으로 개인 / 그룹에 전송",
       "fields": {
-        "bot_token": { "label": "Bot Token", "help": "@BotFather에서 발급" },
-        "chat_id": { "label": "Chat ID", "help": "개인 ID 또는 그룹 ID(- 시작)" },
-        "parse_mode": { "label": "메시지 형식", "help": "HTML 또는 Markdown" }
+        "bot_token": {
+          "label": "Bot Token",
+          "help": "@BotFather에서 발급"
+        },
+        "chat_id": {
+          "label": "Chat ID",
+          "help": "개인 ID 또는 그룹 ID(- 시작)"
+        },
+        "parse_mode": {
+          "label": "메시지 형식",
+          "help": "HTML 또는 Markdown"
+        }
       }
     },
     "discord": {
       "name": "Discord",
       "description": "Webhook으로 채널에 전송",
       "fields": {
-        "webhook_url": { "label": "Webhook URL", "help": "채널 통합 설정에서 가져오기" },
-        "username": { "label": "표시 이름", "help": "선택" }
+        "webhook_url": {
+          "label": "Webhook URL",
+          "help": "채널 통합 설정에서 가져오기"
+        },
+        "username": {
+          "label": "표시 이름",
+          "help": "선택"
+        }
       }
     },
     "slack": {
       "name": "Slack",
       "description": "Incoming Webhook으로 전송",
       "fields": {
-        "webhook_url": { "label": "Webhook URL" },
-        "channel": { "label": "채널", "help": "예: #general (선택)" }
+        "webhook_url": {
+          "label": "Webhook URL"
+        },
+        "channel": {
+          "label": "채널",
+          "help": "예: #general (선택)"
+        }
       }
     },
     "email": {
       "name": "이메일",
       "description": "SMTP로 이메일 알림 발송",
       "fields": {
-        "smtp_host": { "label": "SMTP 호스트" },
-        "smtp_port": { "label": "SMTP 포트", "help": "일반적으로 465 / 587" },
-        "smtp_user": { "label": "SMTP 사용자" },
-        "smtp_password": { "label": "SMTP 비밀번호", "help": "암호화 저장" },
-        "smtp_tls": { "label": "TLS 사용" },
-        "from": { "label": "발신자" },
-        "to": { "label": "수신자", "help": "쉼표로 구분" }
+        "smtp_host": {
+          "label": "SMTP 호스트"
+        },
+        "smtp_port": {
+          "label": "SMTP 포트",
+          "help": "일반적으로 465 / 587"
+        },
+        "smtp_user": {
+          "label": "SMTP 사용자"
+        },
+        "smtp_password": {
+          "label": "SMTP 비밀번호",
+          "help": "암호화 저장"
+        },
+        "smtp_tls": {
+          "label": "TLS 사용"
+        },
+        "from": {
+          "label": "발신자"
+        },
+        "to": {
+          "label": "수신자",
+          "help": "쉼표로 구분"
+        }
       }
     },
     "bark": {
       "name": "Bark",
       "description": "iOS 푸시 (Bark 앱)",
       "fields": {
-        "device_key": { "label": "Device Key", "help": "Bark 앱에서 가져온 디바이스 키" },
-        "server_url": { "label": "서버 URL", "help": "기본 https://api.day.app" }
+        "device_key": {
+          "label": "Device Key",
+          "help": "Bark 앱에서 가져온 디바이스 키"
+        },
+        "server_url": {
+          "label": "서버 URL",
+          "help": "기본 https://api.day.app"
+        }
       }
     },
     "gotify": {
       "name": "Gotify",
       "description": "셀프 호스팅 푸시",
       "fields": {
-        "server_url": { "label": "Gotify URL" },
-        "app_token": { "label": "앱 토큰" }
+        "server_url": {
+          "label": "Gotify URL"
+        },
+        "app_token": {
+          "label": "앱 토큰"
+        }
       }
     },
     "webhook": {
       "name": "사용자 Webhook",
       "description": "범용 HTTP 푸시",
       "fields": {
-        "url": { "label": "요청 URL" },
-        "method": { "label": "HTTP 메서드", "help": "POST / GET" },
-        "headers": { "label": "헤더", "help": "한 줄에 key: value" }
+        "url": {
+          "label": "요청 URL"
+        },
+        "method": {
+          "label": "HTTP 메서드",
+          "help": "POST / GET"
+        },
+        "headers": {
+          "label": "헤더",
+          "help": "한 줄에 key: value"
+        }
       }
     },
     "serverchan": {
       "name": "Server酱",
       "description": "Server酱을 통한 WeChat 푸시",
-      "fields": { "send_key": { "label": "SendKey", "help": "Server酱 대시보드에서 가져오기" } }
+      "fields": {
+        "send_key": {
+          "label": "SendKey",
+          "help": "Server酱 대시보드에서 가져오기"
+        }
+      }
     },
     "pushdeer": {
       "name": "PushDeer",
       "description": "오픈소스 크로스 플랫폼 푸시",
       "fields": {
-        "push_key": { "label": "PushKey" },
-        "server_url": { "label": "서버 URL", "help": "선택" }
+        "push_key": {
+          "label": "PushKey"
+        },
+        "server_url": {
+          "label": "서버 URL",
+          "help": "선택"
+        }
       }
     },
     "ifttt": {
       "name": "IFTTT",
       "description": "Webhook으로 IFTTT 자동화 트리거",
       "fields": {
-        "webhook_key": { "label": "Webhook Key" },
-        "event_name": { "label": "Event 이름" }
+        "webhook_key": {
+          "label": "Webhook Key"
+        },
+        "event_name": {
+          "label": "Event 이름"
+        }
       }
     }
   },
   "events": {
-    "node_offline": { "name": "노드 오프라인", "description": "하트비트 연속 타임아웃" },
-    "traffic_threshold": { "name": "트래픽 경고", "description": "임계값 초과" },
-    "subscription_sync_failed": { "name": "구독 동기화 실패", "description": "원본 가져오기 또는 파싱 실패" },
-    "backup_completed": { "name": "백업 완료", "description": "정기 또는 수동 백업 완료" },
-    "login_anomaly": { "name": "이상 로그인", "description": "새 기기 / 비정상 IP" },
-    "ota_available": { "name": "새 버전", "description": "OTA에서 업데이트 발견" },
-    "script_alert": { "name": "스크립트 알림", "description": "스크립트에서 오류 또는 경보" }
+    "node_offline": {
+      "name": "노드 오프라인",
+      "description": "하트비트 연속 타임아웃"
+    },
+    "traffic_threshold": {
+      "name": "트래픽 경고",
+      "description": "임계값 초과"
+    },
+    "subscription_sync_failed": {
+      "name": "구독 동기화 실패",
+      "description": "원본 가져오기 또는 파싱 실패"
+    },
+    "backup_completed": {
+      "name": "백업 완료",
+      "description": "정기 또는 수동 백업 완료"
+    },
+    "login_anomaly": {
+      "name": "이상 로그인",
+      "description": "새 기기 / 비정상 IP"
+    },
+    "ota_available": {
+      "name": "새 버전",
+      "description": "OTA에서 업데이트 발견"
+    },
+    "script_alert": {
+      "name": "스크립트 알림",
+      "description": "스크립트에서 오류 또는 경보"
+    },
+    "vps_expiry": {
+      "name": "VPS 만료 임박",
+      "description": "VPS 만료일 전에 알림"
+    }
   },
   "card": {
-    "status": { "ok": "활성", "failed": "테스트 실패", "untested": "테스트 안 함" },
+    "status": {
+      "ok": "활성",
+      "failed": "테스트 실패",
+      "untested": "테스트 안 함"
+    },
     "updated_at": "업데이트 {{time}}",
     "enabled": "활성화됨",
     "disabled": "비활성"

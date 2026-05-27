@@ -215,6 +215,9 @@ const (
 	ErrNotFoundAgent        ErrorCode = "ERR_NOT_FOUND_AGENT"
 	ErrNotFoundChannel      ErrorCode = "ERR_NOT_FOUND_CHANNEL"
 	ErrNotFoundVpsAsset     ErrorCode = "ERR_NOT_FOUND_VPS_ASSET"
+	ErrNotFoundProxyGroup   ErrorCode = "ERR_NOT_FOUND_PROXY_GROUP"
+	ErrNotFoundRuleSet      ErrorCode = "ERR_NOT_FOUND_RULE_SET"
+	ErrNotFoundShortLink    ErrorCode = "ERR_NOT_FOUND_SHORT_LINK"
 
 	// CONFLICT
 	ErrConflictUsername        ErrorCode = "ERR_CONFLICT_USERNAME"

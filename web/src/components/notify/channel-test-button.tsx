@@ -31,7 +31,7 @@ export function ChannelTestButton({
   const handleClick = React.useCallback(async () => {
     try {
       const res = await testMutation.mutateAsync(channelId);
-      if (res.ok) {
+      if (!res || res.ok) {
         toast.success(t("notify:test.success"));
         onResult?.(true);
       } else {

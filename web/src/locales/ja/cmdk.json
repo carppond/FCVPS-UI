@@ -21,14 +21,18 @@
     "nodes": "ノード",
     "pipelines": "パイプライン",
     "rules": "ルール",
+    "rule_sets": "ルールセット",
+    "proxy_groups": "プロキシグループ",
     "scripts": "スクリプト",
     "vps_assets": "VPS 資産",
     "agents": "Agent",
     "traffic": "トラフィック",
     "notifications": "通知",
+    "shortlinks": "短縮リンク",
     "settings": "システム設定",
     "users": "ユーザー管理",
     "audit": "監査ログ",
+    "ota": "OTAアップグレード",
     "profile": "プロファイル"
   },
   "actions": {

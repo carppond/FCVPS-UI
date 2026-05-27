@@ -13,98 +13,196 @@
       "name": "Telegram",
       "description": "Bot 経由で個人 / グループに送信",
       "fields": {
-        "bot_token": { "label": "Bot Token", "help": "@BotFather から取得" },
-        "chat_id": { "label": "Chat ID", "help": "個人 ID またはグループ ID（- で始まる）" },
-        "parse_mode": { "label": "本文フォーマット", "help": "HTML または Markdown" }
+        "bot_token": {
+          "label": "Bot Token",
+          "help": "@BotFather から取得"
+        },
+        "chat_id": {
+          "label": "Chat ID",
+          "help": "個人 ID またはグループ ID（- で始まる）"
+        },
+        "parse_mode": {
+          "label": "本文フォーマット",
+          "help": "HTML または Markdown"
+        }
       }
     },
     "discord": {
       "name": "Discord",
       "description": "Webhook 経由でチャンネルに送信",
       "fields": {
-        "webhook_url": { "label": "Webhook URL", "help": "チャンネル統合設定から取得" },
-        "username": { "label": "表示名", "help": "任意" }
+        "webhook_url": {
+          "label": "Webhook URL",
+          "help": "チャンネル統合設定から取得"
+        },
+        "username": {
+          "label": "表示名",
+          "help": "任意"
+        }
       }
     },
     "slack": {
       "name": "Slack",
       "description": "Incoming Webhook で送信",
       "fields": {
-        "webhook_url": { "label": "Webhook URL" },
-        "channel": { "label": "チャンネル", "help": "例：#general（任意）" }
+        "webhook_url": {
+          "label": "Webhook URL"
+        },
+        "channel": {
+          "label": "チャンネル",
+          "help": "例：#general（任意）"
+        }
       }
     },
     "email": {
       "name": "メール",
       "description": "SMTP でメール通知を送信",
       "fields": {
-        "smtp_host": { "label": "SMTP ホスト" },
-        "smtp_port": { "label": "SMTP ポート", "help": "通常 465 / 587" },
-        "smtp_user": { "label": "SMTP ユーザー名" },
-        "smtp_password": { "label": "SMTP パスワード", "help": "暗号化保存" },
-        "smtp_tls": { "label": "TLS を使う" },
-        "from": { "label": "送信元" },
-        "to": { "label": "送信先", "help": "カンマ区切り" }
+        "smtp_host": {
+          "label": "SMTP ホスト"
+        },
+        "smtp_port": {
+          "label": "SMTP ポート",
+          "help": "通常 465 / 587"
+        },
+        "smtp_user": {
+          "label": "SMTP ユーザー名"
+        },
+        "smtp_password": {
+          "label": "SMTP パスワード",
+          "help": "暗号化保存"
+        },
+        "smtp_tls": {
+          "label": "TLS を使う"
+        },
+        "from": {
+          "label": "送信元"
+        },
+        "to": {
+          "label": "送信先",
+          "help": "カンマ区切り"
+        }
       }
     },
     "bark": {
       "name": "Bark",
       "description": "iOS プッシュ（Bark アプリ）",
       "fields": {
-        "device_key": { "label": "Device Key", "help": "Bark アプリのデバイスキー" },
-        "server_url": { "label": "サーバー URL", "help": "デフォルト https://api.day.app" }
+        "device_key": {
+          "label": "Device Key",
+          "help": "Bark アプリのデバイスキー"
+        },
+        "server_url": {
+          "label": "サーバー URL",
+          "help": "デフォルト https://api.day.app"
+        }
       }
     },
     "gotify": {
       "name": "Gotify",
       "description": "セルフホスト通知ゲートウェイ",
       "fields": {
-        "server_url": { "label": "Gotify URL" },
-        "app_token": { "label": "App Token" }
+        "server_url": {
+          "label": "Gotify URL"
+        },
+        "app_token": {
+          "label": "App Token"
+        }
       }
     },
     "webhook": {
       "name": "カスタム Webhook",
       "description": "汎用 HTTP プッシュ",
       "fields": {
-        "url": { "label": "リクエスト URL" },
-        "method": { "label": "HTTP メソッド", "help": "POST / GET" },
-        "headers": { "label": "ヘッダー", "help": "1 行に key: value" }
+        "url": {
+          "label": "リクエスト URL"
+        },
+        "method": {
+          "label": "HTTP メソッド",
+          "help": "POST / GET"
+        },
+        "headers": {
+          "label": "ヘッダー",
+          "help": "1 行に key: value"
+        }
       }
     },
     "serverchan": {
       "name": "Server酱",
       "description": "Server酱 経由で WeChat に送信",
-      "fields": { "send_key": { "label": "SendKey", "help": "Server酱 ダッシュボードから取得" } }
+      "fields": {
+        "send_key": {
+          "label": "SendKey",
+          "help": "Server酱 ダッシュボードから取得"
+        }
+      }
     },
     "pushdeer": {
       "name": "PushDeer",
       "description": "OSS のクロスプラットフォーム通知",
       "fields": {
-        "push_key": { "label": "PushKey" },
-        "server_url": { "label": "サーバー URL", "help": "任意" }
+        "push_key": {
+          "label": "PushKey"
+        },
+        "server_url": {
+          "label": "サーバー URL",
+          "help": "任意"
+        }
       }
     },
     "ifttt": {
       "name": "IFTTT",
       "description": "Webhook で IFTTT を起動",
       "fields": {
-        "webhook_key": { "label": "Webhook Key" },
-        "event_name": { "label": "Event 名" }
+        "webhook_key": {
+          "label": "Webhook Key"
+        },
+        "event_name": {
+          "label": "Event 名"
+        }
       }
     }
   },
   "events": {
-    "node_offline": { "name": "ノードオフライン", "description": "ハートビート連続タイムアウト" },
-    "traffic_threshold": { "name": "トラフィック警告", "description": "閾値超過" },
-    "subscription_sync_failed": { "name": "購読同期失敗", "description": "取得または解析に失敗" },
-    "backup_completed": { "name": "バックアップ完了", "description": "定期またはマニュアルバックアップ完了" },
-    "login_anomaly": { "name": "異常ログイン", "description": "新しい端末 / 異常な IP" },
-    "ota_available": { "name": "新バージョン", "description": "OTA で更新が利用可能" },
-    "script_alert": { "name": "スクリプト警告", "description": "ユーザースクリプトがエラーを通知" }
+    "node_offline": {
+      "name": "ノードオフライン",
+      "description": "ハートビート連続タイムアウト"
+    },
+    "traffic_threshold": {
+      "name": "トラフィック警告",
+      "description": "閾値超過"
+    },
+    "subscription_sync_failed": {
+      "name": "購読同期失敗",
+      "description": "取得または解析に失敗"
+    },
+    "backup_completed": {
+      "name": "バックアップ完了",
+      "description": "定期またはマニュアルバックアップ完了"
+    },
+    "login_anomaly": {
+      "name": "異常ログイン",
+      "description": "新しい端末 / 異常な IP"
+    },
+    "ota_available": {
+      "name": "新バージョン",
+      "description": "OTA で更新が利用可能"
+    },
+    "script_alert": {
+      "name": "スクリプト警告",
+      "description": "ユーザースクリプトがエラーを通知"
+    },
+    "vps_expiry": {
+      "name": "VPS 期限間近",
+      "description": "VPS の有効期限前にリマインド"
+    }
   },
   "card": {
-    "status": { "ok": "稼働中", "failed": "テスト失敗", "untested": "未テスト" },
+    "status": {
+      "ok": "稼働中",
+      "failed": "テスト失敗",
+      "untested": "未テスト"
+    },
     "updated_at": "更新 {{time}}",
     "enabled": "有効",
     "disabled": "無効"

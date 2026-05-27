@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   BookOpen,
@@ -77,6 +77,7 @@ type StatusFilter = "all" | SyncStatus;
 function SubscriptionsPage() {
   const { t } = useTranslation(["subscription", "common"]);
   const { handle: handleError } = useApiError();
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.role === "admin";
 
@@ -181,8 +182,10 @@ function SubscriptionsPage() {
   };
 
   const onShare = (sub: Subscription) => {
-    // Navigate to detail page share tab
-    window.location.href = `/subscriptions/${sub.id}`;
+    void navigate({
+      to: "/subscriptions/$id" as never,
+      params: { id: sub.id } as never,
+    });
   };
 
   const confirmDelete = async () => {

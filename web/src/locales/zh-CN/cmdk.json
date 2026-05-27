@@ -21,14 +21,18 @@
     "nodes": "节点",
     "pipelines": "算子流水线",
     "rules": "规则",
+    "rule_sets": "规则集",
+    "proxy_groups": "代理组",
     "scripts": "脚本",
     "vps_assets": "VPS 资产",
     "agents": "探针",
     "traffic": "流量",
     "notifications": "通知",
+    "shortlinks": "短链",
     "settings": "系统设置",
     "users": "用户管理",
     "audit": "审计日志",
+    "ota": "OTA 升级",
     "profile": "个人资料"
   },
   "actions": {

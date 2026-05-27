@@ -101,6 +101,11 @@ func ProduceClashYAML(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, 
 		root = mutated
 	}
 
+	// Auto-supplement missing proxy groups: scan rules for referenced group
+	// names that don't exist in proxy-groups and create them as select-type
+	// groups. Without this, mihomo rejects the config with "proxy not found".
+	ensureMissingProxyGroups(root, proxyNames)
+
 	return util.MarshalIndent(root)
 }
 
@@ -200,6 +205,90 @@ func defaultSelectGroup(proxyNames []string) *yaml.Node {
 	members = append(members, proxyNames...)
 	_ = util.SetMappingValue(m, "proxies", stringsToYAMLSeq(members))
 	return m
+}
+
+// ensureMissingProxyGroups scans the final rules list for proxy group names
+// that don't exist in proxy-groups and auto-creates them as select-type groups.
+// This prevents mihomo from rejecting configs where a rule template references
+// a group the user hasn't manually created (e.g. "🎮 游戏").
+func ensureMissingProxyGroups(root *yaml.Node, proxyNames []string) {
+	if root == nil || root.Kind != yaml.MappingNode {
+		return
+	}
+	var rulesNode, groupsNode *yaml.Node
+	for i := 0; i+1 < len(root.Content); i += 2 {
+		key := root.Content[i]
+		if key.Kind == yaml.ScalarNode {
+			switch key.Value {
+			case "rules":
+				rulesNode = root.Content[i+1]
+			case "proxy-groups":
+				groupsNode = root.Content[i+1]
+			}
+		}
+	}
+	if rulesNode == nil || groupsNode == nil {
+		return
+	}
+
+	// Collect existing group names.
+	existing := make(map[string]bool)
+	for _, g := range groupsNode.Content {
+		if g.Kind != yaml.MappingNode {
+			continue
+		}
+		for j := 0; j+1 < len(g.Content); j += 2 {
+			if g.Content[j].Value == "name" {
+				existing[g.Content[j+1].Value] = true
+				break
+			}
+		}
+	}
+	// Built-in targets that are not proxy groups.
+	existing["DIRECT"] = true
+	existing["REJECT"] = true
+
+	// Scan rules for referenced group names.
+	missing := make(map[string]bool)
+	for _, r := range rulesNode.Content {
+		if r.Kind != yaml.ScalarNode {
+			continue
+		}
+		parts := strings.SplitN(r.Value, ",", 3)
+		var target string
+		switch {
+		case len(parts) == 2:
+			// 2-part rules like "MATCH,🐟 漏网之鱼"
+			target = strings.TrimSpace(parts[1])
+		case len(parts) >= 3:
+			target = strings.TrimSpace(parts[2])
+			// Strip ",no-resolve" suffix (e.g. "🇭🇰 香港节点,no-resolve" → "🇭🇰 香港节点")
+			if idx := strings.LastIndex(target, ","); idx >= 0 {
+				suffix := strings.TrimSpace(target[idx+1:])
+				if strings.EqualFold(suffix, "no-resolve") {
+					target = strings.TrimSpace(target[:idx])
+				}
+			}
+		default:
+			continue
+		}
+		if target != "" && !existing[target] {
+			missing[target] = true
+		}
+	}
+
+	// Create missing groups as select type.
+	for name := range missing {
+		m := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+		_ = util.SetMappingValue(m, "name", name)
+		_ = util.SetMappingValue(m, "type", "select")
+		members := make([]string, 0, len(proxyNames)+2)
+		members = append(members, "DIRECT", "REJECT")
+		members = append(members, proxyNames...)
+		_ = util.SetMappingValue(m, "proxies", stringsToYAMLSeq(members))
+		groupsNode.Content = append(groupsNode.Content, m)
+		existing[name] = true
+	}
 }
 
 // buildRuleProviders maps RuleSetRecord -> Clash `rule-providers:` mapping.
@@ -402,7 +491,9 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 		_ = setStr(m, "username", n.UUID)
 		_ = setStr(m, "password", n.Password)
 	}
-	if n.SNI != "" {
+	// vless already emits SNI as "servername" in its protocol-specific block;
+	// skip the shared "sni" key to avoid duplicating the value in the output.
+	if n.SNI != "" && n.Protocol != "vless" {
 		_ = setStr(m, "sni", n.SNI)
 	}
 	if len(n.ALPN) > 0 {

@@ -191,6 +191,7 @@ function NavButton({
   active: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation("settings");
   return (
     <button
       type="button"
@@ -216,7 +217,7 @@ function NavButton({
       >
         {item.icon}
       </span>
-      {item.labelKey.includes(":") ? <span>{useTranslation("settings")[0](item.labelKey)}</span> : item.labelKey}
+      {t(item.labelKey)}
     </button>
   );
 }

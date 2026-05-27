@@ -209,7 +209,11 @@ func (h *AgentHandler) Update(w http.ResponseWriter, r *http.Request) {
 		util.RespondError(w, types.ErrInternalDatabase, "update agent", nil, traceID)
 		return
 	}
-	rec, _ := h.repo.GetByID(r.Context(), id, user.ID)
+	rec, err := h.repo.GetByID(r.Context(), id, user.ID)
+	if err != nil {
+		util.RespondError(w, types.ErrInternalDatabase, "reload agent after update", nil, traceID)
+		return
+	}
 	item := h.buildListItem(rec)
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[agentListItem]{
 		Data:      item,
@@ -234,7 +238,7 @@ func (h *AgentHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if h.hub != nil {
 		h.hub.Unregister(id, agent.ByeReasonAgentDeleted)
 	}
-	w.WriteHeader(http.StatusNoContent)
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[any]{RequestID: traceID})
 }
 
 // RotateToken implements POST /api/agents/:id/rotate-token. The previous live

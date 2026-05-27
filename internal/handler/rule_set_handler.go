@@ -288,7 +288,7 @@ func (h *RuleSetHandler) probeURL(parent context.Context, url string) (status st
 func (h *RuleSetHandler) respondStorageErr(w http.ResponseWriter, traceID string, err error) {
 	switch {
 	case errors.Is(err, storage.ErrRuleSetProviderNotFound):
-		util.RespondError(w, types.ErrNotFoundRule, "rule set not found", nil, traceID)
+		util.RespondError(w, types.ErrNotFoundRuleSet, "rule set not found", nil, traceID)
 	default:
 		if h.logger != nil {
 			h.logger.Error("rule set handler db failed",

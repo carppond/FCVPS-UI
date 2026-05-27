@@ -21,14 +21,18 @@
     "nodes": "노드",
     "pipelines": "파이프라인",
     "rules": "규칙",
+    "rule_sets": "규칙 세트",
+    "proxy_groups": "프록시 그룹",
     "scripts": "스크립트",
     "vps_assets": "VPS 자산",
     "agents": "Agent",
     "traffic": "트래픽",
     "notifications": "알림",
+    "shortlinks": "단축 링크",
     "settings": "시스템 설정",
     "users": "사용자 관리",
     "audit": "감사 로그",
+    "ota": "OTA 업그레이드",
     "profile": "프로필"
   },
   "actions": {

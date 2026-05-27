@@ -133,6 +133,10 @@
     "script_alert": {
       "name": "脚本告警",
       "description": "脚本执行抛出错误或主动告警"
+    },
+    "vps_expiry": {
+      "name": "VPS 即将到期",
+      "description": "VPS 到期前自动提醒续费"
     }
   },
   "card": {

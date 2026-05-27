@@ -210,7 +210,7 @@ func (h *ProxyGroupHandler) Presets(w http.ResponseWriter, r *http.Request) {
 func (h *ProxyGroupHandler) respondStorageErr(w http.ResponseWriter, traceID string, err error) {
 	switch {
 	case errors.Is(err, storage.ErrProxyGroupNotFound):
-		util.RespondError(w, types.ErrNotFoundRule, "proxy group not found", nil, traceID)
+		util.RespondError(w, types.ErrNotFoundProxyGroup, "proxy group not found", nil, traceID)
 	default:
 		if h.logger != nil {
 			h.logger.Error("proxy group handler db failed",

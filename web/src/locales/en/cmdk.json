@@ -21,14 +21,18 @@
     "nodes": "Nodes",
     "pipelines": "Pipelines",
     "rules": "Rules",
+    "rule_sets": "Rule Sets",
+    "proxy_groups": "Proxy Groups",
     "scripts": "Scripts",
     "vps_assets": "VPS Assets",
     "agents": "Agents",
     "traffic": "Traffic",
     "notifications": "Notifications",
+    "shortlinks": "Short Links",
     "settings": "Settings",
     "users": "Users",
     "audit": "Audit log",
+    "ota": "OTA Upgrade",
     "profile": "Profile"
   },
   "actions": {
