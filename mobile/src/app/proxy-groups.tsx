@@ -6,52 +6,50 @@ import {
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
-  Alert,
   Modal,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  useRuleSetsQuery,
-  useSyncAllRuleSets,
-  useRuleSetPresets,
-  useCreateRuleSet,
-  useDeleteRuleSet,
-} from "../api/rule-set";
+  useProxyGroupsQuery,
+  useProxyGroupPresets,
+  useCreateProxyGroup,
+} from "../api/proxy-group";
 import { colors, spacing, radius, fontSize } from "../lib/theme";
-import type { RuleSetProvider, RuleSetPreset } from "../types/api";
+import type { ProxyGroupCategory, ProxyGroupPreset } from "../types/api";
 
-function syncStatusColor(status?: string): string {
-  switch (status) {
-    case "ok":
+function typeColor(type: string): string {
+  switch (type) {
+    case "select":
+      return colors.primary;
+    case "url-test":
       return colors.success;
-    case "error":
-      return colors.error;
-    case "pending":
+    case "fallback":
       return colors.warning;
+    case "load-balance":
+      return colors.info;
+    case "relay":
+      return colors.textTertiary;
     default:
       return colors.textDisabled;
   }
 }
 
-function behaviorColor(behavior: string): string {
-  switch (behavior) {
-    case "domain":
-      return colors.info;
-    case "ipcidr":
-      return colors.warning;
-    case "classical":
-      return colors.primary;
-    default:
-      return colors.textTertiary;
-  }
+function typeLabel(type: string): string {
+  const map: Record<string, string> = {
+    select: "手动选择",
+    "url-test": "自动测速",
+    fallback: "故障转移",
+    "load-balance": "负载均衡",
+    relay: "链式代理",
+  };
+  return map[type] ?? type;
 }
 
-export default function RuleSetsScreen() {
-  const { data, isLoading, refetch } = useRuleSetsQuery();
-  const syncAll = useSyncAllRuleSets();
-  const presetsQuery = useRuleSetPresets();
-  const createMutation = useCreateRuleSet();
-  const deleteMutation = useDeleteRuleSet();
+export default function ProxyGroupsScreen() {
+  const { data, isLoading, refetch } = useProxyGroupsQuery();
+  const presetsQuery = useProxyGroupPresets();
+  const createMutation = useCreateProxyGroup();
   const [refreshing, setRefreshing] = useState(false);
   const [presetModalVisible, setPresetModalVisible] = useState(false);
   const [selectedPresets, setSelectedPresets] = useState<Set<string>>(
@@ -65,16 +63,6 @@ export default function RuleSetsScreen() {
   }, []);
 
   const items = data?.items ?? [];
-
-  const handleSyncAll = () => {
-    syncAll.mutate(undefined, {
-      onSuccess: () => {
-        Alert.alert("同步成功", "所有规则集已开始同步");
-        refetch();
-      },
-      onError: (err: any) => Alert.alert("同步失败", err.message),
-    });
-  };
 
   const openPresetModal = async () => {
     await presetsQuery.refetch();
@@ -91,7 +79,7 @@ export default function RuleSetsScreen() {
     });
   };
 
-  const handleBatchImport = async () => {
+  const handleBatchCreate = async () => {
     const presets = presetsQuery.data ?? [];
     const selected = presets.filter((p) => selectedPresets.has(p.id));
     if (selected.length === 0) {
@@ -102,112 +90,71 @@ export default function RuleSetsScreen() {
       for (const preset of selected) {
         await createMutation.mutateAsync({
           name: preset.name,
-          behavior: preset.behavior,
-          format: preset.format,
-          url: preset.url,
-          interval_seconds: preset.interval_seconds,
-          enabled: true,
+          type: preset.type,
+          icon: preset.icon,
+          test_url: preset.test_url,
+          test_interval: preset.test_interval,
+          filter: preset.filter,
+          include_all: preset.include_all,
+          member_proxies: preset.member_proxies,
+          member_groups: preset.member_groups,
         });
       }
       setPresetModalVisible(false);
-      Alert.alert("导入成功", `已导入 ${selected.length} 个规则集`);
+      Alert.alert("创建成功", `已从预设创建 ${selected.length} 个代理组`);
       refetch();
     } catch (err: any) {
-      Alert.alert("导入失败", err.message);
+      Alert.alert("创建失败", err.message);
     }
   };
 
-  const handleDelete = (item: RuleSetProvider) => {
-    Alert.alert("删除确认", `确定删除规则集「${item.name}」吗？`, [
-      { text: "取消", style: "cancel" },
-      {
-        text: "删除",
-        style: "destructive",
-        onPress: () => {
-          deleteMutation.mutate(item.id, {
-            onSuccess: () => refetch(),
-            onError: (err: any) => Alert.alert("删除失败", err.message),
-          });
-        },
-      },
-    ]);
-  };
-
-  const renderItem = ({ item }: { item: RuleSetProvider }) => (
-    <View style={styles.card}>
-      <View style={styles.cardTop}>
-        <View
-          style={[
-            styles.syncDot,
-            { backgroundColor: syncStatusColor(item.last_sync_status) },
-          ]}
-        />
-        <View style={styles.cardInfo}>
-          <Text style={styles.cardName} numberOfLines={1}>
-            {item.name}
-          </Text>
-          <View style={styles.badgeRow}>
-            <View
-              style={[
-                styles.badge,
-                { backgroundColor: behaviorColor(item.behavior) + "1a" },
-              ]}
-            >
-              <Text
+  const renderItem = ({ item }: { item: ProxyGroupCategory }) => {
+    const memberCount =
+      (item.member_proxies?.length ?? 0) + (item.member_groups?.length ?? 0);
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardTop}>
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardName} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <View style={styles.badgeRow}>
+              <View
                 style={[
-                  styles.badgeText,
-                  { color: behaviorColor(item.behavior) },
+                  styles.badge,
+                  { backgroundColor: typeColor(item.type) + "1a" },
                 ]}
               >
-                {item.behavior}
-              </Text>
-            </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{item.format}</Text>
+                <Text
+                  style={[styles.badgeText, { color: typeColor(item.type) }]}
+                >
+                  {typeLabel(item.type)}
+                </Text>
+              </View>
+              {item.include_all && (
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: colors.successBg },
+                  ]}
+                >
+                  <Text style={[styles.badgeText, { color: colors.success }]}>
+                    全部节点
+                  </Text>
+                </View>
+              )}
+              <Text style={styles.memberCount}>{memberCount} 个成员</Text>
             </View>
           </View>
-        </View>
-        <View style={styles.cardActions}>
-          <View
-            style={[
-              styles.enabledChip,
-              {
-                backgroundColor: item.enabled
-                  ? colors.successBg
-                  : "rgba(255,255,255,0.04)",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.enabledText,
-                {
-                  color: item.enabled
-                    ? colors.success
-                    : colors.textDisabled,
-                },
-              ]}
-            >
-              {item.enabled ? "启用" : "禁用"}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => handleDelete(item)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="trash-outline" size={16} color={colors.error} />
-          </TouchableOpacity>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
       <FlatList
-        contentContainerStyle={
-          items.length === 0 ? styles.empty : styles.list
-        }
+        contentContainerStyle={items.length === 0 ? styles.empty : styles.list}
         data={items}
         keyExtractor={(item) => item.id}
         refreshControl={
@@ -218,44 +165,28 @@ export default function RuleSetsScreen() {
           />
         }
         ListHeaderComponent={
-          <View style={styles.headerBtns}>
-            <TouchableOpacity
-              style={[
-                styles.syncAllBtn,
-                syncAll.isPending && styles.syncAllBtnDisabled,
-              ]}
-              onPress={handleSyncAll}
-              disabled={syncAll.isPending}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="sync-outline" size={16} color={colors.primary} />
-              <Text style={styles.syncAllText}>
-                {syncAll.isPending ? "同步中..." : "一键同步"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.presetBtn}
-              onPress={openPresetModal}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="albums-outline"
-                size={16}
-                color={colors.primary}
-              />
-              <Text style={styles.syncAllText}>从预设</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.presetBtn}
+            onPress={openPresetModal}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="albums-outline"
+              size={16}
+              color={colors.primary}
+            />
+            <Text style={styles.presetBtnText}>从预设</Text>
+          </TouchableOpacity>
         }
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyBox}>
               <Ionicons
-                name="layers-outline"
+                name="git-branch-outline"
                 size={48}
                 color={colors.textDisabled}
               />
-              <Text style={styles.emptyText}>暂无规则集</Text>
+              <Text style={styles.emptyText}>暂无代理组</Text>
             </View>
           ) : null
         }
@@ -276,7 +207,7 @@ export default function RuleSetsScreen() {
             </TouchableOpacity>
             <Text style={styles.modalTitle}>选择预设</Text>
             <TouchableOpacity
-              onPress={handleBatchImport}
+              onPress={handleBatchCreate}
               disabled={createMutation.isPending}
             >
               <Text
@@ -286,8 +217,8 @@ export default function RuleSetsScreen() {
                 ]}
               >
                 {createMutation.isPending
-                  ? "导入中..."
-                  : `导入 (${selectedPresets.size})`}
+                  ? "创建中..."
+                  : `创建 (${selectedPresets.size})`}
               </Text>
             </TouchableOpacity>
           </View>
@@ -302,14 +233,11 @@ export default function RuleSetsScreen() {
                 <Text style={styles.loadingText}>暂无预设</Text>
               )
             }
-            renderItem={({ item }: { item: RuleSetPreset }) => {
+            renderItem={({ item }: { item: ProxyGroupPreset }) => {
               const selected = selectedPresets.has(item.id);
               return (
                 <TouchableOpacity
-                  style={[
-                    styles.presetItem,
-                    selected && styles.presetItemSelected,
-                  ]}
+                  style={[styles.presetItem, selected && styles.presetItemSelected]}
                   onPress={() => togglePreset(item.id)}
                   activeOpacity={0.7}
                 >
@@ -319,27 +247,21 @@ export default function RuleSetsScreen() {
                     color={selected ? colors.primary : colors.textDisabled}
                   />
                   <View style={styles.presetInfo}>
-                    <Text style={styles.presetName}>
-                      {item.emoji ? `${item.emoji} ` : ""}
-                      {item.name}
-                    </Text>
+                    <Text style={styles.presetName}>{item.name}</Text>
                     <View style={styles.badgeRow}>
                       <View
                         style={[
                           styles.badge,
-                          {
-                            backgroundColor:
-                              behaviorColor(item.behavior) + "1a",
-                          },
+                          { backgroundColor: typeColor(item.type) + "1a" },
                         ]}
                       >
                         <Text
                           style={[
                             styles.badgeText,
-                            { color: behaviorColor(item.behavior) },
+                            { color: typeColor(item.type) },
                           ]}
                         >
-                          {item.behavior}
+                          {typeLabel(item.type)}
                         </Text>
                       </View>
                       {item.description && (
@@ -365,13 +287,7 @@ const styles = StyleSheet.create({
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyBox: { alignItems: "center", gap: spacing.md },
   emptyText: { fontSize: fontSize.base, color: colors.textTertiary },
-  headerBtns: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  syncAllBtn: {
-    flex: 1,
+  presetBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -379,22 +295,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     borderRadius: radius.lg,
     padding: spacing.md,
+    marginBottom: spacing.lg,
   },
-  syncAllBtnDisabled: { opacity: 0.5 },
-  syncAllText: {
+  presetBtnText: {
     fontSize: fontSize.sm,
     fontWeight: "700",
     color: colors.primary,
-  },
-  presetBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.primarySoft,
-    borderRadius: radius.lg,
-    padding: spacing.md,
   },
   card: {
     backgroundColor: colors.surface,
@@ -409,11 +315,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
   },
-  syncDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
   cardInfo: { flex: 1, gap: 4 },
   cardName: {
     fontSize: fontSize.base,
@@ -422,8 +323,9 @@ const styles = StyleSheet.create({
   },
   badgeRow: {
     flexDirection: "row",
-    gap: spacing.sm,
     alignItems: "center",
+    gap: spacing.sm,
+    flexWrap: "wrap",
   },
   badge: {
     backgroundColor: colors.elevated,
@@ -436,20 +338,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.textSecondary,
   },
-  cardActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  enabledChip: {
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-  },
-  enabledText: {
-    fontSize: fontSize.xs,
-    fontWeight: "700",
-  },
+  memberCount: { fontSize: fontSize.xs, color: colors.textTertiary },
   // Modal
   modalContainer: { flex: 1, backgroundColor: colors.bg },
   modalHeader: {

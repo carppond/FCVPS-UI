@@ -1,9 +1,9 @@
-import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
+import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert } from "react-native";
 import { useState, useCallback } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useNodesQuery } from "../../api/node";
+import { useNodesQuery, useTcpingMutation } from "../../api/node";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
-import type { Node, NodeProtocol } from "../../types/api";
+import type { Node, NodeProtocol, TCPingResult } from "../../types/api";
 
 function protocolColor(protocol: NodeProtocol): string {
   switch (protocol) {
@@ -20,7 +20,9 @@ function protocolColor(protocol: NodeProtocol): string {
 
 export default function NodesScreen() {
   const { data, isLoading, refetch } = useNodesQuery();
+  const tcpingMutation = useTcpingMutation();
   const [refreshing, setRefreshing] = useState(false);
+  const [latencyMap, setLatencyMap] = useState<Record<string, TCPingResult>>({});
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -29,6 +31,28 @@ export default function NodesScreen() {
   }, []);
 
   const items = data?.items ?? [];
+
+  const handleTcping = () => {
+    if (items.length === 0) {
+      Alert.alert("提示", "暂无节点可测速");
+      return;
+    }
+    const nodeIds = items.map((n) => n.id);
+    tcpingMutation.mutate(
+      { node_ids: nodeIds, timeout_ms: 5000 },
+      {
+        onSuccess: (resp) => {
+          const map: Record<string, TCPingResult> = {};
+          for (const r of resp.results) {
+            map[r.node_id] = r;
+          }
+          setLatencyMap(map);
+          Alert.alert("测速完成", `已测试 ${resp.results.length} 个节点`);
+        },
+        onError: (err: any) => Alert.alert("测速失败", err.message),
+      },
+    );
+  };
 
   return (
     <FlatList
@@ -39,6 +63,21 @@ export default function NodesScreen() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
+      ListHeaderComponent={
+        items.length > 0 ? (
+          <TouchableOpacity
+            style={[styles.tcpingBtn, tcpingMutation.isPending && styles.tcpingBtnDisabled]}
+            onPress={handleTcping}
+            disabled={tcpingMutation.isPending}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="speedometer-outline" size={16} color="#fff" />
+            <Text style={styles.tcpingBtnText}>
+              {tcpingMutation.isPending ? "测速中..." : "测速"}
+            </Text>
+          </TouchableOpacity>
+        ) : null
+      }
       ListEmptyComponent={
         !isLoading ? (
           <View style={styles.emptyBox}>
@@ -47,12 +86,12 @@ export default function NodesScreen() {
           </View>
         ) : null
       }
-      renderItem={({ item }) => <NodeCard node={item} />}
+      renderItem={({ item }) => <NodeCard node={item} latency={latencyMap[item.id]} />}
     />
   );
 }
 
-function NodeCard({ node }: { node: Node }) {
+function NodeCard({ node, latency }: { node: Node; latency?: TCPingResult }) {
   const pc = protocolColor(node.protocol);
 
   return (
@@ -62,6 +101,19 @@ function NodeCard({ node }: { node: Node }) {
           <Text style={[styles.protocolText, { color: pc }]}>{node.protocol.toUpperCase()}</Text>
         </View>
         <Text style={styles.cardName} numberOfLines={1}>{node.tag}</Text>
+        {latency && (
+          <View style={[
+            styles.latencyBadge,
+            { backgroundColor: latency.reachable ? colors.successBg : colors.errorBg },
+          ]}>
+            <Text style={[
+              styles.latencyText,
+              { color: latency.reachable ? colors.success : colors.error },
+            ]}>
+              {latency.reachable ? `${latency.latency_ms}ms` : "超时"}
+            </Text>
+          </View>
+        )}
       </View>
       <Text style={styles.serverText} numberOfLines={1}>
         {node.server}:{node.port}
@@ -85,6 +137,18 @@ const styles = StyleSheet.create({
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyBox: { alignItems: "center", gap: spacing.md },
   emptyText: { fontSize: fontSize.base, color: colors.textTertiary },
+  tcpingBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  tcpingBtnDisabled: { opacity: 0.5 },
+  tcpingBtnText: { fontSize: fontSize.base, fontWeight: "700", color: "#fff" },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
@@ -102,6 +166,12 @@ const styles = StyleSheet.create({
   },
   protocolText: { fontSize: fontSize.xs, fontWeight: "700", letterSpacing: 0.5 },
   cardName: { flex: 1, fontSize: fontSize.base, fontWeight: "700", color: colors.textPrimary },
+  latencyBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  latencyText: { fontSize: fontSize.xs, fontWeight: "700" },
   serverText: { fontSize: fontSize.xs, color: colors.textSecondary, fontFamily: "monospace" },
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   tagChip: {

@@ -4,15 +4,14 @@ import { useAuthStore } from "../stores/auth-store";
 import type { LoginRequest, LoginResponse, UserPublicProfile } from "../types/api";
 
 export function useLoginMutation() {
-  const setAuth = useAuthStore((s) => s.setAuth);
   return useMutation({
     mutationFn: (data: LoginRequest) =>
       apiFetch<LoginResponse>("/api/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
       }),
-    onSuccess: (res) => {
-      setAuth(res.access_token, res.user);
+    onSuccess: async (res) => {
+      await useAuthStore.getState().setAuth(res.access_token, res.user);
     },
   });
 }

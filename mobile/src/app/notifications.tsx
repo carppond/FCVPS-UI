@@ -5,9 +5,12 @@ import {
   FlatList,
   StyleSheet,
   RefreshControl,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useNotificationChannelsQuery } from "../api/notify";
+import { useNotificationChannelsQuery, useDeleteChannel } from "../api/notify";
 import { colors, spacing, radius, fontSize } from "../lib/theme";
 import type { NotificationChannel, ChannelKind } from "../types/api";
 
@@ -56,6 +59,7 @@ function channelLabel(kind: ChannelKind): string {
 
 export default function NotificationsScreen() {
   const { data, isLoading, refetch } = useNotificationChannelsQuery();
+  const deleteMutation = useDeleteChannel();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
@@ -66,8 +70,29 @@ export default function NotificationsScreen() {
 
   const items = data?.items ?? [];
 
+  const handleDelete = (item: NotificationChannel) => {
+    Alert.alert("删除确认", `确定删除通知渠道「${item.name}」吗？`, [
+      { text: "取消", style: "cancel" },
+      {
+        text: "删除",
+        style: "destructive",
+        onPress: () => {
+          deleteMutation.mutate(item.id, {
+            onSuccess: () => refetch(),
+            onError: (err: any) => Alert.alert("删除失败", err.message),
+          });
+        },
+      },
+    ]);
+  };
+
   const renderItem = ({ item }: { item: NotificationChannel }) => (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => router.push(`/notification/create`)}
+      onLongPress={() => handleDelete(item)}
+      activeOpacity={0.7}
+    >
       <View style={styles.cardLeft}>
         <View
           style={[
@@ -105,41 +130,54 @@ export default function NotificationsScreen() {
           { backgroundColor: item.enabled ? colors.success : colors.textDisabled },
         ]}
       />
-    </View>
+    </TouchableOpacity>
   );
 
   return (
-    <FlatList
-      style={styles.container}
-      contentContainerStyle={items.length === 0 ? styles.empty : styles.list}
-      data={items}
-      keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={colors.primary}
-        />
-      }
-      ListEmptyComponent={
-        !isLoading ? (
-          <View style={styles.emptyBox}>
-            <Ionicons
-              name="notifications-off-outline"
-              size={48}
-              color={colors.textDisabled}
-            />
-            <Text style={styles.emptyText}>暂无通知渠道</Text>
-          </View>
-        ) : null
-      }
-      renderItem={renderItem}
-    />
+    <View style={styles.wrapper}>
+      <FlatList
+        style={styles.container}
+        contentContainerStyle={items.length === 0 ? styles.empty : styles.list}
+        data={items}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
+        }
+        ListHeaderComponent={
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => router.push("/notification/create")}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add-circle-outline" size={16} color={colors.primary} />
+            <Text style={styles.addBtnText}>新建渠道</Text>
+          </TouchableOpacity>
+        }
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={styles.emptyBox}>
+              <Ionicons
+                name="notifications-off-outline"
+                size={48}
+                color={colors.textDisabled}
+              />
+              <Text style={styles.emptyText}>暂无通知渠道</Text>
+            </View>
+          ) : null
+        }
+        renderItem={renderItem}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  wrapper: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1 },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyBox: { alignItems: "center", gap: spacing.md },
@@ -181,6 +219,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   eventCount: { fontSize: fontSize.xs, color: colors.textTertiary },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  addBtnText: {
+    fontSize: fontSize.sm,
+    fontWeight: "700",
+    color: colors.primary,
+  },
   statusDot: {
     width: 8,
     height: 8,

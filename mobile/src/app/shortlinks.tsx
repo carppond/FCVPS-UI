@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { useShortLinksQuery, useCreateShortLink } from "../api/shortlink";
+import { useShortLinksQuery, useCreateShortLink, useDeleteShortLink } from "../api/shortlink";
 import { colors, spacing, radius, fontSize } from "../lib/theme";
 import type { ShortLink } from "../types/api";
 
@@ -26,6 +26,7 @@ function formatDate(ts?: number): string {
 export default function ShortLinksScreen() {
   const { data, isLoading, refetch } = useShortLinksQuery();
   const createMutation = useCreateShortLink();
+  const deleteMutation = useDeleteShortLink();
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [targetUrl, setTargetUrl] = useState("");
@@ -71,6 +72,25 @@ export default function ShortLinksScreen() {
     });
   };
 
+  const handleDelete = (item: ShortLink) => {
+    Alert.alert("确认删除", `确定要删除此短链吗？\n${item.short_url}`, [
+      { text: "取消", style: "cancel" },
+      {
+        text: "删除",
+        style: "destructive",
+        onPress: () => {
+          deleteMutation.mutate(
+            { fileCode: item.file_code, userCode: item.user_code },
+            {
+              onSuccess: () => Alert.alert("已删除", "短链已删除"),
+              onError: (err: any) => Alert.alert("删除失败", err.message),
+            },
+          );
+        },
+      },
+    ]);
+  };
+
   const renderItem = ({ item }: { item: ShortLink }) => (
     <View style={styles.card}>
       <View style={styles.cardBody}>
@@ -89,13 +109,22 @@ export default function ShortLinksScreen() {
           </Text>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.copyBtn}
-        onPress={() => copyUrl(item.short_url)}
-        activeOpacity={0.6}
-      >
-        <Ionicons name="copy-outline" size={16} color={colors.primary} />
-      </TouchableOpacity>
+      <View style={styles.cardBtnGroup}>
+        <TouchableOpacity
+          style={styles.copyBtn}
+          onPress={() => copyUrl(item.short_url)}
+          activeOpacity={0.6}
+        >
+          <Ionicons name="copy-outline" size={16} color={colors.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteBtn}
+          onPress={() => handleDelete(item)}
+          activeOpacity={0.6}
+        >
+          <Ionicons name="trash-outline" size={16} color={colors.error} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -242,6 +271,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   metaText: { fontSize: fontSize.xs, color: colors.textTertiary },
+  cardBtnGroup: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginLeft: spacing.md,
+  },
   copyBtn: {
     width: 36,
     height: 36,
@@ -249,7 +283,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: spacing.md,
+  },
+  deleteBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    backgroundColor: colors.errorBg,
+    justifyContent: "center",
+    alignItems: "center",
   },
   fab: {
     position: "absolute",

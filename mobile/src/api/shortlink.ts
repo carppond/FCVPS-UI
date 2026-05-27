@@ -22,3 +22,16 @@ export function useCreateShortLink() {
     },
   });
 }
+
+export function useDeleteShortLink() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ fileCode, userCode }: { fileCode: string; userCode: string }) =>
+      apiFetch<void>(`/api/shortlinks/${fileCode}/${userCode}`, {
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shortlink"] });
+    },
+  });
+}

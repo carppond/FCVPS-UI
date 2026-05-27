@@ -1,11 +1,14 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Switch } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../stores/auth-store";
+import { useThemeStore } from "../../stores/theme-store";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 
 export default function SettingsScreen() {
   const { user, serverUrl, clearSession } = useAuthStore();
+  const themeMode = useThemeStore((s) => s.mode);
+  const toggleTheme = useThemeStore((s) => s.toggle);
 
   const handleLogout = () => {
     Alert.alert("退出登录", "确定要退出吗？", [
@@ -24,7 +27,7 @@ export default function SettingsScreen() {
   const initials = user?.username?.slice(0, 2).toUpperCase() ?? "??";
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* Profile card */}
       <View style={styles.profileCard}>
         <View style={styles.avatar}>
@@ -46,6 +49,21 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Appearance */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>外观</Text>
+        <View style={styles.switchRow}>
+          <Ionicons name="moon-outline" size={18} color={colors.textTertiary} />
+          <Text style={styles.rowText}>深色模式</Text>
+          <Switch
+            value={themeMode === "dark"}
+            onValueChange={toggleTheme}
+            trackColor={{ false: colors.border, true: colors.primarySoft }}
+            thumbColor={themeMode === "dark" ? colors.primary : colors.textDisabled}
+          />
+        </View>
+      </View>
+
       {/* Features */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>功能</Text>
@@ -64,12 +82,54 @@ export default function SettingsScreen() {
           <Text style={styles.rowText}>通知</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
         </TouchableOpacity>
+        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/proxy-groups")} activeOpacity={0.6}>
+          <Ionicons name="git-branch-outline" size={18} color={colors.textTertiary} />
+          <Text style={styles.rowText}>代理组</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/pipelines")} activeOpacity={0.6}>
+          <Ionicons name="git-merge-outline" size={18} color={colors.textTertiary} />
+          <Text style={styles.rowText}>流水线</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navRow} onPress={() => router.push("/scripts")} activeOpacity={0.6}>
+          <Ionicons name="code-working-outline" size={18} color={colors.textTertiary} />
+          <Text style={styles.rowText}>脚本</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.navRow} onPress={() => router.push("/profile")} activeOpacity={0.6}>
           <Ionicons name="person-outline" size={18} color={colors.textTertiary} />
           <Text style={styles.rowText}>个人资料</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
         </TouchableOpacity>
       </View>
+
+      {/* Admin (only for admin users) */}
+      {user?.role === "admin" ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>管理</Text>
+          <TouchableOpacity style={styles.navRow} onPress={() => router.push("/admin/users")} activeOpacity={0.6}>
+            <Ionicons name="people-outline" size={18} color={colors.textTertiary} />
+            <Text style={styles.rowText}>用户管理</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navRow} onPress={() => router.push("/admin/audit")} activeOpacity={0.6}>
+            <Ionicons name="document-text-outline" size={18} color={colors.textTertiary} />
+            <Text style={styles.rowText}>审计日志</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navRow} onPress={() => router.push("/admin/settings")} activeOpacity={0.6}>
+            <Ionicons name="settings-outline" size={18} color={colors.textTertiary} />
+            <Text style={styles.rowText}>系统设置</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navRow} onPress={() => router.push("/admin/ota")} activeOpacity={0.6}>
+            <Ionicons name="cloud-download-outline" size={18} color={colors.textTertiary} />
+            <Text style={styles.rowText}>OTA 升级</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* About */}
       <View style={styles.section}>
@@ -85,12 +145,13 @@ export default function SettingsScreen() {
         <Ionicons name="log-out-outline" size={18} color={colors.error} />
         <Text style={styles.logoutText}>退出登录</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg, padding: spacing.xl },
+  container: { flex: 1, backgroundColor: colors.bg },
+  scrollContent: { padding: spacing.xl, paddingBottom: 40 },
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -140,6 +201,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  switchRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   navRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.sm },
   rowText: { fontSize: fontSize.base, color: colors.textSecondary, flex: 1 },
   logoutBtn: {

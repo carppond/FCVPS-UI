@@ -1,8 +1,9 @@
-import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert } from "react-native";
+import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, Modal } from "react-native";
 import { useState, useCallback } from "react";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { useVpsAssetsQuery, useVpsAssetSummaryQuery } from "../../api/vps-asset";
+import { useVpsAssetsQuery, useVpsAssetSummaryQuery, useDeleteVpsAsset } from "../../api/vps-asset";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import type { VpsAsset, VpsAssetStatus } from "../../types/api";
 
@@ -42,7 +43,10 @@ function currencySymbol(c: string) {
 export default function VpsAssetsScreen() {
   const { data, isLoading, refetch } = useVpsAssetsQuery();
   const summary = useVpsAssetSummaryQuery();
+  const deleteMutation = useDeleteVpsAsset();
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedVps, setSelectedVps] = useState<VpsAsset | null>(null);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -57,34 +61,97 @@ export default function VpsAssetsScreen() {
     Alert.alert("已复制", ip);
   };
 
+  const openMenu = (vps: VpsAsset) => {
+    setSelectedVps(vps);
+    setMenuVisible(true);
+  };
+
+  const closeMenu = () => {
+    setMenuVisible(false);
+    setSelectedVps(null);
+  };
+
+  const handleEdit = () => {
+    if (!selectedVps) return;
+    closeMenu();
+    router.push(`/vps-asset/edit?id=${selectedVps.id}`);
+  };
+
+  const handleDelete = () => {
+    if (!selectedVps) return;
+    const vpsId = selectedVps.id;
+    const vpsName = selectedVps.name;
+    closeMenu();
+    Alert.alert("确认删除", `确定要删除 VPS「${vpsName}」吗？`, [
+      { text: "取消", style: "cancel" },
+      {
+        text: "删除",
+        style: "destructive",
+        onPress: () => {
+          deleteMutation.mutate(vpsId, {
+            onSuccess: () => Alert.alert("已删除", "VPS 资产已删除"),
+            onError: (err: any) => Alert.alert("删除失败", err.message),
+          });
+        },
+      },
+    ]);
+  };
+
   return (
-    <FlatList
-      style={styles.container}
-      contentContainerStyle={items.length === 0 ? styles.empty : styles.list}
-      data={items}
-      keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-      }
-      ListHeaderComponent={
-        summary.data ? (
-          <View style={styles.summaryRow}>
-            <SumChip label="总数" value={String(summary.data.total)} />
-            <SumChip label="即将到期" value={String(summary.data.expiring)} color={summary.data.expiring > 0 ? colors.warning : undefined} />
-            <SumChip label="已到期" value={String(summary.data.expired)} color={summary.data.expired > 0 ? colors.error : undefined} />
+    <View style={styles.wrapper}>
+      <FlatList
+        style={styles.container}
+        contentContainerStyle={items.length === 0 ? styles.empty : styles.list}
+        data={items}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        ListHeaderComponent={
+          summary.data ? (
+            <View style={styles.summaryRow}>
+              <SumChip label="总数" value={String(summary.data.total)} />
+              <SumChip label="即将到期" value={String(summary.data.expiring)} color={summary.data.expiring > 0 ? colors.warning : undefined} />
+              <SumChip label="已到期" value={String(summary.data.expired)} color={summary.data.expired > 0 ? colors.error : undefined} />
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={styles.emptyBox}>
+              <Ionicons name="hardware-chip-outline" size={48} color={colors.textDisabled} />
+              <Text style={styles.emptyText}>暂无 VPS 资产</Text>
+            </View>
+          ) : null
+        }
+        renderItem={({ item }) => <VpsCard vps={item} onCopyIp={copyIp} onLongPress={openMenu} />}
+      />
+
+      {/* Action menu modal */}
+      <Modal
+        visible={menuVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={closeMenu}
+      >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeMenu}>
+          <View style={styles.menuSheet}>
+            <Text style={styles.menuTitle} numberOfLines={1}>{selectedVps?.name}</Text>
+            <TouchableOpacity style={styles.menuItem} onPress={handleEdit} activeOpacity={0.6}>
+              <Ionicons name="create-outline" size={20} color={colors.primary} />
+              <Text style={styles.menuItemText}>编辑</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleDelete} activeOpacity={0.6}>
+              <Ionicons name="trash-outline" size={20} color={colors.error} />
+              <Text style={[styles.menuItemText, { color: colors.error }]}>删除</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuCancel} onPress={closeMenu} activeOpacity={0.6}>
+              <Text style={styles.menuCancelText}>取消</Text>
+            </TouchableOpacity>
           </View>
-        ) : null
-      }
-      ListEmptyComponent={
-        !isLoading ? (
-          <View style={styles.emptyBox}>
-            <Ionicons name="hardware-chip-outline" size={48} color={colors.textDisabled} />
-            <Text style={styles.emptyText}>暂无 VPS 资产</Text>
-          </View>
-        ) : null
-      }
-      renderItem={({ item }) => <VpsCard vps={item} onCopyIp={copyIp} />}
-    />
+        </TouchableOpacity>
+      </Modal>
+    </View>
   );
 }
 
@@ -97,14 +164,18 @@ function SumChip({ label, value, color }: { label: string; value: string; color?
   );
 }
 
-function VpsCard({ vps, onCopyIp }: { vps: VpsAsset; onCopyIp: (ip: string) => void }) {
+function VpsCard({ vps, onCopyIp, onLongPress }: { vps: VpsAsset; onCopyIp: (ip: string) => void; onLongPress: (vps: VpsAsset) => void }) {
   const sc = statusColor(vps.status);
   const flag = guessFlag(vps.location);
   const sym = currencySymbol(vps.currency);
   const spec = [vps.cpu, vps.memory, vps.disk].filter(Boolean).join(" · ");
 
   return (
-    <View style={[styles.card, vps.status !== "normal" && { borderColor: sc + "33" }]}>
+    <TouchableOpacity
+      style={[styles.card, vps.status !== "normal" && { borderColor: sc + "33" }]}
+      activeOpacity={0.7}
+      onLongPress={() => onLongPress(vps)}
+    >
       <View style={styles.cardTop}>
         <Text style={styles.flag}>{flag}</Text>
         <View style={styles.cardInfo}>
@@ -125,11 +196,12 @@ function VpsCard({ vps, onCopyIp }: { vps: VpsAsset; onCopyIp: (ip: string) => v
           <Text style={styles.ipText}>{vps.ip}</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
@@ -158,4 +230,46 @@ const styles = StyleSheet.create({
   dayLabel: { fontSize: 8, fontWeight: "700", letterSpacing: 0.5, textTransform: "uppercase" },
   ipRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: spacing.sm, backgroundColor: colors.surfaceHover, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 4, alignSelf: "flex-start" },
   ipText: { fontSize: fontSize.xs, color: colors.textSecondary, fontFamily: "monospace" },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  menuSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    padding: spacing.xl,
+    paddingBottom: 40,
+  },
+  menuTitle: {
+    fontSize: fontSize.base,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    marginBottom: spacing.lg,
+    textAlign: "center",
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  menuItemText: {
+    fontSize: fontSize.base,
+    fontWeight: "600",
+    color: colors.textPrimary,
+  },
+  menuCancel: {
+    alignItems: "center",
+    paddingVertical: spacing.lg,
+    marginTop: spacing.sm,
+  },
+  menuCancelText: {
+    fontSize: fontSize.base,
+    fontWeight: "600",
+    color: colors.textTertiary,
+  },
 });
