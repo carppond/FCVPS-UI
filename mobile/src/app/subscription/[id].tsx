@@ -128,7 +128,12 @@ export default function SubscriptionDetailScreen() {
       </View>
 
       {/* Nodes */}
-      <Text style={styles.sectionTitle}>节点列表 ({data.nodes?.length ?? 0})</Text>
+      <Text style={styles.sectionTitle}>节点列表 ({data.nodes?.length ?? 0}) · 总计 {data.nodes_total ?? 0}</Text>
+      {(!data.nodes || data.nodes.length === 0) && (
+        <View style={{ padding: 20, alignItems: "center" }}>
+          <Text style={{ color: colors.textTertiary, fontSize: 13 }}>暂无节点，请先同步订阅</Text>
+        </View>
+      )}
       {(data.nodes ?? []).map((node) => (
         <View key={node.id} style={styles.nodeCard}>
           <View style={styles.nodeTop}>

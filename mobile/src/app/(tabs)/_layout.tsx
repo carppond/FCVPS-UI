@@ -79,37 +79,19 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="agents"
+        name="more"
         options={{
-          title: "探针",
+          title: "更多",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="radio-outline" size={size} color={color} />
+            <Ionicons name="menu-outline" size={size} color={color} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: "设置",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="rules"
-        options={{
-          title: "规则",
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="traffic"
-        options={{
-          title: "流量",
-          href: null,
-        }}
-      />
+      {/* Hidden tabs — accessible as screens but not in tab bar */}
+      <Tabs.Screen name="agents" options={{ href: null, title: "探针" }} />
+      <Tabs.Screen name="rules" options={{ href: null, title: "规则" }} />
+      <Tabs.Screen name="traffic" options={{ href: null, title: "流量" }} />
+      <Tabs.Screen name="settings" options={{ href: null, title: "设置" }} />
     </Tabs>
   );
 }

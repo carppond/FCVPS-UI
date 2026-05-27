@@ -205,9 +205,7 @@ export default function RuleSetsScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        contentContainerStyle={
-          items.length === 0 ? styles.empty : styles.list
-        }
+        contentContainerStyle={styles.list}
         data={items}
         keyExtractor={(item) => item.id}
         refreshControl={
@@ -256,6 +254,7 @@ export default function RuleSetsScreen() {
                 color={colors.textDisabled}
               />
               <Text style={styles.emptyText}>暂无规则集</Text>
+              <Text style={styles.emptyHint}>点击上方「从预设」批量导入</Text>
             </View>
           ) : null
         }
@@ -363,8 +362,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyBox: { alignItems: "center", gap: spacing.md },
+  emptyBox: { alignItems: "center", gap: spacing.md, paddingTop: 80 },
   emptyText: { fontSize: fontSize.base, color: colors.textTertiary },
+  emptyHint: { fontSize: fontSize.xs, color: colors.textDisabled, marginTop: spacing.xs },
   headerBtns: {
     flexDirection: "row",
     gap: spacing.sm,

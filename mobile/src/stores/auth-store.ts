@@ -35,8 +35,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearSession: async () => {
     await SecureStore.deleteItemAsync(STORAGE_KEYS.TOKEN);
     await SecureStore.deleteItemAsync(STORAGE_KEYS.USER);
-    await SecureStore.deleteItemAsync(STORAGE_KEYS.SAVED_USERNAME);
-    await SecureStore.deleteItemAsync(STORAGE_KEYS.SAVED_PASSWORD);
     set({ token: null, user: null });
   },
 

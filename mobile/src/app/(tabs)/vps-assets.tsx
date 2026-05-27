@@ -186,7 +186,7 @@ function VpsCard({ vps, onCopyIp, onLongPress }: { vps: VpsAsset; onCopyIp: (ip:
         <View style={styles.dayChip}>
           <Text style={[styles.dayNum, { color: sc }]}>{vps.days_until_expiry}</Text>
           <Text style={[styles.dayLabel, { color: sc }]}>
-            {vps.days_until_expiry <= 0 ? "EXPIRED" : "DAYS"}
+            {vps.days_until_expiry <= 0 ? "已过期" : "天"}
           </Text>
         </View>
       </View>

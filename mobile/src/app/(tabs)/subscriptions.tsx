@@ -104,7 +104,7 @@ export default function SubscriptionsScreen() {
               <View style={[styles.statusDot, { backgroundColor: item.last_sync_status === "ok" ? colors.success : item.last_sync_status === "error" ? colors.error : colors.textDisabled }]} />
               <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.node_count} nodes</Text>
+                <Text style={styles.badgeText}>{item.node_count} 个节点</Text>
               </View>
               <TouchableOpacity
                 style={styles.menuBtn}

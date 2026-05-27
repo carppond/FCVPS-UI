@@ -23,6 +23,7 @@ const maxUploadBytes = 4 * 1024 * 1024
 // SubscriptionHandler hosts /api/subscriptions/* endpoints.
 type SubscriptionHandler struct {
 	repo         *storage.SubscriptionRepo
+	nodeRepo     *storage.NodeRepo
 	pipelineRepo *storage.PipelineRepo
 	sync         *substore.SyncService
 	logger       *slog.Logger
@@ -39,6 +40,11 @@ func NewSubscriptionHandler(repo *storage.SubscriptionRepo, sync *substore.SyncS
 // callers / tests that do not exercise the binding endpoints stay
 // unchanged. nil disables the GET / PUT /api/subscriptions/{id}/pipelines
 // endpoints (handlers respond 501).
+func (h *SubscriptionHandler) SetNodeRepo(repo *storage.NodeRepo) {
+	if h == nil { return }
+	h.nodeRepo = repo
+}
+
 func (h *SubscriptionHandler) SetPipelineRepo(repo *storage.PipelineRepo) {
 	if h == nil {
 		return
@@ -146,8 +152,20 @@ func (h *SubscriptionHandler) Get(w http.ResponseWriter, r *http.Request) {
 		h.respondStorageErr(w, traceID, err)
 		return
 	}
+	detail := subscriptionRecordToDetail(rec)
+	if h.nodeRepo != nil {
+		nodeRecs, err := h.nodeRepo.ListBySubscription(r.Context(), id)
+		if err == nil {
+			nodes := make([]types.Node, len(nodeRecs))
+			for i := range nodeRecs {
+				nodes[i] = storage.NodeRecordToDTO(&nodeRecs[i])
+			}
+			detail.Nodes = nodes
+			detail.NodesTotal = int32(len(nodes))
+		}
+	}
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.SubscriptionDetail]{
-		Data:      subscriptionRecordToDetail(rec),
+		Data:      detail,
 		RequestID: traceID,
 	})
 }

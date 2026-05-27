@@ -404,6 +404,7 @@ func run() error {
 	pipelineRepo := storage.NewPipelineRepo(db, time.Now)
 	pipelineHandler := handler.NewPipelineHandler(pipelineRepo, subscriptions, log)
 	subHandler.SetPipelineRepo(pipelineRepo)
+	subHandler.SetNodeRepo(nodeRepo)
 
 	// T-12: M-RULE handler. Reuses the substore NodeRepoAdapter from above so
 	// the preview endpoint can re-render Clash YAML against real nodes.

@@ -154,6 +154,7 @@ export default function RuleCreateScreen() {
       {mode === "template" ? (
         <View style={styles.templateContainer}>
           {/* Category Tabs */}
+          <View style={styles.categoryTabsWrap}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -180,6 +181,7 @@ export default function RuleCreateScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
+          </View>
 
           {/* Template List */}
           <FlatList
@@ -208,6 +210,7 @@ export default function RuleCreateScreen() {
                     name={selected ? "checkbox" : "square-outline"}
                     size={20}
                     color={selected ? colors.primary : colors.textDisabled}
+                    style={{ marginTop: 2 }}
                   />
                   <View style={styles.templateInfo}>
                     <Text style={styles.templateName}>
@@ -215,7 +218,7 @@ export default function RuleCreateScreen() {
                       {item.name}
                     </Text>
                     {item.description ? (
-                      <Text style={styles.templateDesc} numberOfLines={2}>
+                      <Text style={styles.templateDesc} numberOfLines={1}>
                         {item.description}
                       </Text>
                     ) : null}
@@ -433,10 +436,15 @@ const styles = StyleSheet.create({
   },
   // Template mode
   templateContainer: { flex: 1 },
+  categoryTabsWrap: {
+    height: 52,
+    flexShrink: 0,
+  },
   categoryTabs: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     gap: spacing.sm,
+    alignItems: "center",
   },
   categoryTab: {
     paddingHorizontal: spacing.lg,
@@ -445,6 +453,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+    height: 34,
+    justifyContent: "center",
   },
   categoryTabActive: {
     backgroundColor: colors.primarySoft,
@@ -468,14 +478,14 @@ const styles = StyleSheet.create({
   },
   templateItem: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   templateItemSelected: {
     borderColor: colors.primary,

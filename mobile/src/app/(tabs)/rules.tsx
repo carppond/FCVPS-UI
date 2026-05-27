@@ -1,5 +1,6 @@
-import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
+import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from "react-native";
 import { useState, useCallback } from "react";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useRulesQuery } from "../../api/rule";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
@@ -50,11 +51,29 @@ export default function RulesScreen() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
+      ListHeaderComponent={
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => router.push("/rule/create")}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+          <Text style={styles.addBtnText}>添加规则</Text>
+        </TouchableOpacity>
+      }
       ListEmptyComponent={
         !isLoading ? (
           <View style={styles.emptyBox}>
             <Ionicons name="shield-outline" size={48} color={colors.textDisabled} />
             <Text style={styles.emptyText}>暂无规则</Text>
+            <TouchableOpacity
+              style={styles.emptyCreateBtn}
+              onPress={() => router.push("/rule/create")}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="add-outline" size={16} color="#fff" />
+              <Text style={styles.emptyCreateText}>添加规则</Text>
+            </TouchableOpacity>
           </View>
         ) : null
       }
@@ -111,4 +130,26 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   badgeText: { fontSize: fontSize.xs, fontWeight: "700", letterSpacing: 0.5 },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.md,
+  },
+  addBtnText: { fontSize: fontSize.sm, fontWeight: "600", color: colors.primary },
+  emptyCreateBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+  },
+  emptyCreateText: { fontSize: fontSize.base, fontWeight: "700", color: "#fff" },
 });
