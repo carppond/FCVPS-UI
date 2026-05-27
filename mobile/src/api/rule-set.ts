@@ -5,6 +5,7 @@ import type {
   RuleSetProvider,
   RuleSetPreset,
   CreateRuleSetRequest,
+  UpdateRuleSetRequest,
 } from "../types/api";
 
 export function useRuleSetsQuery() {
@@ -43,6 +44,33 @@ export function useCreateRuleSet() {
       apiFetch("/api/rule-sets", {
         method: "POST",
         body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rule-set"] });
+    },
+  });
+}
+
+export function useUpdateRuleSet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateRuleSetRequest }) =>
+      apiFetch(`/api/rule-sets/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rule-set"] });
+    },
+  });
+}
+
+export function useSyncRuleSet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<RuleSetProvider>(`/api/rule-sets/${id}/sync`, {
+        method: "POST",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rule-set"] });

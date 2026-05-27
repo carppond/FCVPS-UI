@@ -9,12 +9,39 @@ import { useAuthStore } from "../../stores/auth-store";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import type { SubscriptionDetail, SyncResult } from "../../types/api";
 
-const TARGETS = [
-  { key: "clash", label: "Clash", icon: "flash-outline" as const, color: colors.primary },
-  { key: "singbox", label: "sing-box", icon: "cube-outline" as const, color: colors.info },
-  { key: "surge", label: "Surge", icon: "thunderstorm-outline" as const, color: colors.warning },
-  { key: "v2ray", label: "V2Ray", icon: "link-outline" as const, color: colors.success },
+const TARGETS: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
+  { key: "clash", label: "Clash", icon: "flash-outline", color: colors.primary },
+  { key: "clashmeta", label: "Clash Meta", icon: "flash-outline", color: colors.warning },
+  { key: "clash-verge-rev", label: "Clash Verge Rev", icon: "desktop-outline", color: colors.info },
+  { key: "stash", label: "Stash", icon: "phone-portrait-outline", color: "#c084fc" },
+  { key: "singbox", label: "sing-box", icon: "cube-outline", color: colors.info },
+  { key: "shadowrocket", label: "Shadowrocket", icon: "rocket-outline", color: colors.success },
+  { key: "surge", label: "Surge", icon: "thunderstorm-outline", color: colors.warning },
+  { key: "surge-ios", label: "Surge iOS", icon: "phone-portrait-outline", color: colors.warning },
+  { key: "quantumult-x", label: "Quantumult X", icon: "grid-outline", color: "#c084fc" },
+  { key: "loon", label: "Loon", icon: "globe-outline", color: colors.info },
+  { key: "v2ray", label: "V2Ray", icon: "link-outline", color: colors.success },
 ];
+
+function formatBytes(bytes: number): string {
+  if (bytes <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const val = bytes / Math.pow(1024, i);
+  return `${val.toFixed(i > 0 ? 1 : 0)} ${units[i]}`;
+}
+
+function daysUntil(epochSeconds: number): number {
+  const nowMs = Date.now();
+  const targetMs = epochSeconds > 1e12 ? epochSeconds : epochSeconds * 1000;
+  return Math.max(0, Math.ceil((targetMs - nowMs) / 86_400_000));
+}
+
+function formatDate(epoch: number): string {
+  const ms = epoch > 1e12 ? epoch : epoch * 1000;
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 export default function SubscriptionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -36,8 +63,13 @@ export default function SubscriptionDetailScreen() {
     onError: (err: any) => Alert.alert("同步失败", err.message),
   });
 
-  const getDownloadUrl = (target: string) =>
-    `${serverUrl}/download/${id}?target=${target}`;
+  // Download URL uses /download/{name}?token={share_token}&target=... (matches web)
+  const getDownloadUrl = (target: string) => {
+    if (!data) return "";
+    const name = encodeURIComponent(data.name);
+    const token = data.share_token ? encodeURIComponent(data.share_token) : "";
+    return `${serverUrl}/download/${name}?token=${token}&target=${encodeURIComponent(target)}`;
+  };
 
   const copyLink = async (target: string, label: string) => {
     const url = getDownloadUrl(target);
@@ -60,6 +92,14 @@ export default function SubscriptionDetailScreen() {
 
   const syncStatus = data.last_sync_status;
   const statusColor = syncStatus === "ok" ? colors.success : syncStatus === "error" ? colors.error : colors.textDisabled;
+
+  const hasTraffic = data.traffic_total && data.traffic_total > 0;
+  const trafficPct = hasTraffic
+    ? Math.min(100, ((data.traffic_used ?? 0) / data.traffic_total!) * 100)
+    : 0;
+
+  const progressBarColor =
+    trafficPct >= 90 ? colors.error : trafficPct >= 70 ? colors.warning : colors.info;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -94,6 +134,41 @@ export default function SubscriptionDetailScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Traffic info section */}
+      <View style={styles.trafficCard}>
+        <View style={styles.trafficRow}>
+          <Ionicons name="cloud-outline" size={14} color={colors.textTertiary} />
+          <Text style={styles.trafficLabel}>流量</Text>
+          <Text style={styles.trafficValue}>
+            {formatBytes(data.traffic_used ?? 0)} / {hasTraffic ? formatBytes(data.traffic_total!) : "无限制"}
+          </Text>
+        </View>
+        {hasTraffic && (
+          <View style={styles.progressBarBg}>
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${trafficPct}%`, backgroundColor: progressBarColor },
+              ]}
+            />
+          </View>
+        )}
+        {hasTraffic && (
+          <Text style={styles.trafficPctText}>
+            已使用 {trafficPct.toFixed(1)}%
+          </Text>
+        )}
+        <View style={styles.trafficRow}>
+          <Ionicons name="calendar-outline" size={14} color={colors.textTertiary} />
+          <Text style={styles.trafficLabel}>到期</Text>
+          <Text style={styles.trafficValue}>
+            {data.expire_at
+              ? `${formatDate(data.expire_at)} (剩余 ${daysUntil(data.expire_at)} 天)`
+              : "无期限"}
+          </Text>
+        </View>
+      </View>
+
       {/* Download links */}
       <Text style={styles.sectionTitle}>订阅链接</Text>
       <View style={styles.linksGrid}>
@@ -103,7 +178,7 @@ export default function SubscriptionDetailScreen() {
               <View style={[styles.linkIcon, { backgroundColor: t.color + "18" }]}>
                 <Ionicons name={t.icon} size={18} color={t.color} />
               </View>
-              <Text style={styles.linkLabel}>{t.label}</Text>
+              <Text style={styles.linkLabel} numberOfLines={1}>{t.label}</Text>
             </View>
             <View style={styles.linkActions}>
               <TouchableOpacity
@@ -189,6 +264,50 @@ const styles = StyleSheet.create({
   },
   syncBtnDisabled: { opacity: 0.5 },
   syncBtnText: { fontSize: fontSize.base, fontWeight: "700", color: "#fff" },
+  // Traffic info
+  trafficCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.xl,
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  trafficRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  trafficLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    color: colors.textTertiary,
+  },
+  trafficValue: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    fontWeight: "600",
+    color: colors.textPrimary,
+    textAlign: "right",
+  },
+  progressBarBg: {
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    overflow: "hidden",
+    marginVertical: spacing.xs,
+  },
+  progressBarFill: {
+    height: 4,
+    borderRadius: 2,
+  },
+  trafficPctText: {
+    fontSize: fontSize.xs,
+    color: colors.textTertiary,
+    textAlign: "right",
+  },
+  // Section
   sectionTitle: {
     fontSize: fontSize.sm,
     fontWeight: "700",
@@ -210,7 +329,7 @@ const styles = StyleSheet.create({
   },
   linkHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   linkIcon: { width: 32, height: 32, borderRadius: radius.md, justifyContent: "center", alignItems: "center" },
-  linkLabel: { fontSize: fontSize.base, fontWeight: "700", color: colors.textPrimary },
+  linkLabel: { fontSize: fontSize.base, fontWeight: "700", color: colors.textPrimary, flex: 1 },
   linkActions: { flexDirection: "row", gap: spacing.sm },
   linkBtn: {
     flex: 1,

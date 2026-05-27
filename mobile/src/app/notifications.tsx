@@ -86,10 +86,17 @@ export default function NotificationsScreen() {
     ]);
   };
 
+  const handleEdit = (item: NotificationChannel) => {
+    const eventTypesStr = item.event_types.join(",");
+    router.push(
+      `/notification/create?editId=${item.id}&editName=${encodeURIComponent(item.name)}&editKind=${item.kind}&editEnabled=${item.enabled}&editEventTypes=${encodeURIComponent(eventTypesStr)}&editConfig=${encodeURIComponent(JSON.stringify(item.config))}`,
+    );
+  };
+
   const renderItem = ({ item }: { item: NotificationChannel }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => router.push(`/notification/create`)}
+      onPress={() => handleEdit(item)}
       onLongPress={() => handleDelete(item)}
       activeOpacity={0.7}
     >
@@ -124,6 +131,7 @@ export default function NotificationsScreen() {
           </Text>
         </View>
       </View>
+      <Ionicons name="chevron-forward" size={16} color={colors.textDisabled} />
       <View
         style={[
           styles.statusDot,
@@ -238,6 +246,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginLeft: spacing.md,
+    marginLeft: spacing.sm,
   },
 });

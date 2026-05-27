@@ -11,9 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useRuleTemplates, useCreateRule } from "../../api/rule";
+import { useRuleTemplates, useCreateRule, useUpdateRule } from "../../api/rule";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import type { RuleTemplate, RuleType, RuleMode } from "../../types/api";
 
@@ -37,19 +37,31 @@ const RULE_MODES: { key: RuleMode; label: string }[] = [
 ];
 
 export default function RuleCreateScreen() {
+  const params = useLocalSearchParams<{
+    editId?: string;
+    editName?: string;
+    editType?: string;
+    editMode?: string;
+    editContent?: string;
+    editEnabled?: string;
+  }>();
+
+  const isEdit = !!params.editId;
+
   const templatesQuery = useRuleTemplates();
   const createMutation = useCreateRule();
-  const [mode, setMode] = useState<"template" | "manual">("template");
+  const updateMutation = useUpdateRule();
+  const [mode, setMode] = useState<"template" | "manual">(isEdit ? "manual" : "template");
   const [activeCategory, setActiveCategory] = useState("region");
   const [selectedTemplates, setSelectedTemplates] = useState<Set<string>>(
     new Set(),
   );
 
-  // Manual form state
-  const [name, setName] = useState("");
-  const [ruleType, setRuleType] = useState<RuleType>("rules");
-  const [ruleMode, setRuleMode] = useState<RuleMode>("prepend");
-  const [content, setContent] = useState("");
+  // Manual form state — prefill from edit params if present
+  const [name, setName] = useState(params.editName ?? "");
+  const [ruleType, setRuleType] = useState<RuleType>((params.editType as RuleType) ?? "rules");
+  const [ruleMode, setRuleMode] = useState<RuleMode>((params.editMode as RuleMode) ?? "prepend");
+  const [content, setContent] = useState(params.editContent ?? "");
 
   const templates = templatesQuery.data ?? [];
   const filteredTemplates = templates.filter(
@@ -98,6 +110,30 @@ export default function RuleCreateScreen() {
       Alert.alert("提示", "请输入规则内容");
       return;
     }
+
+    if (isEdit) {
+      updateMutation.mutate(
+        {
+          id: params.editId!,
+          data: {
+            name: name.trim(),
+            mode: ruleMode,
+            content: content.trim(),
+            enabled: params.editEnabled === "true",
+          },
+        },
+        {
+          onSuccess: () => {
+            Alert.alert("保存成功", "规则已更新", [
+              { text: "好", onPress: () => router.back() },
+            ]);
+          },
+          onError: (err: any) => Alert.alert("保存失败", err.message),
+        },
+      );
+      return;
+    }
+
     createMutation.mutate(
       {
         name: name.trim(),
@@ -389,14 +425,16 @@ export default function RuleCreateScreen() {
             <TouchableOpacity
               style={[
                 styles.submitBtn,
-                createMutation.isPending && styles.submitBtnDisabled,
+                (createMutation.isPending || updateMutation.isPending) && styles.submitBtnDisabled,
               ]}
               onPress={handleManualCreate}
-              disabled={createMutation.isPending}
+              disabled={createMutation.isPending || updateMutation.isPending}
               activeOpacity={0.8}
             >
               <Text style={styles.submitText}>
-                {createMutation.isPending ? "创建中..." : "创建规则"}
+                {isEdit
+                  ? updateMutation.isPending ? "保存中..." : "保存修改"
+                  : createMutation.isPending ? "创建中..." : "创建规则"}
               </Text>
             </TouchableOpacity>
           </ScrollView>

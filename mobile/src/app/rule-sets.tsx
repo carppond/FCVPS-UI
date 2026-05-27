@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -16,6 +17,8 @@ import {
   useRuleSetPresets,
   useCreateRuleSet,
   useDeleteRuleSet,
+  useUpdateRuleSet,
+  useSyncRuleSet,
 } from "../api/rule-set";
 import { colors, spacing, radius, fontSize } from "../lib/theme";
 import type { RuleSetProvider, RuleSetPreset } from "../types/api";
@@ -52,6 +55,8 @@ export default function RuleSetsScreen() {
   const presetsQuery = useRuleSetPresets();
   const createMutation = useCreateRuleSet();
   const deleteMutation = useDeleteRuleSet();
+  const updateMutation = useUpdateRuleSet();
+  const syncSingleMutation = useSyncRuleSet();
   const [refreshing, setRefreshing] = useState(false);
   const [presetModalVisible, setPresetModalVisible] = useState(false);
   const [selectedPresets, setSelectedPresets] = useState<Set<string>>(
@@ -133,6 +138,26 @@ export default function RuleSetsScreen() {
     ]);
   };
 
+  const handleToggleEnabled = (item: RuleSetProvider) => {
+    updateMutation.mutate(
+      { id: item.id, data: { enabled: !item.enabled } },
+      {
+        onSuccess: () => refetch(),
+        onError: (err: any) => Alert.alert("操作失败", err.message),
+      },
+    );
+  };
+
+  const handleSyncSingle = (item: RuleSetProvider) => {
+    syncSingleMutation.mutate(item.id, {
+      onSuccess: () => {
+        Alert.alert("同步成功", `规则集「${item.name}」已同步`);
+        refetch();
+      },
+      onError: (err: any) => Alert.alert("同步失败", err.message),
+    });
+  };
+
   const renderItem = ({ item }: { item: RuleSetProvider }) => (
     <View style={styles.card}>
       <View style={styles.cardTop}>
@@ -168,29 +193,23 @@ export default function RuleSetsScreen() {
           </View>
         </View>
         <View style={styles.cardActions}>
-          <View
-            style={[
-              styles.enabledChip,
-              {
-                backgroundColor: item.enabled
-                  ? colors.successBg
-                  : "rgba(255,255,255,0.04)",
-              },
-            ]}
+          <Switch
+            value={item.enabled}
+            onValueChange={() => handleToggleEnabled(item)}
+            trackColor={{
+              false: colors.surfaceHover,
+              true: colors.primary,
+            }}
+            thumbColor="#fff"
+            style={styles.toggleSwitch}
+          />
+          <TouchableOpacity
+            onPress={() => handleSyncSingle(item)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.6}
           >
-            <Text
-              style={[
-                styles.enabledText,
-                {
-                  color: item.enabled
-                    ? colors.success
-                    : colors.textDisabled,
-                },
-              ]}
-            >
-              {item.enabled ? "启用" : "禁用"}
-            </Text>
-          </View>
+            <Ionicons name="sync-outline" size={16} color={colors.info} />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleDelete(item)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -441,14 +460,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
   },
-  enabledChip: {
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-  },
-  enabledText: {
-    fontSize: fontSize.xs,
-    fontWeight: "700",
+  toggleSwitch: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
   },
   // Modal
   modalContainer: { flex: 1, backgroundColor: colors.bg },

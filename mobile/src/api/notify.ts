@@ -4,6 +4,7 @@ import type {
   PagedResponse,
   NotificationChannel,
   CreateChannelRequest,
+  UpdateChannelRequest,
 } from "../types/api";
 
 export function useNotificationChannelsQuery() {
@@ -22,6 +23,20 @@ export function useCreateChannel() {
     mutationFn: (data: CreateChannelRequest) =>
       apiFetch("/api/notify/channels", {
         method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notify"] });
+    },
+  });
+}
+
+export function useUpdateChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateChannelRequest }) =>
+      apiFetch(`/api/notify/channels/${id}`, {
+        method: "PUT",
         body: JSON.stringify(data),
       }),
     onSuccess: () => {

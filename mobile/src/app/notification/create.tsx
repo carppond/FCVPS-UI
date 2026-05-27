@@ -11,10 +11,10 @@ import {
   Platform,
   Switch,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCreateChannel } from "../../api/notify";
+import { useCreateChannel, useUpdateChannel } from "../../api/notify";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import type {
   ChannelKind,
@@ -110,14 +110,51 @@ function getConfigFields(kind: ChannelKind): ConfigField[] {
   }
 }
 
+function parseEditConfig(configStr?: string): Record<string, string> {
+  if (!configStr) return {};
+  try {
+    const obj = JSON.parse(configStr) as Record<string, unknown>;
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (Array.isArray(value)) {
+        result[key] = value.join(",");
+      } else if (value != null) {
+        result[key] = String(value);
+      }
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
 export default function NotificationCreateScreen() {
+  const params = useLocalSearchParams<{
+    editId?: string;
+    editName?: string;
+    editKind?: string;
+    editEnabled?: string;
+    editEventTypes?: string;
+    editConfig?: string;
+  }>();
+
+  const isEdit = !!params.editId;
+
   const queryClient = useQueryClient();
   const createMutation = useCreateChannel();
-  const [name, setName] = useState("");
-  const [kind, setKind] = useState<ChannelKind>("telegram");
-  const [configValues, setConfigValues] = useState<Record<string, string>>({});
+  const updateMutation = useUpdateChannel();
+
+  const [name, setName] = useState(params.editName ?? "");
+  const [kind, setKind] = useState<ChannelKind>((params.editKind as ChannelKind) ?? "telegram");
+  const [configValues, setConfigValues] = useState<Record<string, string>>(
+    parseEditConfig(params.editConfig),
+  );
   const [selectedEvents, setSelectedEvents] = useState<Set<EventType>>(
-    new Set(),
+    new Set(
+      params.editEventTypes
+        ? (params.editEventTypes.split(",") as EventType[])
+        : [],
+    ),
   );
 
   const configFields = getConfigFields(kind);
@@ -158,7 +195,7 @@ export default function NotificationCreateScreen() {
     return config as unknown as ChannelConfig;
   };
 
-  const handleCreate = () => {
+  const handleSubmit = () => {
     if (!name.trim()) {
       Alert.alert("提示", "请输入渠道名称");
       return;
@@ -167,6 +204,31 @@ export default function NotificationCreateScreen() {
       Alert.alert("提示", "请至少选择一个事件类型");
       return;
     }
+
+    if (isEdit) {
+      updateMutation.mutate(
+        {
+          id: params.editId!,
+          data: {
+            name: name.trim(),
+            config: buildConfig(),
+            event_types: Array.from(selectedEvents),
+            enabled: params.editEnabled === "true",
+          },
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["notify"] });
+            Alert.alert("保存成功", "通知渠道已更新", [
+              { text: "好", onPress: () => router.back() },
+            ]);
+          },
+          onError: (err: any) => Alert.alert("保存失败", err.message),
+        },
+      );
+      return;
+    }
+
     createMutation.mutate(
       {
         kind,
@@ -186,6 +248,8 @@ export default function NotificationCreateScreen() {
       },
     );
   };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
     <KeyboardAvoidingView
@@ -237,12 +301,14 @@ export default function NotificationCreateScreen() {
                 style={[
                   styles.kindChip,
                   kind === ck.key && styles.kindChipActive,
+                  isEdit && kind !== ck.key && styles.kindChipEditDisabled,
                 ]}
                 onPress={() => {
+                  if (isEdit) return; // Don't allow changing kind in edit mode
                   setKind(ck.key);
                   setConfigValues({});
                 }}
-                activeOpacity={0.7}
+                activeOpacity={isEdit ? 1 : 0.7}
               >
                 <Ionicons
                   name={ck.icon as keyof typeof Ionicons.glyphMap}
@@ -337,14 +403,16 @@ export default function NotificationCreateScreen() {
         <TouchableOpacity
           style={[
             styles.submitBtn,
-            createMutation.isPending && styles.submitBtnDisabled,
+            isPending && styles.submitBtnDisabled,
           ]}
-          onPress={handleCreate}
-          disabled={createMutation.isPending}
+          onPress={handleSubmit}
+          disabled={isPending}
           activeOpacity={0.8}
         >
           <Text style={styles.submitText}>
-            {createMutation.isPending ? "创建中..." : "创建渠道"}
+            {isEdit
+              ? isPending ? "保存中..." : "保存修改"
+              : isPending ? "创建中..." : "创建渠道"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -416,6 +484,9 @@ const styles = StyleSheet.create({
   kindChipActive: {
     backgroundColor: colors.primarySoft,
     borderColor: colors.primary,
+  },
+  kindChipEditDisabled: {
+    opacity: 0.4,
   },
   kindChipText: {
     fontSize: fontSize.xs,

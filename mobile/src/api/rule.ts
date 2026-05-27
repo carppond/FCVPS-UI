@@ -5,6 +5,7 @@ import type {
   CustomRule,
   RuleTemplate,
   CreateRuleRequest,
+  UpdateRuleRequest,
 } from "../types/api";
 
 export function useRulesQuery() {
@@ -28,6 +29,20 @@ export function useCreateRule() {
     mutationFn: (data: CreateRuleRequest) =>
       apiFetch("/api/rules", {
         method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rule"] });
+    },
+  });
+}
+
+export function useUpdateRule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateRuleRequest }) =>
+      apiFetch(`/api/rules/${id}`, {
+        method: "PUT",
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
