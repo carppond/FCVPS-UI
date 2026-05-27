@@ -1,0 +1,11 @@
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "../lib/api-client";
+import type { PagedResponse, Node } from "../types/api";
+
+export function useNodesQuery() {
+  return useQuery({
+    queryKey: ["node", "list"],
+    queryFn: () =>
+      apiFetch<PagedResponse<Node>>("/api/nodes?page=1&page_size=500"),
+  });
+}

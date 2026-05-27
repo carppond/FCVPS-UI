@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "拾光VPS",
+    "slug": "shiguang-vps",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "shiguang-vps",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shiguang.vps"
+    },
+    "android": {
+      "package": "com.shiguang.vps",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f0f11",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
+  }
+}
