@@ -106,6 +106,11 @@ func ProduceClashYAML(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, 
 	// groups. Without this, mihomo rejects the config with "proxy not found".
 	ensureMissingProxyGroups(root, proxyNames)
 
+	// Deduplicate rules and ensure MATCH is always last (and appears only
+	// once). The rule_injector may produce duplicates when user custom rules
+	// overlap with the seeded MATCH or with each other.
+	deduplicateRules(root)
+
 	return util.MarshalIndent(root)
 }
 
@@ -289,6 +294,53 @@ func ensureMissingProxyGroups(root *yaml.Node, proxyNames []string) {
 		groupsNode.Content = append(groupsNode.Content, m)
 		existing[name] = true
 	}
+}
+
+// deduplicateRules removes duplicate rule entries and ensures MATCH rules
+// appear exactly once at the very end. Without this, prepend/append injection
+// can produce configs where the same RULE-SET line appears twice or multiple
+// MATCH lines confuse mihomo.
+func deduplicateRules(root *yaml.Node) {
+	if root == nil || root.Kind != yaml.MappingNode {
+		return
+	}
+	var rulesNode *yaml.Node
+	for i := 0; i+1 < len(root.Content); i += 2 {
+		if root.Content[i].Kind == yaml.ScalarNode && root.Content[i].Value == "rules" {
+			rulesNode = root.Content[i+1]
+			break
+		}
+	}
+	if rulesNode == nil || rulesNode.Kind != yaml.SequenceNode {
+		return
+	}
+
+	seen := make(map[string]bool)
+	var deduped []*yaml.Node
+	var matchRule *yaml.Node
+
+	for _, r := range rulesNode.Content {
+		if r.Kind != yaml.ScalarNode {
+			deduped = append(deduped, r)
+			continue
+		}
+		val := r.Value
+		if seen[val] {
+			continue
+		}
+		seen[val] = true
+		if strings.HasPrefix(val, "MATCH,") || val == "MATCH" {
+			matchRule = r
+			continue
+		}
+		deduped = append(deduped, r)
+	}
+
+	// MATCH always goes last as the catch-all.
+	if matchRule != nil {
+		deduped = append(deduped, matchRule)
+	}
+	rulesNode.Content = deduped
 }
 
 // buildRuleProviders maps RuleSetRecord -> Clash `rule-providers:` mapping.

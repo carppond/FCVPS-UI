@@ -748,6 +748,7 @@ func mountRuleSetRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PUT /api/rule-sets/{id}", required(http.HandlerFunc(rh.Update)))
 	mux.Handle("PATCH /api/rule-sets/{id}", required(http.HandlerFunc(rh.Update)))
 	mux.Handle("DELETE /api/rule-sets/{id}", required(http.HandlerFunc(rh.Delete)))
+	mux.Handle("POST /api/rule-sets/sync-all", required(http.HandlerFunc(rh.SyncAllHTTP)))
 	mux.Handle("POST /api/rule-sets/{id}/sync", required(http.HandlerFunc(rh.Sync)))
 }
 

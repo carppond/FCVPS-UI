@@ -202,7 +202,7 @@ function RuleSetRow({ rs, onEdit }: RuleSetRowProps) {
           <span className="flex items-center gap-2">
             <SyncStatusDot status={rs.last_sync_status} />
             <span className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-              {formatRelativeTime(rs.last_synced_at * 1000)}
+              {formatRelativeTime(rs.last_synced_at)}
             </span>
           </span>
         ) : (

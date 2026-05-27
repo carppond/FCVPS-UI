@@ -226,6 +226,17 @@ func (h *RuleSetHandler) Presets(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// SyncAllHTTP implements POST /api/rule-sets/sync-all.
+func (h *RuleSetHandler) SyncAllHTTP(w http.ResponseWriter, r *http.Request) {
+	traceID := middleware.TraceIDFromContext(r.Context())
+	user := auth.MustUserFromContext(r.Context())
+	ok, fail := h.SyncAll(r.Context(), user.ID)
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[map[string]int]{
+		Data:      map[string]int{"ok": ok, "failed": fail},
+		RequestID: traceID,
+	})
+}
+
 // SyncAll 是后台 cron 调度器调用的入口（每日 03:00 UTC）。它遍历所有
 // enabled=1 的规则集，逐个 HEAD 校验。失败的条目把错误记到 last_sync_error，
 // 但循环不会中断。

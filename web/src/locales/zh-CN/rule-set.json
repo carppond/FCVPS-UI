@@ -4,6 +4,7 @@
   "list": {
     "search_placeholder": "按名称搜索…",
     "add": "新建规则集",
+    "sync_all": "一键同步",
     "from_preset": "从预设",
     "empty_title": "尚未添加规则集",
     "empty_description": "规则集会以 rule-providers 形式写入 mihomo 配置，由客户端定期拉取。",
@@ -75,7 +76,8 @@
     "create_ok": "规则集已创建",
     "update_ok": "规则集已更新",
     "delete_ok": "规则集已删除",
-    "sync_ok": "已触发同步"
+    "sync_ok": "已触发同步",
+    "sync_all_ok": "同步完成：{{ok}} 成功，{{failed}} 失败"
   },
   "error": {
     "load_failed": "加载规则集失败",

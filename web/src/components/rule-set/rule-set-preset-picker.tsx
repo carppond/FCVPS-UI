@@ -92,7 +92,7 @@ export function RuleSetPresetPicker({
         if (!preset) continue;
         try {
           await createMutation.mutateAsync({
-            name: preset.name,
+            name: preset.id,
             behavior: preset.behavior,
             format: preset.format,
             url: preset.url,

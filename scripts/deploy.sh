@@ -2,9 +2,9 @@
 # deploy.sh — 一键编译 + 上传 + 部署拾光VPS 到远程 VPS
 #
 # 用法:
-#   ./scripts/deploy.sh
+#   ./scripts/deploy.sh           # 首次部署（含 Nginx + SSL）
+#   ./scripts/deploy.sh --update  # 更新代码（只替换二进制+前端，重启服务）
 #
-# 会交互式询问: VPS IP、SSH 端口、SSH 用户、域名
 # 不影响已有的 3X-UI 等服务
 set -euo pipefail
 
@@ -22,10 +22,20 @@ log()  { echo -e "${GREEN}[deploy]${NC} $*"; }
 warn() { echo -e "${YELLOW}[deploy]${NC} $*"; }
 err()  { echo -e "${RED}[deploy]${NC} $*" >&2; }
 
+# ── 模式判断 ──
+UPDATE_ONLY=false
+if [[ "${1:-}" == "--update" || "${1:-}" == "-u" ]]; then
+  UPDATE_ONLY=true
+fi
+
 # ── 交互输入 ──
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
-echo -e "${CYAN}   拾光VPS 一键部署脚本${NC}"
+if $UPDATE_ONLY; then
+  echo -e "${CYAN}   拾光VPS 更新部署（跳过 Nginx/SSL）${NC}"
+else
+  echo -e "${CYAN}   拾光VPS 首次部署${NC}"
+fi
 echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
 echo ""
 
@@ -34,27 +44,39 @@ read -rp "SSH 端口 [22]: " SSH_PORT
 SSH_PORT="${SSH_PORT:-22}"
 read -rp "SSH 用户 [root]: " SSH_USER
 SSH_USER="${SSH_USER:-root}"
-read -rp "域名 [your-hub.example.com]: " DOMAIN
-DOMAIN="${DOMAIN:-your-hub.example.com}"
-read -rp "邮箱 (SSL 证书用) [admin@example.com]: " EMAIL
-EMAIL="${EMAIL:-admin@example.com}"
 read -rp "VPS 架构 amd64/arm64 [amd64]: " VPS_ARCH
 VPS_ARCH="${VPS_ARCH:-amd64}"
 
-SSH_CMD="ssh -p $SSH_PORT -o StrictHostKeyChecking=accept-new ${SSH_USER}@${VPS_IP}"
-SCP_CMD="scp -P $SSH_PORT"
+if ! $UPDATE_ONLY; then
+  read -rp "域名 [your-hub.example.com]: " DOMAIN
+  DOMAIN="${DOMAIN:-your-hub.example.com}"
+  read -rp "邮箱 (SSL 证书用) [admin@example.com]: " EMAIL
+  EMAIL="${EMAIL:-admin@example.com}"
+fi
 
 REMOTE_DIR="/opt/shiguang-vps"
 
+# SSH ControlMaster — 只输一次密码，后续复用连接
+SSH_SOCKET="/tmp/shiguang-deploy-$$"
+SSH_COMMON="-o StrictHostKeyChecking=accept-new -o ControlMaster=auto -o ControlPath=${SSH_SOCKET} -o ControlPersist=300"
+SSH_CMD="ssh -p $SSH_PORT ${SSH_COMMON} ${SSH_USER}@${VPS_IP}"
+SCP_OPTS="-P $SSH_PORT ${SSH_COMMON}"
+
+cleanup() { ssh -p "$SSH_PORT" -O exit -o ControlPath="${SSH_SOCKET}" "${SSH_USER}@${VPS_IP}" 2>/dev/null || true; }
+trap cleanup EXIT
+
 echo ""
 log "目标: ${SSH_USER}@${VPS_IP}:${SSH_PORT}"
-log "域名: ${DOMAIN}"
 log "架构: linux/${VPS_ARCH}"
-log "远程目录: ${REMOTE_DIR}"
+log "模式: $($UPDATE_ONLY && echo '更新（跳过 Nginx/SSL）' || echo '首次部署')"
 echo ""
 read -rp "确认开始? [Y/n] " CONFIRM
 CONFIRM="${CONFIRM:-Y}"
 [[ "$CONFIRM" =~ ^[Yy]$ ]] || { warn "已取消"; exit 0; }
+
+# 建立 SSH 连接（输一次密码）
+log "建立 SSH 连接..."
+$SSH_CMD echo connected
 
 # ── Step 1: 编译后端 ──
 log "编译后端 (linux/${VPS_ARCH})..."
@@ -88,22 +110,24 @@ log "前端编译完成"
 log "创建远程目录..."
 $SSH_CMD "mkdir -p ${REMOTE_DIR}/data ${REMOTE_DIR}/web"
 
-# ── Step 4: 上传文件 ──
+# ── Step 4: 停止服务 + 上传文件 ──
+log "停止服务（避免覆盖运行中的二进制）..."
+$SSH_CMD "systemctl stop shiguang-vps 2>/dev/null || true"
+
 log "上传后端二进制..."
-$SCP_CMD dist/hub-linux-"$VPS_ARCH" "${SSH_USER}@${VPS_IP}:${REMOTE_DIR}/hub"
-$SCP_CMD dist/agent-linux-"$VPS_ARCH" "${SSH_USER}@${VPS_IP}:${REMOTE_DIR}/agent"
+scp ${SCP_OPTS} dist/hub-linux-"$VPS_ARCH" "${SSH_USER}@${VPS_IP}:${REMOTE_DIR}/hub"
+scp ${SCP_OPTS} dist/agent-linux-"$VPS_ARCH" "${SSH_USER}@${VPS_IP}:${REMOTE_DIR}/agent"
 
 log "上传前端文件..."
-# 先打包再传，比 scp -r 快很多
 tar -czf /tmp/shiguang-web.tar.gz -C web/dist .
-$SCP_CMD /tmp/shiguang-web.tar.gz "${SSH_USER}@${VPS_IP}:/tmp/shiguang-web.tar.gz"
+scp ${SCP_OPTS} /tmp/shiguang-web.tar.gz "${SSH_USER}@${VPS_IP}:/tmp/shiguang-web.tar.gz"
 $SSH_CMD "rm -rf ${REMOTE_DIR}/web/* && tar -xzf /tmp/shiguang-web.tar.gz -C ${REMOTE_DIR}/web && rm -f /tmp/shiguang-web.tar.gz"
 rm -f /tmp/shiguang-web.tar.gz
 
 $SSH_CMD "chmod +x ${REMOTE_DIR}/hub ${REMOTE_DIR}/agent"
 log "文件上传完成"
 
-# ── Step 5: 创建 systemd 服务 ──
+# ── Step 5: 创建/更新 systemd 服务 ──
 log "配置 systemd 服务..."
 $SSH_CMD "cat > /etc/systemd/system/shiguang-vps.service << 'UNIT'
 [Unit]
@@ -128,7 +152,6 @@ systemctl enable shiguang-vps
 systemctl restart shiguang-vps
 sleep 2
 "
-
 log "服务已启动"
 
 # ── Step 6: 获取初始密码 ──
@@ -146,58 +169,63 @@ else
   warn "未找到初始密码（可能非首次部署，密码沿用之前的）"
 fi
 
-# ── Step 7: 配置 Nginx ──
+# ── 更新模式到此结束 ──
+if $UPDATE_ONLY; then
+  STATUS=$($SSH_CMD "systemctl is-active shiguang-vps" || true)
+  if [[ "$STATUS" == "active" ]]; then
+    echo ""
+    echo -e "${GREEN}═══════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}  更新完成！服务已重启${NC}"
+    echo -e "${GREEN}═══════════════════════════════════════════════${NC}"
+    echo ""
+  else
+    err "服务未正常启动，请检查: ssh ${SSH_USER}@${VPS_IP} journalctl -u shiguang-vps -n 30"
+  fi
+  exit 0
+fi
+
+# ── Step 7: 配置 Nginx（仅首次） ──
 log "配置 Nginx..."
-$SSH_CMD "
-# 安装 nginx + certbot（如果没有）
-if ! command -v nginx &>/dev/null; then
-  apt-get update -qq && apt-get install -y -qq nginx
-fi
-if ! command -v certbot &>/dev/null; then
-  apt-get install -y -qq certbot python3-certbot-nginx
-fi
-
-cat > /etc/nginx/sites-available/shiguang-vps << 'NGINX'
+# 生成 Nginx 配置到本地临时文件，避免远程 shell 转义问题
+NGINX_CONF=$(mktemp)
+cat > "$NGINX_CONF" << 'NGINXEOF'
 server {
-    listen 80;
-    server_name ${DOMAIN};
+    server_name DOMAIN_PLACEHOLDER;
 
-    root ${REMOTE_DIR}/web;
+    root /opt/shiguang-vps/web;
     index index.html;
 
-    # 请求体大小（备份恢复上传用）
     client_max_body_size 50m;
 
-    # API 反代
     location /api/ {
         proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host \\\$host;
-        proxy_set_header X-Real-IP \\\$remote_addr;
-        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \\\$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \\\$http_upgrade;
-        proxy_set_header Connection \"upgrade\";
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_read_timeout 86400;
     }
 
     location /download/ {
         proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host \\\$host;
-        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 
-    location ~ ^/s/[A-Za-z0-9_-]+\\\$ {
+    location ~ ^/s/[A-Za-z0-9_-]+$ {
         proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host \\\$host;
-        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 
     location /api/v1/nezha {
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \\\$http_upgrade;
-        proxy_set_header Connection \"upgrade\";
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_read_timeout 86400;
     }
 
@@ -206,20 +234,40 @@ server {
     }
 
     location / {
-        try_files \\\$uri \\\$uri/ /index.html;
+        try_files $uri $uri/ /index.html;
     }
-}
-NGINX
 
+    listen 80;
+}
+NGINXEOF
+
+# 替换域名占位符
+sed -i.bak "s/DOMAIN_PLACEHOLDER/${DOMAIN}/g" "$NGINX_CONF"
+rm -f "${NGINX_CONF}.bak"
+
+$SSH_CMD "
+if ! command -v nginx &>/dev/null; then
+  apt-get update -qq && apt-get install -y -qq nginx
+fi
+if ! command -v certbot &>/dev/null; then
+  apt-get install -y -qq certbot python3-certbot-nginx
+fi
+"
+
+# 上传 Nginx 配置（避免 shell 转义问题）
+scp ${SCP_OPTS} "$NGINX_CONF" "${SSH_USER}@${VPS_IP}:/etc/nginx/sites-available/shiguang-vps"
+rm -f "$NGINX_CONF"
+
+$SSH_CMD "
 ln -sf /etc/nginx/sites-available/shiguang-vps /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 nginx -t && systemctl reload nginx
 "
 log "Nginx 配置完成"
 
-# ── Step 8: SSL 证书 ──
+# ── Step 8: SSL 证书（仅首次） ──
 log "申请 SSL 证书..."
-$SSH_CMD "certbot --nginx -d ${DOMAIN} --non-interactive --agree-tos -m ${EMAIL} 2>&1 || echo '[deploy] certbot 可能已有证书或域名未解析'"
+$SSH_CMD "certbot --nginx -d ${DOMAIN} --non-interactive --agree-tos -m ${EMAIL} 2>&1 || echo '[deploy] certbot: 可能已有证书或域名未解析'"
 
 # ── Step 9: 验证 ──
 log "验证部署..."
@@ -235,7 +283,7 @@ if [[ "$STATUS" == "active" ]]; then
   echo -e "  数据目录:  ${REMOTE_DIR}/data/"
   echo -e "  日志查看:  ssh ${SSH_USER}@${VPS_IP} journalctl -u shiguang-vps -f"
   echo ""
-  echo -e "  后续更新只需重新运行: ${YELLOW}./scripts/deploy.sh${NC}"
+  echo -e "  后续更新:  ${YELLOW}./scripts/deploy.sh --update${NC}"
   echo ""
 else
   err "服务未正常启动，请检查: ssh ${SSH_USER}@${VPS_IP} journalctl -u shiguang-vps -n 30"

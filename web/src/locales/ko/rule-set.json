@@ -8,7 +8,8 @@
     "empty_title": "규칙 세트가 없습니다",
     "empty_description": "규칙 세트는 mihomo 설정의 rule-providers 로 출력되며 클라이언트가 주기적으로 가져옵니다.",
     "never_synced": "동기화된 적 없음",
-    "rows_drag_hint": "작업"
+    "rows_drag_hint": "작업",
+    "sync_all": "전체 동기화"
   },
   "columns": {
     "name": "이름",
@@ -75,7 +76,8 @@
     "create_ok": "규칙 세트를 만들었습니다",
     "update_ok": "규칙 세트를 업데이트했습니다",
     "delete_ok": "규칙 세트를 삭제했습니다",
-    "sync_ok": "동기화를 시작했습니다"
+    "sync_ok": "동기화를 시작했습니다",
+    "sync_all_ok": "동기화 완료: {{ok}} 성공, {{failed}} 실패"
   },
   "error": {
     "load_failed": "규칙 세트를 불러오지 못했습니다",

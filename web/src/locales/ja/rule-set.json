@@ -8,7 +8,8 @@
     "empty_title": "ルールセットがありません",
     "empty_description": "ルールセットは mihomo の rule-providers として出力され、クライアントが定期的に取得します。",
     "never_synced": "未同期",
-    "rows_drag_hint": "操作"
+    "rows_drag_hint": "操作",
+    "sync_all": "一括同期"
   },
   "columns": {
     "name": "名前",
@@ -75,7 +76,8 @@
     "create_ok": "ルールセットを作成しました",
     "update_ok": "ルールセットを更新しました",
     "delete_ok": "ルールセットを削除しました",
-    "sync_ok": "同期を開始しました"
+    "sync_ok": "同期を開始しました",
+    "sync_all_ok": "同期完了：{{ok}} 成功、{{failed}} 失敗"
   },
   "error": {
     "load_failed": "ルールセットの読み込みに失敗しました",

@@ -108,6 +108,19 @@ export function useDeleteRuleSet() {
   });
 }
 
+/** POST /api/rule-sets/sync-all — sync all enabled rule sets. */
+export function useSyncAllRuleSets() {
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<{ ok: number; failed: number }>("/api/rule-sets/sync-all", {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.ruleSet.all() });
+    },
+  });
+}
+
 /**
  * POST /api/rule-sets/{id}/sync — immediate sync (HEAD probe; backend updates
  * last_synced_at / last_sync_status accordingly).

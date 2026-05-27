@@ -295,9 +295,9 @@ func TestProduceClashYAML_ReplaceModeWipesDefaults(t *testing.T) {
 	}
 }
 
-// TestProduceClashYAML_AppendModeKeepsDefaultMatchFirst guards against a
-// regression where append mode reorders the rules list.
-func TestProduceClashYAML_AppendModeKeepsDefaultMatchFirst(t *testing.T) {
+// TestProduceClashYAML_MatchAlwaysLast verifies MATCH is always the final
+// rule. Clash/mihomo requires MATCH as the catch-all tail.
+func TestProduceClashYAML_MatchAlwaysLast(t *testing.T) {
 	input := &ClashRenderInput{
 		CustomRules: []CustomRuleRecord{
 			{Name: "tail", Type: "rules", Mode: "append", Sort: 1,
@@ -309,18 +309,21 @@ func TestProduceClashYAML_AppendModeKeepsDefaultMatchFirst(t *testing.T) {
 		t.Fatalf("ProduceClashYAML: %v", err)
 	}
 	rules := decodeRulesList(t, out)
-	idxMatch := -1
-	idxTail := -1
-	for i, r := range rules {
-		switch r {
-		case "MATCH,🚀 节点选择":
-			idxMatch = i
-		case "DOMAIN-SUFFIX,tail.example,DIRECT":
-			idxTail = i
+	if len(rules) < 2 {
+		t.Fatalf("expected at least 2 rules, got %d", len(rules))
+	}
+	last := rules[len(rules)-1]
+	if last != "MATCH,🚀 节点选择" {
+		t.Errorf("MATCH should be last rule, got %q; rules: %v", last, rules)
+	}
+	found := false
+	for _, r := range rules {
+		if r == "DOMAIN-SUFFIX,tail.example,DIRECT" {
+			found = true
 		}
 	}
-	if idxMatch < 0 || idxTail < 0 || idxMatch > idxTail {
-		t.Errorf("append mode should keep default MATCH first then user lines: %v", rules)
+	if !found {
+		t.Errorf("appended rule missing: %v", rules)
 	}
 }
 

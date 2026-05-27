@@ -8,7 +8,8 @@
     "empty_title": "No rule sets yet",
     "empty_description": "Rule sets are emitted as rule-providers in the mihomo config; the client fetches them on its own schedule.",
     "never_synced": "Never synced",
-    "rows_drag_hint": "Actions"
+    "rows_drag_hint": "Actions",
+    "sync_all": "Sync All"
   },
   "columns": {
     "name": "Name",
@@ -75,7 +76,8 @@
     "create_ok": "Rule set created",
     "update_ok": "Rule set updated",
     "delete_ok": "Rule set deleted",
-    "sync_ok": "Sync triggered"
+    "sync_ok": "Sync triggered",
+    "sync_all_ok": "Sync complete: {{ok}} ok, {{failed}} failed"
   },
   "error": {
     "load_failed": "Failed to load rule sets",

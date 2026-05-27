@@ -1,14 +1,17 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { LayoutTemplate, Plus, Search } from "lucide-react";
+import { LayoutTemplate, Plus, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useApiError } from "@/hooks/use-api-error";
 import { RuleSetList } from "@/components/rule-set/rule-set-list";
 import { RuleSetFormDialog } from "@/components/rule-set/rule-set-form-dialog";
 import { RuleSetPresetPicker } from "@/components/rule-set/rule-set-preset-picker";
-import { useRuleSets } from "@/api/rule-set";
+import { useRuleSets, useSyncAllRuleSets } from "@/api/rule-set";
+import { cn } from "@/lib/cn";
 import type { RuleSetProvider } from "@/types/api";
 
 export const Route = createFileRoute("/_authed/rule-sets")({
@@ -26,9 +29,20 @@ function RuleSetsPage() {
   const [searchInput, setSearchInput] = React.useState("");
   const keyword = useDebounce(searchInput, 250);
 
+  const { handle: handleError } = useApiError();
   const [editing, setEditing] = React.useState<RuleSetProvider | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [presetOpen, setPresetOpen] = React.useState(false);
+  const syncAllMutation = useSyncAllRuleSets();
+
+  const handleSyncAll = async () => {
+    try {
+      const res = await syncAllMutation.mutateAsync();
+      toast.success(t("rule-set:toast.sync_all_ok", { ok: res.ok, failed: res.failed }));
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
   const { data, isLoading, isError, error, refetch } = useRuleSets({
     page: 1,
@@ -61,6 +75,15 @@ function RuleSetsPage() {
                 className="w-64 pl-7"
               />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncAll}
+              disabled={syncAllMutation.isPending}
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", syncAllMutation.isPending && "animate-spin")} />
+              {t("rule-set:list.sync_all")}
+            </Button>
             <Button
               variant="outline"
               size="sm"
