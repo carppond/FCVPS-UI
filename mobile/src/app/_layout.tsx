@@ -55,6 +55,9 @@ export default function RootLayout() {
         <Stack.Screen name="pipelines" options={{ title: "流水线" }} />
         <Stack.Screen name="scripts" options={{ title: "脚本" }} />
         <Stack.Screen name="agents-page" options={{ title: "探针" }} />
+        <Stack.Screen name="agent/[id]" options={{ title: "探针详情" }} />
+        <Stack.Screen name="agent/create" options={{ title: "新建探针", presentation: "modal" }} />
+        <Stack.Screen name="agent/edit" options={{ title: "编辑探针" }} />
         <Stack.Screen name="traffic-page" options={{ title: "流量" }} />
         <Stack.Screen name="rules-page" options={{ title: "规则" }} />
         <Stack.Screen name="settings-page" options={{ title: "设置" }} />
