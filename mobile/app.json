@@ -9,10 +9,17 @@
     "scheme": "shiguang-vps",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.shiguang.vps"
+      "bundleIdentifier": "com.shiguang.vps",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      },
+      "appleTeamId": "YOUR_TEAM_ID"
     },
     "android": {
       "package": "com.shiguang.vps",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#0f0f11",
         "foregroundImage": "./assets/android-icon-foreground.png",

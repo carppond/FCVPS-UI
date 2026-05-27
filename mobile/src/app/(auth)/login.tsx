@@ -8,7 +8,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,11 +24,10 @@ export default function LoginScreen() {
   const [showServer, setShowServer] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [autoLogging, setAutoLogging] = useState(true);
   const loginMutation = useLoginMutation();
   const setServerUrlStore = useAuthStore((s) => s.setServerUrl);
 
-  // Load saved credentials on mount + auto-login
+  // Load saved credentials on mount (fill form only, no auto-login)
   useEffect(() => {
     (async () => {
       const [savedUser, savedPass, savedServer] = await Promise.all([
@@ -40,21 +38,6 @@ export default function LoginScreen() {
       if (savedServer) setServerUrl(savedServer);
       if (savedUser) setUsername(savedUser);
       if (savedPass) setPassword(savedPass);
-
-      // Auto-login if credentials exist
-      if (savedUser && savedPass) {
-        try {
-          if (savedServer) {
-            await useAuthStore.getState().setServerUrl(savedServer);
-          }
-          await loginMutation.mutateAsync({ username: savedUser, password: savedPass });
-          router.replace("/(tabs)");
-          return;
-        } catch {
-          // Auto-login failed, show form
-        }
-      }
-      setAutoLogging(false);
     })();
   }, []);
 
@@ -81,17 +64,6 @@ export default function LoginScreen() {
       Alert.alert("登录失败", err.message || "请检查用户名和密码");
     }
   };
-
-  // Show loading while auto-login
-  if (autoLogging) {
-    return (
-      <View style={styles.autoLogin}>
-        <Text style={styles.logo}>拾光VPS</Text>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 24 }} />
-        <Text style={styles.autoLoginText}>自动登录中...</Text>
-      </View>
-    );
-  }
 
   return (
     <KeyboardAvoidingView
@@ -251,11 +223,4 @@ const styles = StyleSheet.create({
   },
   rememberText: { fontSize: fontSize.sm, color: colors.textSecondary },
   serverToggle: { fontSize: fontSize.sm, color: colors.textTertiary, textAlign: "center", marginTop: spacing.sm },
-  autoLogin: {
-    flex: 1,
-    backgroundColor: colors.bg,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  autoLoginText: { fontSize: fontSize.sm, color: colors.textTertiary, marginTop: spacing.md },
 });

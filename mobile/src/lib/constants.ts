@@ -5,4 +5,5 @@ export const STORAGE_KEYS = {
   USER: "auth_user",
   SAVED_USERNAME: "saved_username",
   SAVED_PASSWORD: "saved_password",
+  MANUAL_LOGOUT: "manual_logout",
 } as const;
