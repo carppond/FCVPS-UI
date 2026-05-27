@@ -22,9 +22,60 @@ export default function ProfileScreen() {
   const passwordMutation = useChangePassword();
   const { clearSession } = useAuthStore();
 
+  const [editUsername, setEditUsername] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editLocale, setEditLocale] = useState("");
+  const [profileDirty, setProfileDirty] = useState(false);
+
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const LOCALE_OPTIONS = [
+    { value: "zh-CN", label: "中文" },
+    { value: "en", label: "English" },
+    { value: "ja", label: "日本語" },
+    { value: "ko", label: "한국어" },
+  ];
+
+  // Sync profile data into edit fields when loaded
+  if (profile && !profileDirty && editUsername === "" && editEmail === "" && editLocale === "") {
+    setEditUsername(profile.username ?? "");
+    setEditEmail(profile.email ?? "");
+    setEditLocale(profile.locale ?? "zh-CN");
+  }
+
+  const handleProfileChange = (field: "username" | "email" | "locale", value: string) => {
+    setProfileDirty(true);
+    if (field === "username") setEditUsername(value);
+    else if (field === "email") setEditEmail(value);
+    else setEditLocale(value);
+  };
+
+  const handleSaveProfile = () => {
+    const payload: { username?: string; email?: string; locale?: string } = {};
+    if (editUsername.trim() && editUsername !== profile?.username) {
+      payload.username = editUsername.trim();
+    }
+    if (editEmail !== (profile?.email ?? "")) {
+      payload.email = editEmail.trim();
+    }
+    if (editLocale !== profile?.locale) {
+      payload.locale = editLocale;
+    }
+    if (Object.keys(payload).length === 0) {
+      Alert.alert("提示", "没有需要保存的修改");
+      return;
+    }
+    updateMutation.mutate(payload, {
+      onSuccess: () => {
+        Alert.alert("成功", "个人信息已更新");
+        setProfileDirty(false);
+        refetch();
+      },
+      onError: (err: any) => Alert.alert("更新失败", err.message),
+    });
+  };
 
   const initials = profile?.username?.slice(0, 2).toUpperCase() ?? "??";
 
@@ -96,7 +147,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Profile info card */}
+        {/* Profile info card - editable */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View
@@ -106,26 +157,49 @@ export default function ProfileScreen() {
             </View>
             <Text style={styles.cardTitle}>账号信息</Text>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>用户名</Text>
-            <Text style={styles.infoValue}>{profile?.username ?? "--"}</Text>
+          <View style={styles.field}>
+            <Text style={styles.label}>用户名</Text>
+            <TextInput
+              style={styles.input}
+              value={editUsername}
+              onChangeText={(v) => handleProfileChange("username", v)}
+              placeholder="请输入用户名"
+              placeholderTextColor={colors.textDisabled}
+            />
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>邮箱</Text>
-            <Text style={styles.infoValue}>
-              {profile?.email || "未设置"}
-            </Text>
+          <View style={styles.field}>
+            <Text style={styles.label}>邮箱</Text>
+            <TextInput
+              style={styles.input}
+              value={editEmail}
+              onChangeText={(v) => handleProfileChange("email", v)}
+              placeholder="请输入邮箱"
+              placeholderTextColor={colors.textDisabled}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>语言</Text>
+            <View style={styles.localeRow}>
+              {LOCALE_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[styles.localeChip, editLocale === opt.value && styles.localeChipActive]}
+                  onPress={() => handleProfileChange("locale", opt.value)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.localeChipText, editLocale === opt.value && styles.localeChipTextActive]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>角色</Text>
             <Text style={styles.infoValue}>
               {profile?.role ?? "--"}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>语言</Text>
-            <Text style={styles.infoValue}>
-              {profile?.locale ?? "--"}
             </Text>
           </View>
           <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
@@ -143,6 +217,16 @@ export default function ProfileScreen() {
               {profile?.totp_enabled ? "已开启" : "未开启"}
             </Text>
           </View>
+          <TouchableOpacity
+            style={[styles.saveBtn, updateMutation.isPending && styles.submitBtnDisabled]}
+            onPress={handleSaveProfile}
+            disabled={updateMutation.isPending}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.saveBtnText}>
+              {updateMutation.isPending ? "保存中..." : "保存修改"}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Change password */}
@@ -361,6 +445,32 @@ const styles = StyleSheet.create({
   },
   submitBtnDisabled: { opacity: 0.5 },
   submitText: { fontSize: fontSize.lg, fontWeight: "700", color: "#fff" },
+  localeRow: {
+    flexDirection: "row", flexWrap: "wrap", gap: spacing.sm,
+  },
+  localeChip: {
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+    borderRadius: radius.lg, backgroundColor: colors.elevated,
+    borderWidth: 1, borderColor: colors.borderStrong,
+  },
+  localeChipActive: {
+    backgroundColor: colors.primary, borderColor: colors.primary,
+  },
+  localeChipText: {
+    fontSize: fontSize.sm, fontWeight: "600", color: colors.textTertiary,
+  },
+  localeChipTextActive: {
+    color: "#fff",
+  },
+  saveBtn: {
+    height: 50,
+    borderRadius: radius.lg,
+    backgroundColor: colors.info,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: spacing.md,
+  },
+  saveBtnText: { fontSize: fontSize.lg, fontWeight: "700", color: "#fff" },
   logoutBtn: {
     flexDirection: "row",
     alignItems: "center",

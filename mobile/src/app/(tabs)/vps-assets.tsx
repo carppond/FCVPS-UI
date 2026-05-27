@@ -1,5 +1,5 @@
-import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, Modal } from "react-native";
-import { useState, useCallback } from "react";
+import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, Modal, TextInput, ScrollView } from "react-native";
+import { useState, useCallback, useMemo } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
@@ -47,6 +47,13 @@ export default function VpsAssetsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedVps, setSelectedVps] = useState<VpsAsset | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("全部");
+
+  const STATUS_FILTERS = ["全部", "正常", "即将到期", "已到期"] as const;
+  const STATUS_MAP: Record<string, VpsAssetStatus | null> = {
+    "全部": null, "正常": "normal", "即将到期": "expiring", "已到期": "expired",
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -54,7 +61,25 @@ export default function VpsAssetsScreen() {
     setRefreshing(false);
   }, []);
 
-  const items = data?.items ?? [];
+  const allItems = data?.items ?? [];
+
+  const items = useMemo(() => {
+    let filtered = allItems;
+    const mappedStatus = STATUS_MAP[statusFilter];
+    if (mappedStatus) {
+      filtered = filtered.filter((v) => v.status === mappedStatus);
+    }
+    const q = search.trim().toLowerCase();
+    if (q) {
+      filtered = filtered.filter((v) => {
+        const name = v.name?.toLowerCase() ?? "";
+        const provider = v.provider?.toLowerCase() ?? "";
+        const ip = v.ip?.toLowerCase() ?? "";
+        return name.includes(q) || provider.includes(q) || ip.includes(q);
+      });
+    }
+    return filtered;
+  }, [allItems, search, statusFilter]);
 
   const copyIp = async (ip: string) => {
     await Clipboard.setStringAsync(ip);
@@ -101,20 +126,53 @@ export default function VpsAssetsScreen() {
     <View style={styles.wrapper}>
       <FlatList
         style={styles.container}
-        contentContainerStyle={items.length === 0 ? styles.empty : styles.list}
+        contentContainerStyle={items.length === 0 && !search && statusFilter === "全部" ? styles.empty : styles.list}
         data={items}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         ListHeaderComponent={
-          summary.data ? (
-            <View style={styles.summaryRow}>
-              <SumChip label="总数" value={String(summary.data.total)} />
-              <SumChip label="即将到期" value={String(summary.data.expiring)} color={summary.data.expiring > 0 ? colors.warning : undefined} />
-              <SumChip label="已到期" value={String(summary.data.expired)} color={summary.data.expired > 0 ? colors.error : undefined} />
-            </View>
-          ) : null
+          <View>
+            {summary.data ? (
+              <View style={styles.summaryRow}>
+                <SumChip label="总数" value={String(summary.data.total)} />
+                <SumChip label="即将到期" value={String(summary.data.expiring)} color={summary.data.expiring > 0 ? colors.warning : undefined} />
+                <SumChip label="已到期" value={String(summary.data.expired)} color={summary.data.expired > 0 ? colors.error : undefined} />
+              </View>
+            ) : null}
+            {allItems.length > 0 ? (
+              <>
+                <View style={styles.searchBar}>
+                  <Ionicons name="search-outline" size={16} color={colors.textTertiary} />
+                  <TextInput
+                    style={styles.searchInput}
+                    value={search}
+                    onChangeText={setSearch}
+                    placeholder="搜索 VPS..."
+                    placeholderTextColor={colors.textDisabled}
+                  />
+                  {search ? (
+                    <TouchableOpacity onPress={() => setSearch("")}>
+                      <Ionicons name="close-circle" size={16} color={colors.textDisabled} />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterRowContent}>
+                  {STATUS_FILTERS.map((s) => (
+                    <TouchableOpacity
+                      key={s}
+                      style={[styles.filterChip, statusFilter === s && styles.filterChipActive]}
+                      onPress={() => setStatusFilter(s)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.filterChipText, statusFilter === s && styles.filterChipTextActive]}>{s}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </>
+            ) : null}
+          </View>
         }
         ListEmptyComponent={
           !isLoading ? (
@@ -207,6 +265,31 @@ const styles = StyleSheet.create({
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyBox: { alignItems: "center", gap: spacing.md },
   emptyText: { fontSize: fontSize.base, color: colors.textTertiary },
+  searchBar: {
+    flexDirection: "row", alignItems: "center", gap: spacing.sm,
+    backgroundColor: colors.surface, borderRadius: radius.lg,
+    borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: spacing.md, height: 40, marginBottom: spacing.md,
+  },
+  searchInput: {
+    flex: 1, fontSize: fontSize.sm, color: colors.textPrimary,
+  },
+  filterRow: { marginBottom: spacing.md },
+  filterRowContent: { gap: spacing.sm },
+  filterChip: {
+    paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
+    borderRadius: radius.lg, backgroundColor: colors.surface,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  filterChipActive: {
+    backgroundColor: colors.primary, borderColor: colors.primary,
+  },
+  filterChipText: {
+    fontSize: fontSize.xs, fontWeight: "600", color: colors.textTertiary,
+  },
+  filterChipTextActive: {
+    color: "#fff",
+  },
   summaryRow: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.lg },
   sumChip: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.md, alignItems: "center" },
   sumLabel: { fontSize: fontSize.xs, color: colors.textTertiary, fontWeight: "600", textTransform: "uppercase" },

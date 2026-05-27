@@ -1,5 +1,5 @@
-import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert } from "react-native";
-import { useState, useCallback } from "react";
+import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, TextInput, ScrollView } from "react-native";
+import { useState, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useNodesQuery, useTcpingMutation } from "../../api/node";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
@@ -23,6 +23,8 @@ export default function NodesScreen() {
   const tcpingMutation = useTcpingMutation();
   const [refreshing, setRefreshing] = useState(false);
   const [latencyMap, setLatencyMap] = useState<Record<string, TCPingResult>>({});
+  const [search, setSearch] = useState("");
+  const [selectedProtocol, setSelectedProtocol] = useState<string>("全部");
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -30,7 +32,29 @@ export default function NodesScreen() {
     setRefreshing(false);
   }, []);
 
-  const items = data?.items ?? [];
+  const allItems = data?.items ?? [];
+
+  const protocols = useMemo(() => {
+    const set = new Set(allItems.map((n) => n.protocol));
+    return ["全部", ...Array.from(set)];
+  }, [allItems]);
+
+  const items = useMemo(() => {
+    let filtered = allItems;
+    if (selectedProtocol !== "全部") {
+      filtered = filtered.filter((n) => n.protocol === selectedProtocol);
+    }
+    const q = search.trim().toLowerCase();
+    if (q) {
+      filtered = filtered.filter((n) => {
+        const tag = n.tag?.toLowerCase() ?? "";
+        const server = n.server?.toLowerCase() ?? "";
+        const tags = n.tags?.join(" ").toLowerCase() ?? "";
+        return tag.includes(q) || server.includes(q) || tags.includes(q);
+      });
+    }
+    return filtered;
+  }, [allItems, search, selectedProtocol]);
 
   const handleTcping = () => {
     if (items.length === 0) {
@@ -57,25 +81,56 @@ export default function NodesScreen() {
   return (
     <FlatList
       style={styles.container}
-      contentContainerStyle={items.length === 0 ? styles.empty : styles.list}
+      contentContainerStyle={items.length === 0 && !search && selectedProtocol === "全部" ? styles.empty : styles.list}
       data={items}
       keyExtractor={(item) => item.id}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
       ListHeaderComponent={
-        items.length > 0 ? (
-          <TouchableOpacity
-            style={[styles.tcpingBtn, tcpingMutation.isPending && styles.tcpingBtnDisabled]}
-            onPress={handleTcping}
-            disabled={tcpingMutation.isPending}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="speedometer-outline" size={16} color="#fff" />
-            <Text style={styles.tcpingBtnText}>
-              {tcpingMutation.isPending ? "测速中..." : "测速"}
-            </Text>
-          </TouchableOpacity>
+        allItems.length > 0 ? (
+          <View>
+            <View style={styles.searchBar}>
+              <Ionicons name="search-outline" size={16} color={colors.textTertiary} />
+              <TextInput
+                style={styles.searchInput}
+                value={search}
+                onChangeText={setSearch}
+                placeholder="搜索节点..."
+                placeholderTextColor={colors.textDisabled}
+              />
+              {search ? (
+                <TouchableOpacity onPress={() => setSearch("")}>
+                  <Ionicons name="close-circle" size={16} color={colors.textDisabled} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterRowContent}>
+              {protocols.map((p) => (
+                <TouchableOpacity
+                  key={p}
+                  style={[styles.filterChip, selectedProtocol === p && styles.filterChipActive]}
+                  onPress={() => setSelectedProtocol(p)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.filterChipText, selectedProtocol === p && styles.filterChipTextActive]}>
+                    {p === "全部" ? "全部" : p.toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={[styles.tcpingBtn, tcpingMutation.isPending && styles.tcpingBtnDisabled]}
+              onPress={handleTcping}
+              disabled={tcpingMutation.isPending}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="speedometer-outline" size={16} color="#fff" />
+              <Text style={styles.tcpingBtnText}>
+                {tcpingMutation.isPending ? "测速中..." : "测速"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         ) : null
       }
       ListEmptyComponent={
@@ -135,6 +190,31 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
+  searchBar: {
+    flexDirection: "row", alignItems: "center", gap: spacing.sm,
+    backgroundColor: colors.surface, borderRadius: radius.lg,
+    borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: spacing.md, height: 40, marginBottom: spacing.md,
+  },
+  searchInput: {
+    flex: 1, fontSize: fontSize.sm, color: colors.textPrimary,
+  },
+  filterRow: { marginBottom: spacing.md },
+  filterRowContent: { gap: spacing.sm },
+  filterChip: {
+    paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
+    borderRadius: radius.lg, backgroundColor: colors.surface,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  filterChipActive: {
+    backgroundColor: colors.primary, borderColor: colors.primary,
+  },
+  filterChipText: {
+    fontSize: fontSize.xs, fontWeight: "600", color: colors.textTertiary,
+  },
+  filterChipTextActive: {
+    color: "#fff",
+  },
   emptyBox: { alignItems: "center", gap: spacing.md },
   emptyText: { fontSize: fontSize.base, color: colors.textTertiary },
   tcpingBtn: {

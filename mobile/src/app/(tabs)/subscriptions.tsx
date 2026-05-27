@@ -1,5 +1,5 @@
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl, Platform, Alert, Modal } from "react-native";
-import { useState, useCallback } from "react";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl, Platform, Alert, Modal, TextInput } from "react-native";
+import { useState, useCallback, useMemo } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSubscriptionsQuery, useSyncSubscription, useDeleteSubscription } from "../../api/subscription";
@@ -13,6 +13,7 @@ export default function SubscriptionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
+  const [search, setSearch] = useState("");
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -20,7 +21,18 @@ export default function SubscriptionsScreen() {
     setRefreshing(false);
   }, []);
 
-  const items = data?.items ?? [];
+  const allItems = data?.items ?? [];
+
+  const items = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return allItems;
+    return allItems.filter((item) => {
+      const name = item.name?.toLowerCase() ?? "";
+      const url = item.source_url?.toLowerCase() ?? "";
+      const tags = item.tags?.join(" ").toLowerCase() ?? "";
+      return name.includes(q) || url.includes(q) || tags.includes(q);
+    });
+  }, [allItems, search]);
 
   const openDetail = (sub: Subscription) => {
     router.push(`/subscription/${sub.id}`);
@@ -76,11 +88,30 @@ export default function SubscriptionsScreen() {
     <View style={styles.wrapper}>
       <FlatList
         style={styles.container}
-        contentContainerStyle={items.length === 0 ? styles.empty : styles.list}
+        contentContainerStyle={items.length === 0 && !search ? styles.empty : styles.list}
         data={items}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        ListHeaderComponent={
+          allItems.length > 0 ? (
+            <View style={styles.searchBar}>
+              <Ionicons name="search-outline" size={16} color={colors.textTertiary} />
+              <TextInput
+                style={styles.searchInput}
+                value={search}
+                onChangeText={setSearch}
+                placeholder="搜索订阅..."
+                placeholderTextColor={colors.textDisabled}
+              />
+              {search ? (
+                <TouchableOpacity onPress={() => setSearch("")}>
+                  <Ionicons name="close-circle" size={16} color={colors.textDisabled} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : null
         }
         ListEmptyComponent={
           !isLoading ? (
@@ -164,6 +195,15 @@ const styles = StyleSheet.create({
   wrapper: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg, gap: spacing.md },
+  searchBar: {
+    flexDirection: "row", alignItems: "center", gap: spacing.sm,
+    backgroundColor: colors.surface, borderRadius: radius.lg,
+    borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: spacing.md, height: 40, marginBottom: spacing.md,
+  },
+  searchInput: {
+    flex: 1, fontSize: fontSize.sm, color: colors.textPrimary,
+  },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyBox: { alignItems: "center", gap: spacing.md },
   emptyText: { fontSize: fontSize.base, color: colors.textTertiary },
