@@ -102,6 +102,12 @@ export default function VpsAssetsScreen() {
     router.push(`/vps-asset/edit?id=${selectedVps.id}`);
   };
 
+  const handleSSH = () => {
+    if (!selectedVps) return;
+    closeMenu();
+    router.push(`/vps-asset/ssh?id=${selectedVps.id}`);
+  };
+
   const handleDelete = () => {
     if (!selectedVps) return;
     const vpsId = selectedVps.id;
@@ -195,6 +201,10 @@ export default function VpsAssetsScreen() {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={closeMenu}>
           <View style={styles.menuSheet}>
             <Text style={styles.menuTitle} numberOfLines={1}>{selectedVps?.name}</Text>
+            <TouchableOpacity style={styles.menuItem} onPress={handleSSH} activeOpacity={0.6}>
+              <Ionicons name="terminal-outline" size={20} color={colors.success} />
+              <Text style={styles.menuItemText}>SSH 连接</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={handleEdit} activeOpacity={0.6}>
               <Ionicons name="create-outline" size={20} color={colors.primary} />
               <Text style={styles.menuItemText}>编辑</Text>

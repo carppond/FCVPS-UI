@@ -2,9 +2,12 @@ import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } 
 import { useState, useCallback } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "../../lib/api-client";
 import { useSubscriptionsQuery, useSyncSubscription } from "../../api/subscription";
 import { useVpsAssetSummaryQuery } from "../../api/vps-asset";
 import { useAgentsQuery } from "../../api/agent";
+import type { PagedResponse, NotificationEvent } from "../../types/api";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import { useAuthStore } from "../../stores/auth-store";
 import { Alert } from "react-native";
@@ -15,6 +18,11 @@ export default function DashboardScreen() {
   const vpsSummary = useVpsAssetSummaryQuery();
   const agents = useAgentsQuery();
   const syncMutation = useSyncSubscription();
+  const eventsQuery = useQuery({
+    queryKey: ["notify", "events", "recent"],
+    queryFn: () =>
+      apiFetch<PagedResponse<NotificationEvent>>("/api/notify/events?page=1&page_size=5"),
+  });
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
@@ -141,12 +149,35 @@ export default function DashboardScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Recent events placeholder */}
+      {/* Recent events */}
       <Text style={styles.sectionTitle}>近期动态</Text>
-      <View style={styles.eventsCard}>
-        <Ionicons name="newspaper-outline" size={24} color={colors.textDisabled} />
-        <Text style={styles.eventsPlaceholder}>暂无近期动态</Text>
-      </View>
+      {eventsQuery.data && eventsQuery.data.items && eventsQuery.data.items.length > 0 ? (
+        <View style={styles.eventsList}>
+          {eventsQuery.data.items.map((ev) => (
+            <View key={ev.id} style={styles.eventItem}>
+              <View style={[styles.eventDot, {
+                backgroundColor: ev.status === "sent" ? colors.success : ev.status === "failed" ? colors.error : colors.warning,
+              }]} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.eventType}>{ev.event_type}</Text>
+                <Text style={styles.eventTime}>
+                  {new Date(ev.created_at).toLocaleString("zh-CN")}
+                </Text>
+              </View>
+              <Text style={[styles.eventStatus, {
+                color: ev.status === "sent" ? colors.success : ev.status === "failed" ? colors.error : colors.warning,
+              }]}>
+                {ev.status === "sent" ? "成功" : ev.status === "failed" ? "失败" : ev.status === "pending" ? "排队中" : "去重"}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View style={styles.eventsCard}>
+          <Ionicons name="newspaper-outline" size={24} color={colors.textDisabled} />
+          <Text style={styles.eventsPlaceholder}>暂无近期动态</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -215,6 +246,19 @@ const styles = StyleSheet.create({
   eventsPlaceholder: {
     fontSize: fontSize.sm, color: colors.textDisabled,
   },
+  eventsList: {
+    backgroundColor: colors.surface, borderRadius: radius.xl,
+    borderWidth: 1, borderColor: colors.border, overflow: "hidden",
+  },
+  eventItem: {
+    flexDirection: "row", alignItems: "center", gap: spacing.md,
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
+  },
+  eventDot: { width: 8, height: 8, borderRadius: 4 },
+  eventType: { fontSize: fontSize.sm, fontWeight: "600", color: colors.textPrimary },
+  eventTime: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 2 },
+  eventStatus: { fontSize: fontSize.xs, fontWeight: "700" },
   card: {
     width: "48%",
     backgroundColor: colors.surface,

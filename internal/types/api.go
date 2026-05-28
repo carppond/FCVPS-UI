@@ -1337,6 +1337,8 @@ type VpsAsset struct {
 	IP              string         `json:"ip,omitempty"`
 	SSHPort         int            `json:"ssh_port"`
 	SSHUser         string         `json:"ssh_user,omitempty"`
+	SSHPassword     string         `json:"ssh_password,omitempty"`
+	SSHPrivateKey   string         `json:"ssh_private_key,omitempty"`
 	OS              string         `json:"os,omitempty"`
 	Location        string         `json:"location,omitempty"`
 	Provider        string         `json:"provider"`
@@ -1364,6 +1366,8 @@ type CreateVpsAssetRequest struct {
 	IP             string       `json:"ip,omitempty"`
 	SSHPort        int          `json:"ssh_port,omitempty"`
 	SSHUser        string       `json:"ssh_user,omitempty"`
+	SSHPassword    string       `json:"ssh_password,omitempty"`
+	SSHPrivateKey  string       `json:"ssh_private_key,omitempty"`
 	OS             string       `json:"os,omitempty"`
 	Location       string       `json:"location,omitempty"`
 	Provider       string       `json:"provider"`
@@ -1387,6 +1391,8 @@ type UpdateVpsAssetRequest struct {
 	IP             *string      `json:"ip,omitempty"`
 	SSHPort        *int         `json:"ssh_port,omitempty"`
 	SSHUser        *string      `json:"ssh_user,omitempty"`
+	SSHPassword    *string      `json:"ssh_password,omitempty"`
+	SSHPrivateKey  *string      `json:"ssh_private_key,omitempty"`
 	OS             *string      `json:"os,omitempty"`
 	Location       *string      `json:"location,omitempty"`
 	Provider       string       `json:"provider,omitempty"`

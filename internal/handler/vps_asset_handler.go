@@ -113,6 +113,8 @@ func (h *VpsAssetHandler) Create(w http.ResponseWriter, r *http.Request) {
 		IP:             req.IP,
 		SSHPort:        sshPort,
 		SSHUser:        req.SSHUser,
+		SSHPassword:    req.SSHPassword,
+		SSHPrivateKey:  req.SSHPrivateKey,
 		OS:             req.OS,
 		Location:       req.Location,
 		Provider:       req.Provider,
@@ -195,6 +197,12 @@ func (h *VpsAssetHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.SSHUser != nil {
 		sets["ssh_user"] = *req.SSHUser
+	}
+	if req.SSHPassword != nil {
+		sets["ssh_password"] = *req.SSHPassword
+	}
+	if req.SSHPrivateKey != nil {
+		sets["ssh_private_key"] = *req.SSHPrivateKey
 	}
 	if req.OS != nil {
 		sets["os"] = *req.OS
@@ -329,6 +337,8 @@ func toVpsAssetDTO(rec *storage.VpsAssetRecord) types.VpsAsset {
 		IP:              rec.IP,
 		SSHPort:         rec.SSHPort,
 		SSHUser:         rec.SSHUser,
+		SSHPassword:     rec.SSHPassword,
+		SSHPrivateKey:   rec.SSHPrivateKey,
 		OS:              rec.OS,
 		Location:        rec.Location,
 		Provider:        rec.Provider,

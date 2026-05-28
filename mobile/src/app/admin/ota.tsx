@@ -34,7 +34,7 @@ export default function AdminOtaScreen() {
 
   const checkMutation = useMutation({
     mutationFn: () =>
-      apiFetch<void>("/api/admin/ota/check", { method: "POST" }),
+      apiFetch<void>("/api/admin/ota/check"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "ota"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "ota-history"] });

@@ -18,6 +18,8 @@ type VpsAssetRecord struct {
 	IP             string
 	SSHPort        int
 	SSHUser        string
+	SSHPassword    string
+	SSHPrivateKey  string
 	OS             string
 	Location       string
 	Provider       string
@@ -100,13 +102,14 @@ func (r *VpsAssetRepo) Create(ctx context.Context, rec VpsAssetRecord) (*VpsAsse
 		rec.UpdatedAt = now
 	}
 	_, err := r.db.Write.ExecContext(ctx, `
-		INSERT INTO vps_assets(id, user_id, name, ip, ssh_port, ssh_user, os, location,
+		INSERT INTO vps_assets(id, user_id, name, ip, ssh_port, ssh_user, ssh_password, ssh_private_key, os, location,
 		                       provider, price, currency, billing_cycle, bandwidth,
 		                       monthly_traffic, cpu, memory, disk, expire_at, notes,
 		                       agent_id, tags, created_at, updated_at)
-		VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		rec.ID, rec.UserID, rec.Name,
 		nullableString(rec.IP), rec.SSHPort, nullableString(rec.SSHUser),
+		rec.SSHPassword, rec.SSHPrivateKey,
 		nullableString(rec.OS), nullableString(rec.Location),
 		rec.Provider, rec.Price, rec.Currency, rec.BillingCycle,
 		nullableString(rec.Bandwidth), rec.MonthlyTraffic,
@@ -124,6 +127,7 @@ func (r *VpsAssetRepo) Create(ctx context.Context, rec VpsAssetRecord) (*VpsAsse
 // selectVpsAssetSQL is the shared SELECT prefix with dynamic fields.
 const selectVpsAssetSQL = `SELECT id, user_id, name,
 	COALESCE(ip,''), ssh_port, COALESCE(ssh_user,''),
+	COALESCE(ssh_password,''), COALESCE(ssh_private_key,''),
 	COALESCE(os,''), COALESCE(location,''),
 	provider, price, currency, billing_cycle,
 	COALESCE(bandwidth,''), monthly_traffic,
@@ -386,6 +390,7 @@ func scanVpsAssetRow(row *sql.Row) (*VpsAssetRecord, error) {
 	err := row.Scan(
 		&a.ID, &a.UserID, &a.Name,
 		&a.IP, &a.SSHPort, &a.SSHUser,
+		&a.SSHPassword, &a.SSHPrivateKey,
 		&a.OS, &a.Location,
 		&a.Provider, &a.Price, &a.Currency, &a.BillingCycle,
 		&a.Bandwidth, &a.MonthlyTraffic,
@@ -409,6 +414,7 @@ func scanVpsAssetRowMulti(rows *sql.Rows) (*VpsAssetRecord, error) {
 	if err := rows.Scan(
 		&a.ID, &a.UserID, &a.Name,
 		&a.IP, &a.SSHPort, &a.SSHUser,
+		&a.SSHPassword, &a.SSHPrivateKey,
 		&a.OS, &a.Location,
 		&a.Provider, &a.Price, &a.Currency, &a.BillingCycle,
 		&a.Bandwidth, &a.MonthlyTraffic,

@@ -30,6 +30,7 @@ export default function RootLayout() {
           headerTintColor: colors.textPrimary,
           headerTitleStyle: { fontWeight: "700" },
           headerBackTitle: "返回",
+          headerBackButtonMenuEnabled: false,
           contentStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
         }}
@@ -43,6 +44,7 @@ export default function RootLayout() {
         <Stack.Screen name="profile" options={{ title: "个人资料" }} />
         <Stack.Screen name="rule-sets" options={{ title: "规则集" }} />
         <Stack.Screen name="vps-asset/create" options={{ title: "新增 VPS", presentation: "modal" }} />
+        <Stack.Screen name="vps-asset/ssh" options={{ headerShown: false, orientation: "landscape" }} />
         <Stack.Screen name="subscription/edit" options={{ title: "编辑订阅" }} />
         <Stack.Screen name="vps-asset/edit" options={{ title: "编辑 VPS" }} />
         <Stack.Screen name="admin/users" options={{ title: "用户管理" }} />

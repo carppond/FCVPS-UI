@@ -44,6 +44,8 @@ export default function CreateVpsAssetScreen() {
   const [bandwidth, setBandwidth] = useState("");
   const [sshPort, setSshPort] = useState("22");
   const [sshUser, setSshUser] = useState("");
+  const [sshPassword, setSshPassword] = useState("");
+  const [sshPrivateKey, setSshPrivateKey] = useState("");
   const [os, setOs] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -92,6 +94,8 @@ export default function CreateVpsAssetScreen() {
     if (bandwidth.trim()) req.bandwidth = bandwidth.trim();
     if (sshPort.trim()) req.ssh_port = parseInt(sshPort, 10) || 22;
     if (sshUser.trim()) req.ssh_user = sshUser.trim();
+    if (sshPassword) req.ssh_password = sshPassword;
+    if (sshPrivateKey.trim()) req.ssh_private_key = sshPrivateKey.trim();
     if (os.trim()) req.os = os.trim();
     if (notes.trim()) req.notes = notes.trim();
 
@@ -315,6 +319,32 @@ export default function CreateVpsAssetScreen() {
               placeholder="root"
               placeholderTextColor={colors.textDisabled}
               autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>SSH 密码（可选）</Text>
+            <TextInput
+              style={styles.input}
+              value={sshPassword}
+              onChangeText={setSshPassword}
+              placeholder="密码登录"
+              placeholderTextColor={colors.textDisabled}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>SSH 私钥（可选）</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={sshPrivateKey}
+              onChangeText={setSshPrivateKey}
+              placeholder="-----BEGIN RSA PRIVATE KEY-----..."
+              placeholderTextColor={colors.textDisabled}
+              multiline
+              numberOfLines={4}
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
           <View style={styles.field}>
