@@ -1,0 +1,30 @@
+# 拾光VPS Docker Compose configuration.
+# Quick start:
+#   docker compose up -d
+#
+# View admin password:
+#   docker compose logs hub | grep ADMIN
+#
+# Update:
+#   docker compose pull && docker compose up -d
+
+services:
+  hub:
+    image: ghcr.io/carppond/fcvps-ui:latest
+    # To build locally instead of pulling:
+    # build: .
+    container_name: shiguang-vps
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data:/data
+    environment:
+      SHIGUANG_LOG_LEVEL: info
+      SHIGUANG_LOG_FORMAT: json
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

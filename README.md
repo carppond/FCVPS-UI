@@ -40,20 +40,40 @@
 
 ---
 
-## 部署到 VPS
+## 部署
 
-### 1. 准备
-
-- 一台 Linux VPS（Debian 12 / Ubuntu 22.04+）
-- 一个解析到 VPS 的域名
-- 一个用于申请 SSL 证书的邮箱
-- Mac/Linux 本机已安装 Go 1.21+、Node.js 20+、pnpm
-
-### 2. 一键部署
+### 方式 1：Docker（推荐）
 
 ```bash
-git clone <你的私有仓库>
-cd shiguang-vps
+docker run -d --name shiguang-vps \
+  -p 8080:80 \
+  -v $PWD/data:/data \
+  --restart unless-stopped \
+  ghcr.io/carppond/fcvps-ui:latest
+```
+
+或用 docker-compose：
+
+```bash
+curl -O https://raw.githubusercontent.com/carppond/FCVPS-UI/main/docker-compose.yml
+docker compose up -d
+```
+
+查看初始 admin 密码：
+
+```bash
+docker logs shiguang-vps 2>&1 | grep ADMIN
+```
+
+访问 `http://your-server:8080` 即可。生产环境请在前面接 Nginx/Caddy + 域名 + Let's Encrypt 反代到 8080。
+
+### 方式 2：一键脚本部署到 VPS（含 Nginx + SSL）
+
+适合直接部署在裸 VPS 上，脚本自动配置 Nginx + Let's Encrypt 证书：
+
+```bash
+git clone https://github.com/carppond/FCVPS-UI.git
+cd FCVPS-UI
 ./scripts/deploy.sh
 ```
 
@@ -63,19 +83,28 @@ cd shiguang-vps
 - 邮箱（必填，用于 Let's Encrypt 证书）
 - VPS 架构（amd64 / arm64）
 
-部署完成后访问 `https://<your-domain>` 即可。首次启动会在 systemd 日志里打印一次性 admin 密码：
+部署完成后访问 `https://<your-domain>`。查看初始密码：
 
 ```bash
 ssh root@<vps> "journalctl -u shiguang-vps -n 20 | grep ADMIN"
 ```
 
-### 3. 更新部署
+更新部署：
 
 ```bash
 ./scripts/deploy.sh --update
 ```
 
-只重新编译上传二进制和前端，不动 Nginx 和 SSL。
+### 方式 3：手动二进制
+
+从 [Releases](https://github.com/carppond/FCVPS-UI/releases) 下载对应平台二进制：
+
+```bash
+chmod +x hub-linux-amd64
+./hub-linux-amd64 --http-addr :8080 --data-dir ./data
+```
+
+自带前端的静态文件需要单独 build（或用 Docker 方式）。
 
 ---
 
@@ -135,6 +164,50 @@ npx expo run:ios --device --configuration Release
 | [流水线常用模式](./docs/user/pipeline-cookbook.md) | YAML 示例与配方 |
 | [常见问题](./docs/user/troubleshooting.md) | 静默模式 / 密码找回 / agent 连接 |
 | [安全说明](./SECURITY.md) | 漏洞报告 + 已知限制 |
+
+---
+
+## 致谢
+
+本项目的设计与实现参考、借鉴了以下优秀的开源项目，在此一并致谢：
+
+### 灵感来源
+
+- **[iluobei/miaomiaowu](https://github.com/iluobei/miaomiaowu)** — 妙妙屋，本项目最初的设计灵感来源，订阅聚合 + 探针 + 通知一体化的产品思路
+- **[sub-store-org/Sub-Store](https://github.com/sub-store-org/Sub-Store)** — Sub-Store，订阅管理与算子流水线的概念来源；本项目保留了 `/download/:name?token=<token>` 兼容路由
+- **[nezhahq/nezha](https://github.com/nezhahq/nezha)** — 哪吒监控，探针 agent 设计参考；本项目支持 Nezha v2 agent 直接接入
+
+### 规则集数据源
+
+- **[MetaCubeX/meta-rules-dat](https://github.com/MetaCubeX/meta-rules-dat)** — Mihomo (Clash Meta) 规则集的官方数据源，本项目内置的 48 个规则集预设全部来自此项目
+
+### 后端依赖（Go）
+
+- **[modernc.org/sqlite](https://gitlab.com/cznic/sqlite)** — 纯 Go 实现的 SQLite 驱动（无 CGo 依赖），支撑无缝交叉编译
+- **[dop251/goja](https://github.com/dop251/goja)** — 纯 Go 实现的 ECMAScript 5.1 引擎，用于自定义脚本沙箱
+- **[gorilla/websocket](https://github.com/gorilla/websocket)** — WebSocket 实现，用于探针 agent 与 hub 的双向通信
+- **[golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)** — bcrypt 密码哈希、SSH 协议、TOTP 支持
+- **[gopkg.in/yaml.v3](https://gopkg.in/yaml.v3)** — YAML 解析与渲染，订阅产物生成
+- **[mihomo](https://github.com/MetaCubeX/mihomo)** — Clash Meta 内核，订阅产物的目标客户端
+
+### 前端依赖（Web）
+
+- **[React 19](https://react.dev/)** + **[Vite 7](https://vitejs.dev/)** — 构建工具链
+- **[TanStack Router](https://tanstack.com/router) / [Query](https://tanstack.com/query)** — 路由 + 数据层
+- **[Tailwind CSS v4](https://tailwindcss.com/)** + **[Radix UI](https://www.radix-ui.com/)** — 样式与无障碍组件
+- **[lucide-react](https://lucide.dev/)** — 图标库
+- **[cmdk](https://cmdk.paco.me/)** — 命令面板（⌘K）
+- **[@dnd-kit](https://dndkit.com/)** — 流水线拖拽编排
+
+### 移动端依赖（Mobile）
+
+- **[Expo SDK 56](https://expo.dev/)** + **[Expo Router](https://expo.github.io/router/)** — React Native 跨端框架与文件路由
+- **[react-native-ssh-sftp](https://github.com/shaqian/react-native-ssh-sftp)** — 原生 SSH 库（封装 NMSSH + JSch），支撑移动端 SSH 终端
+- **[Zustand](https://zustand-demo.pmnd.rs/)** — 轻量状态管理
+
+### 客户端兼容性
+
+- **[Mihomo / Clash Meta](https://github.com/MetaCubeX/mihomo)**、**[sing-box](https://github.com/SagerNet/sing-box)**、**[Surge](https://nssurge.com/)**、**[Quantumult X](https://apps.apple.com/app/quantumult-x/id1443988620)**、**[Loon](https://nsloon.com/)** — 订阅产物的目标客户端
 
 ---
 

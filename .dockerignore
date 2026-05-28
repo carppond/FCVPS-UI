@@ -1,0 +1,53 @@
+# Git
+.git
+.github
+.gitignore
+
+# Build artifacts
+dist
+**/dist
+**/build
+**/out
+
+# Dependencies
+**/node_modules
+.pnpm-store
+
+# Mobile (not needed in server image)
+mobile
+
+# Local data
+data
+*.db
+*.db-wal
+*.db-shm
+
+# Editor
+.idea
+.vscode
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage
+*.test
+**/playwright-report
+**/test-results
+
+# Local config
+.env
+.env.*
+.claude
+.claude_resumes.txt
+
+# Style preview HTML
+style-preview*.html
+
+# CI build cache
+**/.tanstack
+**/.expo
+**/ios
+**/android
