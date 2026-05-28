@@ -1,4 +1,4 @@
-export const DEFAULT_SERVER_URL = "https://your-hub.example.com";
+export const DEFAULT_SERVER_URL = "";
 export const STORAGE_KEYS = {
   TOKEN: "auth_token",
   SERVER_URL: "server_url",

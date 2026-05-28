@@ -14,8 +14,7 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
-      },
-      "appleTeamId": "YOUR_TEAM_ID"
+      }
     },
     "android": {
       "package": "com.shiguang.vps",

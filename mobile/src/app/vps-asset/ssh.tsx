@@ -14,9 +14,16 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const SSHClient = require("react-native-ssh-sftp").default;
 import { useVpsAssetDetail } from "../../api/vps-asset";
+
+// Lazy require so Expo Go can load other screens without crashing.
+// SSH only works in a dev build (npx expo run:ios).
+let SSHClient: any = null;
+try {
+  SSHClient = require("react-native-ssh-sftp").default;
+} catch {
+  // Native module not available (Expo Go).
+}
 
 const TERM_BG = "#0a0a0c";
 const TERM_FG = "#22c55e";
@@ -60,6 +67,10 @@ export default function SSHTerminalScreen() {
   };
 
   const connect = async () => {
+    if (!SSHClient) {
+      Alert.alert("不支持", "SSH 功能需要使用 Dev Build（npx expo run:ios），Expo Go 不支持原生 SSH 模块");
+      return;
+    }
     if (!vps?.ip || !vps?.ssh_user) {
       Alert.alert("缺少信息", "VPS 缺少 IP 或 SSH 用户名");
       return;

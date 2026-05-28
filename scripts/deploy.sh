@@ -48,10 +48,16 @@ read -rp "VPS 架构 amd64/arm64 [amd64]: " VPS_ARCH
 VPS_ARCH="${VPS_ARCH:-amd64}"
 
 if ! $UPDATE_ONLY; then
-  read -rp "域名 [your-hub.example.com]: " DOMAIN
-  DOMAIN="${DOMAIN:-your-hub.example.com}"
-  read -rp "邮箱 (SSL 证书用) [admin@example.com]: " EMAIL
-  EMAIL="${EMAIL:-admin@example.com}"
+  read -rp "域名（如 vpn.example.com）: " DOMAIN
+  if [[ -z "$DOMAIN" ]]; then
+    err "域名不能为空"
+    exit 1
+  fi
+  read -rp "邮箱（SSL 证书申请用）: " EMAIL
+  if [[ -z "$EMAIL" ]]; then
+    err "邮箱不能为空"
+    exit 1
+  fi
 fi
 
 REMOTE_DIR="/opt/shiguang-vps"
