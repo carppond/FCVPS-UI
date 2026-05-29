@@ -43,7 +43,7 @@ const nginx404Body = "<html>\r\n" +
 //     A returned empty string means "silent mode disabled" — the middleware
 //     becomes a no-op until the next reload sees a value.
 //   - EnabledLoader is invoked alongside Loader to refresh the enabled flag.
-//     A nil EnabledLoader defaults to "enabled iff prefix != ”" for
+//     A nil EnabledLoader defaults to "enabled iff prefix != ''" for
 //     backward compatibility with older deployments.
 //   - InitialPrefix / InitialEnabled are the values read at startup; they
 //     short-circuit the first loader poll so the server is correctly
@@ -274,10 +274,6 @@ var silentWhitelist = []string{
 	"/api/v1/nezha",
 	"/api/notify/telegram/webhook",
 	"/api/agent/ws",
-	// The mobile traffic widget fetches this with its scoped token and has no
-	// knowledge of the silent-mode prefix, so it must bypass the gate. Only the
-	// data endpoint is whitelisted — token mint/revoke stay behind the prefix.
-	"/api/widget/traffic",
 }
 
 func isSilentWhitelisted(path string) bool {

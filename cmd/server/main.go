@@ -497,10 +497,6 @@ func run() error {
 	})
 	firewallHandler := handler.NewFirewallHandler(firewallSvc, log)
 
-	// Mobile home-screen traffic widget: scoped read-only token + tiny payload.
-	widgetTokenRepo := storage.NewWidgetTokenRepo(db, time.Now)
-	widgetHandler := handler.NewWidgetHandler(widgetTokenRepo, trafficRepo, agentRepo, settingsRepo, log)
-
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
@@ -539,7 +535,6 @@ func run() error {
 		TGBotSettingsHandler:  tgBotSettingsHandler,
 		VpsAssetHandler:       vpsAssetHandler,
 		FirewallHandler:       firewallHandler,
-		WidgetHandler:         widgetHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}

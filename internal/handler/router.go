@@ -198,10 +198,6 @@ type Deps struct {
 	// nil disables the routes (e.g. when no firewall service is wired).
 	FirewallHandler *FirewallHandler
 
-	// WidgetHandler hosts /api/widget/* — the mobile home-screen traffic
-	// widget (scoped read-only token + tiny traffic payload). nil disables.
-	WidgetHandler *WidgetHandler
-
 	// Silent owns the live silent-mode prefix. Internal — populated by
 	// NewRouter when DB is supplied.
 	silent *middleware.SilentMode
@@ -275,7 +271,6 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountTGWebhookRoutes(mux, deps)
 	mountVpsAssetRoutes(mux, deps)
 	mountFirewallRoutes(mux, deps)
-	mountWidgetRoutes(mux, deps)
 
 	return mux
 }
@@ -926,31 +921,6 @@ func mountFirewallRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("GET /api/admin/firewall/status", requireAdmin(http.HandlerFunc(fh.Status)))
 	mux.Handle("POST /api/admin/firewall/allow", requireAdmin(http.HandlerFunc(fh.Allow)))
 	mux.Handle("POST /api/admin/firewall/delete", requireAdmin(http.HandlerFunc(fh.Delete)))
-}
-
-// mountWidgetRoutes installs the mobile traffic-widget surface:
-//
-//   - POST   /api/widget/token    — mint/rotate read-only token (session auth)
-//   - DELETE /api/widget/token    — revoke / disable widget (session auth)
-//   - GET    /api/widget/token    — token-enabled status (session auth)
-//   - GET    /api/widget/traffic  — tiny traffic payload (WIDGET token auth)
-//
-// /traffic is mounted WITHOUT auth.Required: it authenticates with the scoped
-// widget token inside the handler (like the SSE / nezha endpoints) and is in
-// the silent-mode whitelist so the native widget reaches it directly.
-func mountWidgetRoutes(mux *http.ServeMux, deps *Deps) {
-	if deps == nil || deps.WidgetHandler == nil {
-		return
-	}
-	wh := deps.WidgetHandler
-	mux.Handle("GET /api/widget/traffic", http.HandlerFunc(wh.Traffic))
-	if deps.TokenStore == nil {
-		return
-	}
-	required := auth.Required(deps.TokenStore)
-	mux.Handle("POST /api/widget/token", required(http.HandlerFunc(wh.MintToken)))
-	mux.Handle("DELETE /api/widget/token", required(http.HandlerFunc(wh.RevokeToken)))
-	mux.Handle("GET /api/widget/token", required(http.HandlerFunc(wh.TokenStatus)))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads
