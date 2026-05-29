@@ -47,16 +47,24 @@ function hhmm(d: Date): string {
   return `${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-/** Map a traffic summary onto widget props (top 3 agents by usage). */
+/** Map a traffic summary onto widget props. Carries up to 6 agents (enough for
+ * the large family) with raw bytes, plus total count/bytes so the widget can
+ * size-slice the list and format a "其余 N 个" remainder per family. */
 export function summaryToWidgetProps(s: TrafficSummary, now: Date): TrafficWidgetProps {
   const top = [...s.agents]
     .sort((a, b) => b.total_used - a.total_used)
-    .slice(0, 3)
-    .map((a) => ({ name: a.agent_name || a.agent_id, used: formatBytes(a.total_used) }));
+    .slice(0, 6)
+    .map((a) => ({
+      name: a.agent_name || a.agent_id,
+      used: formatBytes(a.total_used),
+      usedBytes: a.total_used,
+    }));
   return {
     used: formatBytes(s.total_used),
     limit: s.total_limit && s.total_limit > 0 ? formatBytes(s.total_limit) : "",
     percent: Math.max(0, Math.min(100, s.usage_percent || 0)),
+    count: s.agents.length,
+    totalUsedBytes: s.total_used,
     top,
     updatedAt: hhmm(now),
   };

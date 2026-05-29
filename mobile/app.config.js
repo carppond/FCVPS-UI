@@ -23,7 +23,7 @@ const widgetPlugin = [
         name: "ShiguangTraffic",
         displayName: "拾光VPS 流量",
         description: "本月流量与 Top 探针",
-        supportedFamilies: ["systemMedium"],
+        supportedFamilies: ["systemSmall", "systemMedium", "systemLarge"],
         contentMarginsDisabled: false,
       },
     ],
