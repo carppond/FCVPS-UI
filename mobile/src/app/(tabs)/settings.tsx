@@ -1,14 +1,56 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Switch } from "react-native";
+import { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Switch, Platform } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../stores/auth-store";
 import { useThemeStore } from "../../stores/theme-store";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { mintWidgetToken, revokeWidgetToken, getWidgetTokenStatus } from "../../api/widget";
+import { isWidgetSupported, saveWidgetData, clearWidgetData, reloadWidget } from "../../lib/widget-bridge";
 
 export default function SettingsScreen() {
   const { user, serverUrl, clearSession } = useAuthStore();
   const themeMode = useThemeStore((s) => s.mode);
   const toggleTheme = useThemeStore((s) => s.toggle);
+
+  // Home-screen traffic widget (iOS, custom dev/prod build only). The toggle
+  // mints a read-only token and writes {serverUrl, token} into the App Group
+  // so the native widget can fetch traffic; turning it off revokes the token.
+  const widgetSupported = Platform.OS === "ios" && isWidgetSupported();
+  const [widgetOn, setWidgetOn] = useState(false);
+  const [widgetBusy, setWidgetBusy] = useState(false);
+
+  useEffect(() => {
+    if (!widgetSupported) return;
+    getWidgetTokenStatus()
+      .then((s) => setWidgetOn(s.enabled))
+      .catch(() => {});
+  }, [widgetSupported]);
+
+  const toggleWidget = useCallback(
+    async (next: boolean) => {
+      if (widgetBusy) return;
+      setWidgetBusy(true);
+      try {
+        if (next) {
+          const { token } = await mintWidgetToken();
+          saveWidgetData(serverUrl, token);
+          reloadWidget();
+          setWidgetOn(true);
+        } else {
+          await revokeWidgetToken();
+          clearWidgetData();
+          reloadWidget();
+          setWidgetOn(false);
+        }
+      } catch {
+        Alert.alert("操作失败", "请检查网络后重试");
+      } finally {
+        setWidgetBusy(false);
+      }
+    },
+    [widgetBusy, serverUrl],
+  );
 
   const handleLogout = () => {
     Alert.alert("退出登录", "确定要退出吗？", [
@@ -68,6 +110,27 @@ export default function SettingsScreen() {
           />
         </View>
       </View>
+
+      {/* Home-screen widget (iOS only) */}
+      {widgetSupported && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>桌面小组件</Text>
+          <View style={styles.switchRow}>
+            <Ionicons name="speedometer-outline" size={18} color={colors.textTertiary} />
+            <Text style={styles.rowText}>流量小组件</Text>
+            <Switch
+              value={widgetOn}
+              onValueChange={toggleWidget}
+              disabled={widgetBusy}
+              trackColor={{ false: colors.border, true: colors.primarySoft }}
+              thumbColor={widgetOn ? colors.primary : colors.textDisabled}
+            />
+          </View>
+          <Text style={styles.hint}>
+            开启后可在桌面长按添加"拾光VPS"小组件，约 15 分钟自动刷新，打开 App 时立即刷新。
+          </Text>
+        </View>
+      )}
 
       {/* About */}
       <View style={styles.section}>
@@ -141,6 +204,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   switchRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   rowText: { fontSize: fontSize.base, color: colors.textSecondary, flex: 1 },
+  hint: { fontSize: fontSize.xs, color: colors.textDisabled, marginTop: spacing.sm, lineHeight: 16 },
   logoutBtn: {
     flexDirection: "row",
     alignItems: "center",
