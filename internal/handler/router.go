@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"shiguang-vps/internal/agent"
-	"shiguang-vps/internal/auth"
 	auditpkg "shiguang-vps/internal/audit"
+	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/handler/middleware"
 	"shiguang-vps/internal/logger"
 	"shiguang-vps/internal/nezha"
@@ -194,6 +194,10 @@ type Deps struct {
 	// routes.
 	VpsAssetHandler *VpsAssetHandler
 
+	// FirewallHandler hosts /api/admin/firewall/* — local-host ufw management.
+	// nil disables the routes (e.g. when no firewall service is wired).
+	FirewallHandler *FirewallHandler
+
 	// Silent owns the live silent-mode prefix. Internal — populated by
 	// NewRouter when DB is supplied.
 	silent *middleware.SilentMode
@@ -266,6 +270,7 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountInstallScriptRoutes(mux, deps)
 	mountTGWebhookRoutes(mux, deps)
 	mountVpsAssetRoutes(mux, deps)
+	mountFirewallRoutes(mux, deps)
 
 	return mux
 }
@@ -895,6 +900,27 @@ func mountVpsAssetRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PUT /api/vps-assets/{id}", required(http.HandlerFunc(vh.Update)))
 	mux.Handle("PATCH /api/vps-assets/{id}", required(http.HandlerFunc(vh.Update)))
 	mux.Handle("DELETE /api/vps-assets/{id}", required(http.HandlerFunc(vh.Delete)))
+}
+
+// mountFirewallRoutes installs the local-host firewall surface (admin-only):
+//
+//   - GET  /api/admin/firewall/status   — ufw status + allow-rule list (+ note)
+//   - POST /api/admin/firewall/allow    — add an allow-in rule {port, proto}
+//   - POST /api/admin/firewall/delete   — remove a rule {port, proto}
+//
+// Mutations are admin-gated and serialised inside the service. Delete refuses
+// protected ports (SSH / panel access). Returns 200 with an embedded status
+// (available / can_manage / reason) so the UI degrades gracefully when ufw is
+// absent or the deployment is containerised.
+func mountFirewallRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.FirewallHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	requireAdmin := auth.RequireAdmin(deps.TokenStore)
+	fh := deps.FirewallHandler
+	mux.Handle("GET /api/admin/firewall/status", requireAdmin(http.HandlerFunc(fh.Status)))
+	mux.Handle("POST /api/admin/firewall/allow", requireAdmin(http.HandlerFunc(fh.Allow)))
+	mux.Handle("POST /api/admin/firewall/delete", requireAdmin(http.HandlerFunc(fh.Delete)))
 }
 
 // silentPrefixLoader returns a loader closure for SilentModeConfig that reads

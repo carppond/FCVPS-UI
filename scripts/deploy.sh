@@ -189,6 +189,8 @@ if $UPDATE_ONLY; then
   BACKEND_PORT=$($SSH_CMD "grep -oE 'http-addr 127.0.0.1:[0-9]+' /etc/systemd/system/shiguang-vps.service 2>/dev/null | grep -oE '[0-9]+$' | head -1" || true)
   BACKEND_PORT="${BACKEND_PORT:-8080}"
   log "沿用现有后端端口: 127.0.0.1:${BACKEND_PORT}"
+  # 沿用首次部署写入的受保护端口（面板防自锁），更新时不要丢
+  PROTECTED_PORTS=$($SSH_CMD "grep -oE 'SHIGUANG_FIREWALL_PROTECTED_PORTS=[0-9,]*' /etc/systemd/system/shiguang-vps.service 2>/dev/null | head -1 | cut -d= -f2" || true)
 else
   echo ""
   echo -e "${CYAN}域名可留空：${NC}"
@@ -237,6 +239,11 @@ else
       [[ "$goon" =~ ^[Yy]$ ]] || { warn "已取消"; exit 0; }
     fi
   fi
+
+  # 面板受保护端口：SSH + 对外访问端口（域名模式再加 80），写进 systemd env，
+  # 让 hub 拒绝从面板删除这些端口的放行规则（防自锁）。
+  PROTECTED_PORTS="${SSH_PORT},${EXTERNAL_PORT}"
+  [[ -n "$DOMAIN" ]] && PROTECTED_PORTS="${PROTECTED_PORTS},80"
 fi
 
 # ── 确认 ──
@@ -321,6 +328,7 @@ Restart=always
 RestartSec=5
 Environment=SHIGUANG_LOG_LEVEL=info
 Environment=SHIGUANG_LOG_FORMAT=json
+Environment=SHIGUANG_FIREWALL_PROTECTED_PORTS=${PROTECTED_PORTS}
 
 [Install]
 WantedBy=multi-user.target
@@ -436,6 +444,23 @@ else
     warn "排查（域名 A 记录是否指向本机、80 是否可达）后重跑脚本，或手动签发证书"
     SUMMARY_URL="http://${DOMAIN}  (证书未签发，暂为 HTTP)"
   fi
+fi
+
+# ── Step 7.5: ufw 放行（仅当 ufw 已启用，纯加法，绝不主动 enable） ──
+# 已启用 ufw 时，把 SSH 端口 + 访问端口（域名模式再加 80）放行，避免它们被默认
+# 拒绝策略挡住。未启用时不碰防火墙——强行 enable 会把未识别的其他服务一起闷死，
+# 且容易锁掉 SSH。
+log "检查 ufw 防火墙..."
+FW_PORTS="${SSH_PORT} ${EXTERNAL_PORT}"
+[[ -n "$DOMAIN" ]] && FW_PORTS="${FW_PORTS} 80"
+if $SSH_CMD "command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'"; then
+  for p in $FW_PORTS; do
+    $SSH_CMD "ufw allow ${p}/tcp >/dev/null 2>&1 || true"
+  done
+  log "ufw 已启用：已放行端口 ${FW_PORTS}（tcp）"
+else
+  warn "ufw 未启用（或未安装）→ 未改动防火墙，端口默认可达"
+  warn "如需启用：务必先 ufw allow ${SSH_PORT}/tcp 和访问端口，再 ufw enable，否则会断开 SSH"
 fi
 
 # ── Step 8: 验证 + 统一汇总 ──

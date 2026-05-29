@@ -9,6 +9,7 @@ import {
   Bell,
   Download,
   Save,
+  Flame,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import { useMeQuery } from "@/api/user";
 import { useSettings, useUpdateSettings, type SettingsMap } from "@/api/settings";
 import { SilentModeSection } from "@/components/admin/silent-mode-section";
 import { BackupSection } from "@/components/admin/backup-section";
+import { FirewallSection } from "@/components/admin/firewall-section";
 import { useApiError } from "@/hooks/use-api-error";
 import { cn } from "@/lib/cn";
 
@@ -27,7 +29,7 @@ export const Route = createFileRoute("/_authed/admin/settings")({
   component: AdminSettingsPage,
 });
 
-type SectionId = "silent" | "account" | "traffic" | "agent" | "notify" | "backup";
+type SectionId = "silent" | "account" | "traffic" | "agent" | "notify" | "firewall" | "backup";
 
 interface NavItemDef {
   id: SectionId;
@@ -43,6 +45,7 @@ const NAV_ITEMS: NavItemDef[] = [
   { id: "traffic", icon: <BarChart2 className="h-[15px] w-[15px]" />, labelKey: "settings:tabs.traffic", iconBg: "rgba(52,211,153,.08)", iconColor: "var(--color-success)" },
   { id: "agent", icon: <Radio className="h-[15px] w-[15px]" />, labelKey: "settings:tabs.agent", iconBg: "rgba(251,191,36,.08)", iconColor: "var(--color-warning)" },
   { id: "notify", icon: <Bell className="h-[15px] w-[15px]" />, labelKey: "settings:tabs.notify", iconBg: "rgba(167,139,250,.08)", iconColor: "#a78bfa" },
+  { id: "firewall", icon: <Flame className="h-[15px] w-[15px]" />, labelKey: "settings:tabs.firewall", iconBg: "rgba(251,146,60,.08)", iconColor: "#fb923c" },
 ];
 
 const NAV_BOTTOM: NavItemDef = {
@@ -174,6 +177,7 @@ function AdminSettingsPage() {
                 initialValues={settings.data}
               />
             )}
+            {activeSection === "firewall" && <FirewallSection />}
             {activeSection === "backup" && <BackupPanel />}
           </div>
         </div>

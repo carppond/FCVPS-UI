@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -30,6 +32,7 @@ import (
 	"shiguang-vps/internal/audit"
 	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/config"
+	"shiguang-vps/internal/firewall"
 	"shiguang-vps/internal/handler"
 	"shiguang-vps/internal/logger"
 	"shiguang-vps/internal/nezha"
@@ -81,7 +84,7 @@ func run() error {
 	if err := logger.Init(logger.Options{
 		Level: cfg.Log.Level, Format: cfg.Log.Format, File: cfg.Log.File,
 		MaxSizeMB: cfg.Log.MaxSizeMB, MaxAgeDay: cfg.Log.MaxAgeDays,
-		Backups:   cfg.Log.MaxBackups,
+		Backups: cfg.Log.MaxBackups,
 	}); err != nil {
 		return fmt.Errorf("init logger: %w", err)
 	}
@@ -484,6 +487,16 @@ func run() error {
 		return fmt.Errorf("expiry checker: %w", err)
 	}
 
+	// Local-host firewall (ufw) management. Protected ports beyond the
+	// auto-detected SSH port come from SHIGUANG_FIREWALL_PROTECTED_PORTS
+	// (comma-separated); the deploy script puts the panel access port there so
+	// it can never be deleted through the UI (self-lockout guard).
+	firewallSvc := firewall.New(firewall.Config{
+		Logger:         log,
+		ProtectedPorts: parsePortList(os.Getenv("SHIGUANG_FIREWALL_PROTECTED_PORTS")),
+	})
+	firewallHandler := handler.NewFirewallHandler(firewallSvc, log)
+
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
 		Version:               "v0.0.0-dev",
@@ -521,6 +534,7 @@ func run() error {
 		TGWebhookHandler:      tgWebhookHandler,
 		TGBotSettingsHandler:  tgBotSettingsHandler,
 		VpsAssetHandler:       vpsAssetHandler,
+		FirewallHandler:       firewallHandler,
 		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
@@ -715,4 +729,22 @@ func runAgentRecordsRetention(ctx context.Context, repo *storage.AgentRecordRepo
 			sweep()
 		}
 	}
+}
+
+// parsePortList parses a comma-separated port list (e.g. "443,8443") into a
+// slice of valid port numbers. Invalid / out-of-range entries are skipped.
+// Used to seed the firewall service's always-protected port set from
+// SHIGUANG_FIREWALL_PROTECTED_PORTS.
+func parsePortList(s string) []int {
+	if strings.TrimSpace(s) == "" {
+		return nil
+	}
+	var ports []int
+	for _, part := range strings.Split(s, ",") {
+		p, err := strconv.Atoi(strings.TrimSpace(part))
+		if err == nil && p >= 1 && p <= 65535 {
+			ports = append(ports, p)
+		}
+	}
+	return ports
 }

@@ -1021,6 +1021,32 @@ export interface OTAHistoryItem {
   error?: string;
 }
 
+// ─── Firewall (local-host ufw management) ──────────────────────────────────
+
+export interface FirewallStatus {
+  available: boolean; // ufw binary present and queryable
+  active: boolean; // ufw is enforcing rules
+  can_manage: boolean; // hub may add/delete rules
+  in_container: boolean; // running inside a container
+  backend: "ufw" | "firewalld" | "iptables" | "none";
+  reason?: string; // why not manageable (when can_manage=false)
+}
+
+export interface FirewallRule {
+  spec: string; // exact ufw target token, e.g. "8081/tcp" | "22"
+  port: number; // parsed numeric port (0 for ranges / named profiles)
+  proto: "tcp" | "udp" | ""; // "" = both
+  process?: string; // process currently listening on this port
+  pid?: number;
+  protected: boolean; // SSH / panel access port — not deletable
+}
+
+export interface FirewallStatusResponse {
+  status: FirewallStatus;
+  rules: FirewallRule[];
+  note: string; // cloud security-group reminder
+}
+
 export interface AuditLog {
   id: number;
   user_id?: string;
