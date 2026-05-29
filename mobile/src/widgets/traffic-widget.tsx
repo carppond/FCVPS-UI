@@ -23,36 +23,39 @@ export interface TrafficWidgetProps {
   updatedAt: string; // e.g. "14:05"
 }
 
-const DEFAULT_PROPS: TrafficWidgetProps = {
-  used: "—",
-  limit: "",
-  percent: 0,
-  top: [],
-  updatedAt: "",
-};
-
 export const trafficWidget = createWidget<TrafficWidgetProps>(
   "ShiguangTraffic",
   (props) => {
     "widget";
-    const p = { ...DEFAULT_PROPS, ...props };
+    // Everything the widget renders must live INSIDE this function — the
+    // 'widget' directive serializes only the function body to the widget
+    // runtime; module-level vars/helpers are NOT available there (only the
+    // injected @expo/ui/swift-ui globals + React + JS builtins).
+    // Per-field fallback (widget may render with empty props before the app
+    // pushes data). No object-spread defaults — props is a complete type so a
+    // spread would just overwrite them (TS2783).
+    const used = props.used || "—";
+    const limit = props.limit || "";
+    const percent = props.percent || 0;
+    const top = props.top || [];
+    const updatedAt = props.updatedAt || "";
     return (
       <VStack spacing={6}>
         <HStack>
           <Text>本月流量</Text>
           <Spacer />
-          <Text>{p.limit ? `${p.used} / ${p.limit}` : p.used}</Text>
+          <Text>{limit ? `${used} / ${limit}` : used}</Text>
         </HStack>
-        <ProgressView value={Math.max(0, Math.min(1, p.percent / 100))} />
+        <ProgressView value={Math.max(0, Math.min(1, percent / 100))} />
         <Divider />
-        {p.top.map((a) => (
+        {top.map((a) => (
           <HStack key={a.name}>
             <Text>{a.name}</Text>
             <Spacer />
             <Text>{a.used}</Text>
           </HStack>
         ))}
-        {p.updatedAt ? <Text>更新于 {p.updatedAt}</Text> : <Text> </Text>}
+        {updatedAt ? <Text>更新于 {updatedAt}</Text> : <Text> </Text>}
       </VStack>
     );
   },
