@@ -12,6 +12,7 @@
 // updateSnapshot()/updateTimeline() to feed it (see lib/widget-sync.ts).
 import { createWidget } from "expo-widgets";
 import { VStack, HStack, Text, ProgressView, Spacer, Divider } from "@expo/ui/swift-ui";
+import { font, foregroundStyle, tint, padding } from "@expo/ui/swift-ui/modifiers";
 
 /** Props pushed from the app. Values are pre-formatted strings so the widget
  * stays a dumb renderer (byte formatting happens app-side). */
@@ -39,23 +40,36 @@ export const trafficWidget = createWidget<TrafficWidgetProps>(
     const percent = props.percent || 0;
     const top = props.top || [];
     const updatedAt = props.updatedAt || "";
+    // Usage-based bar color: green < 80%, amber < 95%, red otherwise (red is the
+    // app brand #ff6363). Styling uses @expo/ui/swift-ui/modifiers, which the
+    // widget bundle injects as globals (same as the components).
+    const barColor = percent >= 95 ? "#ff6363" : percent >= 80 ? "#f59e0b" : "#22c55e";
+    const secondary = foregroundStyle({ type: "hierarchical", style: "secondary" });
     return (
-      <VStack spacing={6}>
+      <VStack alignment="leading" spacing={6} modifiers={[padding({ horizontal: 14, vertical: 12 })]}>
         <HStack>
-          <Text>本月流量</Text>
+          <Text modifiers={[font({ textStyle: "subheadline", weight: "semibold" }), secondary]}>
+            本月流量
+          </Text>
           <Spacer />
-          <Text>{limit ? `${used} / ${limit}` : used}</Text>
+          <Text modifiers={[font({ weight: "semibold" })]}>
+            {limit ? `${used} / ${limit}` : used}
+          </Text>
         </HStack>
-        <ProgressView value={Math.max(0, Math.min(1, percent / 100))} />
+        <ProgressView value={Math.max(0, Math.min(1, percent / 100))} modifiers={[tint(barColor)]} />
         <Divider />
         {top.map((a) => (
           <HStack key={a.name}>
-            <Text>{a.name}</Text>
+            <Text modifiers={[font({ textStyle: "footnote" }), secondary]}>{a.name}</Text>
             <Spacer />
-            <Text>{a.used}</Text>
+            <Text modifiers={[font({ textStyle: "footnote" })]}>{a.used}</Text>
           </HStack>
         ))}
-        {updatedAt ? <Text>更新于 {updatedAt}</Text> : <Text> </Text>}
+        {updatedAt ? (
+          <Text modifiers={[font({ textStyle: "caption2" }), secondary]}>更新于 {updatedAt}</Text>
+        ) : (
+          <Text> </Text>
+        )}
       </VStack>
     );
   },

@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
 import { colors } from "../lib/theme";
+// Side-effect import: loading widget-sync runs createWidget() so the home-screen
+// widget's layout is registered with native at app startup (not only when the
+// Traffic tab mounts). No-ops safely when the native module is absent (Expo Go).
+import "../lib/widget-sync";
 
 const queryClient = new QueryClient({
   defaultOptions: {
