@@ -1,8 +1,12 @@
-"widget";
 // Home-screen traffic widget (method 甲: the app pushes data; the widget only
 // renders props). UI uses @expo/ui/swift-ui components — regular react-native
 // View/Text are NOT available in the widget runtime. The `name` here MUST match
 // the `name` in app.json's expo-widgets `widgets[]` entry ("ShiguangTraffic").
+//
+// IMPORTANT: the `'widget'` directive must be the FIRST statement INSIDE the
+// layout function body (not at module top) — babel-preset-expo's widgets-plugin
+// only transforms functions whose body opens with it. Misplacing it yields a
+// runtime "no layout found" error.
 //
 // The app holds the returned `trafficWidget` handle and calls
 // updateSnapshot()/updateTimeline() to feed it (see lib/widget-sync.ts).
@@ -30,6 +34,7 @@ const DEFAULT_PROPS: TrafficWidgetProps = {
 export const trafficWidget = createWidget<TrafficWidgetProps>(
   "ShiguangTraffic",
   (props) => {
+    "widget";
     const p = { ...DEFAULT_PROPS, ...props };
     return (
       <VStack spacing={6}>
