@@ -111,7 +111,7 @@
     "token_label": "에이전트 토큰 (1회용)",
     "install_label": "설치 명령",
     "nezha_hint_title": "Nezha 에이전트 연결 안내",
-    "nezha_hint_body": "기존 Nezha 에이전트 설정에서 Server URL을 이 허브의 /api/v1/nezha 엔드포인트로 변경하고 위 토큰을 secret으로 사용하세요. 예:\nServer: https://{{host}}/api/v1/nezha\nSecret: {{token}}",
+    "nezha_hint_body": "기존 Nezha 에이전트 설정에서 Server URL을 이 허브의 /api/v1/nezha 엔드포인트로 변경하고 위 토큰을 secret으로 사용하세요. 예:\nServer: {{origin}}/api/v1/nezha\nSecret: {{token}}",
     "next": "다음",
     "previous": "이전",
     "submit": "생성",

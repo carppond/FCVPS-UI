@@ -111,7 +111,7 @@
     "token_label": "エージェントトークン（1回限り）",
     "install_label": "インストールコマンド",
     "nezha_hint_title": "Nezha agent 接続手順",
-    "nezha_hint_body": "既存の Nezha agent 設定で Server URL をこのハブの /api/v1/nezha エンドポイントに変更し、上記のトークンを secret として使用してください。例:\nServer: https://{{host}}/api/v1/nezha\nSecret: {{token}}",
+    "nezha_hint_body": "既存の Nezha agent 設定で Server URL をこのハブの /api/v1/nezha エンドポイントに変更し、上記のトークンを secret として使用してください。例:\nServer: {{origin}}/api/v1/nezha\nSecret: {{token}}",
     "next": "次へ",
     "previous": "戻る",
     "submit": "作成",

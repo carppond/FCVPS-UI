@@ -111,7 +111,7 @@
     "token_label": "Agent Token（仅此一次）",
     "install_label": "一键安装命令",
     "nezha_hint_title": "Nezha agent 接入指引",
-    "nezha_hint_body": "在已有 Nezha agent 配置中，把 Server 地址改为本 hub 的 /api/v1/nezha 端点，并使用上方 Token 作为 secret。例如：\nServer: https://{{host}}/api/v1/nezha\nSecret: {{token}}",
+    "nezha_hint_body": "在已有 Nezha agent 配置中，把 Server 地址改为本 hub 的 /api/v1/nezha 端点，并使用上方 Token 作为 secret。例如：\nServer: {{origin}}/api/v1/nezha\nSecret: {{token}}",
     "next": "下一步",
     "previous": "上一步",
     "submit": "创建",

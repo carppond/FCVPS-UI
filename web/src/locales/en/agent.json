@@ -111,7 +111,7 @@
     "token_label": "Agent token (one-time)",
     "install_label": "Install command",
     "nezha_hint_title": "Nezha agent setup",
-    "nezha_hint_body": "Open the Nezha agent config on your host and point its Server URL to this hub's /api/v1/nezha endpoint, using the token above as the secret. For example:\nServer: https://{{host}}/api/v1/nezha\nSecret: {{token}}",
+    "nezha_hint_body": "Open the Nezha agent config on your host and point its Server URL to this hub's /api/v1/nezha endpoint, using the token above as the secret. For example:\nServer: {{origin}}/api/v1/nezha\nSecret: {{token}}",
     "next": "Next",
     "previous": "Back",
     "submit": "Create",

@@ -304,11 +304,17 @@ function Step2({
   // The native installer already encodes os/arch via the curl URL; for
   // nezha_compat the install_command is the migration hint string only.
   const command = React.useMemo(() => {
-    if (result.kind === "nezha_compat") return result.install_command;
+    // The backend emits a literal "<hub>" placeholder (it has no request
+    // context when building the string); substitute the address the operator
+    // is actually viewing the panel at. origin includes the http/https scheme
+    // so the resulting curl URL is complete.
+    const hub =
+      typeof window !== "undefined" ? window.location.origin : "<hub>";
+    const installCmd = result.install_command.replaceAll("<hub>", hub);
+    if (result.kind === "nezha_compat") return installCmd;
     // Append optional os/arch hints so users on macOS / arm64 can still pick
     // the correct binary if the install script honours those env vars.
-    const sep = result.install_command.includes("--") ? "" : "";
-    return `${result.install_command}${sep ? ` ${sep}` : ""} --os=${os} --arch=${arch}`;
+    return `${installCmd} --os=${os} --arch=${arch}`;
   }, [result, os, arch]);
 
   const copy = async (text: string, label: string) => {
@@ -358,8 +364,10 @@ function Step2({
             className="whitespace-pre-wrap rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 font-mono text-[var(--font-size-xs)] text-[var(--color-text-primary)]"
           >
             {t("wizard.nezha_hint_body", {
-              host:
-                typeof window !== "undefined" ? window.location.host : "<hub>",
+              origin:
+                typeof window !== "undefined"
+                  ? window.location.origin
+                  : "<hub>",
               token: result.token,
             })}
           </pre>
