@@ -474,6 +474,9 @@ func buildInstallCommand(kind types.AgentKind, token, name string) string {
 			token, name,
 		)
 	}
-	return fmt.Sprintf(`curl -fsSL <hub>/install-agent.sh | TOKEN=%s AGENT_NAME=%s bash`,
-		token, name)
+	// Token goes in the ?token= query — the install-script handler bakes it
+	// (and the hub URL, OS/arch) into the rendered script, so the one-liner is
+	// just `curl … | bash` with no env vars or args. The "<hub>" placeholder is
+	// substituted with the panel's origin by the web UI before display.
+	return fmt.Sprintf(`curl -fsSL "<hub>/install-agent.sh?token=%s" | bash`, token)
 }

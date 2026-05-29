@@ -124,9 +124,7 @@ export function AgentCreateDialog({
             setArch={setArch}
           />
         )}
-        {step === 2 && result && (
-          <Step2 result={result} os={os} arch={arch} />
-        )}
+        {step === 2 && result && <Step2 result={result} />}
         {step === 3 && <Step3 />}
 
         <DialogFooter className="mt-4">
@@ -291,18 +289,8 @@ function KindChoice({
 
 // ── Step 2 ───────────────────────────────────────────────────────────────────
 
-function Step2({
-  result,
-  os,
-  arch,
-}: {
-  result: AgentCreateResponse;
-  os: OsChoice;
-  arch: ArchChoice;
-}) {
+function Step2({ result }: { result: AgentCreateResponse }) {
   const { t } = useTranslation("agent");
-  // The native installer already encodes os/arch via the curl URL; for
-  // nezha_compat the install_command is the migration hint string only.
   const command = React.useMemo(() => {
     // The backend emits a literal "<hub>" placeholder (it has no request
     // context when building the string); substitute the address the operator
@@ -310,12 +298,11 @@ function Step2({
     // so the resulting curl URL is complete.
     const hub =
       typeof window !== "undefined" ? window.location.origin : "<hub>";
-    const installCmd = result.install_command.replaceAll("<hub>", hub);
-    if (result.kind === "nezha_compat") return installCmd;
-    // Append optional os/arch hints so users on macOS / arm64 can still pick
-    // the correct binary if the install script honours those env vars.
-    return `${installCmd} --os=${os} --arch=${arch}`;
-  }, [result, os, arch]);
+    // The install script reads the token from the URL query and auto-detects
+    // OS/arch (uname) + hub URL server-side, so the one-liner takes no extra
+    // args — anything appended here would be handed to `bash` and rejected.
+    return result.install_command.replaceAll("<hub>", hub);
+  }, [result]);
 
   const copy = async (text: string, label: string) => {
     try {
