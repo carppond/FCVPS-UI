@@ -42,6 +42,9 @@
 
 ## 部署
 
+> **没有域名也能用。** 三种方式都支持用 IP + HTTP 直接访问（`http://<你的IP>`），域名/HTTPS 是可选项。
+> 注意：HTTP 为明文传输，登录密码、订阅 token、SSH 凭据都不加密——**纯 IP 模式建议仅在内网、局域网，或已套 WireGuard / Tailscale 等加密隧道时使用**；公网长期部署强烈建议配域名 + HTTPS。
+
 ### 方式 1：Docker（推荐）
 
 ```bash
@@ -65,11 +68,13 @@ docker compose up -d
 docker logs shiguang-vps 2>&1 | grep ADMIN
 ```
 
-访问 `http://your-server:8080` 即可。生产环境请在前面接 Nginx/Caddy + 域名 + Let's Encrypt 反代到 8080。
+访问 `http://<你的IP>:8080` 即可，**无需域名**。想上 HTTPS，在前面接 Nginx/Caddy + 域名 + Let's Encrypt 反代到 8080 即可。
 
-### 方式 2：一键脚本部署到 VPS（含 Nginx + SSL）
+> **换端口**：`-p` 左边是对外端口，随意改以避开已占用端口。例如 `-p 9000:80` → `http://<你的IP>:9000`；容器内部端口固定 `80`，无需关心。
 
-适合直接部署在裸 VPS 上，脚本自动配置 Nginx + Let's Encrypt 证书：
+### 方式 2：一键脚本部署到 VPS（可选 Nginx + SSL）
+
+适合直接部署在裸 VPS 上。脚本会问域名——**填了就自动配 Nginx + Let's Encrypt HTTPS，留空就用 IP + HTTP**：
 
 ```bash
 git clone https://github.com/carppond/FCVPS-UI.git
@@ -79,11 +84,16 @@ cd FCVPS-UI
 
 脚本会交互式询问：
 - VPS IP、SSH 端口、SSH 用户
-- 域名（必填）
-- 邮箱（必填，用于 Let's Encrypt 证书）
+- 域名（**可留空**；留空 → IP + HTTP，跳过 SSL）
+- 邮箱（仅填了域名时需要，用于 Let's Encrypt 证书）
+- **访问端口**（对外端口，默认 HTTP 80 / HTTPS 443，可自定义）
+- **后端端口**（仅本机回环，默认 8080，可自定义）
 - VPS 架构（amd64 / arm64）
 
-部署完成后访问 `https://<your-domain>`。查看初始密码：
+> **端口冲突自动探测**：脚本连上 VPS 后会实时检测你填的端口是否已被占用（如 3X-UI、其他面板），占用会提示换端口，避免部署到一半失败。访问端口和后端端口都能自定义，方便与已有服务共存。
+> 域名模式也支持自定义 HTTPS 端口（如 `https://<域名>:8443`）：脚本用 80 端口完成 Let's Encrypt 验证后，会把证书装到你指定的端口上。
+
+部署完成后会**统一打印**访问地址、初始账号密码、后端端口等信息。填域名访问 `https://<your-domain>`，留空则访问 `http://<你的IP>`。若需重新查看初始密码：
 
 ```bash
 ssh root@<vps> "journalctl -u shiguang-vps -n 20 | grep ADMIN"
@@ -104,7 +114,7 @@ chmod +x hub-linux-amd64
 ./hub-linux-amd64 --http-addr :8080 --data-dir ./data
 ```
 
-自带前端的静态文件需要单独 build（或用 Docker 方式）。
+`--http-addr` 想监听哪个端口/地址都行，例如 `--http-addr :9000`（任意端口）或 `--http-addr 127.0.0.1:8080`（仅本机，前面再接反代）。自带前端的静态文件需要单独 build（或用 Docker 方式）。
 
 ---
 
