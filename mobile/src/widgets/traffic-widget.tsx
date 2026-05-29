@@ -12,7 +12,7 @@
 // updateSnapshot()/updateTimeline() to feed it (see lib/widget-sync.ts).
 import { createWidget } from "expo-widgets";
 import { VStack, HStack, Text, ProgressView, Spacer, Divider } from "@expo/ui/swift-ui";
-import { font, foregroundStyle, tint, padding } from "@expo/ui/swift-ui/modifiers";
+import { font, foregroundStyle, tint, padding, lineLimit } from "@expo/ui/swift-ui/modifiers";
 
 /** Props pushed from the app. Values are pre-formatted strings so the widget
  * stays a dumb renderer (byte formatting happens app-side). */
@@ -22,6 +22,7 @@ export interface TrafficWidgetProps {
   percent: number; // 0..100
   top: { name: string; used: string }[]; // up to 3
   updatedAt: string; // e.g. "14:05"
+  stale?: boolean; // set by a future timeline entry once data may be outdated
 }
 
 export const trafficWidget = createWidget<TrafficWidgetProps>(
@@ -40,6 +41,7 @@ export const trafficWidget = createWidget<TrafficWidgetProps>(
     const percent = props.percent || 0;
     const top = props.top || [];
     const updatedAt = props.updatedAt || "";
+    const stale = props.stale || false;
     // Usage-based bar color: green < 80%, amber < 95%, red otherwise (red is the
     // app brand #ff6363). Styling uses @expo/ui/swift-ui/modifiers, which the
     // widget bundle injects as globals (same as the components).
@@ -60,13 +62,23 @@ export const trafficWidget = createWidget<TrafficWidgetProps>(
         <Divider />
         {top.map((a) => (
           <HStack key={a.name}>
-            <Text modifiers={[font({ textStyle: "footnote" }), secondary]}>{a.name}</Text>
+            <Text modifiers={[font({ textStyle: "footnote" }), secondary, lineLimit(1)]}>
+              {a.name}
+            </Text>
             <Spacer />
-            <Text modifiers={[font({ textStyle: "footnote" })]}>{a.used}</Text>
+            <Text modifiers={[font({ textStyle: "footnote" }), lineLimit(1)]}>{a.used}</Text>
           </HStack>
         ))}
         {updatedAt ? (
-          <Text modifiers={[font({ textStyle: "caption2" }), secondary]}>更新于 {updatedAt}</Text>
+          <Text
+            modifiers={[
+              font({ textStyle: "caption2" }),
+              stale ? foregroundStyle("#f59e0b") : secondary,
+              lineLimit(1),
+            ]}
+          >
+            {stale ? `更新于 ${updatedAt} · 可能过期` : `更新于 ${updatedAt}`}
+          </Text>
         ) : (
           <Text> </Text>
         )}

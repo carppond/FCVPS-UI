@@ -6,7 +6,16 @@ import type { TrafficWidgetProps } from "../widgets/traffic-widget";
 // custom dev/prod build — so we lazy-require it and no-op when absent (Expo Go
 // / before prebuild), mirroring the SSH page's optional-native pattern.
 
-let trafficWidget: { updateSnapshot?: (p: TrafficWidgetProps) => void; reload?: () => void } | null = null;
+// Data is considered "possibly stale" this many minutes after a push — a future
+// timeline entry flips the widget into a stale state at that point, so it ages
+// gracefully on its own (no background task) until the app pushes fresh data.
+const STALE_AFTER_MIN = 60;
+
+let trafficWidget: {
+  updateSnapshot?: (p: TrafficWidgetProps) => void;
+  updateTimeline?: (entries: { date: Date; props: TrafficWidgetProps }[]) => void;
+  reload?: () => void;
+} | null = null;
 try {
   // Importing the widget module triggers createWidget(); guard so Expo Go
   // (no expo-widgets native module) doesn't crash on load.
@@ -53,11 +62,23 @@ export function summaryToWidgetProps(s: TrafficSummary, now: Date): TrafficWidge
   };
 }
 
-/** Push a fresh snapshot into the widget. No-op when the widget is unavailable. */
+/** Push fresh traffic into the widget. Builds a 2-entry timeline — fresh now,
+ * "possibly stale" after STALE_AFTER_MIN — so the widget ages on its own until
+ * the next push. No-op when the widget runtime is unavailable. */
 export function pushTrafficToWidget(s: TrafficSummary): void {
   if (!isTrafficWidgetAvailable()) return;
   try {
-    trafficWidget!.updateSnapshot!(summaryToWidgetProps(s, new Date()));
+    const now = new Date();
+    const fresh = summaryToWidgetProps(s, now);
+    if (typeof trafficWidget!.updateTimeline === "function") {
+      const staleAt = new Date(now.getTime() + STALE_AFTER_MIN * 60_000);
+      trafficWidget!.updateTimeline([
+        { date: now, props: { ...fresh, stale: false } },
+        { date: staleAt, props: { ...fresh, stale: true } },
+      ]);
+    } else {
+      trafficWidget!.updateSnapshot!(fresh);
+    }
   } catch {
     // best-effort; widget refresh should never break the app
   }

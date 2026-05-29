@@ -1,14 +1,16 @@
 import { useEffect } from "react";
+import { AppState } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
 import { colors } from "../lib/theme";
+import { trafficSummaryQuery } from "../api/traffic";
 // Side-effect import: loading widget-sync runs createWidget() so the home-screen
 // widget's layout is registered with native at app startup (not only when the
 // Traffic tab mounts). No-ops safely when the native module is absent (Expo Go).
-import "../lib/widget-sync";
+import { pushTrafficToWidget, isTrafficWidgetAvailable } from "../lib/widget-sync";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,6 +25,22 @@ export default function RootLayout() {
   useEffect(() => {
     loadFromStorage();
     loadTheme();
+  }, []);
+
+  // Refresh the home-screen widget whenever the app returns to the foreground:
+  // re-fetch traffic (respecting staleTime) and push it. Keeps the widget fresh
+  // on reopen without relying on background tasks or the Traffic tab being open.
+  // Skipped when logged out; failures are swallowed (widget is best-effort).
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active" || !useAuthStore.getState().token) return;
+      if (!isTrafficWidgetAvailable()) return; // no widget runtime → don't fetch
+      queryClient
+        .fetchQuery(trafficSummaryQuery)
+        .then(pushTrafficToWidget)
+        .catch(() => {});
+    });
+    return () => sub.remove();
   }, []);
 
   return (
