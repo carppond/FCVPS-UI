@@ -1,9 +1,10 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useTrafficSummary } from "../../api/traffic";
 import { colors, spacing, radius, fontSize } from "../../lib/theme";
 import type { AgentTrafficSummary } from "../../types/api";
+import { pushTrafficToWidget } from "../../lib/widget-sync";
 
 function formatBytes(n: number): string {
   if (n === 0) return "0 B";
@@ -22,6 +23,12 @@ export default function TrafficScreen() {
     await refetch();
     setRefreshing(false);
   }, []);
+
+  // Feed the home-screen widget whenever fresh traffic loads (no-op when the
+  // widget runtime isn't linked — Expo Go / before prebuild).
+  useEffect(() => {
+    if (data) pushTrafficToWidget(data);
+  }, [data]);
 
   const agents = data?.agents ?? [];
 
