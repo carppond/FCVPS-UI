@@ -67,5 +67,9 @@ mobile/node_modules/
 mobile/.expo/
 mobile/dist/
 
+# EAS projectId ties the checkout to a personal Expo account — keep it local,
+# inject via app.config.js (mirrors APPLE_TEAM_ID env handling).
+mobile/eas-project.local.json
+
 # iOS 打包产物(走 Release,不入库)
 *.ipa
