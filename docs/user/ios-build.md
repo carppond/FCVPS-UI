@@ -82,7 +82,7 @@ open ios/VPS.xcworkspace
 #   - Product → Archive → Distribute App → (Ad Hoc / Development) → 导出 IPA
 ```
 
-> 也可用 EAS Build（云端）出包，但仓库未内置 `eas.json`，需自行 `eas build:configure` 并按 `EXPO_WIDGET` 配 build profile 的环境变量。
+> 也可用 EAS Build（云端）出包：仓库已内置 `mobile/eas.json` 的 `widget` profile（`EXPO_WIDGET=1`），`eas build -p ios --profile widget` 即可（需在 EAS 配好付费团队的签名凭据）。
 
 ---
 
@@ -129,4 +129,4 @@ open ios/VPS.xcworkspace
 - 去掉 `EXPO_WIDGET=1` 后仍报 App Group 错：旧的 `ios/` 工程还在被复用。必须 **`npx expo prebuild -p ios --clean`** 重新生成。
 - SSH 弹「不支持，需要 Dev Build」：SSH 需**真机** + Dev Build；当前底层 SSH 原生库较旧，若仍不可用属已知问题（见仓库 Issue）。
 
-> Android 不受以上限制：直接下 APK 安装即可（见 Android 打包说明）。
+> Android 不受以上限制：直接下 APK 安装即可（见 [android-build.md](./android-build.md)）。
