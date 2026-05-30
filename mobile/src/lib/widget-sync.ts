@@ -54,11 +54,18 @@ export function summaryToWidgetProps(s: TrafficSummary, now: Date): TrafficWidge
   const top = [...s.agents]
     .sort((a, b) => b.total_used - a.total_used)
     .slice(0, 6)
-    .map((a) => ({
-      name: a.agent_name || a.agent_id,
-      used: formatBytes(a.total_used),
-      usedBytes: a.total_used,
-    }));
+    .map((a) => {
+      const usedStr = formatBytes(a.total_used);
+      // 方案1: per-agent "used / limit · pct%" when a monthly quota is set
+      // (manual or BandwagonHost); otherwise just the used figure.
+      const display =
+        a.limit && a.limit > 0
+          ? `${usedStr} / ${formatBytes(a.limit)} ${Math.round(
+              Math.min(100, (a.total_used / a.limit) * 100),
+            )}%`
+          : usedStr;
+      return { name: a.agent_name || a.agent_id, used: display, usedBytes: a.total_used };
+    });
   return {
     used: formatBytes(s.total_used),
     limit: s.total_limit && s.total_limit > 0 ? formatBytes(s.total_limit) : "",
