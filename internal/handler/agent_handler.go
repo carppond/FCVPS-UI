@@ -120,7 +120,7 @@ func (h *AgentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	resp := types.AgentCreateResponse{
 		Agent:          agentRecordToDTO(created, false, nil),
 		Token:          token,
-		InstallCommand: buildInstallCommand(kind, token, created.Name),
+		InstallCommand: buildInstallCommand(kind, created.ID, token, created.Name),
 	}
 	if kind == types.AgentKindNezhaCompat {
 		// Frontend renders the migration guide under this i18n key (T-16).
@@ -467,7 +467,7 @@ func isAllowedCommand(c string) bool {
 // For kind=nezha_compat the return value is a Server-URL hint instead of an
 // installer one-liner: the operator already has a Nezha agent binary; we just
 // need to tell them what URL to point it at and which token to use.
-func buildInstallCommand(kind types.AgentKind, token, name string) string {
+func buildInstallCommand(kind types.AgentKind, agentID, token, name string) string {
 	if kind == types.AgentKindNezhaCompat {
 		return fmt.Sprintf(
 			`# Set Server = "<hub>/api/v1/nezha" and ClientSecret = "%s" in your existing Nezha agent config (agent.yaml). Agent name on hub: %s`,
@@ -482,5 +482,7 @@ func buildInstallCommand(kind types.AgentKind, token, name string) string {
 	// the agent from the public address even when a reverse proxy fails to
 	// forward the original Host (otherwise deriveHubURL falls back to the
 	// internal upstream, e.g. http://127.0.0.1:8080).
-	return fmt.Sprintf(`curl -fsSL "<hub>/install-agent.sh?token=%s&hub_url=<hub>" | bash`, token)
+	return fmt.Sprintf(
+		`curl -fsSL "<hub>/install-agent.sh?token=%s&agent_id=%s&hub_url=<hub>" | bash`,
+		token, agentID)
 }

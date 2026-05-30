@@ -97,6 +97,7 @@ func NewInstallScriptHandler(cfg InstallScriptHandlerConfig) *InstallScriptHandl
 type installScriptVars struct {
 	Token   string
 	HubURL  string
+	AgentID string
 	Version string
 }
 
@@ -120,6 +121,19 @@ func (h *InstallScriptHandler) InstallScript(w http.ResponseWriter, r *http.Requ
 		util.RespondError(w, types.ErrValidationInvalidFormat, "invalid token characters", nil, traceID)
 		return
 	}
+	// agent_id is the hub-assigned UUID the agent must report on the WS hello
+	// (the hub cross-checks it against the token). Baked into a single-quoted
+	// bash var, so it is validated with the same plain-token allow-list to keep
+	// shell metacharacters out. Required: the agent refuses to start without it.
+	agentID := strings.TrimSpace(r.URL.Query().Get("agent_id"))
+	if agentID == "" {
+		util.RespondError(w, types.ErrValidationRequiredField, "agent_id query required", nil, traceID)
+		return
+	}
+	if !isPlainToken(agentID) {
+		util.RespondError(w, types.ErrValidationInvalidFormat, "invalid agent_id characters", nil, traceID)
+		return
+	}
 	hubURL := strings.TrimSpace(r.URL.Query().Get("hub_url"))
 	if hubURL == "" {
 		hubURL = h.deriveHubURL(r)
@@ -138,6 +152,7 @@ func (h *InstallScriptHandler) InstallScript(w http.ResponseWriter, r *http.Requ
 	vars := installScriptVars{
 		Token:   token,
 		HubURL:  hubURL,
+		AgentID: agentID,
 		Version: "v1",
 	}
 	var buf bytes.Buffer

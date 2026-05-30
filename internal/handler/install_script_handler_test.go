@@ -19,7 +19,7 @@ func newInstallScriptStack(t *testing.T) http.Handler {
 func TestInstallScriptRendersTokenAndHubURL(t *testing.T) {
 	mux := newInstallScriptStack(t)
 	req := httptest.NewRequest(http.MethodGet,
-		"/install-agent.sh?token=abc123def456&hub_url=https://hub.example.com", nil)
+		"/install-agent.sh?token=abc123def456&agent_id=agent-uuid-1&hub_url=https://hub.example.com", nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
@@ -31,6 +31,9 @@ func TestInstallScriptRendersTokenAndHubURL(t *testing.T) {
 	}
 	if !strings.Contains(body, `HUB_URL='https://hub.example.com'`) {
 		t.Fatalf("rendered script missing hub_url: %s", body)
+	}
+	if !strings.Contains(body, `AGENT_ID='agent-uuid-1'`) {
+		t.Fatalf("rendered script missing agent_id: %s", body)
 	}
 	if !strings.Contains(body, "#!/usr/bin/env bash") {
 		t.Fatalf("rendered script missing shebang: %s", body)
@@ -61,10 +64,21 @@ func TestInstallScriptRejectsBadToken(t *testing.T) {
 	}
 }
 
+func TestInstallScriptRequiresAgentID(t *testing.T) {
+	mux := newInstallScriptStack(t)
+	req := httptest.NewRequest(http.MethodGet,
+		"/install-agent.sh?token=tokenvalue&hub_url=https://hub.example.com", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 without agent_id, got %d body=%s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestInstallScriptFallsBackToRequestHost(t *testing.T) {
 	mux := newInstallScriptStack(t)
 	req := httptest.NewRequest(http.MethodGet,
-		"/install-agent.sh?token=tokenvalue", nil)
+		"/install-agent.sh?token=tokenvalue&agent_id=agent-uuid-1", nil)
 	req.Host = "hub.local:8080"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
@@ -86,14 +100,14 @@ func TestInstallScript_HubURLInjection_Rejected(t *testing.T) {
 		// Each value uses encoded form for shell metacharacters that the
 		// URL parser would otherwise truncate (`;`, `&`) so they reach the
 		// validator intact.
-		"/install-agent.sh?token=tokenvalue&hub_url=https://x$(touch%20/tmp/pwn)",
-		"/install-agent.sh?token=tokenvalue&hub_url=https://x%60id%60",
-		"/install-agent.sh?token=tokenvalue&hub_url=https://x%3Bid",
-		"/install-agent.sh?token=tokenvalue&hub_url=https://x%27evil",
-		"/install-agent.sh?token=tokenvalue&hub_url=https://x%7Cid",
-		"/install-agent.sh?token=tokenvalue&hub_url=https://x%20evil",
-		"/install-agent.sh?token=tokenvalue&hub_url=ftp://example.com",
-		"/install-agent.sh?token=tokenvalue&hub_url=http://x.com/%24%28id%29",
+		"/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=https://x$(touch%20/tmp/pwn)",
+		"/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=https://x%60id%60",
+		"/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=https://x%3Bid",
+		"/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=https://x%27evil",
+		"/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=https://x%7Cid",
+		"/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=https://x%20evil",
+		"/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=ftp://example.com",
+		"/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=http://x.com/%24%28id%29",
 	}
 	for _, target := range cases {
 		req := httptest.NewRequest(http.MethodGet, target, nil)
@@ -116,7 +130,7 @@ func TestInstallScript_LegitHubURLAccepted(t *testing.T) {
 		"https://hub.example.com/_app/abcdef0123456789abcdef0123456789",
 	}
 	for _, hubURL := range cases {
-		target := "/install-agent.sh?token=tokenvalue&hub_url=" + hubURL
+		target := "/install-agent.sh?token=tokenvalue&agent_id=ag1&hub_url=" + hubURL
 		req := httptest.NewRequest(http.MethodGet, target, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)

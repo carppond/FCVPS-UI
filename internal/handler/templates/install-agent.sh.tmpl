@@ -14,6 +14,7 @@ set -euo pipefail
 # character, so this delimiter is safe.
 TOKEN='{{.Token}}'
 HUB_URL='{{.HubURL}}'
+AGENT_ID='{{.AgentID}}'
 
 if [[ -z "$TOKEN" ]]; then
   echo "install-agent.sh: TOKEN is empty — refusing to install" >&2
@@ -21,6 +22,10 @@ if [[ -z "$TOKEN" ]]; then
 fi
 if [[ -z "$HUB_URL" ]]; then
   echo "install-agent.sh: HUB_URL is empty — refusing to install" >&2
+  exit 2
+fi
+if [[ -z "$AGENT_ID" ]]; then
+  echo "install-agent.sh: AGENT_ID is empty — refusing to install" >&2
   exit 2
 fi
 
@@ -69,7 +74,7 @@ Description=Shiguang VPS Agent
 After=network.target
 
 [Service]
-ExecStart=${TARGET_BIN} -hub-url ${HUB_URL} -token ${TOKEN}
+ExecStart=${TARGET_BIN} -hub-url ${HUB_URL} -token ${TOKEN} -agent-id ${AGENT_ID}
 Restart=always
 RestartSec=5
 User=root
@@ -89,7 +94,7 @@ UNIT
   fi
   echo "==> shiguang-agent enabled and started via systemd"
 else
-  echo "==> systemd not detected; run '${TARGET_BIN} -hub-url ${HUB_URL} -token ${TOKEN}' manually"
+  echo "==> systemd not detected; run '${TARGET_BIN} -hub-url ${HUB_URL} -token ${TOKEN} -agent-id ${AGENT_ID}' manually"
 fi
 
 echo "OK: shiguang-agent installed and running"
