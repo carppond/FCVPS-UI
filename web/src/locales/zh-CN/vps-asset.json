@@ -27,6 +27,7 @@
     "days_left": "DAYS",
     "expired_label": "已过期",
     "agent_online": "在线",
+    "agent_offline": "离线",
     "agent_offline": "探针离线",
     "no_agent": "未配置探针",
     "vps_may_recycled": "VPS 可能已被回收"
@@ -58,6 +59,8 @@
     "ssh_user": "SSH 用户名",
     "os": "操作系统",
     "os_placeholder": "如 Ubuntu 22.04",
+    "agent_label": "关联探针",
+    "agent_none": "不关联",
     "location": "机房位置",
     "location_placeholder": "如 Hong Kong",
     "price": "价格",

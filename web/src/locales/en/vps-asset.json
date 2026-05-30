@@ -27,6 +27,7 @@
     "days_left": "DAYS",
     "expired_label": "EXPIRED",
     "agent_online": "Online",
+    "agent_offline": "Offline",
     "agent_offline": "Agent Offline",
     "no_agent": "No Agent",
     "vps_may_recycled": "VPS may have been recycled"
@@ -58,6 +59,8 @@
     "ssh_user": "SSH User",
     "os": "OS",
     "os_placeholder": "e.g. Ubuntu 22.04",
+    "agent_label": "Linked agent",
+    "agent_none": "None",
     "location": "Location",
     "location_placeholder": "e.g. Hong Kong",
     "price": "Price",

@@ -27,6 +27,7 @@
     "days_left": "DAYS",
     "expired_label": "期限切れ",
     "agent_online": "オンライン",
+    "agent_offline": "オフライン",
     "agent_offline": "エージェントオフライン",
     "no_agent": "エージェント未設定",
     "vps_may_recycled": "VPSが回収された可能性があります"
@@ -58,6 +59,8 @@
     "ssh_user": "SSHユーザー",
     "os": "OS",
     "os_placeholder": "例: Ubuntu 22.04",
+    "agent_label": "関連エージェント",
+    "agent_none": "なし",
     "location": "ロケーション",
     "location_placeholder": "例: Tokyo",
     "price": "価格",

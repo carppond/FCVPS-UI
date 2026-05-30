@@ -27,6 +27,7 @@
     "days_left": "DAYS",
     "expired_label": "만료됨",
     "agent_online": "온라인",
+    "agent_offline": "오프라인",
     "agent_offline": "에이전트 오프라인",
     "no_agent": "에이전트 없음",
     "vps_may_recycled": "VPS가 회수되었을 수 있습니다"
@@ -58,6 +59,8 @@
     "ssh_user": "SSH 사용자",
     "os": "운영체제",
     "os_placeholder": "예: Ubuntu 22.04",
+    "agent_label": "연결된 에이전트",
+    "agent_none": "없음",
     "location": "위치",
     "location_placeholder": "예: Tokyo",
     "price": "가격",

@@ -21,6 +21,7 @@ import {
   useCreateVpsAssetMutation,
   useUpdateVpsAssetMutation,
 } from "@/api/vps-asset";
+import { useAgentsQuery } from "@/api/agent";
 import type {
   BillingCycle,
   CreateVpsAssetRequest,
@@ -51,6 +52,8 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
 
   const createMutation = useCreateVpsAssetMutation();
   const updateMutation = useUpdateVpsAssetMutation();
+  const { data: agentsPage } = useAgentsQuery();
+  const agents = agentsPage?.items ?? [];
 
   const [name, setName] = React.useState("");
   const [provider, setProvider] = React.useState("");
@@ -69,6 +72,7 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
   const [sshUser, setSshUser] = React.useState("");
   const [os, setOs] = React.useState("");
   const [notes, setNotes] = React.useState("");
+  const [agentId, setAgentId] = React.useState("");
 
   React.useEffect(() => {
     if (!open) return;
@@ -90,12 +94,13 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
       setSshUser(vps.ssh_user ?? "");
       setOs(vps.os ?? "");
       setNotes(vps.notes ?? "");
+      setAgentId(vps.agent_id ?? "");
     } else {
       setName(""); setProvider(""); setIp(""); setLocation("");
       setPrice(""); setCurrency("USD"); setBillingCycle("annual");
       setExpireAt(""); setCpu(""); setMemory(""); setDisk("");
       setBandwidth(""); setMonthlyTraffic("0"); setSshPort("22");
-      setSshUser(""); setOs(""); setNotes("");
+      setSshUser(""); setOs(""); setNotes(""); setAgentId("");
     }
   }, [open, vps]);
 
@@ -115,7 +120,7 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
             ssh_port: Number(sshPort), ssh_user: sshUser || null, os: os || null,
             cpu: cpu || null, memory: memory || null, disk: disk || null,
             bandwidth: bandwidth || null, monthly_traffic: Number(monthlyTraffic),
-            notes: notes || null,
+            notes: notes || null, agent_id: agentId || null,
           },
         });
         toast.success(t("vps-asset:toast.updated"));
@@ -136,6 +141,7 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
         if (bandwidth) req.bandwidth = bandwidth;
         if (monthlyTraffic !== "0") req.monthly_traffic = Number(monthlyTraffic);
         if (notes) req.notes = notes;
+        if (agentId) req.agent_id = agentId;
         await createMutation.mutateAsync(req);
         toast.success(t("vps-asset:toast.created"));
       }
@@ -246,6 +252,16 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
                   </Field>
                   <Field label={t("vps-asset:form.os")}>
                     <Input value={os} onChange={(e) => setOs(e.target.value)} placeholder={t("vps-asset:form.os_placeholder")} className="h-11" />
+                  </Field>
+                </div>
+                <div className="mt-3">
+                  <Field label={t("vps-asset:form.agent_label")}>
+                    <select value={agentId} onChange={(e) => setAgentId(e.target.value)} className={selectClass}>
+                      <option value="">{t("vps-asset:form.agent_none")}</option>
+                      {agents.map((a) => (
+                        <option key={a.id} value={a.id}>{a.name}</option>
+                      ))}
+                    </select>
                   </Field>
                 </div>
                 <div className="mt-3">

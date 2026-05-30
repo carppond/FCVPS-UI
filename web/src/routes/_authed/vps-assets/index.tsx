@@ -35,7 +35,15 @@ import {
   useDeleteVpsAssetMutation,
 } from "@/api/vps-asset";
 import { VpsAssetFormDialog } from "@/components/vps-asset/vps-asset-form";
-import type { VpsAsset, VpsAssetStatus } from "@/types/api";
+import { useAgentsQuery } from "@/api/agent";
+import { useTrafficSummaryQuery } from "@/api/traffic";
+import { formatBytes } from "@/lib/format";
+import type {
+  AgentListItem,
+  AgentTrafficSummary,
+  VpsAsset,
+  VpsAssetStatus,
+} from "@/types/api";
 
 export const Route = createFileRoute("/_authed/vps-assets/")({
   component: VpsAssetsPage,
@@ -62,6 +70,19 @@ function VpsAssetsPage() {
     pageSize: 500,
   });
   const { data: summary } = useVpsAssetSummaryQuery();
+  // Linked-agent live state + monthly traffic for the per-card badge.
+  const { data: agentsPage } = useAgentsQuery();
+  const { data: trafficSummary } = useTrafficSummaryQuery();
+  const agentById = React.useMemo(() => {
+    const m = new Map<string, AgentListItem>();
+    for (const a of agentsPage?.items ?? []) m.set(a.id, a);
+    return m;
+  }, [agentsPage]);
+  const trafficByAgent = React.useMemo(() => {
+    const m = new Map<string, AgentTrafficSummary>();
+    for (const a of trafficSummary?.agents ?? []) m.set(a.agent_id, a);
+    return m;
+  }, [trafficSummary]);
 
   const allItems = data?.items ?? [];
 
@@ -214,6 +235,10 @@ function VpsAssetsPage() {
             <VpsCard
               key={vps.id}
               vps={vps}
+              agent={vps.agent_id ? agentById.get(vps.agent_id) : undefined}
+              traffic={
+                vps.agent_id ? trafficByAgent.get(vps.agent_id) : undefined
+              }
               onEdit={setEditTarget}
               onDelete={setDeleteTarget}
               onCopyIp={copyIp}
@@ -348,11 +373,15 @@ function expiryBarPercent(days: number): number {
 
 function VpsCard({
   vps,
+  agent,
+  traffic,
   onEdit,
   onDelete,
   onCopyIp,
 }: {
   vps: VpsAsset;
+  agent?: AgentListItem;
+  traffic?: AgentTrafficSummary;
   onEdit: (v: VpsAsset) => void;
   onDelete: (v: VpsAsset) => void;
   onCopyIp: (ip: string) => void;
@@ -439,17 +468,35 @@ function VpsCard({
             {vps.ip}
           </button>
         )}
-        {vps.agent_id && (
+        {vps.agent_id && agent ? (
           <span className="flex items-center gap-1 rounded-[5px] bg-[var(--color-surface-hover)] px-2 py-1 text-[10px]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
-            <span className="text-[var(--color-text-secondary)]">{t("vps-asset:card.agent_online")}</span>
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                agent.online
+                  ? "bg-[var(--color-success)]"
+                  : "bg-[var(--color-text-disabled)]",
+              )}
+            />
+            <span className="text-[var(--color-text-secondary)]">
+              {agent.online
+                ? t("vps-asset:card.agent_online")
+                : t("vps-asset:card.agent_offline")}
+              {agent.online && agent.latest_metrics
+                ? ` · CPU ${Math.round(agent.latest_metrics.cpu_percent)}%`
+                : ""}
+            </span>
           </span>
-        )}
-        {!vps.agent_id && (
+        ) : (
           <span className="rounded-[5px] bg-[var(--color-surface-hover)] px-2 py-1 text-[10px] text-[var(--color-text-tertiary)]">
             {t("vps-asset:card.no_agent")}
           </span>
         )}
+        {traffic && traffic.limit ? (
+          <span className="rounded-[5px] bg-[var(--color-surface-hover)] px-2 py-1 text-[10px] tabular-nums text-[var(--color-text-secondary)]">
+            {formatBytes(traffic.total_used)} / {formatBytes(traffic.limit)}
+          </span>
+        ) : null}
         {vps.tags.map((tag) => (
           <span
             key={tag}
