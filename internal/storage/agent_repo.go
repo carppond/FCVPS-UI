@@ -318,6 +318,47 @@ func (r *AgentRepo) UpdateTrafficConfig(ctx context.Context, id, userID string, 
 	return nil
 }
 
+// BwgAgentCreds carries the BandwagonHost credentials the poller needs.
+type BwgAgentCreds struct {
+	ID     string
+	Veid   string
+	APIKey string
+}
+
+// ListBwgAgents returns every agent (across users) that has BandwagonHost
+// credentials configured, for the background traffic poller.
+func (r *AgentRepo) ListBwgAgents(ctx context.Context) ([]BwgAgentCreds, error) {
+	rows, err := r.db.Read.QueryContext(ctx,
+		`SELECT id, bwg_veid, bwg_api_key FROM agents WHERE bwg_veid != '' AND bwg_api_key != ''`)
+	if err != nil {
+		return nil, fmt.Errorf("list bwg agents: %w", err)
+	}
+	defer rows.Close()
+	var out []BwgAgentCreds
+	for rows.Next() {
+		var c BwgAgentCreds
+		if err := rows.Scan(&c.ID, &c.Veid, &c.APIKey); err != nil {
+			return nil, fmt.Errorf("scan bwg agent: %w", err)
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+// UpdateBwgCache stores the provider-reported figures fetched by the poller.
+func (r *AgentRepo) UpdateBwgCache(ctx context.Context, id string, used, limit, resetAt, syncedAt int64) error {
+	if id == "" {
+		return fmt.Errorf("update bwg cache: empty id")
+	}
+	_, err := r.db.Write.ExecContext(ctx,
+		`UPDATE agents SET bwg_used = ?, bwg_limit = ?, bwg_reset_at = ?, bwg_synced_at = ? WHERE id = ?`,
+		used, limit, resetAt, syncedAt, id)
+	if err != nil {
+		return fmt.Errorf("update bwg cache: %w", err)
+	}
+	return nil
+}
+
 // RotateToken atomically updates token_hash + updated_at. Caller is responsible
 // for generating + hashing the new token.
 func (r *AgentRepo) RotateToken(ctx context.Context, id, userID, newTokenHash string) error {

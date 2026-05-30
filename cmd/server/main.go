@@ -31,6 +31,7 @@ import (
 	"shiguang-vps/internal/asset"
 	"shiguang-vps/internal/audit"
 	"shiguang-vps/internal/auth"
+	"shiguang-vps/internal/bandwagon"
 	"shiguang-vps/internal/config"
 	"shiguang-vps/internal/firewall"
 	"shiguang-vps/internal/handler"
@@ -580,6 +581,14 @@ func run() error {
 	defer stopMonthlyReset()
 	stopTrafficCleanup := trafficCleanup.StartDaily(rootCtx)
 	defer stopTrafficCleanup()
+	// BandwagonHost traffic poller: every 30 min, refresh per-agent provider
+	// figures (used/limit) for agents with API credentials. The traffic summary
+	// prefers these over measured usage when synced.
+	bwgPoller := bandwagon.NewPoller(agentRepo,
+		safehttp.NewClient(safehttp.Config{AllowPrivate: allowPrivate}, 15*time.Second),
+		log, time.Now)
+	stopBwgPoller := bwgPoller.StartPeriodic(rootCtx, 30*time.Minute)
+	defer stopBwgPoller()
 	// M-ASSET: daily expiry check (VPS near expiry → vps_expiry notification).
 	stopExpiryChecker := expiryChecker.StartDaily(rootCtx)
 	defer stopExpiryChecker()
