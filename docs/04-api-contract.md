@@ -590,6 +590,7 @@ PagedResponse<T> {
 | `agent_id` | string | 是 | - |
 | `recorded_at` | int64 | 是 | unix ms |
 | `cpu_percent` | float64 | 是 | 0-100 |
+| `cpu_cores` | int32 | 否 | 逻辑核数（静态） |
 | `mem_used` | int64 | 是 | 字节 |
 | `mem_total` | int64 | 是 | 字节 |
 | `swap_used` | int64 | 是 | 字节 |

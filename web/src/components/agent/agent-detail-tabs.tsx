@@ -255,6 +255,9 @@ function OverviewCards({ agent }: { agent: AgentListItem }) {
         icon={<Cpu className="h-4 w-4" />}
         label={t("agent:card.cpu_label")}
         big={formatPercent(cpuPct)}
+        secondary={
+          m.cpu_cores ? t("agent:card.cpu_cores", { n: m.cpu_cores }) : undefined
+        }
         progress={cpuPct}
       />
       <OverviewCard

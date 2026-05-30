@@ -143,6 +143,7 @@
     "cpu": "CPU",
     "memory": "メモリ",
     "cpu_label": "CPU",
+    "cpu_cores": "{{n}} コア",
     "memory_label": "メモリ",
     "disk_label": "ディスク",
     "network_label": "ネットワーク",

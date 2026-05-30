@@ -787,6 +787,7 @@ export interface AgentMetric {
   agent_id: string;
   recorded_at: number;
   cpu_percent: number;
+  cpu_cores?: number;
   mem_used: number;
   mem_total: number;
   swap_used: number;

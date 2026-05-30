@@ -143,6 +143,7 @@
     "cpu": "CPU",
     "memory": "内存",
     "cpu_label": "CPU",
+    "cpu_cores": "{{n}} 核",
     "memory_label": "内存",
     "disk_label": "磁盘",
     "network_label": "网络",

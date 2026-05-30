@@ -444,6 +444,7 @@ func wsMetricsToDTO(agentID string, recordedAt int64, m *agent.MetricsPayload) t
 		AgentID:      agentID,
 		RecordedAt:   recordedAt,
 		CPUPercent:   m.CPUPercent,
+		CPUCores:     m.CPUCores,
 		MemUsed:      m.MemUsed,
 		MemTotal:     m.MemTotal,
 		SwapUsed:     m.SwapUsed,

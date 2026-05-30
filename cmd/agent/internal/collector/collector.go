@@ -3,6 +3,7 @@ package collector
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"sync"
 	"time"
 
@@ -70,8 +71,12 @@ func (a *Aggregator) Collect(ctx context.Context) (*agentlib.MetricsPayload, err
 	}
 
 	var (
-		mu        sync.Mutex
-		payload   = &agentlib.MetricsPayload{AgentID: a.cfg.AgentID}
+		mu sync.Mutex
+		// CPUCores is static (logical core count) — set directly, no collector.
+		payload = &agentlib.MetricsPayload{
+			AgentID:  a.cfg.AgentID,
+			CPUCores: int32(runtime.NumCPU()),
+		}
 	)
 
 	g, gctx := errgroup.WithContext(ctx)

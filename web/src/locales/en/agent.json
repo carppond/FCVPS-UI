@@ -143,6 +143,7 @@
     "cpu": "CPU",
     "memory": "Memory",
     "cpu_label": "CPU",
+    "cpu_cores": "{{n}} cores",
     "memory_label": "Memory",
     "disk_label": "Disk",
     "network_label": "Network",

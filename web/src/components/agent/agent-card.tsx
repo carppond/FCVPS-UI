@@ -110,6 +110,9 @@ function CardMetrics({ metrics: m, t }: CardMetricsProps) {
         icon={<Cpu className="h-3.5 w-3.5" />}
         label={t("card.cpu_label")}
         primary={formatPercent(cpuPct)}
+        secondary={
+          m.cpu_cores ? t("card.cpu_cores", { n: m.cpu_cores }) : undefined
+        }
         progress={cpuPct}
       />
       <Metric

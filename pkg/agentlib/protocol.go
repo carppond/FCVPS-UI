@@ -120,6 +120,7 @@ type HeartbeatPayload struct {
 type MetricsPayload struct {
 	AgentID     string  `json:"agent_id"`
 	CPUPercent  float64 `json:"cpu_percent"`
+	CPUCores    int32   `json:"cpu_cores,omitempty"` // 逻辑核数（静态，新增字段）
 	MemUsed     int64   `json:"mem_used"`
 	MemTotal    int64   `json:"mem_total"`
 	SwapUsed    int64   `json:"swap_used"`

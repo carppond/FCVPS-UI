@@ -968,6 +968,7 @@ type AgentMetric struct {
 	AgentID      string  `json:"agent_id"`
 	RecordedAt   int64   `json:"recorded_at"`
 	CPUPercent   float64 `json:"cpu_percent"`
+	CPUCores     int32   `json:"cpu_cores,omitempty"`
 	MemUsed      int64   `json:"mem_used"`
 	MemTotal     int64   `json:"mem_total"`
 	SwapUsed     int64   `json:"swap_used"`
