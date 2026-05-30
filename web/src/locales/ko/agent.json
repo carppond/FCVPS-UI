@@ -127,7 +127,9 @@
   "delete_dialog": {
     "title": "에이전트를 삭제하시겠습니까?",
     "description": "에이전트 {{name}}와 모든 지표 기록이 영구적으로 삭제됩니다. 되돌릴 수 없습니다.",
-    "confirm": "영구 삭제"
+    "confirm": "영구 삭제",
+    "uninstall_label": "에이전트도 원격으로 제거 (온라인 상태에서만)",
+    "uninstall_hint": "오프라인 에이전트는 호스트에서 수동으로 제거하세요:"
   },
   "command_dialog": {
     "title": "명령 전송",

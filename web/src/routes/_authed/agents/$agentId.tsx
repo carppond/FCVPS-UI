@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
@@ -27,6 +28,7 @@ import { AgentStatusDot } from "@/components/agent/agent-status-dot";
 import { AgentKindBadge } from "@/components/agent/agent-kind-badge";
 import {
   useAgentQuery,
+  AGENT_UNINSTALL_CMD,
   useDeleteAgentMutation,
   useRotateTokenMutation,
   useSendCommandMutation,
@@ -77,6 +79,7 @@ function AgentDetailPage() {
     React.useState<RotateTokenResponse | null>(null);
   const [commandOpen, setCommandOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [deleteUninstall, setDeleteUninstall] = React.useState(true);
 
   // Realtime metric ring buffer fed by the SSE `agent_metrics` event. Kept in
   // a ref-backed state so charts always show a stable order without flapping
@@ -171,7 +174,7 @@ function AgentDetailPage() {
 
   const onDeleteConfirm = async () => {
     try {
-      await del.mutateAsync(agent.id);
+      await del.mutateAsync({ id: agent.id, uninstall: deleteUninstall });
       toast.success(t("common:actions.delete"));
       setDeleteOpen(false);
       void navigate({ to: "/agents" });
@@ -316,7 +319,13 @@ function AgentDetailPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(o) => {
+          setDeleteOpen(o);
+          if (o) setDeleteUninstall(true);
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t("agent:delete_dialog.title")}</DialogTitle>
@@ -324,6 +333,21 @@ function AgentDetailPage() {
               {t("agent:delete_dialog.description", { name: agent.name })}
             </DialogDescription>
           </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-primary)]">
+              <Checkbox
+                checked={deleteUninstall}
+                onCheckedChange={(v) => setDeleteUninstall(v === true)}
+              />
+              {t("agent:delete_dialog.uninstall_label")}
+            </label>
+            <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+              {t("agent:delete_dialog.uninstall_hint")}
+            </p>
+            <code className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-2 font-mono text-[var(--font-size-xs)] text-[var(--color-text-secondary)]">
+              {AGENT_UNINSTALL_CMD}
+            </code>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteOpen(false)}>
               {t("common:actions.cancel")}

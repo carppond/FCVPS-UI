@@ -127,7 +127,9 @@
   "delete_dialog": {
     "title": "删除 Agent？",
     "description": "Agent {{name}} 将被永久删除，并清空其所有指标历史。此操作不可撤销。",
-    "confirm": "永久删除"
+    "confirm": "永久删除",
+    "uninstall_label": "同时远程卸载探针程序（仅在线时生效）",
+    "uninstall_hint": "离线探针请登录该机器手动卸载："
   },
   "command_dialog": {
     "title": "下发命令",

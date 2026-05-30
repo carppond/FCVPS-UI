@@ -52,6 +52,7 @@ const (
 
 	CmdRestart             = agentlib.CmdRestart
 	CmdRefreshSubscription = agentlib.CmdRefreshSubscription
+	CmdUninstall           = agentlib.CmdUninstall
 	CmdCollectNow          = agentlib.CmdCollectNow
 	CmdShutdown            = agentlib.CmdShutdown
 

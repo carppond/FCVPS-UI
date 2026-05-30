@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
+
 	"shiguang-vps/internal/agent"
 	"shiguang-vps/internal/auth"
 	"shiguang-vps/internal/handler/middleware"
@@ -227,6 +229,7 @@ func (h *AgentHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	traceID := middleware.TraceIDFromContext(r.Context())
 	user := auth.MustUserFromContext(r.Context())
 	id := r.PathValue("id")
+	uninstall := r.URL.Query().Get("uninstall") == "true"
 	if err := h.repo.Delete(r.Context(), id, user.ID); err != nil {
 		if errors.Is(err, storage.ErrAgentNotFound) {
 			util.RespondError(w, types.ErrNotFoundAgent, "agent not found", nil, traceID)
@@ -236,7 +239,20 @@ func (h *AgentHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if h.hub != nil {
-		h.hub.Unregister(id, agent.ByeReasonAgentDeleted)
+		// uninstall=true: best-effort push the self-uninstall command to the
+		// online agent. It tears itself down and disconnects, so we skip the
+		// force-unregister on success. If it is offline (SendCommand errors),
+		// fall back to a normal disconnect — the operator removes it manually
+		// (the panel surfaces the local uninstall command).
+		if uninstall {
+			err := h.hub.SendCommand(r.Context(), id, uuid.NewString(),
+				agent.CmdPayload{Cmd: agent.CmdUninstall})
+			if err != nil {
+				h.hub.Unregister(id, agent.ByeReasonAgentDeleted)
+			}
+		} else {
+			h.hub.Unregister(id, agent.ByeReasonAgentDeleted)
+		}
 	}
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[any]{RequestID: traceID})
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"shiguang-vps/pkg/agentlib"
 )
@@ -45,6 +46,8 @@ func (h *DefaultCommandHandler) Handle(ctx context.Context, cmd agentlib.CmdPayl
 		return nil
 	case agentlib.CmdCollectNow:
 		return h.collectNow(ctx)
+	case agentlib.CmdUninstall:
+		return h.uninstall()
 	case agentlib.CmdRestart:
 		h.client.cfg.Logger.Warn("agent cmd: restart received; defer to process supervisor")
 		return fmt.Errorf("restart not implemented in v1")
@@ -54,6 +57,19 @@ func (h *DefaultCommandHandler) Handle(ctx context.Context, cmd agentlib.CmdPayl
 	default:
 		return fmt.Errorf("unknown cmd %q", cmd.Cmd)
 	}
+}
+
+// uninstall spawns a detached process that stops the systemd service and
+// removes the unit + binary, then kills this agent. The agent IS the service,
+// so it cannot stop itself inline (systemctl stop would kill the running
+// command); the detached uninstaller (new session) survives that and tears the
+// agent down. Best-effort — the ack reports any spawn failure to the hub.
+func (h *DefaultCommandHandler) uninstall() error {
+	h.client.cfg.Logger.Warn("agent cmd: uninstall received; self-removing")
+	if err := spawnDetachedUninstall(os.Getpid()); err != nil {
+		return fmt.Errorf("uninstall: %w", err)
+	}
+	return nil
 }
 
 // collectNow drives one immediate metrics frame.

@@ -43,6 +43,9 @@ type CmdType string
 const (
 	CmdRestart             CmdType = "restart"
 	CmdRefreshSubscription CmdType = "refresh_subscription"
+	// CmdUninstall: agent stops + removes itself (service + binary). Pushed by
+	// the hub when an agent is deleted with uninstall=true.
+	CmdUninstall CmdType = "uninstall"
 	// 以下为 P2 预留，v1 hub 不会下发，agent 须忽略未知命令：
 	CmdCollectNow CmdType = "collect_now"
 	CmdShutdown   CmdType = "shutdown"

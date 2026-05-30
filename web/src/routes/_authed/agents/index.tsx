@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import { useEventStream, type SSEHandlers } from "@/hooks/use-event-stream";
 import { AgentList } from "@/components/agent/agent-list";
 import { AgentCreateDialog } from "@/components/agent/agent-create-dialog";
 import {
+  AGENT_UNINSTALL_CMD,
   useDeleteAgentMutation,
   useRotateTokenMutation,
   useSendCommandMutation,
@@ -117,10 +119,10 @@ function AgentsPage() {
     }
   };
 
-  const onDeleteConfirm = async () => {
+  const onDeleteConfirm = async (uninstall: boolean) => {
     if (!deleteTarget) return;
     try {
-      await del.mutateAsync(deleteTarget.id);
+      await del.mutateAsync({ id: deleteTarget.id, uninstall });
       toast.success(t("common:actions.delete"));
       setDeleteTarget(null);
     } catch (err) {
@@ -338,10 +340,15 @@ function DeleteAgentDialog({
 }: {
   target: AgentListItem | null;
   pending: boolean;
-  onConfirm: () => void;
+  onConfirm: (uninstall: boolean) => void;
   onClose: () => void;
 }) {
   const { t } = useTranslation(["agent", "common"]);
+  const [uninstall, setUninstall] = React.useState(true);
+  // Reset to the default (checked) each time the dialog opens for a new target.
+  React.useEffect(() => {
+    if (target) setUninstall(true);
+  }, [target]);
   return (
     <Dialog open={Boolean(target)} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
@@ -353,13 +360,28 @@ function DeleteAgentDialog({
               : ""}
           </DialogDescription>
         </DialogHeader>
+        <div className="flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-primary)]">
+            <Checkbox
+              checked={uninstall}
+              onCheckedChange={(v) => setUninstall(v === true)}
+            />
+            {t("agent:delete_dialog.uninstall_label")}
+          </label>
+          <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+            {t("agent:delete_dialog.uninstall_hint")}
+          </p>
+          <code className="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-2 font-mono text-[var(--font-size-xs)] text-[var(--color-text-secondary)]">
+            {AGENT_UNINSTALL_CMD}
+          </code>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             {t("common:actions.cancel")}
           </Button>
           <Button
             variant="destructive"
-            onClick={onConfirm}
+            onClick={() => onConfirm(uninstall)}
             disabled={pending}
           >
             {pending ? t("common:loading") : t("agent:delete_dialog.confirm")}

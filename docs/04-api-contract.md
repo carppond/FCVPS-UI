@@ -256,7 +256,7 @@
 | 64 | POST | `/api/agents` | 创建 agent（生成 token，仅此一次返回明文） | `[user]` |
 | 65 | GET | `/api/agents/:id` | agent 详情（含最新指标快照） | `[user]` |
 | 66 | PATCH | `/api/agents/:id` | 修改名称/标签 | `[user]` |
-| 67 | DELETE | `/api/agents/:id` | 删除 agent + 吊销 token | `[user]` |
+| 67 | DELETE | `/api/agents/:id` | 删除 agent + 吊销 token；`?uninstall=true` 时若 agent 在线先下发自卸载命令（best-effort） | `[user]` |
 | 68 | POST | `/api/agents/:id/rotate-token` | 轮换 token（旧 token 立即失效） | `[user]` |
 | 69 | POST | `/api/agents/:id/restart` | 下发 restart 命令（WebSocket 通道） | `[user]` |
 | 70 | GET | `/api/agents/:id/records` | 高频原始记录（支持 from/to 时间范围） | `[user]` |

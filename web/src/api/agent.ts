@@ -126,10 +126,20 @@ export function useUpdateAgentMutation() {
 }
 
 /** DELETE /api/agents/{id}. */
+// AGENT_UNINSTALL_CMD is the credential-free local uninstall one-liner shown in
+// the delete dialog as a fallback for offline agents (remote uninstall only
+// reaches online ones).
+export const AGENT_UNINSTALL_CMD =
+  "systemctl disable --now shiguang-agent; rm -f /etc/systemd/system/shiguang-agent.service /usr/local/bin/shiguang-agent; systemctl daemon-reload";
+
 export function useDeleteAgentMutation() {
   return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<null>(`/api/agents/${id}`, { method: "DELETE" }),
+    // uninstall=true asks the hub to push a self-uninstall command to the
+    // online agent (best-effort) before removing the record.
+    mutationFn: ({ id, uninstall }: { id: string; uninstall?: boolean }) =>
+      apiFetch<null>(`/api/agents/${id}${uninstall ? "?uninstall=true" : ""}`, {
+        method: "DELETE",
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.agent.all() });
     },

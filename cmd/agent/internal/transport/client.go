@@ -188,7 +188,7 @@ func (c *Client) Connect(ctx context.Context) error {
 		Arch:         runtime.GOARCH,
 		Version:      c.cfg.Version,
 		Kind:         agentlib.KindNative,
-		Capabilities: []string{"metrics", "restart"},
+		Capabilities: []string{"metrics", "restart", "uninstall"},
 	}
 	if err := c.writeEnvelope(conn, agentlib.MsgHello, newMsgID("hello"), hello); err != nil {
 		_ = conn.Close()

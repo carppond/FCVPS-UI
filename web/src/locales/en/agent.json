@@ -127,7 +127,9 @@
   "delete_dialog": {
     "title": "Delete agent?",
     "description": "Agent {{name}} and all its metric history will be permanently removed. This cannot be undone.",
-    "confirm": "Delete permanently"
+    "confirm": "Delete permanently",
+    "uninstall_label": "Also remotely uninstall the agent (online agents only)",
+    "uninstall_hint": "For an offline agent, run this on the host to uninstall:"
   },
   "command_dialog": {
     "title": "Send command",
