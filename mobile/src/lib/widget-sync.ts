@@ -66,10 +66,19 @@ export function summaryToWidgetProps(s: TrafficSummary, now: Date): TrafficWidge
           : usedStr;
       return { name: a.agent_name || a.agent_id, used: display, usedBytes: a.total_used };
     });
+  // Headline quota: the account-wide limit if set, else the sum of per-agent
+  // limits — so configuring only per-agent quotas still drives the headline
+  // total + percent (otherwise it stays blank / 0%).
+  const sumLimit = s.agents.reduce((acc, a) => acc + (a.limit || 0), 0);
+  const effLimit = s.total_limit && s.total_limit > 0 ? s.total_limit : sumLimit;
+  const percent =
+    effLimit > 0
+      ? Math.min(100, (s.total_used / effLimit) * 100)
+      : Math.max(0, Math.min(100, s.usage_percent || 0));
   return {
     used: formatBytes(s.total_used),
-    limit: s.total_limit && s.total_limit > 0 ? formatBytes(s.total_limit) : "",
-    percent: Math.max(0, Math.min(100, s.usage_percent || 0)),
+    limit: effLimit > 0 ? formatBytes(effLimit) : "",
+    percent,
     count: s.agents.length,
     totalUsedBytes: s.total_used,
     top,
