@@ -150,43 +150,69 @@ func (r *TrafficRepo) GetMonthSummary(ctx context.Context, userID string, year i
 	periodStart := start.Format("2006-01-02")
 	periodEnd := end.Format("2006-01-02")
 
-	// Per-agent breakdown (NULL agent_id surfaces as "" so the consumer can
-	// treat user-wide totals as a single bucket).
-	rows, err := r.db.Read.QueryContext(ctx, `
-		SELECT COALESCE(t.agent_id,'') AS aid,
-		       SUM(t.total_used) AS used,
-		       SUM(t.total_in)   AS in_b,
-		       SUM(t.total_out)  AS out_b,
-		       COALESCE(a.traffic_limit,0),
-		       COALESCE(a.bwg_used,0),
-		       COALESCE(a.bwg_limit,0),
-		       COALESCE(a.bwg_synced_at,0)
-		  FROM traffic_records t
-		  LEFT JOIN agents a ON a.id = t.agent_id
-		 WHERE t.user_id = ? AND t.date >= ? AND t.date <= ?
-		 GROUP BY t.agent_id`,
-		userID, periodStart, periodEnd,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("summary agents: %w", err)
-	}
-	defer rows.Close()
 	summary := &TrafficSummary{
 		UserID:      userID,
 		PeriodStart: periodStart,
 		PeriodEnd:   periodEnd,
 		TotalLimit:  monthlyLimit,
 	}
-	for rows.Next() {
-		var b TrafficAgentBreakdown
-		var tLimit, bwgUsed, bwgLimit, bwgSynced int64
-		if err := rows.Scan(&b.AgentID, &b.TotalUsed, &b.TotalIn, &b.TotalOut,
-			&tLimit, &bwgUsed, &bwgLimit, &bwgSynced); err != nil {
-			return nil, fmt.Errorf("scan summary row: %w", err)
+
+	// 1. Measured usage per agent (NULL agent_id → "" user-wide bucket).
+	type usage struct{ used, in, out int64 }
+	usageByID := map[string]usage{}
+	urows, err := r.db.Read.QueryContext(ctx, `
+		SELECT COALESCE(agent_id,'') AS aid,
+		       SUM(total_used), SUM(total_in), SUM(total_out)
+		  FROM traffic_records
+		 WHERE user_id = ? AND date >= ? AND date <= ?
+		 GROUP BY aid`,
+		userID, periodStart, periodEnd,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("summary usage: %w", err)
+	}
+	for urows.Next() {
+		var aid string
+		var u usage
+		if err := urows.Scan(&aid, &u.used, &u.in, &u.out); err != nil {
+			urows.Close()
+			return nil, fmt.Errorf("scan usage row: %w", err)
 		}
-		// Effective quota: a synced BandwagonHost figure (provider-reported used
-		// + limit) overrides the measured/manual pair; else fall back to the
-		// operator-entered limit against measured usage.
+		usageByID[aid] = u
+	}
+	urows.Close()
+	if err := urows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate usage: %w", err)
+	}
+
+	add := func(b TrafficAgentBreakdown) {
+		summary.Agents = append(summary.Agents, b)
+		summary.TotalUsed += b.TotalUsed
+		summary.TotalIn += b.TotalIn
+		summary.TotalOut += b.TotalOut
+	}
+
+	// 2. Drive the breakdown off the user's agents so a configured quota (manual
+	// limit or synced BandwagonHost figure) shows even before any traffic has
+	// been aggregated for the month.
+	arows, err := r.db.Read.QueryContext(ctx, `
+		SELECT id, COALESCE(traffic_limit,0), COALESCE(bwg_used,0),
+		       COALESCE(bwg_limit,0), COALESCE(bwg_synced_at,0)
+		  FROM agents WHERE user_id = ?`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("summary agents: %w", err)
+	}
+	seen := map[string]bool{}
+	for arows.Next() {
+		var id string
+		var tLimit, bwgUsed, bwgLimit, bwgSynced int64
+		if err := arows.Scan(&id, &tLimit, &bwgUsed, &bwgLimit, &bwgSynced); err != nil {
+			arows.Close()
+			return nil, fmt.Errorf("scan agent row: %w", err)
+		}
+		seen[id] = true
+		u := usageByID[id]
+		b := TrafficAgentBreakdown{AgentID: id, TotalUsed: u.used, TotalIn: u.in, TotalOut: u.out}
 		switch {
 		case bwgSynced > 0 && bwgLimit > 0:
 			b.TotalUsed = bwgUsed
@@ -196,14 +222,21 @@ func (r *TrafficRepo) GetMonthSummary(ctx context.Context, userID string, year i
 			b.Limit = tLimit
 			b.Source = "manual"
 		}
-		summary.Agents = append(summary.Agents, b)
-		summary.TotalUsed += b.TotalUsed
-		summary.TotalIn += b.TotalIn
-		summary.TotalOut += b.TotalOut
+		add(b)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate summary: %w", err)
+	arows.Close()
+	if err := arows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate agents: %w", err)
 	}
+
+	// 3. Usage with no matching agent (user-wide "" bucket or deleted agents).
+	for aid, u := range usageByID {
+		if seen[aid] {
+			continue
+		}
+		add(TrafficAgentBreakdown{AgentID: aid, TotalUsed: u.used, TotalIn: u.in, TotalOut: u.out})
+	}
+
 	return summary, nil
 }
 
