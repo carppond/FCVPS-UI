@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Copy, RotateCw, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Gauge, RotateCw, Send, Trash2 } from "lucide-react";
 import i18n from "@/lib/i18n";
 import agentZh from "@/locales/zh-CN/agent.json";
 import agentEn from "@/locales/en/agent.json";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
@@ -32,12 +33,16 @@ import {
   useDeleteAgentMutation,
   useRotateTokenMutation,
   useSendCommandMutation,
+  useUpdateAgentMutation,
 } from "@/api/agent";
+import { useTrafficSummaryQuery } from "@/api/traffic";
+import { formatBytes } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   AgentListItem,
   AgentMetric,
+  AgentTrafficSummary,
   RotateTokenResponse,
   SSEAgentStatusPayload,
 } from "@/types/api";
@@ -80,6 +85,47 @@ function AgentDetailPage() {
   const [commandOpen, setCommandOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteUninstall, setDeleteUninstall] = React.useState(true);
+
+  // Per-agent monthly traffic: used comes from the traffic summary (measured /
+  // provider figure), limit/source from the same row. Config is set via the
+  // settings dialog (manual limit + BandwagonHost creds).
+  const update = useUpdateAgentMutation();
+  const { data: trafficSummary } = useTrafficSummaryQuery();
+  const agentTraffic = trafficSummary?.agents.find((a) => a.agent_id === agentId);
+
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [form, setForm] = React.useState({ name: "", limitGB: "", veid: "", key: "" });
+  const openSettings = () => {
+    if (!agent) return;
+    setForm({
+      name: agent.name,
+      limitGB: agent.traffic_limit ? String(agent.traffic_limit / 1024 ** 3) : "",
+      veid: agent.bwg_veid ?? "",
+      key: "",
+    });
+    setSettingsOpen(true);
+  };
+  const onSettingsSave = async () => {
+    if (!agent) return;
+    const gb = parseFloat(form.limitGB);
+    const limitBytes =
+      form.limitGB.trim() && gb > 0 ? Math.round(gb * 1024 ** 3) : 0;
+    try {
+      await update.mutateAsync({
+        id: agent.id,
+        payload: {
+          name: form.name.trim() || agent.name,
+          traffic_limit: limitBytes,
+          bwg_veid: form.veid.trim(),
+          bwg_api_key: form.key.trim(),
+        },
+      });
+      toast.success(t("common:actions.save"));
+      setSettingsOpen(false);
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
   // Realtime metric ring buffer fed by the SSE `agent_metrics` event. Kept in
   // a ref-backed state so charts always show a stable order without flapping
@@ -212,6 +258,10 @@ function AgentDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={openSettings}>
+            <Gauge className="h-4 w-4" />
+            {t("agent:actions.traffic_settings")}
+          </Button>
           <Button
             variant="outline"
             onClick={() => {
@@ -239,6 +289,8 @@ function AgentDetailPage() {
           </Button>
         </div>
       </header>
+
+      {agentTraffic && <MonthlyTrafficCard traffic={agentTraffic} t={t} />}
 
       <AgentDetailTabs agent={agent} realtimeMetrics={realtimeMetrics} />
 
@@ -364,6 +416,123 @@ function AgentDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("agent:settings.title")}</DialogTitle>
+            <DialogDescription>
+              {t("agent:settings.description")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ag-name">{t("agent:settings.name_label")}</Label>
+              <Input
+                id="ag-name"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ag-limit">{t("agent:settings.limit_label")}</Label>
+              <Input
+                id="ag-limit"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                placeholder="0"
+                value={form.limitGB}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, limitGB: e.target.value }))
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
+              <p className="text-[var(--font-size-sm)] font-medium text-[var(--color-text-secondary)]">
+                {t("agent:settings.bwg_section")}
+              </p>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ag-veid">{t("agent:settings.bwg_veid_label")}</Label>
+                <Input
+                  id="ag-veid"
+                  value={form.veid}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, veid: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="ag-key">{t("agent:settings.bwg_key_label")}</Label>
+                <Input
+                  id="ag-key"
+                  type="password"
+                  value={form.key}
+                  placeholder={agent.has_bwg_key ? "••••••••" : ""}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, key: e.target.value }))
+                  }
+                />
+                <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+                  {t("agent:settings.bwg_key_hint")}
+                </p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+              {t("common:actions.cancel")}
+            </Button>
+            <Button onClick={onSettingsSave} disabled={update.isPending}>
+              {update.isPending ? t("common:loading") : t("common:actions.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function MonthlyTrafficCard({
+  traffic,
+  t,
+}: {
+  traffic: AgentTrafficSummary;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
+  const used = traffic.total_used;
+  const limit = traffic.limit ?? 0;
+  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : null;
+  return (
+    <div className="flex flex-col gap-2 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-[var(--font-size-sm)] font-medium text-[var(--color-text-secondary)]">
+          {t("agent:traffic_card.title")}
+        </span>
+        {traffic.source === "bandwagon" && (
+          <span className="rounded-[var(--radius-sm)] bg-[var(--color-surface-hover)] px-1.5 py-0.5 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+            {t("agent:traffic_card.source_bandwagon")}
+          </span>
+        )}
+      </div>
+      <div className="flex items-baseline gap-2 tabular-nums">
+        <span className="text-[var(--font-size-2xl)] font-bold text-[var(--color-text-primary)]">
+          {formatBytes(used)}
+        </span>
+        <span className="text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
+          {limit > 0
+            ? `/ ${formatBytes(limit)} · ${Math.round(pct as number)}%`
+            : t("agent:traffic_card.no_limit")}
+        </span>
+      </div>
+      {pct !== null && (
+        <div className="h-1.5 overflow-hidden rounded-[var(--radius-sm)] bg-[var(--color-surface-hover)]">
+          <div
+            className="h-full rounded-[var(--radius-sm)] bg-[var(--color-primary)]"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }

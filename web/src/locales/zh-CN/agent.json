@@ -4,6 +4,7 @@
   "actions": {
     "create": "添加 Agent",
     "rotate_token": "轮换 Token",
+    "traffic_settings": "流量设置",
     "send_command": "下发命令",
     "restart": "重启 Agent",
     "delete": "删除 Agent",
@@ -138,6 +139,21 @@
     "cmd_restart": "重启 Agent",
     "submit": "下发",
     "queued": "命令已下发（cmd_id: {{id}}）"
+  },
+  "settings": {
+    "title": "流量设置",
+    "description": "设置本机月流量上限。已用由探针实测；填搬瓦工 VEID + API key 可自动获取上限与已用。",
+    "name_label": "名称",
+    "limit_label": "月流量上限 (GB，留空或 0 = 不限)",
+    "bwg_section": "搬瓦工自动获取（可选）",
+    "bwg_veid_label": "VEID",
+    "bwg_key_label": "API Key",
+    "bwg_key_hint": "留空保留原 key"
+  },
+  "traffic_card": {
+    "title": "本月流量",
+    "source_bandwagon": "搬瓦工",
+    "no_limit": "未设上限"
   },
   "card": {
     "cpu": "CPU",

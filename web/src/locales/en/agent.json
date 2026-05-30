@@ -4,6 +4,7 @@
   "actions": {
     "create": "Add agent",
     "rotate_token": "Rotate token",
+    "traffic_settings": "Traffic settings",
     "send_command": "Send command",
     "restart": "Restart agent",
     "delete": "Delete agent",
@@ -138,6 +139,21 @@
     "cmd_restart": "Restart agent",
     "submit": "Send",
     "queued": "Command dispatched (cmd_id: {{id}})"
+  },
+  "settings": {
+    "title": "Traffic settings",
+    "description": "Set this host's monthly traffic cap. Usage is measured by the agent; enter a BandwagonHost VEID + API key to auto-fetch the cap and usage.",
+    "name_label": "Name",
+    "limit_label": "Monthly cap (GB, empty or 0 = unlimited)",
+    "bwg_section": "BandwagonHost auto-fetch (optional)",
+    "bwg_veid_label": "VEID",
+    "bwg_key_label": "API Key",
+    "bwg_key_hint": "Leave blank to keep the stored key"
+  },
+  "traffic_card": {
+    "title": "This month",
+    "source_bandwagon": "BandwagonHost",
+    "no_limit": "No cap set"
   },
   "card": {
     "cpu": "CPU",

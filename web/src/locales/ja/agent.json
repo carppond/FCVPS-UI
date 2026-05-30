@@ -4,6 +4,7 @@
   "actions": {
     "create": "エージェント追加",
     "rotate_token": "トークンを更新",
+    "traffic_settings": "トラフィック設定",
     "send_command": "コマンド送信",
     "restart": "エージェント再起動",
     "delete": "エージェント削除",
@@ -138,6 +139,21 @@
     "cmd_restart": "エージェント再起動",
     "submit": "送信",
     "queued": "コマンドを送信しました（cmd_id: {{id}}）"
+  },
+  "settings": {
+    "title": "トラフィック設定",
+    "description": "このホストの月間トラフィック上限を設定します。使用量はエージェントが計測します。BandwagonHost の VEID と API キーを入力すると上限と使用量を自動取得します。",
+    "name_label": "名前",
+    "limit_label": "月間上限 (GB、空欄または 0 = 無制限)",
+    "bwg_section": "BandwagonHost 自動取得（任意）",
+    "bwg_veid_label": "VEID",
+    "bwg_key_label": "API キー",
+    "bwg_key_hint": "空欄で既存のキーを保持"
+  },
+  "traffic_card": {
+    "title": "今月",
+    "source_bandwagon": "BandwagonHost",
+    "no_limit": "上限未設定"
   },
   "card": {
     "cpu": "CPU",

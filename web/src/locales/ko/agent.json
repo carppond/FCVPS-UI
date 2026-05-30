@@ -4,6 +4,7 @@
   "actions": {
     "create": "에이전트 추가",
     "rotate_token": "토큰 교체",
+    "traffic_settings": "트래픽 설정",
     "send_command": "명령 전송",
     "restart": "에이전트 재시작",
     "delete": "에이전트 삭제",
@@ -138,6 +139,21 @@
     "cmd_restart": "에이전트 재시작",
     "submit": "전송",
     "queued": "명령이 전송되었습니다 (cmd_id: {{id}})"
+  },
+  "settings": {
+    "title": "트래픽 설정",
+    "description": "이 호스트의 월 트래픽 한도를 설정합니다. 사용량은 에이전트가 측정합니다. BandwagonHost VEID와 API 키를 입력하면 한도와 사용량을 자동으로 가져옵니다.",
+    "name_label": "이름",
+    "limit_label": "월 한도 (GB, 비움 또는 0 = 무제한)",
+    "bwg_section": "BandwagonHost 자동 가져오기(선택)",
+    "bwg_veid_label": "VEID",
+    "bwg_key_label": "API 키",
+    "bwg_key_hint": "비워두면 기존 키 유지"
+  },
+  "traffic_card": {
+    "title": "이번 달",
+    "source_bandwagon": "BandwagonHost",
+    "no_limit": "한도 없음"
   },
   "card": {
     "cpu": "CPU",
