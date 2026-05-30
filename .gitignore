@@ -73,3 +73,7 @@ mobile/eas-project.local.json
 
 # iOS 打包产物(走 Release,不入库)
 *.ipa
+
+# Release 打包暂存(产物走 GitHub Release,不入库)
+dist-release/
+*.apk
