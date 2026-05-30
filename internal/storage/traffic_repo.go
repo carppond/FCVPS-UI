@@ -29,6 +29,10 @@ type TrafficAgentBreakdown struct {
 	TotalIn   int64
 	TotalOut  int64
 	TotalUsed int64
+	// Effective monthly quota for this agent: bandwagon (provider API, when
+	// synced) overrides manual; Source is "bandwagon" | "manual" | "".
+	Limit  int64
+	Source string
 }
 
 // TrafficSummary aggregates traffic_records across a billing period. It is the
@@ -149,13 +153,18 @@ func (r *TrafficRepo) GetMonthSummary(ctx context.Context, userID string, year i
 	// Per-agent breakdown (NULL agent_id surfaces as "" so the consumer can
 	// treat user-wide totals as a single bucket).
 	rows, err := r.db.Read.QueryContext(ctx, `
-		SELECT COALESCE(agent_id,'') AS aid,
-		       SUM(total_used) AS used,
-		       SUM(total_in)   AS in_b,
-		       SUM(total_out)  AS out_b
-		  FROM traffic_records
-		 WHERE user_id = ? AND date >= ? AND date <= ?
-		 GROUP BY aid`,
+		SELECT COALESCE(t.agent_id,'') AS aid,
+		       SUM(t.total_used) AS used,
+		       SUM(t.total_in)   AS in_b,
+		       SUM(t.total_out)  AS out_b,
+		       COALESCE(a.traffic_limit,0),
+		       COALESCE(a.bwg_used,0),
+		       COALESCE(a.bwg_limit,0),
+		       COALESCE(a.bwg_synced_at,0)
+		  FROM traffic_records t
+		  LEFT JOIN agents a ON a.id = t.agent_id
+		 WHERE t.user_id = ? AND t.date >= ? AND t.date <= ?
+		 GROUP BY t.agent_id`,
 		userID, periodStart, periodEnd,
 	)
 	if err != nil {
@@ -170,8 +179,22 @@ func (r *TrafficRepo) GetMonthSummary(ctx context.Context, userID string, year i
 	}
 	for rows.Next() {
 		var b TrafficAgentBreakdown
-		if err := rows.Scan(&b.AgentID, &b.TotalUsed, &b.TotalIn, &b.TotalOut); err != nil {
+		var tLimit, bwgUsed, bwgLimit, bwgSynced int64
+		if err := rows.Scan(&b.AgentID, &b.TotalUsed, &b.TotalIn, &b.TotalOut,
+			&tLimit, &bwgUsed, &bwgLimit, &bwgSynced); err != nil {
 			return nil, fmt.Errorf("scan summary row: %w", err)
+		}
+		// Effective quota: a synced BandwagonHost figure (provider-reported used
+		// + limit) overrides the measured/manual pair; else fall back to the
+		// operator-entered limit against measured usage.
+		switch {
+		case bwgSynced > 0 && bwgLimit > 0:
+			b.TotalUsed = bwgUsed
+			b.Limit = bwgLimit
+			b.Source = "bandwagon"
+		case tLimit > 0:
+			b.Limit = tLimit
+			b.Source = "manual"
 		}
 		summary.Agents = append(summary.Agents, b)
 		summary.TotalUsed += b.TotalUsed

@@ -107,12 +107,15 @@ func (h *AgentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		token = util.RandomHex32()
 	}
 	rec := storage.AgentRecord{
-		ID:        util.UUIDv7(),
-		UserID:    user.ID,
-		Name:      req.Name,
-		TokenHash: util.SHA256Hex(token),
-		Kind:      string(kind),
-		Status:    "offline",
+		ID:           util.UUIDv7(),
+		UserID:       user.ID,
+		Name:         req.Name,
+		TokenHash:    util.SHA256Hex(token),
+		Kind:         string(kind),
+		Status:       "offline",
+		TrafficLimit: req.TrafficLimit,
+		BwgVeid:      req.BwgVeid,
+		BwgAPIKey:    req.BwgAPIKey,
 	}
 	created, err := h.repo.Create(r.Context(), rec)
 	if err != nil {
@@ -209,6 +212,12 @@ func (h *AgentHandler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		util.RespondError(w, types.ErrInternalDatabase, "update agent", nil, traceID)
+		return
+	}
+	// Per-agent traffic quota config (manual limit + BandwagonHost creds).
+	if err := h.repo.UpdateTrafficConfig(r.Context(), id, user.ID,
+		req.TrafficLimit, req.BwgVeid, req.BwgAPIKey); err != nil {
+		util.RespondError(w, types.ErrInternalDatabase, "update agent traffic config", nil, traceID)
 		return
 	}
 	rec, err := h.repo.GetByID(r.Context(), id, user.ID)
@@ -405,10 +414,13 @@ func agentRecordToDTO(rec *storage.AgentRecord, online bool, _ *types.AgentMetri
 		OS:         rec.OS,
 		Arch:       rec.Arch,
 		PublicIP:   rec.PublicIP,
-		LastSeenAt: rec.LastSeenAt,
-		Status:     status,
-		CreatedAt:  rec.CreatedAt,
-		UpdatedAt:  rec.UpdatedAt,
+		LastSeenAt:   rec.LastSeenAt,
+		Status:       status,
+		CreatedAt:    rec.CreatedAt,
+		UpdatedAt:    rec.UpdatedAt,
+		TrafficLimit: rec.TrafficLimit,
+		BwgVeid:      rec.BwgVeid,
+		HasBwgKey:    rec.BwgAPIKey != "",
 	}
 }
 

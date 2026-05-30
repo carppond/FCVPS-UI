@@ -767,6 +767,9 @@ export interface Agent {
   status: AgentStatus;
   created_at: number;
   updated_at: number;
+  traffic_limit?: number;
+  bwg_veid?: string;
+  has_bwg_key?: boolean;
 }
 
 export interface AgentCreateResponse extends Agent {
@@ -810,10 +813,16 @@ export interface AgentMetric {
 export interface CreateAgentRequest {
   name: string;
   kind?: AgentKind; // 默认 "native"
+  traffic_limit?: number;
+  bwg_veid?: string;
+  bwg_api_key?: string;
 }
 
 export interface UpdateAgentRequest {
   name?: string;
+  traffic_limit?: number;
+  bwg_veid?: string;
+  bwg_api_key?: string;
 }
 
 export interface RotateTokenResponse {
@@ -840,6 +849,8 @@ export interface AgentTrafficSummary {
   total_in: number;
   total_out: number;
   total_used: number;
+  limit?: number;
+  source?: string;
 }
 
 export interface TrafficSummary {

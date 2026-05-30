@@ -269,6 +269,8 @@ func (h *TrafficHandler) summaryToDTO(r *http.Request, summary *storage.TrafficS
 			TotalIn:   a.TotalIn,
 			TotalOut:  a.TotalOut,
 			TotalUsed: a.TotalUsed,
+			Limit:     a.Limit,
+			Source:    a.Source,
 		})
 	}
 	return dto

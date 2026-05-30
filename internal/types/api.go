@@ -949,6 +949,12 @@ type Agent struct {
 	Status     AgentStatus `json:"status"`
 	CreatedAt  int64       `json:"created_at"`
 	UpdatedAt  int64       `json:"updated_at"`
+
+	// Per-agent traffic quota config (manual limit + BandwagonHost auto-fetch).
+	// The API key is never returned — HasBwgKey signals whether one is stored.
+	TrafficLimit int64  `json:"traffic_limit,omitempty"`
+	BwgVeid      string `json:"bwg_veid,omitempty"`
+	HasBwgKey    bool   `json:"has_bwg_key,omitempty"`
 }
 
 // AgentCreateResponse 创建 agent 时的响应（含一次性 token）。
@@ -994,13 +1000,19 @@ type AgentMetric struct {
 // 较短（22 字符 base64url，即 16 字节），且响应附带 nezha 接入指引的 i18n key
 // （install_hint_i18n_key），由前端按当前语言渲染。
 type CreateAgentRequest struct {
-	Name string    `json:"name"`
-	Kind AgentKind `json:"kind,omitempty"`
+	Name         string    `json:"name"`
+	Kind         AgentKind `json:"kind,omitempty"`
+	TrafficLimit int64     `json:"traffic_limit,omitempty"`
+	BwgVeid      string    `json:"bwg_veid,omitempty"`
+	BwgAPIKey    string    `json:"bwg_api_key,omitempty"`
 }
 
-// UpdateAgentRequest 修改 agent 请求。
+// UpdateAgentRequest 修改 agent 请求。空 bwg_api_key 表示保留原 key。
 type UpdateAgentRequest struct {
-	Name string `json:"name,omitempty"`
+	Name         string `json:"name,omitempty"`
+	TrafficLimit int64  `json:"traffic_limit,omitempty"`
+	BwgVeid      string `json:"bwg_veid,omitempty"`
+	BwgAPIKey    string `json:"bwg_api_key,omitempty"`
 }
 
 // RotateTokenResponse 轮换 token 响应。
@@ -1025,11 +1037,15 @@ type TrafficRecord struct {
 
 // AgentTrafficSummary 单 agent 流量概览。
 type AgentTrafficSummary struct {
-	AgentID    string `json:"agent_id"`
-	AgentName  string `json:"agent_name"`
-	TotalIn    int64  `json:"total_in"`
-	TotalOut   int64  `json:"total_out"`
-	TotalUsed  int64  `json:"total_used"`
+	AgentID   string `json:"agent_id"`
+	AgentName string `json:"agent_name"`
+	TotalIn   int64  `json:"total_in"`
+	TotalOut  int64  `json:"total_out"`
+	TotalUsed int64  `json:"total_used"`
+	// Per-agent monthly quota for "used / limit" display. Source: "manual"
+	// (operator-entered), "bandwagon" (provider API), or "" (none set).
+	Limit  int64  `json:"limit,omitempty"`
+	Source string `json:"source,omitempty"`
 }
 
 // TrafficSummary 当月流量汇总。

@@ -28,6 +28,16 @@ type AgentRecord struct {
 	Status     string // "online" | "offline" | "degraded"
 	CreatedAt  int64
 	UpdatedAt  int64
+
+	// Per-agent monthly traffic quota (0009). TrafficLimit is operator-entered
+	// (bytes); the Bwg* fields are BandwagonHost auto-fetch config + cache.
+	TrafficLimit int64
+	BwgVeid      string
+	BwgAPIKey    string
+	BwgUsed      int64
+	BwgLimit     int64
+	BwgResetAt   int64
+	BwgSyncedAt  int64
 }
 
 // AgentListOptions narrows the List query.
@@ -83,12 +93,14 @@ func (r *AgentRepo) Create(ctx context.Context, rec AgentRecord) (*AgentRecord, 
 	}
 	_, err := r.db.Write.ExecContext(ctx, `
 		INSERT INTO agents(id, user_id, name, token_hash, kind, version, os, arch,
-		                   public_ip, last_seen_at, status, created_at, updated_at)
-		VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		                   public_ip, last_seen_at, status, created_at, updated_at,
+		                   traffic_limit, bwg_veid, bwg_api_key)
+		VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		rec.ID, rec.UserID, rec.Name, rec.TokenHash, rec.Kind,
 		nullableString(rec.Version), nullableString(rec.OS), nullableString(rec.Arch),
 		nullableString(rec.PublicIP), nullableInt64(rec.LastSeenAt),
 		rec.Status, rec.CreatedAt, rec.UpdatedAt,
+		rec.TrafficLimit, rec.BwgVeid, rec.BwgAPIKey,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("insert agent: %w", err)
@@ -272,6 +284,40 @@ func (r *AgentRepo) UpdateProfile(ctx context.Context, id, userID, name string) 
 	return nil
 }
 
+// UpdateTrafficConfig sets the per-agent traffic quota config. traffic_limit and
+// bwg_veid are written verbatim; apiKey is only written when non-empty so the UI
+// can leave the field blank to keep the stored key. Clearing bwg_veid also
+// resets the cached provider figures so stale data does not linger.
+// Returns ErrAgentNotFound when no (id, userID) row matches.
+func (r *AgentRepo) UpdateTrafficConfig(ctx context.Context, id, userID string, limit int64, veid, apiKey string) error {
+	if id == "" || userID == "" {
+		return fmt.Errorf("update traffic config: empty id/user")
+	}
+	now := r.now().UnixMilli()
+	sets := []string{"traffic_limit = ?", "bwg_veid = ?", "updated_at = ?"}
+	args := []any{limit, veid, now}
+	if apiKey != "" {
+		sets = append(sets, "bwg_api_key = ?")
+		args = append(args, apiKey)
+	}
+	if veid == "" {
+		sets = append(sets, "bwg_api_key = ''", "bwg_used = 0", "bwg_limit = 0",
+			"bwg_reset_at = 0", "bwg_synced_at = 0")
+	}
+	args = append(args, id, userID)
+	res, err := r.db.Write.ExecContext(ctx,
+		"UPDATE agents SET "+strings.Join(sets, ", ")+" WHERE id = ? AND user_id = ?",
+		args...)
+	if err != nil {
+		return fmt.Errorf("update traffic config: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return ErrAgentNotFound
+	}
+	return nil
+}
+
 // RotateToken atomically updates token_hash + updated_at. Caller is responsible
 // for generating + hashing the new token.
 func (r *AgentRepo) RotateToken(ctx context.Context, id, userID, newTokenHash string) error {
@@ -328,13 +374,18 @@ func (r *AgentRepo) MarkAllOffline(ctx context.Context) error {
 const selectAgentSQL = `SELECT id, user_id, name, token_hash, kind,
 		COALESCE(version,''), COALESCE(os,''), COALESCE(arch,''),
 		COALESCE(public_ip,''), COALESCE(last_seen_at,0),
-		status, created_at, updated_at FROM agents`
+		status, created_at, updated_at,
+		COALESCE(traffic_limit,0), COALESCE(bwg_veid,''), COALESCE(bwg_api_key,''),
+		COALESCE(bwg_used,0), COALESCE(bwg_limit,0),
+		COALESCE(bwg_reset_at,0), COALESCE(bwg_synced_at,0) FROM agents`
 
 func scanAgentRow(row *sql.Row) (*AgentRecord, error) {
 	var a AgentRecord
 	err := row.Scan(&a.ID, &a.UserID, &a.Name, &a.TokenHash, &a.Kind,
 		&a.Version, &a.OS, &a.Arch, &a.PublicIP, &a.LastSeenAt,
-		&a.Status, &a.CreatedAt, &a.UpdatedAt)
+		&a.Status, &a.CreatedAt, &a.UpdatedAt,
+		&a.TrafficLimit, &a.BwgVeid, &a.BwgAPIKey,
+		&a.BwgUsed, &a.BwgLimit, &a.BwgResetAt, &a.BwgSyncedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrAgentNotFound
@@ -348,7 +399,9 @@ func scanAgentRowMulti(rows *sql.Rows) (*AgentRecord, error) {
 	var a AgentRecord
 	if err := rows.Scan(&a.ID, &a.UserID, &a.Name, &a.TokenHash, &a.Kind,
 		&a.Version, &a.OS, &a.Arch, &a.PublicIP, &a.LastSeenAt,
-		&a.Status, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		&a.Status, &a.CreatedAt, &a.UpdatedAt,
+		&a.TrafficLimit, &a.BwgVeid, &a.BwgAPIKey,
+		&a.BwgUsed, &a.BwgLimit, &a.BwgResetAt, &a.BwgSyncedAt); err != nil {
 		return nil, fmt.Errorf("scan agent: %w", err)
 	}
 	return &a, nil

@@ -575,6 +575,11 @@ PagedResponse<T> {
 | `status` | AgentStatus | 是 | `"online"` \| `"offline"` \| `"degraded"` | `"online"` |
 | `created_at` | int64 | 是 | - | - |
 | `updated_at` | int64 | 是 | - | - |
+| `traffic_limit` | int64 | 否 | 手填月流量上限（字节，0=未设） | `2199023255552` |
+| `bwg_veid` | string | 否 | 搬瓦工 VEID（自动获取流量用） | - |
+| `has_bwg_key` | bool | 否 | 是否已存搬瓦工 API key（key 本身不返回） | - |
+
+> Create/Update 请求体可带 `traffic_limit` / `bwg_veid` / `bwg_api_key`（空 `bwg_api_key` 表示保留原 key）。AgentTrafficSummary 增加 `limit`（int64，有效配额）+ `source`（`"manual"`\|`"bandwagon"`\|`""`），用于"已用/上限"展示。
 
 **创建 agent 时额外返回（仅一次）：**
 
