@@ -475,8 +475,12 @@ func buildInstallCommand(kind types.AgentKind, token, name string) string {
 		)
 	}
 	// Token goes in the ?token= query — the install-script handler bakes it
-	// (and the hub URL, OS/arch) into the rendered script, so the one-liner is
-	// just `curl … | bash` with no env vars or args. The "<hub>" placeholder is
-	// substituted with the panel's origin by the web UI before display.
-	return fmt.Sprintf(`curl -fsSL "<hub>/install-agent.sh?token=%s" | bash`, token)
+	// (plus the hub URL and, via uname, OS/arch) into the rendered script, so
+	// the one-liner is just `curl … | bash` with no env vars or args. Both
+	// "<hub>" placeholders are substituted with the panel's origin by the web
+	// UI before display. hub_url is passed explicitly so the script downloads
+	// the agent from the public address even when a reverse proxy fails to
+	// forward the original Host (otherwise deriveHubURL falls back to the
+	// internal upstream, e.g. http://127.0.0.1:8080).
+	return fmt.Sprintf(`curl -fsSL "<hub>/install-agent.sh?token=%s&hub_url=<hub>" | bash`, token)
 }

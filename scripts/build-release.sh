@@ -32,6 +32,16 @@ echo "[build-release] Version: $VERSION"
 echo "[build-release] Output:  $DIST"
 echo ""
 
+# Embed the linux agents into every hub binary so the self-install /dl/ endpoint
+# can serve them (//go:embed agents in install_script_handler.go). Built before
+# the hub targets below so the embed dir is populated when the hub compiles.
+echo "[build-release] Building embedded agents (linux amd64+arm64)..."
+for embed_arch in amd64 arm64; do
+  GOOS=linux GOARCH="$embed_arch" go build \
+    -ldflags="$LDFLAGS" -trimpath \
+    -o "$REPO_ROOT/internal/handler/agents/agent-linux-$embed_arch" ./cmd/agent
+done
+
 for target in "${TARGETS[@]}"; do
   OS="${target%/*}"
   ARCH="${target#*/}"

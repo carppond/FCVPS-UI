@@ -27,6 +27,10 @@ Thumbs.db
 # Go test binaries
 *.test
 
+# Agent binaries built into the hub embed dir at deploy/release time
+# (//go:embed agents). README.md stays tracked.
+internal/handler/agents/agent-*
+
 # Editor
 .idea/
 .vscode/

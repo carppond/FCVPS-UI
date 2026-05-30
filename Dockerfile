@@ -22,6 +22,13 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 ARG VERSION=docker
+# Build the linux agents into the embed dir FIRST so the hub binary's
+# //go:embed agents picks them up — the self-install /dl/agent-<os>-<arch>
+# endpoint serves these. amd64+arm64 cover the common monitored-host arches.
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -trimpath \
+        -o internal/handler/agents/agent-linux-amd64 ./cmd/agent && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -trimpath \
+        -o internal/handler/agents/agent-linux-arm64 ./cmd/agent
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-s -w -X main.version=${VERSION}" \
     -trimpath \

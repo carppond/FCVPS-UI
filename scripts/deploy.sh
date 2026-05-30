@@ -92,6 +92,13 @@ app_locations() {
 
     location /install-agent.sh {
         proxy_pass http://127.0.0.1:__BP__;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /dl/ {
+        proxy_pass http://127.0.0.1:__BP__;
+        proxy_set_header Host $host;
     }
 
     location / {
@@ -263,15 +270,24 @@ read -rp "确认开始? [Y/n] " CONFIRM
 CONFIRM="${CONFIRM:-Y}"
 [[ "$CONFIRM" =~ ^[Yy]$ ]] || { warn "已取消"; exit 0; }
 
-# ── Step 1: 编译后端 ──
+# ── Step 1: 编译探针 → 嵌入 hub → 编译后端 ──
+# 探针必须先编进 internal/handler/agents/，hub 的 //go:embed agents 才能把它们
+# 打进二进制，curl|bash 安装脚本的 /dl/agent-<os>-<arch> 才有东西可下。
+# 编 amd64+arm64 两个 linux 架构，覆盖被监控机器的常见架构。
+log "编译探针 (linux amd64+arm64) 并嵌入 hub..."
+for AGENT_ARCH in amd64 arm64; do
+  GOOS=linux GOARCH="$AGENT_ARCH" go build \
+    -ldflags="-s -w" -trimpath \
+    -o internal/handler/agents/agent-linux-"$AGENT_ARCH" ./cmd/agent
+done
+
 log "编译后端 (linux/${VPS_ARCH})..."
 GOOS=linux GOARCH="$VPS_ARCH" go build \
   -ldflags="-s -w" -trimpath \
   -o dist/hub-linux-"$VPS_ARCH" ./cmd/server
 
-GOOS=linux GOARCH="$VPS_ARCH" go build \
-  -ldflags="-s -w" -trimpath \
-  -o dist/agent-linux-"$VPS_ARCH" ./cmd/agent
+# 单独留一份探针给手动安装 / scp 到 hub 机器（沿用 Step 4 的上传）
+cp internal/handler/agents/agent-linux-"$VPS_ARCH" dist/agent-linux-"$VPS_ARCH"
 
 log "后端编译完成"
 
