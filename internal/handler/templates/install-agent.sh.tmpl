@@ -2,11 +2,29 @@
 # shiguang-vps agent installer ({{.Version}}).
 #
 # Usage:
-#   curl -fsSL "<hub_url>/_app/<prefix>/install-agent.sh?token=<TOKEN>&hub_url=<HUB>" | bash
+#   install:   curl -fsSL "<hub>/install-agent.sh?token=<T>&agent_id=<ID>&hub_url=<HUB>" | bash
+#   uninstall: curl -fsSL "<hub>/install-agent.sh?token=<T>&agent_id=<ID>" | bash -s -- --uninstall
 #
 # The script is rendered by the hub at request time — the TOKEN below is
 # already inlined; the script does NOT need any further environment vars.
 set -euo pipefail
+
+# Uninstall mode (`… | bash -s -- --uninstall`): stop + remove the agent and
+# exit. Handled before the credential guards below so it needs no valid token.
+for arg in "$@"; do
+  if [[ "$arg" == "--uninstall" ]]; then
+    echo "==> Uninstalling shiguang-agent..."
+    SUDO=""; [[ "$EUID" -ne 0 ]] && SUDO="sudo"
+    if command -v systemctl >/dev/null 2>&1; then
+      $SUDO systemctl disable --now shiguang-agent 2>/dev/null || true
+      $SUDO rm -f /etc/systemd/system/shiguang-agent.service
+      $SUDO systemctl daemon-reload 2>/dev/null || true
+    fi
+    $SUDO rm -f /usr/local/bin/shiguang-agent
+    echo "OK: shiguang-agent uninstalled — remember to delete it in the panel too"
+    exit 0
+  fi
+done
 
 # Values are emitted inside single quotes so bash performs NO substitution on
 # them ($... and `...` would otherwise execute inside double quotes). The
