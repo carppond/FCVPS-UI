@@ -321,3 +321,25 @@ func TestBuildWSURL(t *testing.T) {
 		t.Errorf("expected token in url, got %q", got)
 	}
 }
+
+// TestBuildWSURLNormalisesScheme verifies the http(s) hub URLs handed out by
+// the install script / panel are mapped to ws(s) (websocket.Dialer rejects
+// http/https) and the canonical path is auto-attached.
+func TestBuildWSURLNormalisesScheme(t *testing.T) {
+	cases := []struct {
+		in, wantPrefix string
+	}{
+		{"https://hub.example.com:8443", "wss://hub.example.com:8443/api/agent/ws"},
+		{"http://10.0.0.1:8080", "ws://10.0.0.1:8080/api/agent/ws"},
+		{"wss://hub.example.com/api/agent/ws", "wss://hub.example.com/api/agent/ws"},
+	}
+	for _, c := range cases {
+		got, err := buildWSURL(c.in, "tok")
+		if err != nil {
+			t.Fatalf("buildWSURL(%q): %v", c.in, err)
+		}
+		if !strings.HasPrefix(got, c.wantPrefix+"?") {
+			t.Errorf("buildWSURL(%q) = %q, want prefix %q", c.in, got, c.wantPrefix)
+		}
+	}
+}

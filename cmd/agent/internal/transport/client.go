@@ -441,11 +441,20 @@ func (c *Client) handleBye(env *agentlib.Envelope, conn *websocket.Conn) {
 // `ws://host:port/`), the canonical /api/agent/ws path is auto-attached so
 // the install command stays short — without this the root path hits the
 // silent-mode nginx mimic and the connect fails with "bad handshake".
-// It does NOT log the token.
+//
+// The install script / panel hand out an http(s) hub URL (the same address the
+// web UI uses), but websocket.Dialer only accepts ws/wss — so https→wss and
+// http→ws are normalised here. It does NOT log the token.
 func buildWSURL(hubURL, token string) (string, error) {
 	u, err := url.Parse(hubURL)
 	if err != nil {
 		return "", err
+	}
+	switch u.Scheme {
+	case "https":
+		u.Scheme = "wss"
+	case "http":
+		u.Scheme = "ws"
 	}
 	if u.Path == "" || u.Path == "/" {
 		u.Path = "/api/agent/ws"
