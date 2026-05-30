@@ -66,3 +66,6 @@ web/blob-report/
 mobile/node_modules/
 mobile/.expo/
 mobile/dist/
+
+# iOS 打包产物(走 Release,不入库)
+*.ipa
