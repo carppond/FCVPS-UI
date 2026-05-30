@@ -1,7 +1,15 @@
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Copy, Gauge, RotateCw, Send, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Copy,
+  Gauge,
+  RefreshCw,
+  RotateCw,
+  Send,
+  Trash2,
+} from "lucide-react";
 import i18n from "@/lib/i18n";
 import agentZh from "@/locales/zh-CN/agent.json";
 import agentEn from "@/locales/en/agent.json";
@@ -35,7 +43,10 @@ import {
   useSendCommandMutation,
   useUpdateAgentMutation,
 } from "@/api/agent";
-import { useTrafficSummaryQuery } from "@/api/traffic";
+import {
+  useTrafficSummaryQuery,
+  useRecomputeTrafficMutation,
+} from "@/api/traffic";
 import { formatBytes } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -90,8 +101,17 @@ function AgentDetailPage() {
   // provider figure), limit/source from the same row. Config is set via the
   // settings dialog (manual limit + BandwagonHost creds).
   const update = useUpdateAgentMutation();
+  const recompute = useRecomputeTrafficMutation();
   const { data: trafficSummary } = useTrafficSummaryQuery();
   const agentTraffic = trafficSummary?.agents.find((a) => a.agent_id === agentId);
+  const onRecompute = async () => {
+    try {
+      await recompute.mutateAsync();
+      toast.success(t("agent:traffic_card.recomputed"));
+    } catch (err) {
+      handleError(err);
+    }
+  };
 
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [form, setForm] = React.useState({ name: "", limitGB: "", veid: "", key: "" });
@@ -290,7 +310,14 @@ function AgentDetailPage() {
         </div>
       </header>
 
-      {agentTraffic && <MonthlyTrafficCard traffic={agentTraffic} t={t} />}
+      {agentTraffic && (
+        <MonthlyTrafficCard
+          traffic={agentTraffic}
+          t={t}
+          onRecompute={onRecompute}
+          recomputing={recompute.isPending}
+        />
+      )}
 
       <AgentDetailTabs agent={agent} realtimeMetrics={realtimeMetrics} />
 
@@ -496,9 +523,13 @@ function AgentDetailPage() {
 function MonthlyTrafficCard({
   traffic,
   t,
+  onRecompute,
+  recomputing,
 }: {
   traffic: AgentTrafficSummary;
   t: (key: string, opts?: Record<string, unknown>) => string;
+  onRecompute: () => void;
+  recomputing: boolean;
 }) {
   const used = traffic.total_used;
   const limit = traffic.limit ?? 0;
@@ -509,11 +540,26 @@ function MonthlyTrafficCard({
         <span className="text-[var(--font-size-sm)] font-medium text-[var(--color-text-secondary)]">
           {t("agent:traffic_card.title")}
         </span>
-        {traffic.source === "bandwagon" && (
-          <span className="rounded-[var(--radius-sm)] bg-[var(--color-surface-hover)] px-1.5 py-0.5 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-            {t("agent:traffic_card.source_bandwagon")}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {traffic.source === "bandwagon" && (
+            <span className="rounded-[var(--radius-sm)] bg-[var(--color-surface-hover)] px-1.5 py-0.5 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+              {t("agent:traffic_card.source_bandwagon")}
+            </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRecompute}
+            disabled={recomputing}
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5${recomputing ? " animate-spin" : ""}`}
+            />
+            {recomputing
+              ? t("common:loading")
+              : t("agent:traffic_card.recompute")}
+          </Button>
+        </div>
       </div>
       <div className="flex items-baseline gap-2 tabular-nums">
         <span className="text-[var(--font-size-2xl)] font-bold text-[var(--color-text-primary)]">

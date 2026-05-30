@@ -153,7 +153,9 @@
   "traffic_card": {
     "title": "本月流量",
     "source_bandwagon": "搬瓦工",
-    "no_limit": "未设上限"
+    "no_limit": "未设上限",
+    "recompute": "重算",
+    "recomputed": "已重算,流量已更新"
   },
   "card": {
     "cpu": "CPU",

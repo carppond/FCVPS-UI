@@ -153,7 +153,9 @@
   "traffic_card": {
     "title": "今月",
     "source_bandwagon": "BandwagonHost",
-    "no_limit": "上限未設定"
+    "no_limit": "上限未設定",
+    "recompute": "再集計",
+    "recomputed": "再集計しました"
   },
   "card": {
     "cpu": "CPU",

@@ -641,6 +641,7 @@ func mountTrafficRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("GET /api/traffic/summary", required(http.HandlerFunc(th.Summary)))
 	mux.Handle("GET /api/traffic/history", required(http.HandlerFunc(th.History)))
 	mux.Handle("GET /api/traffic/by-agent", required(http.HandlerFunc(th.ByAgent)))
+	mux.Handle("POST /api/traffic/recompute", required(http.HandlerFunc(th.Recompute)))
 	mux.Handle("PUT /api/traffic/threshold", required(http.HandlerFunc(th.SetThreshold)))
 	// Contract §1 also lists POST /api/traffic/threshold — alias it.
 	mux.Handle("POST /api/traffic/threshold", required(http.HandlerFunc(th.SetThreshold)))

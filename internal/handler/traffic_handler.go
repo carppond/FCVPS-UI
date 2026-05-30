@@ -30,16 +30,25 @@ import (
 // All read endpoints scope to the authenticated user; admins use the same
 // reads (their own view) but additionally can flip system-wide settings via
 // the PUT endpoints.
+// trafficAggregator is the subset of traffic.Aggregator the handler needs to
+// trigger an on-demand recompute (kept as an interface so the handler stays
+// testable with a nil/stub).
+type trafficAggregator interface {
+	RunForDate(ctx context.Context, day time.Time) error
+}
+
 type TrafficHandler struct {
 	trafficRepo  *storage.TrafficRepo
 	agentRepo    *storage.AgentRepo
 	settingsRepo *storage.SettingsRepo
+	aggregator   trafficAggregator
 	logger       *slog.Logger
 }
 
 // NewTrafficHandler wires the handler. agentRepo is required so the
-// /summary + /by-agent responses can resolve agent names.
-func NewTrafficHandler(trafficRepo *storage.TrafficRepo, agentRepo *storage.AgentRepo, settingsRepo *storage.SettingsRepo, logger *slog.Logger) *TrafficHandler {
+// /summary + /by-agent responses can resolve agent names. aggregator may be nil
+// (disables POST /recompute).
+func NewTrafficHandler(trafficRepo *storage.TrafficRepo, agentRepo *storage.AgentRepo, settingsRepo *storage.SettingsRepo, aggregator trafficAggregator, logger *slog.Logger) *TrafficHandler {
 	if logger == nil {
 		logger = slog.Default()
 	}
@@ -47,6 +56,7 @@ func NewTrafficHandler(trafficRepo *storage.TrafficRepo, agentRepo *storage.Agen
 		trafficRepo:  trafficRepo,
 		agentRepo:    agentRepo,
 		settingsRepo: settingsRepo,
+		aggregator:   aggregator,
 		logger:       logger,
 	}
 }
@@ -69,6 +79,26 @@ func (h *TrafficHandler) Summary(w http.ResponseWriter, r *http.Request) {
 		Data:      dto,
 		RequestID: traceID,
 	})
+}
+
+// Recompute implements POST /api/traffic/recompute. It aggregates today +
+// yesterday on demand so newly consumed traffic appears in the month summary
+// without waiting for the daily 00:30 UTC sweep. RunForDate aggregates every
+// agent for the date, so this is a global (not per-user) refresh.
+func (h *TrafficHandler) Recompute(w http.ResponseWriter, r *http.Request) {
+	traceID := middleware.TraceIDFromContext(r.Context())
+	if h.aggregator == nil {
+		util.RespondError(w, types.ErrInternalUnknown, "recompute unavailable", nil, traceID)
+		return
+	}
+	now := time.Now().UTC()
+	for _, day := range []time.Time{now, now.AddDate(0, 0, -1)} {
+		if err := h.aggregator.RunForDate(r.Context(), day); err != nil {
+			util.RespondError(w, types.ErrInternalUnknown, "recompute: "+err.Error(), nil, traceID)
+			return
+		}
+	}
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[any]{RequestID: traceID})
 }
 
 // History implements GET /api/traffic/history. Query params:

@@ -60,7 +60,7 @@ func newTrafficTestStack(t *testing.T) *trafficTestStack {
 	agentRepo := storage.NewAgentRepo(db, time.Now)
 	tRepo := storage.NewTrafficRepo(db, time.Now)
 	sRepo := storage.NewSettingsRepo(db, time.Now)
-	th := NewTrafficHandler(tRepo, agentRepo, sRepo, nil)
+	th := NewTrafficHandler(tRepo, agentRepo, sRepo, nil, nil)
 	deps := &Deps{
 		DB:             db,
 		AuthManager:    mgr,

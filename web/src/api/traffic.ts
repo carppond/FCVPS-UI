@@ -87,6 +87,17 @@ export function useSetTrafficThresholdMutation() {
   });
 }
 
+/** POST /api/traffic/recompute — aggregate today+yesterday now so freshly
+ * consumed traffic shows in the month summary without waiting for the daily sweep. */
+export function useRecomputeTrafficMutation() {
+  return useMutation({
+    mutationFn: () => apiFetch<null>("/api/traffic/recompute", { method: "POST" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.traffic.all() });
+    },
+  });
+}
+
 /** PUT /api/traffic/limit — admin: configure the monthly bytes limit. */
 export function useSetTrafficLimitMutation() {
   return useMutation({

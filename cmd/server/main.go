@@ -393,7 +393,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("traffic cleanup: %w", err)
 	}
-	trafficHandler := handler.NewTrafficHandler(trafficRepo, agentRepo, settingsRepo, log)
+	trafficHandler := handler.NewTrafficHandler(trafficRepo, agentRepo, settingsRepo, trafficAggregator, log)
 
 	// T-13: M-SCRIPT goja sandbox + per-user CRUD. The engine is process-
 	// wide (sync.Pool inside) so a single instance handles every concurrent
