@@ -128,6 +128,14 @@ func vlessToURI(n *ParsedNode) string {
 	if n.Host != "" {
 		q.Set("host", n.Host)
 	}
+	// Reality / xtls extras the parser keeps verbatim in Raw. Without these
+	// (flow / fp / pbk / sid / spx) a reality node TCP-pings but fails the
+	// handshake — the node is unusable in clients fed the uri-list format.
+	for _, k := range []string{"flow", "fp", "pbk", "sid", "spx"} {
+		if v, ok := stringFromRaw(n.Raw, k); ok && v != "" {
+			q.Set(k, v)
+		}
+	}
 	return fmt.Sprintf("vless://%s@%s:%d?%s#%s",
 		n.UUID, n.Server, n.Port, q.Encode(), url.QueryEscape(n.Name))
 }
