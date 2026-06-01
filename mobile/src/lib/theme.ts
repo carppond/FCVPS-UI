@@ -57,8 +57,16 @@ export function getColors(mode: "light" | "dark") {
   return mode === "dark" ? darkColors : lightColors;
 }
 
-/** Backward-compatible alias — existing code imports `colors` directly. */
-export const colors = darkColors;
+/** Type of a resolved color palette (for makeStyles factories). */
+export type AppColors = typeof darkColors;
+
+/**
+ * Backward-compatible alias — screens that haven't migrated to `useColors()`
+ * import this directly. Points at the LIGHT palette so the app's default
+ * appearance is light (matching the theme-store default mode). Screens migrated
+ * to `useColors()` follow the live mode and support the dark toggle.
+ */
+export const colors = lightColors;
 
 /** Gradient stop pairs (mode-independent) for LinearGradient. */
 export const gradients = {
