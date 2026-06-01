@@ -145,17 +145,23 @@ print_summary() {
   echo ""
 }
 
-# do_uninstall — 远程清理:停服务 + 删 systemd 单元 + 删 nginx 站点,数据目录单独确认
+# do_uninstall — 远程清理:停服务 + 删 systemd 单元 + 删 nginx 站点;数据/证书/ufw 逐项确认
 do_uninstall() {
+  local site="/etc/nginx/sites-available/shiguang-vps"
   echo ""
   warn "即将从 ${SSH_USER}@${VPS_IP} 卸载拾光VPS:"
   echo "    • 停止并禁用 systemd 服务 shiguang-vps,删除其单元文件"
   echo "    • 删除 nginx 站点 /etc/nginx/sites-{available,enabled}/shiguang-vps 并 reload"
   echo "    • 二进制与前端文件(${REMOTE_DIR}/hub、/agent、/web)"
-  echo "    • 数据目录 ${REMOTE_DIR}/data(含 SQLite 数据库)会再单独问你是否删"
+  echo "    • 数据目录 / SSL 证书 / ufw 放行规则会逐项单独确认"
   echo ""
   read -rp "确认卸载? [y/N] " yn
   [[ "$yn" =~ ^[Yy]$ ]] || { warn "已取消"; exit 0; }
+
+  # 删 nginx 配置前,先从中探测域名(证书名)与访问端口,供后续可选清理
+  local detected_domain detected_ports
+  detected_domain=$($SSH_CMD "grep -oE '/etc/letsencrypt/live/[^/]+' $site 2>/dev/null | head -1 | sed -E 's#.*/live/##'" 2>/dev/null || true)
+  detected_ports=$($SSH_CMD "grep -oE 'listen +[0-9]+' $site 2>/dev/null | grep -oE '[0-9]+' | sort -u | tr '\n' ' '" 2>/dev/null || true)
 
   log "停止并禁用服务..."
   $SSH_CMD "systemctl stop shiguang-vps 2>/dev/null || true
@@ -177,11 +183,33 @@ do_uninstall() {
     log "已删二进制与前端,保留数据目录 ${REMOTE_DIR}/data(彻底清除请手动: rm -rf ${REMOTE_DIR})"
   fi
 
+  # ── 可选:删除 SSL 证书(探测到域名时;删后再签有 Let's Encrypt 频率限制)──
+  if [[ -n "$detected_domain" ]]; then
+    echo ""
+    read -rp "检测到 SSL 证书 [${detected_domain}],一并删除?(删后再签有频率限制) [y/N] " del_cert
+    if [[ "$del_cert" =~ ^[Yy]$ ]]; then
+      $SSH_CMD "command -v certbot >/dev/null 2>&1 && certbot delete --cert-name ${detected_domain} --non-interactive 2>/dev/null || true"
+      log "已删除证书 ${detected_domain}"
+    fi
+  fi
+
+  # ── 可选:删除 ufw 放行(自动排除 SSH 端口,绝不锁掉自己)──
+  if $SSH_CMD "command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'"; then
+    local rm_ports="" p
+    for p in $detected_ports; do [[ "$p" != "$SSH_PORT" ]] && rm_ports="${rm_ports}${p} "; done
+    if [[ -n "${rm_ports// /}" ]]; then
+      echo ""
+      read -rp "删除面板访问端口的 ufw 放行 [${rm_ports}](已自动排除 SSH 端口 ${SSH_PORT})? [y/N] " del_fw
+      if [[ "$del_fw" =~ ^[Yy]$ ]]; then
+        for p in $rm_ports; do $SSH_CMD "ufw delete allow ${p}/tcp >/dev/null 2>&1 || true"; done
+        log "已删除 ufw 放行: ${rm_ports}"
+      fi
+    fi
+  fi
+
   echo ""
-  warn "未自动删除(按需手动处理):"
-  echo "    • Let's Encrypt 证书: certbot delete --cert-name <域名>"
-  echo "    • ufw 放行规则:        ufw delete allow <端口>/tcp"
-  echo "    • 被监控机器上的探针:  在各机器执行探针自卸载(见 docs/user/uninstall.md)"
+  warn "无法自动处理(探针在其它机器上,hub 自我拆除时无法远程下发卸载):"
+  echo "    • 被监控机器上的探针:在各机器执行探针自卸载(见 docs/user/uninstall.md 第一节)"
   echo ""
   log "卸载完成"
 }

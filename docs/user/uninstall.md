@@ -42,11 +42,13 @@ rm -rf ./data                                    # 若用的是 ./data 绑定挂
 ```bash
 ./scripts/deploy.sh --uninstall
 ```
-交互式输入 VPS 连接信息后，脚本会远程：停止并禁用 `shiguang-vps` 服务、删除其 systemd 单元、删除 nginx 站点配置并 reload、删除二进制与前端文件；**数据目录会单独问你是否删除**（默认保留）。
+交互式输入 VPS 连接信息后，脚本会远程：停止并禁用 `shiguang-vps` 服务、删除其 systemd 单元、删除 nginx 站点配置并 reload、删除二进制与前端文件。随后**逐项单独确认**（默认都不删，避免误伤）：
 
-脚本**不会**自动删除以下内容（按提示手动处理）：
-- Let's Encrypt 证书：`certbot delete --cert-name <域名>`
-- ufw 放行规则：`ufw delete allow <端口>/tcp`
+- **数据目录** `${REMOTE_DIR}/data`（含 SQLite 数据库）——默认保留。
+- **SSL 证书**——脚本从 nginx 配置**自动探测域名**，问你是否 `certbot delete`（删后再签有 Let's Encrypt 频率限制，故默认不删）。
+- **ufw 放行规则**——自动探测面板访问端口并询问删除，**始终排除 SSH 端口**，绝不会把你锁在门外。
+
+唯一无法自动处理的是**被监控机器上的探针**：它们在别的机器上，hub 在自我拆除时已无法远程下发卸载命令——需按本文第一节「探针」在各机器手动卸载。
 
 ### 方式 3：手动二进制
 
