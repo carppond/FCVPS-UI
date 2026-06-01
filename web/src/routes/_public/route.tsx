@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_public")({
 
 function PublicLayout() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)]">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] p-4">
       <Outlet />
     </div>
   );

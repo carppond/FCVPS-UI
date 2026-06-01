@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,8 @@ export function LoginForm() {
   const setSession = useAuthStore((s) => s.setSession);
   const setTwoFactorPending = useAuthStore((s) => s.setTwoFactorPending);
 
+  const [showPassword, setShowPassword] = React.useState(false);
+
   const schema = React.useMemo(() => buildSchema(t), [t]);
 
   const form = useForm<FormValues>({
@@ -128,14 +131,33 @@ export function LoginForm() {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="password">{t("auth:login.password_label")}</Label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          placeholder={t("auth:login.password_placeholder")}
-          aria-invalid={!!form.formState.errors.password}
-          {...form.register("password")}
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder={t("auth:login.password_placeholder")}
+            aria-invalid={!!form.formState.errors.password}
+            className="pr-9"
+            {...form.register("password")}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            aria-label={
+              showPassword
+                ? t("auth:login.hide_password")
+                : t("auth:login.show_password")
+            }
+            className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-[var(--color-text-tertiary)] transition-colors duration-[var(--duration-fast)] hover:text-[var(--color-text-primary)]"
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" aria-hidden />
+            ) : (
+              <Eye className="h-4 w-4" aria-hidden />
+            )}
+          </button>
+        </div>
         {form.formState.errors.password && (
           <p className="text-[var(--font-size-xs)] text-[var(--color-error)]">
             {form.formState.errors.password.message}

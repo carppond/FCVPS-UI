@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { LoginForm } from "@/components/auth/login-form";
+import { LoginArt } from "@/components/auth/login-art";
 
 /**
  * Search params for `/login`.
@@ -31,18 +32,21 @@ export const Route = createFileRoute("/_public/login")({
 });
 
 function LoginPage() {
-  const { t } = useTranslation(["auth", "common"]);
+  const { t } = useTranslation(["auth"]);
   return (
-    <div className="w-full max-w-sm px-4">
-      <div className="mb-8 text-center">
-        <h1 className="text-[var(--font-size-2xl)] font-semibold text-[var(--color-text-primary)]">
-          {t("auth:login.title")}
+    <div className="login-rise grid w-full max-w-3xl grid-cols-1 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-solid)] shadow-[var(--shadow-xl)] md:min-h-96 md:grid-cols-2">
+      <LoginArt />
+      <div className="flex flex-col justify-center p-8 sm:p-10">
+        <h1 className="text-[var(--font-size-xl)] font-semibold text-[var(--color-text-primary)]">
+          {t("auth:login.welcome")}
         </h1>
-        <p className="mt-2 text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
+        <p className="mt-1 text-[var(--font-size-sm)] text-[var(--color-text-tertiary)]">
           {t("auth:login.subtitle")}
         </p>
+        <div className="mt-6">
+          <LoginForm />
+        </div>
       </div>
-      <LoginForm />
     </div>
   );
 }
