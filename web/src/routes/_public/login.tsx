@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_public/login")({
 function LoginPage() {
   const { t } = useTranslation(["auth"]);
   return (
-    <div className="login-rise grid w-full max-w-3xl grid-cols-1 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-solid)] shadow-[var(--shadow-xl)] md:min-h-96 md:grid-cols-2">
+    <div className="login-rise grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-solid)] shadow-[var(--shadow-xl)] md:h-[34rem] md:grid-cols-2">
       <LoginArt />
       <div className="flex flex-col justify-center p-8 sm:p-10">
         <h1 className="text-[var(--font-size-xl)] font-semibold text-[var(--color-text-primary)]">
