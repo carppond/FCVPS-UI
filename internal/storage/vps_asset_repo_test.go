@@ -190,7 +190,7 @@ func TestVpsAssetRepoUpdateAndDelete(t *testing.T) {
 	}
 
 	updated, err := repo.Update(context.Background(), "v1", "u1", map[string]any{
-		"name": "new-name",
+		"name":  "new-name",
 		"price": 99.0,
 	})
 	if err != nil {
@@ -251,5 +251,22 @@ func TestVpsAssetRepoSummary(t *testing.T) {
 	}
 	if costMap["USD"] != 5 {
 		t.Fatalf("USD monthly cost: want 5, got %f", costMap["USD"])
+	}
+}
+
+// Empty table: SUM(...) over zero rows yields SQL NULL; the query must COALESCE
+// it to 0, otherwise scanning NULL into int fails (regression for the
+// "converting NULL to int is unsupported" 500 on fresh installs).
+func TestVpsAssetRepoSummaryEmpty(t *testing.T) {
+	db := newTestDB(t)
+	newTestUser(t, db, "u1")
+	repo := storage.NewVpsAssetRepo(db, time.Now)
+
+	total, expiring, expired, err := repo.Summary(context.Background(), "u1")
+	if err != nil {
+		t.Fatalf("Summary on empty table: %v", err)
+	}
+	if total != 0 || expiring != 0 || expired != 0 {
+		t.Fatalf("empty summary: want 0/0/0, got %d/%d/%d", total, expiring, expired)
 	}
 }

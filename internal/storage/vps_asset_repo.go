@@ -328,9 +328,9 @@ func (r *VpsAssetRepo) Summary(ctx context.Context, userID string) (total, expir
 	err = r.db.Read.QueryRowContext(ctx, `
 		SELECT
 			COUNT(*),
-			SUM(CASE WHEN julianday(expire_at) - julianday('now') > 0
-			          AND julianday(expire_at) - julianday('now') <= 7 THEN 1 ELSE 0 END),
-			SUM(CASE WHEN julianday(expire_at) - julianday('now') <= 0 THEN 1 ELSE 0 END)
+			COALESCE(SUM(CASE WHEN julianday(expire_at) - julianday('now') > 0
+			          AND julianday(expire_at) - julianday('now') <= 7 THEN 1 ELSE 0 END), 0),
+			COALESCE(SUM(CASE WHEN julianday(expire_at) - julianday('now') <= 0 THEN 1 ELSE 0 END), 0)
 		FROM vps_assets WHERE user_id = ?`, userID).Scan(&total, &expiring, &expired)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("summary: %w", err)
