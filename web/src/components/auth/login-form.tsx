@@ -7,8 +7,6 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api-client";
 import { useLoginMutation } from "@/api/auth";
 import { useAuthStore } from "@/stores/auth-store";
@@ -111,17 +109,29 @@ export function LoginForm() {
   const isSubmitting = loginMutation.isPending || form.formState.isSubmitting;
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="username">{t("auth:login.username_label")}</Label>
-        <Input
-          id="username"
-          autoComplete="username"
-          autoFocus
-          placeholder={t("auth:login.username_placeholder")}
-          aria-invalid={!!form.formState.errors.username}
-          {...form.register("username")}
-        />
+    <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
+      <div
+        className="login-fade-up flex flex-col gap-1.5"
+        style={{ animationDelay: "0.12s" }}
+      >
+        <label
+          htmlFor="username"
+          className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]"
+        >
+          {t("auth:login.username_label")}
+        </label>
+        <div className="relative">
+          <input
+            id="username"
+            autoComplete="username"
+            autoFocus
+            placeholder={t("auth:login.username_placeholder")}
+            aria-invalid={!!form.formState.errors.username}
+            className="peer h-10 w-full border-0 border-b border-[var(--color-border-strong)] bg-transparent px-1 text-[var(--font-size-sm)] text-[var(--color-text-primary)] outline-none transition-colors placeholder:text-[var(--color-text-tertiary)]"
+            {...form.register("username")}
+          />
+          <span className="pointer-events-none absolute -bottom-px left-0 h-0.5 w-0 rounded-full bg-[var(--color-primary)] transition-[width] duration-[var(--duration-normal)] peer-focus:w-full" />
+        </div>
         {form.formState.errors.username && (
           <p className="text-[var(--font-size-xs)] text-[var(--color-error)]">
             {form.formState.errors.username.message}
@@ -129,18 +139,27 @@ export function LoginForm() {
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="password">{t("auth:login.password_label")}</Label>
+      <div
+        className="login-fade-up flex flex-col gap-1.5"
+        style={{ animationDelay: "0.22s" }}
+      >
+        <label
+          htmlFor="password"
+          className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]"
+        >
+          {t("auth:login.password_label")}
+        </label>
         <div className="relative">
-          <Input
+          <input
             id="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             placeholder={t("auth:login.password_placeholder")}
             aria-invalid={!!form.formState.errors.password}
-            className="pr-9"
+            className="peer h-10 w-full border-0 border-b border-[var(--color-border-strong)] bg-transparent pl-1 pr-8 text-[var(--font-size-sm)] text-[var(--color-text-primary)] outline-none transition-colors placeholder:text-[var(--color-text-tertiary)]"
             {...form.register("password")}
           />
+          <span className="pointer-events-none absolute -bottom-px left-0 h-0.5 w-0 rounded-full bg-[var(--color-primary)] transition-[width] duration-[var(--duration-normal)] peer-focus:w-full" />
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
@@ -149,7 +168,7 @@ export function LoginForm() {
                 ? t("auth:login.hide_password")
                 : t("auth:login.show_password")
             }
-            className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-[var(--color-text-tertiary)] transition-colors duration-[var(--duration-fast)] hover:text-[var(--color-text-primary)]"
+            className="absolute bottom-1.5 right-0 flex h-7 w-7 items-center justify-center text-[var(--color-text-tertiary)] transition-colors duration-[var(--duration-fast)] hover:text-[var(--color-text-primary)]"
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4" aria-hidden />
@@ -165,18 +184,26 @@ export function LoginForm() {
         )}
       </div>
 
-      <label className="flex items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-secondary)]">
+      <label
+        className="login-fade-up flex items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-secondary)]"
+        style={{ animationDelay: "0.3s" }}
+      >
         <input
           type="checkbox"
-          className="h-4 w-4 rounded-[var(--radius-sm)] border-[var(--color-border-strong)]"
+          className="h-4 w-4 rounded-[var(--radius-sm)] border-[var(--color-border-strong)] accent-[var(--color-primary)]"
           {...form.register("rememberMe")}
         />
         {t("auth:login.remember_me")}
       </label>
 
-      <Button type="submit" disabled={isSubmitting} className="mt-2 w-full">
-        {isSubmitting ? t("auth:login.submitting") : t("auth:login.submit")}
-      </Button>
+      <div
+        className="login-fade-up mt-1"
+        style={{ animationDelay: "0.36s" }}
+      >
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? t("auth:login.submitting") : t("auth:login.submit")}
+        </Button>
+      </div>
     </form>
   );
 }

@@ -383,3 +383,11 @@ pre,
 @media (prefers-reduced-motion: reduce) {
   .login-rise, .login-float, .login-halo, .login-fade-up { animation: none; opacity: 1; }
 }
+@keyframes login-sparkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.5); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+}
+.login-sparkle { animation: login-sparkle 3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .login-sparkle { animation: none; }
+}

@@ -13,7 +13,7 @@ import { Activity } from "lucide-react";
  * the panel stays dark in both light and dark themes.
  */
 const HERO_BG =
-  "radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--color-chart-2) 38%, var(--color-neutral-50)) 0%, var(--color-neutral-50) 62%)";
+  "radial-gradient(125% 125% at 0% 0%, color-mix(in srgb, var(--color-chart-2) 50%, var(--color-neutral-200)) 0%, var(--color-neutral-200) 64%)";
 const HALO_BG =
   "radial-gradient(circle, color-mix(in srgb, var(--color-primary) 45%, transparent), color-mix(in srgb, var(--color-chart-2) 28%, transparent) 45%, transparent 70%)";
 
@@ -43,8 +43,22 @@ export function LoginArt() {
       onMouseLeave={onLeave}
     >
       <div
-        className="login-halo pointer-events-none absolute left-1/2 top-[44%] h-80 w-80 blur-2xl"
+        className="login-halo pointer-events-none absolute left-1/2 top-[42%] h-96 w-96 blur-2xl"
         style={{ background: HALO_BG }}
+        aria-hidden
+      />
+      <span
+        className="login-sparkle pointer-events-none absolute left-[20%] top-[22%] h-1.5 w-1.5 rounded-full bg-[var(--color-neutral-950)]"
+        aria-hidden
+      />
+      <span
+        className="login-sparkle pointer-events-none absolute right-[18%] top-[32%] h-1.5 w-1.5 rounded-full bg-[var(--color-neutral-950)]"
+        style={{ animationDelay: "0.8s" }}
+        aria-hidden
+      />
+      <span
+        className="login-sparkle pointer-events-none absolute right-[26%] bottom-[30%] h-1 w-1 rounded-full bg-[var(--color-neutral-950)]"
+        style={{ animationDelay: "1.6s" }}
         aria-hidden
       />
 
@@ -61,7 +75,7 @@ export function LoginArt() {
             src="/login-art.png"
             alt={t("auth:login.character_alt")}
             onError={() => setFallback(true)}
-            className="login-float pointer-events-none max-h-[92%] w-auto object-contain object-bottom drop-shadow-[var(--shadow-xl)]"
+            className="login-float pointer-events-none max-h-[80%] w-auto object-contain object-bottom drop-shadow-[var(--shadow-xl)]"
           />
         )}
       </div>
