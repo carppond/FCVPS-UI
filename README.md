@@ -173,6 +173,7 @@ npx expo run:ios --device --configuration Release
 | [通知渠道配置](./docs/user/notification-setup.md) | 10 个渠道配置说明 |
 | [iOS 编译与自签安装](./docs/user/ios-build.md) | 基础版/完整版两个 IPA、证书要求、编译打包与重签步骤 |
 | [Android 编译与打包](./docs/user/android-build.md) | APK 安装、编译环境、本地/EAS 云构建 |
+| [卸载](./docs/user/uninstall.md) | 探针 / Docker / 脚本 / 二进制各方式的卸载步骤 |
 | [流水线常用模式](./docs/user/pipeline-cookbook.md) | YAML 示例与配方 |
 | [常见问题](./docs/user/troubleshooting.md) | 静默模式 / 密码找回 / agent 连接 |
 | [安全说明](./SECURITY.md) | 漏洞报告 + 已知限制 |

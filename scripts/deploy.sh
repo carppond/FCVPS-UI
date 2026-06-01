@@ -2,8 +2,9 @@
 # deploy.sh — 一键编译 + 上传 + 部署拾光VPS 到远程 VPS
 #
 # 用法:
-#   ./scripts/deploy.sh           # 首次部署（域名 → Nginx+SSL；留空 → IP+HTTP）
-#   ./scripts/deploy.sh --update  # 更新代码（只替换二进制+前端，重启服务）
+#   ./scripts/deploy.sh             # 首次部署（域名 → Nginx+SSL；留空 → IP+HTTP）
+#   ./scripts/deploy.sh --update    # 更新代码（只替换二进制+前端，重启服务）
+#   ./scripts/deploy.sh --uninstall # 卸载（停服务、删 systemd/nginx，数据目录另问）
 #
 # 不影响已有的 3X-UI 等服务：访问端口 / 后端端口均可自定义，且部署前实时探测占用
 set -euo pipefail
@@ -144,16 +145,62 @@ print_summary() {
   echo ""
 }
 
+# do_uninstall — 远程清理:停服务 + 删 systemd 单元 + 删 nginx 站点,数据目录单独确认
+do_uninstall() {
+  echo ""
+  warn "即将从 ${SSH_USER}@${VPS_IP} 卸载拾光VPS:"
+  echo "    • 停止并禁用 systemd 服务 shiguang-vps,删除其单元文件"
+  echo "    • 删除 nginx 站点 /etc/nginx/sites-{available,enabled}/shiguang-vps 并 reload"
+  echo "    • 二进制与前端文件(${REMOTE_DIR}/hub、/agent、/web)"
+  echo "    • 数据目录 ${REMOTE_DIR}/data(含 SQLite 数据库)会再单独问你是否删"
+  echo ""
+  read -rp "确认卸载? [y/N] " yn
+  [[ "$yn" =~ ^[Yy]$ ]] || { warn "已取消"; exit 0; }
+
+  log "停止并禁用服务..."
+  $SSH_CMD "systemctl stop shiguang-vps 2>/dev/null || true
+    systemctl disable shiguang-vps 2>/dev/null || true
+    rm -f /etc/systemd/system/shiguang-vps.service
+    systemctl daemon-reload"
+
+  log "移除 nginx 站点配置..."
+  $SSH_CMD "rm -f /etc/nginx/sites-enabled/shiguang-vps /etc/nginx/sites-available/shiguang-vps
+    if command -v nginx >/dev/null 2>&1; then nginx -t 2>/dev/null && systemctl reload nginx 2>/dev/null || true; fi"
+
+  echo ""
+  read -rp "是否一并删除数据目录 ${REMOTE_DIR}（含数据库，不可恢复）? [y/N] " del_data
+  if [[ "$del_data" =~ ^[Yy]$ ]]; then
+    $SSH_CMD "rm -rf ${REMOTE_DIR}"
+    warn "已删除 ${REMOTE_DIR}（含数据）"
+  else
+    $SSH_CMD "rm -f ${REMOTE_DIR}/hub ${REMOTE_DIR}/agent; rm -rf ${REMOTE_DIR}/web"
+    log "已删二进制与前端,保留数据目录 ${REMOTE_DIR}/data(彻底清除请手动: rm -rf ${REMOTE_DIR})"
+  fi
+
+  echo ""
+  warn "未自动删除(按需手动处理):"
+  echo "    • Let's Encrypt 证书: certbot delete --cert-name <域名>"
+  echo "    • ufw 放行规则:        ufw delete allow <端口>/tcp"
+  echo "    • 被监控机器上的探针:  在各机器执行探针自卸载(见 docs/user/uninstall.md)"
+  echo ""
+  log "卸载完成"
+}
+
 # ── 模式判断 ──
 UPDATE_ONLY=false
+UNINSTALL=false
 if [[ "${1:-}" == "--update" || "${1:-}" == "-u" ]]; then
   UPDATE_ONLY=true
+elif [[ "${1:-}" == "--uninstall" ]]; then
+  UNINSTALL=true
 fi
 
 # ── 交互输入：基础连接信息 ──
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
-if $UPDATE_ONLY; then
+if $UNINSTALL; then
+  echo -e "${CYAN}   拾光VPS 卸载${NC}"
+elif $UPDATE_ONLY; then
   echo -e "${CYAN}   拾光VPS 更新部署（跳过 Nginx/SSL）${NC}"
 else
   echo -e "${CYAN}   拾光VPS 首次部署${NC}"
@@ -166,8 +213,10 @@ read -rp "SSH 端口 [22]: " SSH_PORT
 SSH_PORT="${SSH_PORT:-22}"
 read -rp "SSH 用户 [root]: " SSH_USER
 SSH_USER="${SSH_USER:-root}"
-read -rp "VPS 架构 amd64/arm64 [amd64]: " VPS_ARCH
-VPS_ARCH="${VPS_ARCH:-amd64}"
+if ! $UNINSTALL; then
+  read -rp "VPS 架构 amd64/arm64 [amd64]: " VPS_ARCH
+  VPS_ARCH="${VPS_ARCH:-amd64}"
+fi
 
 REMOTE_DIR="/opt/shiguang-vps"
 
@@ -184,6 +233,12 @@ trap cleanup EXIT
 echo ""
 log "建立 SSH 连接（${SSH_USER}@${VPS_IP}:${SSH_PORT}）..."
 $SSH_CMD echo connected >/dev/null
+
+# ── 卸载模式:清理远程后退出 ──
+if $UNINSTALL; then
+  do_uninstall
+  exit 0
+fi
 
 # ── 域名 + 端口配置 ──
 DOMAIN=""
