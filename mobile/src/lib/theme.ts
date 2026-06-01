@@ -1,47 +1,56 @@
+// 拾光VPS 移动端「二次元」主题 —— 粉橙主色 + 紫光点缀。
+// 保留全部原有 color key(各屏直接引用),新增 primary2 / purple / cyan 供渐变与光晕使用。
+
 export const lightColors = {
-  bg: "#f5f5f7",
+  bg: "#fbf7ff",
   surface: "#ffffff",
-  surfaceHover: "#f0f0f2",
-  elevated: "#f8f8fa",
-  border: "rgba(0,0,0,0.08)",
-  borderStrong: "rgba(0,0,0,0.12)",
-  primary: "#ff6363",
-  primarySoft: "rgba(255,99,99,0.08)",
-  textPrimary: "#1a1a1e",
-  textSecondary: "#4a4a55",
-  textTertiary: "#8a8a96",
-  textDisabled: "#b8b8c2",
+  surfaceHover: "#f3eefb",
+  elevated: "#faf7ff",
+  border: "rgba(120,80,160,0.12)",
+  borderStrong: "rgba(120,80,160,0.2)",
+  primary: "#ff5d83",
+  primary2: "#ff8a5c",
+  purple: "#8b5cf6",
+  cyan: "#2bc4d6",
+  primarySoft: "rgba(255,93,131,0.12)",
+  textPrimary: "#2a2336",
+  textSecondary: "#6a6280",
+  textTertiary: "#9a93ad",
+  textDisabled: "#c3bdd0",
   success: "#22c55e",
-  successBg: "rgba(34,197,94,0.08)",
+  successBg: "rgba(34,197,94,0.12)",
   warning: "#f59e0b",
-  warningBg: "rgba(245,158,11,0.08)",
+  warningBg: "rgba(245,158,11,0.12)",
   error: "#ef4444",
-  errorBg: "rgba(239,68,68,0.08)",
-  info: "#3b82f6",
-  infoBg: "rgba(59,130,246,0.08)",
+  errorBg: "rgba(239,68,68,0.12)",
+  info: "#6b9bff",
+  infoBg: "rgba(107,155,255,0.12)",
 } as const;
 
 export const darkColors = {
-  bg: "#0a0a0c",
-  surface: "#111113",
-  surfaceHover: "#161618",
-  elevated: "#1c1c1f",
-  border: "rgba(255,255,255,0.07)",
-  borderStrong: "rgba(255,255,255,0.12)",
-  primary: "#ff6363",
-  primarySoft: "rgba(255,99,99,0.08)",
-  textPrimary: "#f0f0f2",
-  textSecondary: "#a0a0ad",
-  textTertiary: "#5c5c6a",
-  textDisabled: "#3a3a44",
-  success: "#22c55e",
-  successBg: "rgba(34,197,94,0.08)",
-  warning: "#f59e0b",
-  warningBg: "rgba(245,158,11,0.08)",
-  error: "#ef4444",
-  errorBg: "rgba(239,68,68,0.08)",
-  info: "#3b82f6",
-  infoBg: "rgba(59,130,246,0.08)",
+  bg: "#0b0a0f",
+  surface: "#16131f",
+  surfaceHover: "#1d1930",
+  elevated: "#221d33",
+  border: "rgba(255,255,255,0.08)",
+  borderStrong: "rgba(255,255,255,0.15)",
+  primary: "#ff6b8a",
+  primary2: "#ff9a6b",
+  purple: "#9b6bff",
+  cyan: "#4bd6e6",
+  primarySoft: "rgba(255,107,138,0.16)",
+  textPrimary: "#f3eefb",
+  textSecondary: "#b4adc6",
+  textTertiary: "#6d6783",
+  textDisabled: "#45405a",
+  success: "#43e08a",
+  successBg: "rgba(67,224,138,0.16)",
+  warning: "#ffb44a",
+  warningBg: "rgba(255,180,74,0.16)",
+  error: "#ff5d73",
+  errorBg: "rgba(255,93,115,0.16)",
+  info: "#6b9bff",
+  infoBg: "rgba(107,155,255,0.16)",
 } as const;
 
 export function getColors(mode: "light" | "dark") {
@@ -49,7 +58,23 @@ export function getColors(mode: "light" | "dark") {
 }
 
 /** Backward-compatible alias — existing code imports `colors` directly. */
-export const colors = lightColors;
+export const colors = darkColors;
+
+/** Gradient stop pairs (mode-independent) for LinearGradient. */
+export const gradients = {
+  primary: ["#ff6b8a", "#ff9a6b"] as const,
+  purple: ["#9b6bff", "#ff6b8a"] as const,
+  heroGlow: ["rgba(155,107,255,0.32)", "rgba(255,107,138,0.0)"] as const,
+};
+
+/** Soft primary glow shadow (iOS). On Android, pair with `elevation`. */
+export const glow = (color = "#ff6b8a", radius = 16, opacity = 0.45) => ({
+  shadowColor: color,
+  shadowOpacity: opacity,
+  shadowRadius: radius,
+  shadowOffset: { width: 0, height: 6 },
+  elevation: 8,
+});
 
 export const spacing = {
   xs: 4,
@@ -62,10 +87,10 @@ export const spacing = {
 } as const;
 
 export const radius = {
-  sm: 6,
-  md: 10,
-  lg: 14,
-  xl: 20,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 22,
 } as const;
 
 export const fontSize = {

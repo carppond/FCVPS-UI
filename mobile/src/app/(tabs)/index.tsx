@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Image } from "react-native";
 import { useState, useCallback } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,9 +8,11 @@ import { useSubscriptionsQuery, useSyncSubscription } from "../../api/subscripti
 import { useVpsAssetSummaryQuery } from "../../api/vps-asset";
 import { useAgentsQuery } from "../../api/agent";
 import type { PagedResponse, NotificationEvent } from "../../types/api";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { colors, spacing, radius, fontSize, glow } from "../../lib/theme";
 import { useAuthStore } from "../../stores/auth-store";
 import { Alert } from "react-native";
+
+const MASCOT = require("../../../assets/login-art.png");
 
 export default function DashboardScreen() {
   const user = useAuthStore((s) => s.user);
@@ -74,8 +76,21 @@ export default function DashboardScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
     >
-      <Text style={styles.greeting}>你好，{user?.username ?? "Admin"}</Text>
-      <Text style={styles.greetingSub}>基础设施一览</Text>
+      <View style={styles.hello}>
+        <View style={styles.avatarWrap}>
+          <Image source={MASCOT} style={styles.avatarImg} resizeMode="cover" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.greeting}>你好，{user?.username ?? "Admin"}</Text>
+          <Text style={styles.greetingSub}>基础设施一览</Text>
+        </View>
+      </View>
+      <View style={styles.bubble}>
+        <Text style={styles.bubbleText}>
+          今天 <Text style={styles.bubbleHi}>{agentOnline}/{agentTotal}</Text> 台探针在线
+          {vpsExpiring > 0 ? `，${vpsExpiring} 台 VPS 快到期啦` : "，一切正常哦"} ✦
+        </Text>
+      </View>
 
       <View style={styles.grid}>
         <StatCard
@@ -214,8 +229,21 @@ function StatCard({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl },
-  greeting: { fontSize: fontSize.xxxl, fontWeight: "800", color: colors.textPrimary, letterSpacing: -0.5 },
-  greetingSub: { fontSize: fontSize.sm, color: colors.textTertiary, marginTop: 6, marginBottom: spacing.xxxl },
+  hello: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.md },
+  avatarWrap: {
+    width: 48, height: 48, borderRadius: 24, overflow: "hidden",
+    borderWidth: 1.5, borderColor: colors.primary, ...glow(colors.primary, 12, 0.4),
+  },
+  avatarImg: { width: 48, height: 64, marginTop: 1 },
+  greeting: { fontSize: fontSize.xl, fontWeight: "800", color: colors.textPrimary, letterSpacing: -0.5 },
+  greetingSub: { fontSize: fontSize.sm, color: colors.textTertiary, marginTop: 2 },
+  bubble: {
+    backgroundColor: colors.surface, borderRadius: radius.lg,
+    borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.md, marginBottom: spacing.xl,
+  },
+  bubbleText: { fontSize: fontSize.sm, color: colors.textSecondary, lineHeight: 19 },
+  bubbleHi: { color: colors.success, fontWeight: "700" },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
   sectionTitle: {
     fontSize: fontSize.base, fontWeight: "700", color: colors.textPrimary,

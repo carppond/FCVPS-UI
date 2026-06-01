@@ -6,16 +6,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Image,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { useLoginMutation } from "../../api/auth";
 import { useAuthStore } from "../../stores/auth-store";
 import { STORAGE_KEYS } from "../../lib/constants";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { colors, spacing, radius, fontSize, gradients, glow } from "../../lib/theme";
+
+const MASCOT = require("../../../assets/login-art.png");
 
 export default function LoginScreen() {
   const [serverUrl, setServerUrl] = useState(useAuthStore.getState().serverUrl);
@@ -50,7 +55,6 @@ export default function LoginScreen() {
       await setServerUrlStore(serverUrl);
       await loginMutation.mutateAsync({ username, password });
 
-      // Save credentials
       if (rememberMe) {
         await SecureStore.setItemAsync(STORAGE_KEYS.SAVED_USERNAME, username);
         await SecureStore.setItemAsync(STORAGE_KEYS.SAVED_PASSWORD, password);
@@ -70,13 +74,27 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.inner}>
-        <View style={styles.header}>
-          <Text style={styles.logo}>拾光VPS</Text>
-          <Text style={styles.subtitle}>自托管代理订阅管理平台</Text>
+      {/* ambient glow */}
+      <LinearGradient
+        colors={gradients.heroGlow}
+        start={{ x: 0.8, y: 0 }}
+        end={{ x: 0.2, y: 0.7 }}
+        style={styles.glow}
+        pointerEvents="none"
+      />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.hero}>
+          <Image source={MASCOT} style={styles.mascot} resizeMode="contain" />
         </View>
 
         <View style={styles.form}>
+          <Text style={styles.title}>欢迎回来 ♡</Text>
+          <Text style={styles.subtitle}>拾光娘在等你登录呢～</Text>
+
           <View style={styles.field}>
             <Text style={styles.label}>用户名</Text>
             <TextInput
@@ -115,14 +133,13 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Remember me */}
           <TouchableOpacity
             style={styles.rememberRow}
             onPress={() => setRememberMe(!rememberMe)}
             activeOpacity={0.6}
           >
             <Ionicons
-              name={rememberMe ? "checkbox-outline" : "square-outline"}
+              name={rememberMe ? "checkbox" : "square-outline"}
               size={20}
               color={rememberMe ? colors.primary : colors.textTertiary}
             />
@@ -130,14 +147,21 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, loginMutation.isPending && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loginMutation.isPending}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
+            style={[glow(colors.primary), { marginTop: spacing.sm }]}
           >
-            <Text style={styles.buttonText}>
-              {loginMutation.isPending ? "登录中..." : "登录"}
-            </Text>
+            <LinearGradient
+              colors={gradients.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.button, loginMutation.isPending && styles.buttonDisabled]}
+            >
+              <Text style={styles.buttonText}>
+                {loginMutation.isPending ? "登录中..." : "登录"}
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setShowServer(!showServer)} activeOpacity={0.6}>
@@ -162,23 +186,25 @@ export default function LoginScreen() {
             </View>
           )}
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  inner: { flex: 1, justifyContent: "center", paddingHorizontal: spacing.xxxl },
-  header: { alignItems: "center", marginBottom: 48 },
-  logo: { fontSize: 32, fontWeight: "800", color: colors.textPrimary, letterSpacing: -1 },
-  subtitle: { fontSize: fontSize.sm, color: colors.textTertiary, marginTop: spacing.sm },
-  form: { gap: spacing.lg },
+  glow: { position: "absolute", top: 0, left: 0, right: 0, height: 360 },
+  scroll: { flexGrow: 1, justifyContent: "center", paddingBottom: spacing.xxl },
+  hero: { height: 280, alignItems: "center", justifyContent: "flex-end" },
+  mascot: { height: 280, width: "100%" },
+  form: { paddingHorizontal: spacing.xxxl, gap: spacing.md, marginTop: -spacing.lg },
+  title: { fontSize: fontSize.xxl, fontWeight: "800", color: colors.textPrimary, letterSpacing: -0.5 },
+  subtitle: { fontSize: fontSize.sm, color: colors.textTertiary, marginTop: spacing.xs, marginBottom: spacing.sm },
   field: { gap: spacing.xs },
-  label: { fontSize: fontSize.sm, fontWeight: "600", color: colors.textSecondary },
+  label: { fontSize: fontSize.xs, fontWeight: "600", color: colors.textTertiary },
   input: {
-    height: 48,
-    borderRadius: radius.lg,
+    height: 46,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     backgroundColor: colors.surface,
@@ -186,41 +212,26 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     color: colors.textPrimary,
   },
-  button: {
-    height: 48,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: spacing.sm,
-  },
-  buttonDisabled: { opacity: 0.5 },
-  buttonText: { fontSize: fontSize.base, fontWeight: "700", color: "#fff" },
   passwordWrap: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     backgroundColor: colors.surface,
   },
   passwordInput: {
     flex: 1,
-    height: 48,
+    height: 46,
     paddingHorizontal: spacing.lg,
     fontSize: fontSize.base,
     color: colors.textPrimary,
   },
-  eyeBtn: {
-    paddingHorizontal: spacing.md,
-    height: 48,
-    justifyContent: "center",
-  },
-  rememberRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
+  eyeBtn: { paddingHorizontal: spacing.md, height: 46, justifyContent: "center" },
+  rememberRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.xs },
   rememberText: { fontSize: fontSize.sm, color: colors.textSecondary },
+  button: { height: 48, borderRadius: radius.lg, justifyContent: "center", alignItems: "center" },
+  buttonDisabled: { opacity: 0.6 },
+  buttonText: { fontSize: fontSize.base, fontWeight: "800", color: "#fff" },
   serverToggle: { fontSize: fontSize.sm, color: colors.textTertiary, textAlign: "center", marginTop: spacing.sm },
 });

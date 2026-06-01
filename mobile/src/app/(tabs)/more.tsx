@@ -1,8 +1,10 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../stores/auth-store";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { colors, spacing, radius, fontSize, glow } from "../../lib/theme";
+
+const MASCOT = require("../../../assets/login-art.png");
 
 interface NavItem {
   icon: keyof typeof Ionicons.glyphMap;
@@ -45,6 +47,21 @@ export default function MoreScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <TouchableOpacity
+        style={styles.profile}
+        onPress={() => router.push("/profile" as any)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.profileAvatarWrap}>
+          <Image source={MASCOT} style={styles.profileAvatarImg} resizeMode="cover" />
+        </View>
+        <Text style={styles.profileName}>{user?.username ?? "Admin"}</Text>
+        <Text style={styles.profileMeta}>
+          {isAdmin ? "管理员" : "用户"}
+          {user?.totp_enabled ? " · 已启用 2FA" : ""} · Lv.拾光
+        </Text>
+      </TouchableOpacity>
+
       <Section title="工具" items={TOOLS} />
       <Section title="服务" items={SERVICES} />
       <Section title="账户" items={ACCOUNT} />
@@ -80,6 +97,29 @@ function Section({ title, items }: { title: string; items: NavItem[] }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
+  profile: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  profileAvatarWrap: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: colors.primary,
+    marginBottom: spacing.md,
+    ...glow(colors.primary, 16, 0.45),
+  },
+  profileAvatarImg: { width: 74, height: 100, marginTop: 2 },
+  profileName: { fontSize: fontSize.lg, fontWeight: "800", color: colors.textPrimary },
+  profileMeta: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 4 },
   section: { marginBottom: spacing.xl },
   sectionTitle: {
     fontSize: fontSize.xs,

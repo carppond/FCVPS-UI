@@ -1,10 +1,51 @@
-import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
+import { View, Text, FlatList, StyleSheet, RefreshControl, Image } from "react-native";
 import { useState, useCallback, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
 import { useTrafficSummary } from "../../api/traffic";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { colors, spacing, radius, fontSize, glow } from "../../lib/theme";
 import type { AgentTrafficSummary } from "../../types/api";
 import { pushTrafficToWidget } from "../../lib/widget-sync";
+
+const MASCOT = require("../../../assets/login-art.png");
+
+function TrafficRing({ percent, used }: { percent: number; used: string }) {
+  const size = 156;
+  const stroke = 13;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(100, percent));
+  const offset = circ * (1 - pct / 100);
+  return (
+    <View style={styles.ringWrap}>
+      <Svg width={size} height={size}>
+        <Defs>
+          <SvgGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={colors.primary} />
+            <Stop offset="1" stopColor={colors.primary2} />
+          </SvgGradient>
+        </Defs>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={colors.surfaceHover} strokeWidth={stroke} fill="none" />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke="url(#ringGrad)"
+          strokeWidth={stroke}
+          fill="none"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <View style={styles.ringCenter} pointerEvents="none">
+        <Text style={styles.ringValue}>{used}</Text>
+        <Text style={styles.ringPct}>{Math.round(pct)}% 已用</Text>
+      </View>
+    </View>
+  );
+}
 
 function formatBytes(n: number): string {
   if (n === 0) return "0 B";
@@ -44,6 +85,21 @@ export default function TrafficScreen() {
       ListHeaderComponent={
         data ? (
           <View style={styles.summarySection}>
+            <View style={styles.ringCard}>
+              <TrafficRing percent={data.usage_percent} used={formatBytes(data.total_used)} />
+              <View style={styles.encourage}>
+                <View style={styles.miniAvatarWrap}>
+                  <Image source={MASCOT} style={styles.miniAvatarImg} resizeMode="cover" />
+                </View>
+                <Text style={styles.encourageText}>
+                  {data.usage_percent >= 90
+                    ? "流量快用完啦,省着点用哦～"
+                    : data.usage_percent >= 70
+                      ? `还剩 ${Math.round(100 - data.usage_percent)}%,留意一下哦`
+                      : `还剩 ${Math.round(100 - data.usage_percent)}%,够用到月底啦~`}
+                </Text>
+              </View>
+            </View>
             <View style={styles.summaryRow}>
               <SumChip label="上传" value={formatBytes(data.total_in)} icon="arrow-up-outline" />
               <SumChip label="下载" value={formatBytes(data.total_out)} icon="arrow-down-outline" />
@@ -115,6 +171,27 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: "center", gap: spacing.md },
   emptyText: { fontSize: fontSize.base, color: colors.textTertiary },
   summarySection: { gap: spacing.sm, marginBottom: spacing.lg },
+  ringCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  ringWrap: { width: 156, height: 156, alignItems: "center", justifyContent: "center" },
+  ringCenter: { position: "absolute", alignItems: "center" },
+  ringValue: { fontSize: fontSize.xxl, fontWeight: "800", color: colors.textPrimary },
+  ringPct: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 2 },
+  encourage: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  miniAvatarWrap: {
+    width: 30, height: 30, borderRadius: 15, overflow: "hidden",
+    borderWidth: 1.5, borderColor: colors.primary, ...glow(colors.primary, 8, 0.4),
+  },
+  miniAvatarImg: { width: 30, height: 40, marginTop: 1 },
+  encourageText: { fontSize: fontSize.sm, color: colors.textSecondary },
   summaryRow: { flexDirection: "row", gap: spacing.sm },
   sumChip: {
     flex: 1,

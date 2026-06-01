@@ -8,6 +8,7 @@
     "expo": "~56.0.5",
     "expo-clipboard": "~56.0.3",
     "expo-constants": "^56.0.16",
+    "expo-linear-gradient": "~56.0.4",
     "expo-linking": "^56.0.12",
     "expo-router": "^56.2.7",
     "expo-screen-orientation": "^56.0.5",
@@ -20,6 +21,7 @@
     "react-native-safe-area-context": "^5.8.0",
     "react-native-screens": "^4.25.2",
     "react-native-ssh-sftp": "^1.0.3",
+    "react-native-svg": "15.15.4",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
