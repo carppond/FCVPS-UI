@@ -20,7 +20,7 @@
 - **10 渠道通知**：Telegram / Discord / Slack / Email / Bark / Gotify / Webhook / Server酱 / PushDeer / IFTTT
 - **Telegram Bot 双向交互**：`/nodes`、`/refresh <sub>`、`/traffic` 等命令运维
 - **静默模式**：所有路径返回 404，登录页面隐藏在随机前缀下
-- **移动端 App**：iOS + Android（Expo / React Native），含 SSH 终端、订阅复制、VPS 管理
+- **移动端 App**：iOS + Android（Expo / React Native），「拾光娘」二次元主题 + 亮/暗模式、订阅复制、VPS 管理、探针/流量监控
 
 ---
 
@@ -136,7 +136,7 @@ cd web && pnpm install && pnpm dev
 ./scripts/dev-mobile.sh
 ```
 
-一键启动后端 + Expo dev server + iOS 模拟器。
+一键启动后端 + Expo dev server + iOS 模拟器。脚本默认让 Metro 绑 `127.0.0.1`，避免开了 VPN/系统代理时模拟器连不上(502 / Could not connect)。真机调试同 WiFi 时用 `REACT_NATIVE_PACKAGER_HOSTNAME=<你的局域网IP> ./scripts/dev-mobile.sh` 覆盖。
 
 ### 移动端真机测试
 
