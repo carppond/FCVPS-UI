@@ -429,6 +429,29 @@ func (r *SubscriptionRepo) GetRawContent(ctx context.Context, id, userID string)
 	return raw, nil
 }
 
+// UpdateTrafficMeta refreshes the traffic/expiry figures parsed from the
+// upstream Subscription-Userinfo header during a url sync. traffic_used/total
+// are always written; expire_at is only overwritten when expireMs > 0 so a
+// header without an expire field does not clobber a manually set expiry.
+func (r *SubscriptionRepo) UpdateTrafficMeta(ctx context.Context, id string, used, total, expireMs int64) error {
+	if id == "" {
+		return fmt.Errorf("update traffic meta: empty id")
+	}
+	sets := "traffic_used = ?, traffic_total = ?"
+	args := []any{used, total}
+	if expireMs > 0 {
+		sets += ", expire_at = ?"
+		args = append(args, expireMs)
+	}
+	sets += ", updated_at = ?"
+	args = append(args, r.now().UnixMilli(), id)
+	_, err := r.db.Write.ExecContext(ctx, "UPDATE subscriptions SET "+sets+" WHERE id = ?", args...)
+	if err != nil {
+		return fmt.Errorf("update traffic meta: %w", err)
+	}
+	return nil
+}
+
 // selectSubscriptionSQL is the shared SELECT prefix used by every read path.
 // Column order must match scanSubscriptionRow.
 //

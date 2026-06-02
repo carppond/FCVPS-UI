@@ -10,6 +10,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -170,7 +171,7 @@ func (s *SyncService) SyncOne(ctx context.Context, sub *storage.SubscriptionReco
 		return nil, fmt.Errorf("sync one: nil subscription")
 	}
 	startedAt := s.now()
-	body, err := s.resolveBody(ctx, sub)
+	body, info, err := s.resolveBody(ctx, sub)
 	if err != nil {
 		s.failSync(ctx, sub, err)
 		return nil, err
@@ -222,6 +223,16 @@ func (s *SyncService) SyncOne(ctx context.Context, sub *storage.SubscriptionReco
 		// Sync ran but state metadata failed: still surface to caller.
 		return nil, fmt.Errorf("update sync state: %w", err)
 	}
+	// Best-effort: refresh traffic/expiry from the upstream Subscription-Userinfo
+	// header (so used/limit match the source panel, e.g. 3X-UI).
+	if info != nil {
+		if mErr := s.repo.UpdateTrafficMeta(ctx, sub.ID, info.used, info.total, info.expireMs); mErr != nil && s.logger != nil {
+			s.logger.Warn("subscription update traffic meta failed",
+				slog.String("subscription_id", sub.ID),
+				slog.String("err", mErr.Error()),
+			)
+		}
+	}
 	result := &types.SyncResult{
 		SubscriptionID: sub.ID,
 		NodeCount:      int32(upsertResult.Total),
@@ -267,34 +278,85 @@ func (s *SyncService) SyncAll(ctx context.Context, userID string) error {
 	return firstErr
 }
 
-// resolveBody chooses the right source per subscription type.
-func (s *SyncService) resolveBody(ctx context.Context, sub *storage.SubscriptionRecord) ([]byte, error) {
+// userinfoMeta holds the traffic/expiry figures parsed from the upstream
+// `Subscription-Userinfo` response header (the de-facto standard used by 3X-UI,
+// sub-store, etc.). nil when the header is absent/unparseable.
+type userinfoMeta struct {
+	used     int64 // upload + download
+	total    int64 // 0 = unlimited/unknown
+	expireMs int64 // 0 = no expiry in header
+}
+
+// parseSubscriptionUserinfo parses a header like
+// "upload=455727941; download=6174315083; total=1073741824000; expire=1719792000".
+// expire is unix seconds → converted to ms to match the subscription contract.
+func parseSubscriptionUserinfo(h string) *userinfoMeta {
+	if strings.TrimSpace(h) == "" {
+		return nil
+	}
+	var up, down, total, expire int64
+	got := false
+	for _, part := range strings.Split(h, ";") {
+		k, v, ok := strings.Cut(strings.TrimSpace(part), "=")
+		if !ok {
+			continue
+		}
+		n, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
+		if err != nil {
+			continue
+		}
+		switch strings.ToLower(strings.TrimSpace(k)) {
+		case "upload":
+			up, got = n, true
+		case "download":
+			down, got = n, true
+		case "total":
+			total, got = n, true
+		case "expire":
+			expire, got = n, true
+		}
+	}
+	if !got {
+		return nil
+	}
+	m := &userinfoMeta{used: up + down, total: total}
+	if expire > 0 {
+		m.expireMs = expire * 1000
+	}
+	return m
+}
+
+// resolveBody chooses the right source per subscription type. The returned
+// userinfoMeta is non-nil only for url subscriptions whose upstream emitted a
+// Subscription-Userinfo header.
+func (s *SyncService) resolveBody(ctx context.Context, sub *storage.SubscriptionRecord) ([]byte, *userinfoMeta, error) {
 	switch sub.Type {
 	case string(types.SubTypeURL):
 		if sub.SourceURL == "" {
-			return nil, fmt.Errorf("subscription %s: type=url with empty source_url", sub.ID)
+			return nil, nil, fmt.Errorf("subscription %s: type=url with empty source_url", sub.ID)
 		}
 		return s.fetchURL(ctx, sub.SourceURL, sub.UA, sub.AllowInsecure)
 	case string(types.SubTypeUpload):
 		if len(sub.RawContent) == 0 {
-			return nil, fmt.Errorf("subscription %s: type=upload with empty raw_content", sub.ID)
+			return nil, nil, fmt.Errorf("subscription %s: type=upload with empty raw_content", sub.ID)
 		}
-		return sub.RawContent, nil
+		return sub.RawContent, nil, nil
 	case string(types.SubTypeManual):
 		// Manual subscriptions sync via per-node POSTs (T-11). No-op here.
-		return nil, fmt.Errorf("subscription %s: type=manual cannot be synced", sub.ID)
+		return nil, nil, fmt.Errorf("subscription %s: type=manual cannot be synced", sub.ID)
 	}
-	return nil, fmt.Errorf("subscription %s: unknown type %q", sub.ID, sub.Type)
+	return nil, nil, fmt.Errorf("subscription %s: unknown type %q", sub.ID, sub.Type)
 }
 
-// fetchURL performs the HTTP GET with the supplied UA (or DefaultUserAgent).
-func (s *SyncService) fetchURL(ctx context.Context, url, ua string, insecure bool) ([]byte, error) {
+// fetchURL performs the HTTP GET with the supplied UA (or DefaultUserAgent) and
+// parses the Subscription-Userinfo header (traffic/expiry) when present.
+func (s *SyncService) fetchURL(ctx context.Context, url, ua string, insecure bool) ([]byte, *userinfoMeta, error) {
 	if ua == "" {
 		ua = DefaultUserAgent
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("build request: %w", err)
+		return nil, nil, fmt.Errorf("build request: %w", err)
 	}
 	req.Header.Set("User-Agent", ua)
 	client := s.httpClient
@@ -303,20 +365,20 @@ func (s *SyncService) fetchURL(ctx context.Context, url, ua string, insecure boo
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("http get %s: %w", url, err)
+		return nil, nil, fmt.Errorf("http get %s: %w", url, err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("http get %s: status %d", url, resp.StatusCode)
+		return nil, nil, fmt.Errorf("http get %s: status %d", url, resp.StatusCode)
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, MaxResponseBytes+1))
 	if err != nil {
-		return nil, fmt.Errorf("read body: %w", err)
+		return nil, nil, fmt.Errorf("read body: %w", err)
 	}
 	if int64(len(body)) > MaxResponseBytes {
-		return nil, fmt.Errorf("subscription body exceeds %d bytes", MaxResponseBytes)
+		return nil, nil, fmt.Errorf("subscription body exceeds %d bytes", MaxResponseBytes)
 	}
-	return body, nil
+	return body, parseSubscriptionUserinfo(resp.Header.Get("Subscription-Userinfo")), nil
 }
 
 // failSync records the failure state and emits a notification. It deliberately
