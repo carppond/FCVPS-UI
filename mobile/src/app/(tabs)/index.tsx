@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Image } from "react-native";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -8,13 +8,16 @@ import { useSubscriptionsQuery, useSyncSubscription } from "../../api/subscripti
 import { useVpsAssetSummaryQuery } from "../../api/vps-asset";
 import { useAgentsQuery } from "../../api/agent";
 import type { PagedResponse, NotificationEvent } from "../../types/api";
-import { colors, spacing, radius, fontSize, glow } from "../../lib/theme";
+import { spacing, radius, fontSize, glow, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import { useAuthStore } from "../../stores/auth-store";
 import { Alert } from "react-native";
 
 const MASCOT = require("../../../assets/login-art.png");
 
 export default function DashboardScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const user = useAuthStore((s) => s.user);
   const subs = useSubscriptionsQuery();
   const vpsSummary = useVpsAssetSummaryQuery();
@@ -214,6 +217,8 @@ function StatCard({
   sub: string;
   highlight?: boolean;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.card}>
       <View style={[styles.cardIcon, { backgroundColor: iconBg }]}>
@@ -226,7 +231,8 @@ function StatCard({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl },
   hello: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.md },

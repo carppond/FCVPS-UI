@@ -1,11 +1,15 @@
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Switch } from "react-native";
+import { useMemo } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../stores/auth-store";
 import { useThemeStore } from "../../stores/theme-store";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 
 export default function SettingsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { user, serverUrl, clearSession } = useAuthStore();
   const themeMode = useThemeStore((s) => s.mode);
   const toggleTheme = useThemeStore((s) => s.toggle);
@@ -87,7 +91,8 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   scrollContent: { padding: spacing.xl, paddingBottom: 40 },
   profileCard: {

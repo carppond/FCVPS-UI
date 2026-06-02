@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useCreateAgent } from "../../api/agent";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { AgentKind, AgentCreateResponse } from "../../types/api";
 
 const KINDS: { key: AgentKind; label: string; desc: string }[] = [
@@ -21,6 +22,8 @@ const KINDS: { key: AgentKind; label: string; desc: string }[] = [
 ];
 
 export default function CreateAgentScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const createMutation = useCreateAgent();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AgentKind>("native");
@@ -167,7 +170,8 @@ export default function CreateAgentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
   card: {

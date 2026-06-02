@@ -1,15 +1,16 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, Modal } from "react-native";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useRulesQuery, useDeleteRule, useUpdateRule } from "../../api/rule";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { CustomRule, RuleType, RuleMode } from "../../types/api";
 
-function typeColor(type: RuleType): string {
+function typeColor(type: RuleType, c: AppColors): string {
   switch (type) {
-    case "dns": return colors.info;
-    case "rules": return colors.success;
+    case "dns": return c.info;
+    case "rules": return c.success;
     case "rule-providers": return "#c084fc";
   }
 }
@@ -22,15 +23,17 @@ function modeLabel(mode: RuleMode): string {
   }
 }
 
-function modeColor(mode: RuleMode): string {
+function modeColor(mode: RuleMode, c: AppColors): string {
   switch (mode) {
-    case "replace": return colors.warning;
-    case "prepend": return colors.info;
-    case "append": return colors.success;
+    case "replace": return c.warning;
+    case "prepend": return c.info;
+    case "append": return c.success;
   }
 }
 
 export default function RulesScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useRulesQuery();
   const deleteMutation = useDeleteRule();
   const updateMutation = useUpdateRule();
@@ -177,8 +180,10 @@ export default function RulesScreen() {
 }
 
 function RuleCard({ rule, onMenu }: { rule: CustomRule; onMenu: (rule: CustomRule) => void }) {
-  const tc = typeColor(rule.type);
-  const mc = modeColor(rule.mode);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const tc = typeColor(rule.type, colors);
+  const mc = modeColor(rule.mode, colors);
 
   return (
     <View style={[styles.card, !rule.enabled && styles.cardDisabled]}>
@@ -206,7 +211,8 @@ function RuleCard({ rule, onMenu }: { rule: CustomRule; onMenu: (rule: CustomRul
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   wrapper: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },

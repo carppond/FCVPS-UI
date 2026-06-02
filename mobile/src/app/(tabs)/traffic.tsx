@@ -1,15 +1,18 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl, Image } from "react-native";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
 import { useTrafficSummary } from "../../api/traffic";
-import { colors, spacing, radius, fontSize, glow } from "../../lib/theme";
+import { spacing, radius, fontSize, glow, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { AgentTrafficSummary } from "../../types/api";
 import { pushTrafficToWidget } from "../../lib/widget-sync";
 
 const MASCOT = require("../../../assets/login-art.png");
 
 function TrafficRing({ percent, used }: { percent: number; used: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const size = 156;
   const stroke = 13;
   const r = (size - stroke) / 2;
@@ -56,6 +59,8 @@ function formatBytes(n: number): string {
 }
 
 export default function TrafficScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useTrafficSummary();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -133,6 +138,8 @@ export default function TrafficScreen() {
 }
 
 function SumChip({ label, value, icon, color }: { label: string; value: string; icon: string; color?: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.sumChip}>
       <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={14} color={color ?? colors.textTertiary} />
@@ -143,6 +150,8 @@ function SumChip({ label, value, icon, color }: { label: string; value: string; 
 }
 
 function AgentTrafficCard({ agent }: { agent: AgentTrafficSummary }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.card}>
       <Text style={styles.cardName} numberOfLines={1}>{agent.agent_name}</Text>
@@ -164,7 +173,8 @@ function AgentTrafficCard({ agent }: { agent: AgentTrafficSummary }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },

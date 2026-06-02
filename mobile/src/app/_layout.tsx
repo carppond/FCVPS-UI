@@ -1,11 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { AppState } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
-import { colors } from "../lib/theme";
+import { type AppColors } from "../lib/theme";
+import { useColors } from "../lib/useColors";
 import { trafficSummaryQuery } from "../api/traffic";
 // Side-effect import: loading widget-sync runs createWidget() so the home-screen
 // widget's layout is registered with native at app startup (not only when the
@@ -19,6 +20,7 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
+  const colors = useColors();
   const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
   const loadTheme = useThemeStore((s) => s.loadFromStorage);
 

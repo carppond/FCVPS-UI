@@ -1,8 +1,10 @@
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useMemo } from "react";
 import { useAuthStore } from "../../stores/auth-store";
-import { colors, spacing, radius, fontSize, glow } from "../../lib/theme";
+import { spacing, radius, fontSize, glow, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 
 const MASCOT = require("../../../assets/login-art.png");
 
@@ -14,34 +16,36 @@ interface NavItem {
   route: string;
 }
 
-const TOOLS: NavItem[] = [
-  { icon: "radio-outline", iconColor: colors.success, iconBg: colors.successBg, label: "探针", route: "/agents-page" },
-  { icon: "bar-chart-outline", iconColor: colors.info, iconBg: colors.infoBg, label: "流量", route: "/traffic-page" },
-  { icon: "shield-outline", iconColor: colors.primary, iconBg: colors.primarySoft, label: "规则", route: "/rules-page" },
-  { icon: "layers-outline", iconColor: colors.warning, iconBg: colors.warningBg, label: "规则集", route: "/rule-sets" },
-  { icon: "git-branch-outline", iconColor: "#a78bfa", iconBg: "rgba(167,139,250,0.08)", label: "代理组", route: "/proxy-groups" },
-  { icon: "code-slash-outline", iconColor: colors.info, iconBg: colors.infoBg, label: "流水线", route: "/pipelines" },
-  { icon: "terminal-outline", iconColor: colors.textSecondary, iconBg: "rgba(0,0,0,0.04)", label: "脚本", route: "/scripts" },
+const buildTools = (c: AppColors): NavItem[] => [
+  { icon: "radio-outline", iconColor: c.success, iconBg: c.successBg, label: "探针", route: "/agents-page" },
+  { icon: "bar-chart-outline", iconColor: c.info, iconBg: c.infoBg, label: "流量", route: "/traffic-page" },
+  { icon: "shield-outline", iconColor: c.primary, iconBg: c.primarySoft, label: "规则", route: "/rules-page" },
+  { icon: "layers-outline", iconColor: c.warning, iconBg: c.warningBg, label: "规则集", route: "/rule-sets" },
+  { icon: "git-branch-outline", iconColor: c.purple, iconBg: "rgba(155,107,255,0.12)", label: "代理组", route: "/proxy-groups" },
+  { icon: "code-slash-outline", iconColor: c.info, iconBg: c.infoBg, label: "流水线", route: "/pipelines" },
+  { icon: "terminal-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: "脚本", route: "/scripts" },
 ];
 
-const SERVICES: NavItem[] = [
-  { icon: "link-outline", iconColor: colors.primary, iconBg: colors.primarySoft, label: "短链", route: "/shortlinks" },
-  { icon: "notifications-outline", iconColor: colors.warning, iconBg: colors.warningBg, label: "通知", route: "/notifications" },
+const buildServices = (c: AppColors): NavItem[] => [
+  { icon: "link-outline", iconColor: c.primary, iconBg: c.primarySoft, label: "短链", route: "/shortlinks" },
+  { icon: "notifications-outline", iconColor: c.warning, iconBg: c.warningBg, label: "通知", route: "/notifications" },
 ];
 
-const ACCOUNT: NavItem[] = [
-  { icon: "person-outline", iconColor: colors.info, iconBg: colors.infoBg, label: "个人资料", route: "/profile" },
-  { icon: "settings-outline", iconColor: colors.textSecondary, iconBg: "rgba(0,0,0,0.04)", label: "设置", route: "/settings-page" },
+const buildAccount = (c: AppColors): NavItem[] => [
+  { icon: "person-outline", iconColor: c.info, iconBg: c.infoBg, label: "个人资料", route: "/profile" },
+  { icon: "settings-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: "设置", route: "/settings-page" },
 ];
 
-const ADMIN: NavItem[] = [
-  { icon: "people-outline", iconColor: colors.primary, iconBg: colors.primarySoft, label: "用户管理", route: "/admin/users" },
-  { icon: "document-text-outline", iconColor: colors.warning, iconBg: colors.warningBg, label: "审计日志", route: "/admin/audit" },
-  { icon: "construct-outline", iconColor: colors.textSecondary, iconBg: "rgba(0,0,0,0.04)", label: "系统设置", route: "/admin/settings" },
-  { icon: "cloud-download-outline", iconColor: colors.success, iconBg: colors.successBg, label: "OTA 升级", route: "/admin/ota" },
+const buildAdmin = (c: AppColors): NavItem[] => [
+  { icon: "people-outline", iconColor: c.primary, iconBg: c.primarySoft, label: "用户管理", route: "/admin/users" },
+  { icon: "document-text-outline", iconColor: c.warning, iconBg: c.warningBg, label: "审计日志", route: "/admin/audit" },
+  { icon: "construct-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: "系统设置", route: "/admin/settings" },
+  { icon: "cloud-download-outline", iconColor: c.success, iconBg: c.successBg, label: "OTA 升级", route: "/admin/ota" },
 ];
 
 export default function MoreScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.role === "admin";
 
@@ -62,15 +66,17 @@ export default function MoreScreen() {
         </Text>
       </TouchableOpacity>
 
-      <Section title="工具" items={TOOLS} />
-      <Section title="服务" items={SERVICES} />
-      <Section title="账户" items={ACCOUNT} />
-      {isAdmin && <Section title="管理" items={ADMIN} />}
+      <Section title="工具" items={buildTools(colors)} />
+      <Section title="服务" items={buildServices(colors)} />
+      <Section title="账户" items={buildAccount(colors)} />
+      {isAdmin && <Section title="管理" items={buildAdmin(colors)} />}
     </ScrollView>
   );
 }
 
 function Section({ title, items }: { title: string; items: NavItem[] }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -94,7 +100,8 @@ function Section({ title, items }: { title: string; items: NavItem[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
   profile: {

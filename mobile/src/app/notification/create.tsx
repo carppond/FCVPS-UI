@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateChannel, useUpdateChannel } from "../../api/notify";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type {
   ChannelKind,
   EventType,
@@ -129,6 +130,8 @@ function parseEditConfig(configStr?: string): Record<string, string> {
 }
 
 export default function NotificationCreateScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const params = useLocalSearchParams<{
     editId?: string;
     editName?: string;
@@ -420,7 +423,8 @@ export default function NotificationCreateScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
   card: {

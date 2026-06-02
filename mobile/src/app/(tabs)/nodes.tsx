@@ -2,23 +2,26 @@ import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Ale
 import { useState, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useNodesQuery, useTcpingMutation } from "../../api/node";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { Node, NodeProtocol, TCPingResult } from "../../types/api";
 
-function protocolColor(protocol: NodeProtocol): string {
+function protocolColor(protocol: NodeProtocol, c: AppColors): string {
   switch (protocol) {
-    case "vmess": return colors.info;
-    case "vless": return colors.success;
-    case "ss": return colors.warning;
-    case "trojan": return colors.primary;
+    case "vmess": return c.info;
+    case "vless": return c.success;
+    case "ss": return c.warning;
+    case "trojan": return c.primary;
     case "hysteria":
-    case "hysteria2": return "#c084fc";
-    case "tuic": return "#fb923c";
-    default: return colors.textTertiary;
+    case "hysteria2": return c.purple;
+    case "tuic": return c.primary2;
+    default: return c.textTertiary;
   }
 }
 
 export default function NodesScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useNodesQuery();
   const tcpingMutation = useTcpingMutation();
   const [refreshing, setRefreshing] = useState(false);
@@ -147,7 +150,9 @@ export default function NodesScreen() {
 }
 
 function NodeCard({ node, latency }: { node: Node; latency?: TCPingResult }) {
-  const pc = protocolColor(node.protocol);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const pc = protocolColor(node.protocol, colors);
 
   return (
     <View style={styles.card}>
@@ -186,7 +191,8 @@ function NodeCard({ node, latency }: { node: Node; latency?: TCPingResult }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },

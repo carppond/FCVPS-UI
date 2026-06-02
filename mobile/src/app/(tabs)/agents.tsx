@@ -1,12 +1,15 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, Modal } from "react-native";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAgentsQuery, useDeleteAgent } from "../../api/agent";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { AgentListItem } from "../../types/api";
 
 export default function AgentsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useAgentsQuery();
   const deleteMutation = useDeleteAgent();
   const [refreshing, setRefreshing] = useState(false);
@@ -122,6 +125,8 @@ export default function AgentsScreen() {
 }
 
 function AgentCard({ agent, onPress, onLongPress }: { agent: AgentListItem; onPress: (a: AgentListItem) => void; onLongPress: (a: AgentListItem) => void }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const online = agent.online;
   const cpu = agent.latest_metrics?.cpu_percent;
   const memUsed = agent.latest_metrics?.mem_used;
@@ -155,6 +160,8 @@ function AgentCard({ agent, onPress, onLongPress }: { agent: AgentListItem; onPr
 }
 
 function MetricChip({ label, value, color }: { label: string; value: string; color: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.metric}>
       <Text style={styles.metricLabel}>{label}</Text>
@@ -163,7 +170,8 @@ function MetricChip({ label, value, color }: { label: string; value: string; col
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },

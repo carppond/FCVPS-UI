@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOtaStatus, useOtaHistory } from "../../api/admin";
 import { apiFetch } from "../../lib/api-client";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { OTAHistoryItem } from "../../types/api";
 
 function formatTime(ts: number): string {
@@ -27,6 +28,8 @@ function formatTime(ts: number): string {
 }
 
 export default function AdminOtaScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const queryClient = useQueryClient();
   const { data: status, isLoading: statusLoading, refetch: refetchStatus } = useOtaStatus();
   const { data: history, isLoading: historyLoading, refetch: refetchHistory } = useOtaHistory();
@@ -176,7 +179,8 @@ export default function AdminOtaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
   card: {

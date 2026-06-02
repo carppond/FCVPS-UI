@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,23 +15,24 @@ import {
   useProxyGroupPresets,
   useCreateProxyGroup,
 } from "../api/proxy-group";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
+import { useColors } from "../lib/useColors";
 import type { ProxyGroupCategory, ProxyGroupPreset } from "../types/api";
 
-function typeColor(type: string): string {
+function typeColor(type: string, c: AppColors): string {
   switch (type) {
     case "select":
-      return colors.primary;
+      return c.primary;
     case "url-test":
-      return colors.success;
+      return c.success;
     case "fallback":
-      return colors.warning;
+      return c.warning;
     case "load-balance":
-      return colors.info;
+      return c.info;
     case "relay":
-      return colors.textTertiary;
+      return c.textTertiary;
     default:
-      return colors.textDisabled;
+      return c.textDisabled;
   }
 }
 
@@ -47,6 +48,8 @@ function typeLabel(type: string): string {
 }
 
 export default function ProxyGroupsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useProxyGroupsQuery();
   const presetsQuery = useProxyGroupPresets();
   const createMutation = useCreateProxyGroup();
@@ -122,11 +125,11 @@ export default function ProxyGroupsScreen() {
               <View
                 style={[
                   styles.badge,
-                  { backgroundColor: typeColor(item.type) + "1a" },
+                  { backgroundColor: typeColor(item.type, colors) + "1a" },
                 ]}
               >
                 <Text
-                  style={[styles.badgeText, { color: typeColor(item.type) }]}
+                  style={[styles.badgeText, { color: typeColor(item.type, colors) }]}
                 >
                   {typeLabel(item.type)}
                 </Text>
@@ -252,13 +255,13 @@ export default function ProxyGroupsScreen() {
                       <View
                         style={[
                           styles.badge,
-                          { backgroundColor: typeColor(item.type) + "1a" },
+                          { backgroundColor: typeColor(item.type, colors) + "1a" },
                         ]}
                       >
                         <Text
                           style={[
                             styles.badgeText,
-                            { color: typeColor(item.type) },
+                            { color: typeColor(item.type, colors) },
                           ]}
                         >
                           {typeLabel(item.type)}
@@ -281,7 +284,8 @@ export default function ProxyGroupsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },

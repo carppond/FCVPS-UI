@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useNotificationChannelsQuery, useDeleteChannel } from "../api/notify";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
+import { useColors } from "../lib/useColors";
 import type { NotificationChannel, ChannelKind } from "../types/api";
 
 function channelIcon(kind: ChannelKind): keyof typeof Ionicons.glyphMap {
@@ -58,6 +59,8 @@ function channelLabel(kind: ChannelKind): string {
 }
 
 export default function NotificationsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useNotificationChannelsQuery();
   const deleteMutation = useDeleteChannel();
   const [refreshing, setRefreshing] = useState(false);
@@ -183,7 +186,8 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   wrapper: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1 },
   list: { padding: spacing.lg },

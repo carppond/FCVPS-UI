@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,12 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useProfileQuery, useUpdateProfile, useChangePassword } from "../api/user";
 import { useAuthStore } from "../stores/auth-store";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
+import { useColors } from "../lib/useColors";
 
 export default function ProfileScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data: profile, refetch } = useProfileQuery();
   const updateMutation = useUpdateProfile();
   const passwordMutation = useChangePassword();
@@ -314,7 +317,8 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
   profileCard: {

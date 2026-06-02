@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useVpsAssetsQuery, useVpsAssetSummaryQuery, useDeleteVpsAsset } from "../../api/vps-asset";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { VpsAsset, VpsAssetStatus } from "../../types/api";
 
 const FLAG_MAP: Record<string, string> = {
@@ -22,11 +23,11 @@ function guessFlag(location?: string): string {
   return "🌐";
 }
 
-function statusColor(status: VpsAssetStatus) {
+function statusColor(status: VpsAssetStatus, c: AppColors) {
   switch (status) {
-    case "normal": return colors.success;
-    case "expiring": return colors.warning;
-    case "expired": return colors.error;
+    case "normal": return c.success;
+    case "expiring": return c.warning;
+    case "expired": return c.error;
   }
 }
 
@@ -41,6 +42,8 @@ function currencySymbol(c: string) {
 }
 
 export default function VpsAssetsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useVpsAssetsQuery();
   const summary = useVpsAssetSummaryQuery();
   const deleteMutation = useDeleteVpsAsset();
@@ -224,6 +227,8 @@ export default function VpsAssetsScreen() {
 }
 
 function SumChip({ label, value, color }: { label: string; value: string; color?: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.sumChip}>
       <Text style={styles.sumLabel}>{label}</Text>
@@ -233,7 +238,9 @@ function SumChip({ label, value, color }: { label: string; value: string; color?
 }
 
 function VpsCard({ vps, onCopyIp, onLongPress }: { vps: VpsAsset; onCopyIp: (ip: string) => void; onLongPress: (vps: VpsAsset) => void }) {
-  const sc = statusColor(vps.status);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const sc = statusColor(vps.status, colors);
   const flag = guessFlag(vps.location);
   const sym = currencySymbol(vps.currency);
   const spec = [vps.cpu, vps.memory, vps.disk].filter(Boolean).join(" · ");
@@ -268,7 +275,8 @@ function VpsCard({ vps, onCopyIp, onLongPress }: { vps: VpsAsset; onCopyIp: (ip:
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   wrapper: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },

@@ -57,8 +57,10 @@ export function getColors(mode: "light" | "dark") {
   return mode === "dark" ? darkColors : lightColors;
 }
 
-/** Type of a resolved color palette (for makeStyles factories). */
-export type AppColors = typeof darkColors;
+/** Type of a resolved color palette (for makeStyles factories). Values are
+ * widened to `string` so both the light and dark palettes (and the union
+ * `useColors()` returns) satisfy it. */
+export type AppColors = Record<keyof typeof darkColors, string>;
 
 /**
  * Backward-compatible alias — screens that haven't migrated to `useColors()`

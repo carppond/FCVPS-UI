@@ -1,9 +1,11 @@
 import { Tabs, router } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, fontSize, spacing } from "../../lib/theme";
+import { fontSize, spacing } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 
 export default function TabsLayout() {
+  const colors = useColors();
   return (
     <Tabs
       screenOptions={{

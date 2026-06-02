@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useVpsAssetDetail, useUpdateVpsAsset } from "../../api/vps-asset";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { UpdateVpsAssetRequest, BillingCycle } from "../../types/api";
 
 const CURRENCY_OPTIONS = ["CNY", "USD", "EUR", "GBP"] as const;
@@ -28,6 +29,8 @@ const BILLING_OPTIONS: { label: string; value: BillingCycle }[] = [
 ];
 
 export default function EditVpsAssetScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, isLoading } = useVpsAssetDetail(id ?? "");
   const updateMutation = useUpdateVpsAsset();
@@ -395,7 +398,8 @@ export default function EditVpsAssetScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },

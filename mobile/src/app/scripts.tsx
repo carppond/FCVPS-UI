@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useScriptsQuery } from "../api/script";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
+import { useColors } from "../lib/useColors";
 import type { Script, HookType } from "../types/api";
 
 function hookLabel(hook: HookType): string {
@@ -19,14 +20,14 @@ function hookLabel(hook: HookType): string {
   return map[hook] ?? hook;
 }
 
-function hookColor(hook: HookType): string {
+function hookColor(hook: HookType, c: AppColors): string {
   switch (hook) {
     case "pre_save_nodes":
-      return colors.info;
+      return c.info;
     case "post_fetch":
-      return colors.warning;
+      return c.warning;
     default:
-      return colors.textTertiary;
+      return c.textTertiary;
   }
 }
 
@@ -37,6 +38,8 @@ function formatDate(ts?: number): string {
 }
 
 export default function ScriptsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useScriptsQuery();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -80,11 +83,11 @@ export default function ScriptsScreen() {
             <View
               style={[
                 styles.badge,
-                { backgroundColor: hookColor(item.hook) + "1a" },
+                { backgroundColor: hookColor(item.hook, colors) + "1a" },
               ]}
             >
               <Text
-                style={[styles.badgeText, { color: hookColor(item.hook) }]}
+                style={[styles.badgeText, { color: hookColor(item.hook, colors) }]}
               >
                 {hookLabel(item.hook)}
               </Text>
@@ -133,7 +136,8 @@ export default function ScriptsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },

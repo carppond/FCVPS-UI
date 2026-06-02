@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useRuleTemplates, useCreateRule, useUpdateRule } from "../../api/rule";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { RuleTemplate, RuleType, RuleMode } from "../../types/api";
 
 const CATEGORIES = [
@@ -37,6 +38,8 @@ const RULE_MODES: { key: RuleMode; label: string }[] = [
 ];
 
 export default function RuleCreateScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const params = useLocalSearchParams<{
     editId?: string;
     editName?: string;
@@ -444,7 +447,8 @@ export default function RuleCreateScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   modeTabs: {
     flexDirection: "row",

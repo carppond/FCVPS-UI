@@ -1,10 +1,11 @@
 import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { AgentListItem } from "../../types/api";
 
 function formatBytes(bytes: number): string {
@@ -24,6 +25,8 @@ function formatUptime(seconds: number): string {
 }
 
 export default function AgentDetailScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -141,6 +144,8 @@ export default function AgentDetailScreen() {
 }
 
 function InfoRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -150,6 +155,8 @@ function InfoRow({ label, value, mono }: { label: string; value: string; mono?: 
 }
 
 function MetricCard({ label, value, sub, color, pct }: { label: string; value: string; sub?: string; color: string; pct: number }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.metricCard}>
       <Text style={styles.metricLabel}>{label}</Text>
@@ -162,7 +169,8 @@ function MetricCard({ label, value, sub, color, pct }: { label: string; value: s
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.bg },

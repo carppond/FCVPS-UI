@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useShortLinksQuery, useCreateShortLink, useDeleteShortLink } from "../api/shortlink";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
+import { useColors } from "../lib/useColors";
 import type { ShortLink } from "../types/api";
 
 function formatDate(ts?: number): string {
@@ -24,6 +25,8 @@ function formatDate(ts?: number): string {
 }
 
 export default function ShortLinksScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useShortLinksQuery();
   const createMutation = useCreateShortLink();
   const deleteMutation = useDeleteShortLink();
@@ -238,7 +241,8 @@ export default function ShortLinksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },

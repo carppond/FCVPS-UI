@@ -35,6 +35,10 @@ if $BUILD; then
   EXPO_PID=$!
 else
   echo "📱 启动 Expo（JS 热更）..."
+  # 默认让 metro 绑 127.0.0.1，模拟器走 loopback 直连，避开 VPN/代理选到
+  # 198.18.0.1 这类不可达地址导致的 502/Could not connect。
+  # 真机调试时在前面覆盖：REACT_NATIVE_PACKAGER_HOSTNAME=<你的局域网IP> ./scripts/dev-mobile.sh
+  export REACT_NATIVE_PACKAGER_HOSTNAME="${REACT_NATIVE_PACKAGER_HOSTNAME:-127.0.0.1}"
   npx expo start --ios --clear &
   EXPO_PID=$!
 fi

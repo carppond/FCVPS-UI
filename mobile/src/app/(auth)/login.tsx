@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -18,11 +18,14 @@ import * as SecureStore from "expo-secure-store";
 import { useLoginMutation } from "../../api/auth";
 import { useAuthStore } from "../../stores/auth-store";
 import { STORAGE_KEYS } from "../../lib/constants";
-import { colors, spacing, radius, fontSize, gradients, glow } from "../../lib/theme";
+import { spacing, radius, fontSize, gradients, glow, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 
 const MASCOT = require("../../../assets/login-art.png");
 
 export default function LoginScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [serverUrl, setServerUrl] = useState(useAuthStore.getState().serverUrl);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -191,7 +194,8 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   glow: { position: "absolute", top: 0, left: 0, right: 0, height: 360 },
   scroll: { flexGrow: 1, justifyContent: "center", paddingBottom: spacing.xxl },

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
 import { useRuleTemplates, useCreateRule } from "../../api/rule";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { CreateSubscriptionRequest, Subscription, RuleTemplate } from "../../types/api";
 
 const TEMPLATE_CATEGORIES = [
@@ -26,6 +27,8 @@ const TEMPLATE_CATEGORIES = [
 ] as const;
 
 export default function CreateSubscriptionScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
 
@@ -290,7 +293,8 @@ export default function CreateSubscriptionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
 

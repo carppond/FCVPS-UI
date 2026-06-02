@@ -1,24 +1,27 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useNodesQuery } from "../../api/node";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { Node, NodeProtocol } from "../../types/api";
 
-function protocolColor(protocol: NodeProtocol): string {
+function protocolColor(protocol: NodeProtocol, c: AppColors): string {
   switch (protocol) {
-    case "vmess": return colors.info;
-    case "vless": return colors.success;
-    case "ss": return colors.warning;
-    case "trojan": return colors.primary;
+    case "vmess": return c.info;
+    case "vless": return c.success;
+    case "ss": return c.warning;
+    case "trojan": return c.primary;
     case "hysteria":
     case "hysteria2": return "#c084fc";
     case "tuic": return "#fb923c";
-    default: return colors.textTertiary;
+    default: return c.textTertiary;
   }
 }
 
 export default function NodesPage() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useNodesQuery();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -53,7 +56,9 @@ export default function NodesPage() {
 }
 
 function NodeCard({ node }: { node: Node }) {
-  const pc = protocolColor(node.protocol);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const pc = protocolColor(node.protocol, colors);
 
   return (
     <View style={styles.card}>
@@ -79,7 +84,8 @@ function NodeCard({ node }: { node: Node }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },

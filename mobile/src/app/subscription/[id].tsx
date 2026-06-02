@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share, Alert, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,21 +6,22 @@ import * as Clipboard from "expo-clipboard";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
 import { useAuthStore } from "../../stores/auth-store";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { SubscriptionDetail, SyncResult, ShortLink } from "../../types/api";
 
-const TARGETS: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [
-  { key: "clash", label: "Clash", icon: "flash-outline", color: colors.primary },
-  { key: "clashmeta", label: "Clash Meta", icon: "flash-outline", color: colors.warning },
-  { key: "clash-verge-rev", label: "Clash Verge Rev", icon: "desktop-outline", color: colors.info },
+const buildTargets = (c: AppColors): { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] => [
+  { key: "clash", label: "Clash", icon: "flash-outline", color: c.primary },
+  { key: "clashmeta", label: "Clash Meta", icon: "flash-outline", color: c.warning },
+  { key: "clash-verge-rev", label: "Clash Verge Rev", icon: "desktop-outline", color: c.info },
   { key: "stash", label: "Stash", icon: "phone-portrait-outline", color: "#c084fc" },
-  { key: "singbox", label: "sing-box", icon: "cube-outline", color: colors.info },
-  { key: "shadowrocket", label: "Shadowrocket", icon: "rocket-outline", color: colors.success },
-  { key: "surge", label: "Surge", icon: "thunderstorm-outline", color: colors.warning },
-  { key: "surge-ios", label: "Surge iOS", icon: "phone-portrait-outline", color: colors.warning },
+  { key: "singbox", label: "sing-box", icon: "cube-outline", color: c.info },
+  { key: "shadowrocket", label: "Shadowrocket", icon: "rocket-outline", color: c.success },
+  { key: "surge", label: "Surge", icon: "thunderstorm-outline", color: c.warning },
+  { key: "surge-ios", label: "Surge iOS", icon: "phone-portrait-outline", color: c.warning },
   { key: "quantumult-x", label: "Quantumult X", icon: "grid-outline", color: "#c084fc" },
-  { key: "loon", label: "Loon", icon: "globe-outline", color: colors.info },
-  { key: "v2ray", label: "V2Ray", icon: "link-outline", color: colors.success },
+  { key: "loon", label: "Loon", icon: "globe-outline", color: c.info },
+  { key: "v2ray", label: "V2Ray", icon: "link-outline", color: c.success },
 ];
 
 function formatBytes(bytes: number): string {
@@ -44,6 +45,8 @@ function formatDate(epoch: number): string {
 }
 
 export default function SubscriptionDetailScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const serverUrl = useAuthStore((s) => s.serverUrl);
 
@@ -191,7 +194,7 @@ export default function SubscriptionDetailScreen() {
       {/* Download links */}
       <Text style={styles.sectionTitle}>订阅链接</Text>
       <View style={styles.linksGrid}>
-        {TARGETS.map((t) => (
+        {buildTargets(colors).map((t) => (
           <View key={t.key} style={styles.linkCard}>
             <View style={styles.linkHeader}>
               <View style={[styles.linkIcon, { backgroundColor: t.color + "18" }]}>
@@ -252,6 +255,8 @@ export default function SubscriptionDetailScreen() {
 }
 
 function MetaChip({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.metaChip}>
       <Ionicons name={icon} size={12} color={colors.textTertiary} />
@@ -260,7 +265,8 @@ function MetaChip({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.bg },

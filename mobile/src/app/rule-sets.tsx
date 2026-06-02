@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -20,36 +20,39 @@ import {
   useUpdateRuleSet,
   useSyncRuleSet,
 } from "../api/rule-set";
-import { colors, spacing, radius, fontSize } from "../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
+import { useColors } from "../lib/useColors";
 import type { RuleSetProvider, RuleSetPreset } from "../types/api";
 
-function syncStatusColor(status?: string): string {
+function syncStatusColor(status: string | undefined, c: AppColors): string {
   switch (status) {
     case "ok":
-      return colors.success;
+      return c.success;
     case "error":
-      return colors.error;
+      return c.error;
     case "pending":
-      return colors.warning;
+      return c.warning;
     default:
-      return colors.textDisabled;
+      return c.textDisabled;
   }
 }
 
-function behaviorColor(behavior: string): string {
+function behaviorColor(behavior: string, c: AppColors): string {
   switch (behavior) {
     case "domain":
-      return colors.info;
+      return c.info;
     case "ipcidr":
-      return colors.warning;
+      return c.warning;
     case "classical":
-      return colors.primary;
+      return c.primary;
     default:
-      return colors.textTertiary;
+      return c.textTertiary;
   }
 }
 
 export default function RuleSetsScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useRuleSetsQuery();
   const syncAll = useSyncAllRuleSets();
   const presetsQuery = useRuleSetPresets();
@@ -164,7 +167,7 @@ export default function RuleSetsScreen() {
         <View
           style={[
             styles.syncDot,
-            { backgroundColor: syncStatusColor(item.last_sync_status) },
+            { backgroundColor: syncStatusColor(item.last_sync_status, colors) },
           ]}
         />
         <View style={styles.cardInfo}>
@@ -175,13 +178,13 @@ export default function RuleSetsScreen() {
             <View
               style={[
                 styles.badge,
-                { backgroundColor: behaviorColor(item.behavior) + "1a" },
+                { backgroundColor: behaviorColor(item.behavior, colors) + "1a" },
               ]}
             >
               <Text
                 style={[
                   styles.badgeText,
-                  { color: behaviorColor(item.behavior) },
+                  { color: behaviorColor(item.behavior, colors) },
                 ]}
               >
                 {item.behavior}
@@ -347,14 +350,14 @@ export default function RuleSetsScreen() {
                           styles.badge,
                           {
                             backgroundColor:
-                              behaviorColor(item.behavior) + "1a",
+                              behaviorColor(item.behavior, colors) + "1a",
                           },
                         ]}
                       >
                         <Text
                           style={[
                             styles.badgeText,
-                            { color: behaviorColor(item.behavior) },
+                            { color: behaviorColor(item.behavior, colors) },
                           ]}
                         >
                           {item.behavior}
@@ -377,7 +380,8 @@ export default function RuleSetsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg },
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },

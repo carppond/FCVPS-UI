@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
-import { colors, spacing, radius, fontSize } from "../../lib/theme";
+import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
+import { useColors } from "../../lib/useColors";
 import type { CreateVpsAssetRequest, VpsAsset, BillingCycle } from "../../types/api";
 
 const CURRENCY_OPTIONS = ["CNY", "USD", "EUR", "GBP"] as const;
@@ -28,6 +29,8 @@ const BILLING_OPTIONS: { label: string; value: BillingCycle }[] = [
 ];
 
 export default function CreateVpsAssetScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
@@ -388,7 +391,8 @@ export default function CreateVpsAssetScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
   card: {
