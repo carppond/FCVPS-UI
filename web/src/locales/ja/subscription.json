@@ -156,7 +156,9 @@
     "expire_at_label": "有効期限 (ミリ秒)",
     "traffic_total_label": "トラフィック上限 (バイト)",
     "submit": "保存",
-    "success": "保存しました"
+    "success": "保存しました",
+    "allow_insecure_label": "TLS 証明書の検証をスキップ",
+    "allow_insecure_hint": "上流の証明書が自己署名/期限切れの場合に有効化(信頼できる自分のサーバーのみ)。この取得の MITM 保護がなくなります。"
   },
   "upload": {
     "drop_hint": "YAML をドロップまたはクリックして選択",

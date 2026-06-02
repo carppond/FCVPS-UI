@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/toast";
 import { useApiError } from "@/hooks/use-api-error";
 import { useUpdateSubscriptionMutation } from "@/api/subscription";
@@ -33,6 +34,7 @@ interface FormValues {
   ua: string;
   expireAt: string; // input type=number string for ms timestamp; empty = unset
   trafficTotal: string;
+  allowInsecure: boolean;
 }
 
 const NAME_MAX = 100;
@@ -49,6 +51,7 @@ function buildSchema(t: (key: string) => string) {
     ua: z.string(),
     expireAt: z.string(),
     trafficTotal: z.string(),
+    allowInsecure: z.boolean(),
   });
 }
 
@@ -71,6 +74,7 @@ export function SubEditForm({ open, subscription, onClose }: SubEditFormProps) {
       trafficTotal: subscription.traffic_total
         ? String(subscription.traffic_total)
         : "",
+      allowInsecure: subscription.allow_insecure ?? false,
     },
   });
 
@@ -86,6 +90,7 @@ export function SubEditForm({ open, subscription, onClose }: SubEditFormProps) {
         trafficTotal: subscription.traffic_total
           ? String(subscription.traffic_total)
           : "",
+        allowInsecure: subscription.allow_insecure ?? false,
       });
     }
   }, [open, subscription, form]);
@@ -98,6 +103,7 @@ export function SubEditForm({ open, subscription, onClose }: SubEditFormProps) {
         remark: values.remark || undefined,
         sync_interval: values.syncInterval,
         ua: values.ua || undefined,
+        allow_insecure: values.allowInsecure,
       };
       // expireAt + trafficTotal are not part of the contract's PATCH body strictly,
       // but the backend mirrors them through the subscription record. Skip sending
@@ -170,6 +176,27 @@ export function SubEditForm({ open, subscription, onClose }: SubEditFormProps) {
             <Label htmlFor="edit-ua">{t("subscription:edit.ua_label")}</Label>
             <Input id="edit-ua" {...form.register("ua")} />
           </div>
+
+          {subscription.type === "url" && (
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-[var(--font-size-sm)] text-[var(--color-text-secondary)]">
+                <Controller
+                  name="allowInsecure"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(c) => field.onChange(c === true)}
+                    />
+                  )}
+                />
+                {t("subscription:edit.allow_insecure_label")}
+              </label>
+              <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+                {t("subscription:edit.allow_insecure_hint")}
+              </p>
+            </div>
+          )}
 
           <DialogFooter className="mt-2">
             <Button

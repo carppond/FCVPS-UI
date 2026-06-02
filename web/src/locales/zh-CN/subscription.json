@@ -156,7 +156,9 @@
     "expire_at_label": "到期时间（毫秒时间戳）",
     "traffic_total_label": "总流量（字节）",
     "submit": "保存修改",
-    "success": "已保存"
+    "success": "已保存",
+    "allow_insecure_label": "跳过 TLS 证书校验",
+    "allow_insecure_hint": "上游证书自签或过期时勾选(仅限你信任的自有节点)。会失去该订阅拉取的 MITM 防护。"
   },
   "upload": {
     "drop_hint": "拖拽 YAML 文件到此或点击选择",

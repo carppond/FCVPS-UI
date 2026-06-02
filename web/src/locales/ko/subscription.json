@@ -156,7 +156,9 @@
     "expire_at_label": "만료 (밀리초)",
     "traffic_total_label": "트래픽 한도 (바이트)",
     "submit": "저장",
-    "success": "저장됨"
+    "success": "저장됨",
+    "allow_insecure_label": "TLS 인증서 검증 건너뛰기",
+    "allow_insecure_hint": "업스트림 인증서가 자체 서명되었거나 만료된 경우 사용(신뢰하는 본인 서버만). 이 요청의 MITM 보호가 사라집니다."
   },
   "upload": {
     "drop_hint": "YAML 파일을 드롭하거나 클릭하여 선택",

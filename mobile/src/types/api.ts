@@ -275,6 +275,7 @@ export interface Subscription {
   traffic_used?: number;
   tags: string[];
   remark?: string;
+  allow_insecure: boolean;
   node_count: number;
   created_at: number;
   updated_at: number;
@@ -336,6 +337,7 @@ export interface CreateSubscriptionRequest {
   sync_interval?: number;
   tags?: string[];
   remark?: string;
+  allow_insecure?: boolean;
 }
 
 export interface UpdateSubscriptionRequest {
@@ -345,6 +347,7 @@ export interface UpdateSubscriptionRequest {
   sync_interval?: number;
   tags?: string[];
   remark?: string;
+  allow_insecure?: boolean;
 }
 
 export interface SyncResult {

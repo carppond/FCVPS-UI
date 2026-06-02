@@ -41,7 +41,9 @@ func NewSubscriptionHandler(repo *storage.SubscriptionRepo, sync *substore.SyncS
 // unchanged. nil disables the GET / PUT /api/subscriptions/{id}/pipelines
 // endpoints (handlers respond 501).
 func (h *SubscriptionHandler) SetNodeRepo(repo *storage.NodeRepo) {
-	if h == nil { return }
+	if h == nil {
+		return
+	}
 	h.nodeRepo = repo
 }
 
@@ -118,15 +120,16 @@ func (h *SubscriptionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rec := storage.SubscriptionRecord{
-		ID:           util.UUIDv7(),
-		UserID:       user.ID,
-		Name:         req.Name,
-		Type:         string(req.Type),
-		SourceURL:    req.SourceURL,
-		UA:           req.UA,
-		SyncInterval: req.SyncInterval,
-		Tags:         req.Tags,
-		Remark:       req.Remark,
+		ID:            util.UUIDv7(),
+		UserID:        user.ID,
+		Name:          req.Name,
+		Type:          string(req.Type),
+		SourceURL:     req.SourceURL,
+		UA:            req.UA,
+		SyncInterval:  req.SyncInterval,
+		Tags:          req.Tags,
+		Remark:        req.Remark,
+		AllowInsecure: req.AllowInsecure,
 	}
 	created, err := h.repo.Create(r.Context(), rec)
 	if err != nil {
@@ -202,6 +205,9 @@ func (h *SubscriptionHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Remark != "" {
 		upd.Remark = stringPtr(req.Remark)
+	}
+	if req.AllowInsecure != nil {
+		upd.AllowInsecure = req.AllowInsecure
 	}
 	if err := h.repo.Update(r.Context(), id, user.ID, upd); err != nil {
 		h.respondStorageErr(w, traceID, err)
@@ -502,6 +508,7 @@ func subscriptionRecordToDTO(rec *storage.SubscriptionRecord) types.Subscription
 		TrafficUsed:    rec.TrafficUsed,
 		Tags:           rec.Tags,
 		Remark:         rec.Remark,
+		AllowInsecure:  rec.AllowInsecure,
 		NodeCount:      rec.NodeCount,
 		CreatedAt:      rec.CreatedAt,
 		UpdatedAt:      rec.UpdatedAt,

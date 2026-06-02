@@ -399,6 +399,7 @@ PagedResponse<T> {
 | `traffic_used` | int64 | 否 | 字节 | `236273664` |
 | `tags` | string[] | 是 | - | `["HK","游戏"]` |
 | `remark` | string | 否 | - | - |
+| `allow_insecure` | bool | 是 | type=url 拉取时跳过 TLS 证书校验(自签/过期上游用);默认 false | `false` |
 | `node_count` | int32 | 是 | 当前节点数 | `56` |
 | `created_at` | int64 | 是 | - | - |
 | `updated_at` | int64 | 是 | - | - |

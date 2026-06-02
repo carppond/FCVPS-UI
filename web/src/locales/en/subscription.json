@@ -156,7 +156,9 @@
     "expire_at_label": "Expires at (ms timestamp)",
     "traffic_total_label": "Traffic limit (bytes)",
     "submit": "Save changes",
-    "success": "Saved"
+    "success": "Saved",
+    "allow_insecure_label": "Skip TLS certificate verification",
+    "allow_insecure_hint": "Enable when the upstream cert is self-signed or expired (only for your own trusted servers). Removes MITM protection for this fetch."
   },
   "upload": {
     "drop_hint": "Drop a YAML file here or click to browse",

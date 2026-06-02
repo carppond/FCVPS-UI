@@ -198,11 +198,11 @@ const (
 	ErrAuthForbidden           ErrorCode = "ERR_AUTH_FORBIDDEN"
 
 	// VALIDATION
-	ErrValidationRequiredField ErrorCode = "ERR_VALIDATION_REQUIRED_FIELD"
-	ErrValidationInvalidFormat ErrorCode = "ERR_VALIDATION_INVALID_FORMAT"
-	ErrValidationOutOfRange    ErrorCode = "ERR_VALIDATION_OUT_OF_RANGE"
-	ErrValidationRegexCompile  ErrorCode = "ERR_VALIDATION_REGEX_COMPILE"
-	ErrValidationYAMLParse     ErrorCode = "ERR_VALIDATION_YAML_PARSE"
+	ErrValidationRequiredField  ErrorCode = "ERR_VALIDATION_REQUIRED_FIELD"
+	ErrValidationInvalidFormat  ErrorCode = "ERR_VALIDATION_INVALID_FORMAT"
+	ErrValidationOutOfRange     ErrorCode = "ERR_VALIDATION_OUT_OF_RANGE"
+	ErrValidationRegexCompile   ErrorCode = "ERR_VALIDATION_REGEX_COMPILE"
+	ErrValidationYAMLParse      ErrorCode = "ERR_VALIDATION_YAML_PARSE"
 	ErrValidationSchemaMismatch ErrorCode = "ERR_VALIDATION_SCHEMA_MISMATCH"
 
 	// NOT_FOUND
@@ -255,15 +255,15 @@ const (
 
 // User 完整用户信息（仅 admin / 内部使用）。
 type User struct {
-	ID                string   `json:"id"`
-	Username          string   `json:"username"`
-	Role              UserRole `json:"role"`
-	IsActive          bool     `json:"is_active"`
-	Email             string   `json:"email,omitempty"`
-	Locale            string   `json:"locale"`
-	TOTPEnabled       bool     `json:"totp_enabled"`
-	CreatedAt         int64    `json:"created_at"`
-	UpdatedAt         int64    `json:"updated_at"`
+	ID          string   `json:"id"`
+	Username    string   `json:"username"`
+	Role        UserRole `json:"role"`
+	IsActive    bool     `json:"is_active"`
+	Email       string   `json:"email,omitempty"`
+	Locale      string   `json:"locale"`
+	TOTPEnabled bool     `json:"totp_enabled"`
+	CreatedAt   int64    `json:"created_at"`
+	UpdatedAt   int64    `json:"updated_at"`
 }
 
 // UserPublicProfile 面向前端的用户信息（不含敏感字段）。
@@ -398,6 +398,7 @@ type Subscription struct {
 	TrafficUsed    int64      `json:"traffic_used,omitempty"`
 	Tags           []string   `json:"tags"`
 	Remark         string     `json:"remark,omitempty"`
+	AllowInsecure  bool       `json:"allow_insecure"`
 	NodeCount      int32      `json:"node_count"`
 	CreatedAt      int64      `json:"created_at"`
 	UpdatedAt      int64      `json:"updated_at"`
@@ -425,13 +426,14 @@ type RotateShareTokenResponse struct {
 
 // CreateSubscriptionRequest 创建订阅请求。
 type CreateSubscriptionRequest struct {
-	Name         string   `json:"name"`
-	Type         SubType  `json:"type"`
-	SourceURL    string   `json:"source_url,omitempty"`
-	UA           string   `json:"ua,omitempty"`
-	SyncInterval int32    `json:"sync_interval,omitempty"`
-	Tags         []string `json:"tags,omitempty"`
-	Remark       string   `json:"remark,omitempty"`
+	Name          string   `json:"name"`
+	Type          SubType  `json:"type"`
+	SourceURL     string   `json:"source_url,omitempty"`
+	UA            string   `json:"ua,omitempty"`
+	SyncInterval  int32    `json:"sync_interval,omitempty"`
+	Tags          []string `json:"tags,omitempty"`
+	Remark        string   `json:"remark,omitempty"`
+	AllowInsecure bool     `json:"allow_insecure,omitempty"`
 }
 
 // UpdateSubscriptionRequest 修改订阅元数据请求。
@@ -442,6 +444,8 @@ type UpdateSubscriptionRequest struct {
 	SyncInterval int32    `json:"sync_interval,omitempty"`
 	Tags         []string `json:"tags,omitempty"`
 	Remark       string   `json:"remark,omitempty"`
+	// 指针:可显式置 false 关闭(omitempty 的 bool 无法区分未设置/false)。
+	AllowInsecure *bool `json:"allow_insecure,omitempty"`
 }
 
 // SyncResult 同步结果。
@@ -471,20 +475,20 @@ type PipelineBindingInput struct {
 
 // Node 节点信息。
 type Node struct {
-	ID            string       `json:"id"`
-	SubscriptionID string      `json:"subscription_id"`
-	RawURI        string       `json:"raw_uri"`
-	Protocol      NodeProtocol `json:"protocol"`
-	Server        string       `json:"server"`
-	Port          int32        `json:"port"`
-	Tag           string       `json:"tag"`
-	Tags          []string     `json:"tags"`
-	IsChainProxy  bool         `json:"is_chain_proxy"`
-	ChainParentID string       `json:"chain_parent_id,omitempty"`
-	ParsedConfig  any          `json:"parsed_config"`
-	Position      int32        `json:"position"`
-	CreatedAt     int64        `json:"created_at"`
-	UpdatedAt     int64        `json:"updated_at"`
+	ID             string       `json:"id"`
+	SubscriptionID string       `json:"subscription_id"`
+	RawURI         string       `json:"raw_uri"`
+	Protocol       NodeProtocol `json:"protocol"`
+	Server         string       `json:"server"`
+	Port           int32        `json:"port"`
+	Tag            string       `json:"tag"`
+	Tags           []string     `json:"tags"`
+	IsChainProxy   bool         `json:"is_chain_proxy"`
+	ChainParentID  string       `json:"chain_parent_id,omitempty"`
+	ParsedConfig   any          `json:"parsed_config"`
+	Position       int32        `json:"position"`
+	CreatedAt      int64        `json:"created_at"`
+	UpdatedAt      int64        `json:"updated_at"`
 }
 
 // NodeWithLatency 含 TCPing 结果的节点。
@@ -594,7 +598,7 @@ type RegexRenameArgs struct {
 
 // OutputArgs output 算子参数。
 type OutputArgs struct {
-	Format   string `json:"format"`    // "clash" | "clash_meta" | "raw"
+	Format   string `json:"format"` // "clash" | "clash_meta" | "raw"
 	MaxNodes int32  `json:"max_nodes,omitempty"`
 }
 
@@ -647,10 +651,10 @@ type ASTToYAMLRequest struct {
 
 // OperatorSchema 算子 schema 描述。
 type OperatorSchema struct {
-	Type        OperatorType `json:"type"`
-	DisplayName string       `json:"display_name"`
-	Description string       `json:"description"`
-	ParamsSchema any         `json:"params_schema"` // JSON Schema object
+	Type         OperatorType `json:"type"`
+	DisplayName  string       `json:"display_name"`
+	Description  string       `json:"description"`
+	ParamsSchema any          `json:"params_schema"` // JSON Schema object
 }
 
 // ---------------------------------------------------------------------------
@@ -964,8 +968,8 @@ type Agent struct {
 // 等）。原 native agent 流程返回空字符串。
 type AgentCreateResponse struct {
 	Agent
-	Token              string `json:"token"`                          // 明文 token，仅此一次
-	InstallCommand     string `json:"install_command"`                // 一键安装命令
+	Token              string `json:"token"`                           // 明文 token，仅此一次
+	InstallCommand     string `json:"install_command"`                 // 一键安装命令
 	InstallHintI18nKey string `json:"install_hint_i18n_key,omitempty"` // nezha_compat 时的接入指引 i18n key
 }
 
@@ -1026,7 +1030,7 @@ type RotateTokenResponse struct {
 
 // TrafficRecord 日聚合流量记录。
 type TrafficRecord struct {
-	Date       string `json:"date"`       // YYYY-MM-DD
+	Date       string `json:"date"` // YYYY-MM-DD
 	UserID     string `json:"user_id"`
 	AgentID    string `json:"agent_id,omitempty"`
 	TotalLimit int64  `json:"total_limit,omitempty"`
@@ -1050,23 +1054,23 @@ type AgentTrafficSummary struct {
 
 // TrafficSummary 当月流量汇总。
 type TrafficSummary struct {
-	UserID        string                `json:"user_id"`
-	PeriodStart   string                `json:"period_start"` // YYYY-MM-DD
-	PeriodEnd     string                `json:"period_end"`
-	TotalLimit    int64                 `json:"total_limit,omitempty"`
-	TotalUsed     int64                 `json:"total_used"`
-	TotalIn       int64                 `json:"total_in"`
-	TotalOut      int64                 `json:"total_out"`
-	UsagePercent  float64               `json:"usage_percent"`
-	Agents        []AgentTrafficSummary `json:"agents"`
+	UserID       string                `json:"user_id"`
+	PeriodStart  string                `json:"period_start"` // YYYY-MM-DD
+	PeriodEnd    string                `json:"period_end"`
+	TotalLimit   int64                 `json:"total_limit,omitempty"`
+	TotalUsed    int64                 `json:"total_used"`
+	TotalIn      int64                 `json:"total_in"`
+	TotalOut     int64                 `json:"total_out"`
+	UsagePercent float64               `json:"usage_percent"`
+	Agents       []AgentTrafficSummary `json:"agents"`
 }
 
 // TrafficChartPoint 图表数据点。
 type TrafficChartPoint struct {
-	Date     string  `json:"date"`
-	TotalIn  int64   `json:"total_in"`
-	TotalOut int64   `json:"total_out"`
-	AgentID  string  `json:"agent_id,omitempty"`
+	Date     string `json:"date"`
+	TotalIn  int64  `json:"total_in"`
+	TotalOut int64  `json:"total_out"`
+	AgentID  string `json:"agent_id,omitempty"`
 }
 
 // TrafficThresholdRequest 设置流量阈值请求。
@@ -1182,9 +1186,9 @@ type UpdateChannelRequest struct {
 
 // ChannelKindSchema 通道类型 schema 描述。
 type ChannelKindSchema struct {
-	Kind        ChannelKind `json:"kind"`
-	DisplayName string      `json:"display_name"`
-	ConfigSchema any        `json:"config_schema"` // JSON Schema
+	Kind         ChannelKind `json:"kind"`
+	DisplayName  string      `json:"display_name"`
+	ConfigSchema any         `json:"config_schema"` // JSON Schema
 }
 
 // NotificationEvent 通知投递记录。
@@ -1263,35 +1267,35 @@ type SystemSetting struct {
 
 // SystemSettingsMap 系统设置映射（批量读取时使用）。
 type SystemSettingsMap struct {
-	SilentModeEnabled       bool   `json:"silent_mode_enabled"`
-	SilentModePrefix        string `json:"silent_mode_prefix"`
-	SessionTTLSeconds       int64  `json:"session_ttl_seconds"`
-	MonthlyResetDay         int32  `json:"monthly_reset_day"`
-	OTACheckInterval        int32  `json:"ota_check_interval"`
-	AgentHeartbeatInterval  int32  `json:"agent_heartbeat_interval"`
-	NotificationDebounce    int32  `json:"notification_debounce"`
+	SilentModeEnabled      bool   `json:"silent_mode_enabled"`
+	SilentModePrefix       string `json:"silent_mode_prefix"`
+	SessionTTLSeconds      int64  `json:"session_ttl_seconds"`
+	MonthlyResetDay        int32  `json:"monthly_reset_day"`
+	OTACheckInterval       int32  `json:"ota_check_interval"`
+	AgentHeartbeatInterval int32  `json:"agent_heartbeat_interval"`
+	NotificationDebounce   int32  `json:"notification_debounce"`
 }
 
 // UpdateSettingsRequest 修改系统设置请求（部分更新）。
 type UpdateSettingsRequest struct {
-	SilentModeEnabled      *bool  `json:"silent_mode_enabled,omitempty"`
-	SessionTTLSeconds      int64  `json:"session_ttl_seconds,omitempty"`
-	MonthlyResetDay        int32  `json:"monthly_reset_day,omitempty"`
-	OTACheckInterval       int32  `json:"ota_check_interval,omitempty"`
-	AgentHeartbeatInterval int32  `json:"agent_heartbeat_interval,omitempty"`
-	NotificationDebounce   int32  `json:"notification_debounce,omitempty"`
+	SilentModeEnabled      *bool `json:"silent_mode_enabled,omitempty"`
+	SessionTTLSeconds      int64 `json:"session_ttl_seconds,omitempty"`
+	MonthlyResetDay        int32 `json:"monthly_reset_day,omitempty"`
+	OTACheckInterval       int32 `json:"ota_check_interval,omitempty"`
+	AgentHeartbeatInterval int32 `json:"agent_heartbeat_interval,omitempty"`
+	NotificationDebounce   int32 `json:"notification_debounce,omitempty"`
 }
 
 // SilentModeRequest 开关静默模式 / 轮换前缀请求。
 type SilentModeRequest struct {
-	Enabled  *bool `json:"enabled,omitempty"`
-	Rotate   bool  `json:"rotate,omitempty"` // 是否立即轮换前缀
+	Enabled *bool `json:"enabled,omitempty"`
+	Rotate  bool  `json:"rotate,omitempty"` // 是否立即轮换前缀
 }
 
 // SilentModeResponse 静默模式操作响应（含新前缀）。
 type SilentModeResponse struct {
-	Enabled bool   `json:"enabled"`
-	Prefix  string `json:"prefix"`
+	Enabled  bool   `json:"enabled"`
+	Prefix   string `json:"prefix"`
 	LoginURL string `json:"login_url"`
 }
 
@@ -1429,10 +1433,10 @@ type UpdateVpsAssetRequest struct {
 
 // VpsAssetSummary VPS 资产汇总统计。
 type VpsAssetSummary struct {
-	Total         int                      `json:"total"`
-	Expiring      int                      `json:"expiring"`
-	Expired       int                      `json:"expired"`
-	MonthlyCost   []VpsAssetMonthlyCost    `json:"monthly_cost"`
+	Total       int                   `json:"total"`
+	Expiring    int                   `json:"expiring"`
+	Expired     int                   `json:"expired"`
+	MonthlyCost []VpsAssetMonthlyCost `json:"monthly_cost"`
 }
 
 // VpsAssetMonthlyCost 按币种分组的月费折算。

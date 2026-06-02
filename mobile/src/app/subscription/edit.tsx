@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,6 +29,7 @@ export default function EditSubscriptionScreen() {
   const [name, setName] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [remark, setRemark] = useState("");
+  const [allowInsecure, setAllowInsecure] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -35,6 +37,7 @@ export default function EditSubscriptionScreen() {
       setName(data.name ?? "");
       setSourceUrl(data.source_url ?? "");
       setRemark(data.remark ?? "");
+      setAllowInsecure(data.allow_insecure ?? false);
       setLoaded(true);
     }
   }, [data, loaded]);
@@ -51,6 +54,7 @@ export default function EditSubscriptionScreen() {
       req.source_url = sourceUrl.trim();
     }
     req.remark = remark.trim() || undefined;
+    req.allow_insecure = allowInsecure;
     updateMutation.mutate(
       { id: id!, data: req },
       {
@@ -143,6 +147,29 @@ export default function EditSubscriptionScreen() {
           </View>
         </View>
 
+        {/* Allow insecure TLS (url subscriptions only) */}
+        {data?.type === "url" && (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.cardIcon, { backgroundColor: colors.warningBg }]}>
+                <Ionicons name="shield-outline" size={16} color={colors.warning} />
+              </View>
+              <Text style={styles.cardTitle}>跳过 TLS 证书校验</Text>
+            </View>
+            <View style={styles.insecureRow}>
+              <Text style={styles.insecureHint}>
+                上游证书自签或过期时开启(仅限你信任的自有节点)。会失去该订阅拉取的 MITM 防护。
+              </Text>
+              <Switch
+                value={allowInsecure}
+                onValueChange={setAllowInsecure}
+                trackColor={{ false: colors.border, true: colors.primarySoft }}
+                thumbColor={allowInsecure ? colors.primary : colors.textDisabled}
+              />
+            </View>
+          </View>
+        )}
+
         {/* Submit */}
         <TouchableOpacity
           style={[styles.submitBtn, updateMutation.isPending && styles.submitBtnDisabled]}
@@ -164,6 +191,8 @@ const makeStyles = (colors: AppColors) =>
   container: { flex: 1, backgroundColor: colors.bg },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingBottom: 40 },
+  insecureRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  insecureHint: { flex: 1, fontSize: fontSize.sm, color: colors.textTertiary, lineHeight: 18 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.xl,

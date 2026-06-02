@@ -3,6 +3,7 @@ package substore
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -103,11 +104,15 @@ type SyncService struct {
 	repo       *storage.SubscriptionRepo
 	nodeRepo   NodeRepo
 	httpClient *http.Client
-	hooks      ScriptHookRunner
-	notify     NotifyHook
-	events     EventBus
-	logger     *slog.Logger
-	now        func() time.Time
+	// insecureClient mirrors httpClient but skips TLS verification — used only
+	// for subscriptions with allow_insecure=true (trusted upstreams whose cert
+	// is self-signed/expired). Lazily nil-safe via getClient.
+	insecureClient *http.Client
+	hooks          ScriptHookRunner
+	notify         NotifyHook
+	events         EventBus
+	logger         *slog.Logger
+	now            func() time.Time
 }
 
 // SyncServiceConfig bundles SyncService dependencies.
@@ -135,19 +140,26 @@ func NewSyncService(cfg SyncServiceConfig) (*SyncService, error) {
 	if client == nil {
 		client = &http.Client{Timeout: DefaultHTTPTimeout}
 	}
+	insecureClient := &http.Client{
+		Timeout: client.Timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // opt-in per subscription
+		},
+	}
 	now := cfg.Now
 	if now == nil {
 		now = time.Now
 	}
 	return &SyncService{
-		repo:       cfg.Repo,
-		nodeRepo:   cfg.NodeRepo,
-		httpClient: client,
-		hooks:      cfg.Hooks,
-		notify:     cfg.Notify,
-		events:     cfg.Events,
-		logger:     cfg.Logger,
-		now:        now,
+		repo:           cfg.Repo,
+		nodeRepo:       cfg.NodeRepo,
+		httpClient:     client,
+		insecureClient: insecureClient,
+		hooks:          cfg.Hooks,
+		notify:         cfg.Notify,
+		events:         cfg.Events,
+		logger:         cfg.Logger,
+		now:            now,
 	}, nil
 }
 
@@ -262,7 +274,7 @@ func (s *SyncService) resolveBody(ctx context.Context, sub *storage.Subscription
 		if sub.SourceURL == "" {
 			return nil, fmt.Errorf("subscription %s: type=url with empty source_url", sub.ID)
 		}
-		return s.fetchURL(ctx, sub.SourceURL, sub.UA)
+		return s.fetchURL(ctx, sub.SourceURL, sub.UA, sub.AllowInsecure)
 	case string(types.SubTypeUpload):
 		if len(sub.RawContent) == 0 {
 			return nil, fmt.Errorf("subscription %s: type=upload with empty raw_content", sub.ID)
@@ -276,7 +288,7 @@ func (s *SyncService) resolveBody(ctx context.Context, sub *storage.Subscription
 }
 
 // fetchURL performs the HTTP GET with the supplied UA (or DefaultUserAgent).
-func (s *SyncService) fetchURL(ctx context.Context, url, ua string) ([]byte, error) {
+func (s *SyncService) fetchURL(ctx context.Context, url, ua string, insecure bool) ([]byte, error) {
 	if ua == "" {
 		ua = DefaultUserAgent
 	}
@@ -285,7 +297,11 @@ func (s *SyncService) fetchURL(ctx context.Context, url, ua string) ([]byte, err
 		return nil, fmt.Errorf("build request: %w", err)
 	}
 	req.Header.Set("User-Agent", ua)
-	resp, err := s.httpClient.Do(req)
+	client := s.httpClient
+	if insecure && s.insecureClient != nil {
+		client = s.insecureClient
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("http get %s: %w", url, err)
 	}

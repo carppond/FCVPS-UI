@@ -38,6 +38,7 @@ type SubscriptionRecord struct {
 	Tags           []string
 	Remark         string
 	ShareToken     string
+	AllowInsecure  bool
 	CreatedAt      int64
 	UpdatedAt      int64
 	// NodeCount is the live count of rows in nodes joined on subscription_id.
@@ -113,15 +114,15 @@ func (r *SubscriptionRepo) Create(ctx context.Context, rec SubscriptionRecord) (
 			id, user_id, name, type, source_url, raw_content, ua,
 			sync_interval, last_synced_at, last_sync_status, last_sync_error,
 			expire_at, traffic_total, traffic_used, tags, remark,
-			share_token, created_at, updated_at
-		) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			share_token, created_at, updated_at, allow_insecure
+		) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		rec.ID, rec.UserID, rec.Name, rec.Type,
 		nullableString(rec.SourceURL), nullableBytes(rec.RawContent), nullableString(rec.UA),
 		rec.SyncInterval, nullableInt64(rec.LastSyncedAt),
 		nullableString(rec.LastSyncStatus), nullableString(rec.LastSyncError),
 		nullableInt64(rec.ExpireAt), nullableInt64(rec.TrafficTotal), nullableInt64(rec.TrafficUsed),
 		tagsJSON, nullableString(rec.Remark),
-		rec.ShareToken, rec.CreatedAt, rec.UpdatedAt,
+		rec.ShareToken, rec.CreatedAt, rec.UpdatedAt, rec.AllowInsecure,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("insert subscription: %w", err)
@@ -231,12 +232,13 @@ func (r *SubscriptionRepo) List(ctx context.Context, userID string, opts Subscri
 // pointer to allow distinguishing "clear" (empty slice) from "leave alone"
 // (nil pointer).
 type SubscriptionUpdate struct {
-	Name         *string
-	SourceURL    *string
-	UA           *string
-	SyncInterval *int32
-	Tags         *[]string
-	Remark       *string
+	Name          *string
+	SourceURL     *string
+	UA            *string
+	SyncInterval  *int32
+	Tags          *[]string
+	Remark        *string
+	AllowInsecure *bool
 }
 
 // Update applies a partial change to the subscription identified by (id, userID).
@@ -277,6 +279,10 @@ func (r *SubscriptionRepo) Update(ctx context.Context, id, userID string, upd Su
 	if upd.Remark != nil {
 		sets = append(sets, "remark = ?")
 		args = append(args, nullableString(*upd.Remark))
+	}
+	if upd.AllowInsecure != nil {
+		sets = append(sets, "allow_insecure = ?")
+		args = append(args, *upd.AllowInsecure)
 	}
 	if len(sets) == 0 {
 		return nil
@@ -439,7 +445,7 @@ const selectSubscriptionSQL = `SELECT s.id, s.user_id, s.name, s.type,
 		COALESCE(s.last_sync_status,''), COALESCE(s.last_sync_error,''),
 		COALESCE(s.expire_at,0), COALESCE(s.traffic_total,0), COALESCE(s.traffic_used,0),
 		s.tags, COALESCE(s.remark,''), COALESCE(s.share_token,''),
-		s.created_at, s.updated_at,
+		s.created_at, s.updated_at, COALESCE(s.allow_insecure,0),
 		COALESCE(n.cnt, 0) AS node_count
 	FROM subscriptions s
 	LEFT JOIN (
@@ -453,6 +459,7 @@ func scanSubscriptionRow(row *sql.Row) (*SubscriptionRecord, error) {
 	var rec SubscriptionRecord
 	var raw []byte
 	var tagsJSON string
+	var allowInsecure int64
 	if err := row.Scan(
 		&rec.ID, &rec.UserID, &rec.Name, &rec.Type,
 		&rec.SourceURL, &raw, &rec.UA,
@@ -460,7 +467,7 @@ func scanSubscriptionRow(row *sql.Row) (*SubscriptionRecord, error) {
 		&rec.LastSyncStatus, &rec.LastSyncError,
 		&rec.ExpireAt, &rec.TrafficTotal, &rec.TrafficUsed,
 		&tagsJSON, &rec.Remark, &rec.ShareToken,
-		&rec.CreatedAt, &rec.UpdatedAt,
+		&rec.CreatedAt, &rec.UpdatedAt, &allowInsecure,
 		&rec.NodeCount,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -471,6 +478,7 @@ func scanSubscriptionRow(row *sql.Row) (*SubscriptionRecord, error) {
 	if len(raw) > 0 {
 		rec.RawContent = raw
 	}
+	rec.AllowInsecure = allowInsecure != 0
 	tags, err := decodeTags(tagsJSON)
 	if err != nil {
 		return nil, fmt.Errorf("decode tags: %w", err)
@@ -484,6 +492,7 @@ func scanSubscriptionRowMulti(rows *sql.Rows) (*SubscriptionRecord, error) {
 	var rec SubscriptionRecord
 	var raw []byte
 	var tagsJSON string
+	var allowInsecure int64
 	if err := rows.Scan(
 		&rec.ID, &rec.UserID, &rec.Name, &rec.Type,
 		&rec.SourceURL, &raw, &rec.UA,
@@ -491,7 +500,7 @@ func scanSubscriptionRowMulti(rows *sql.Rows) (*SubscriptionRecord, error) {
 		&rec.LastSyncStatus, &rec.LastSyncError,
 		&rec.ExpireAt, &rec.TrafficTotal, &rec.TrafficUsed,
 		&tagsJSON, &rec.Remark, &rec.ShareToken,
-		&rec.CreatedAt, &rec.UpdatedAt,
+		&rec.CreatedAt, &rec.UpdatedAt, &allowInsecure,
 		&rec.NodeCount,
 	); err != nil {
 		return nil, fmt.Errorf("scan subscription: %w", err)
@@ -499,6 +508,7 @@ func scanSubscriptionRowMulti(rows *sql.Rows) (*SubscriptionRecord, error) {
 	if len(raw) > 0 {
 		rec.RawContent = raw
 	}
+	rec.AllowInsecure = allowInsecure != 0
 	tags, err := decodeTags(tagsJSON)
 	if err != nil {
 		return nil, fmt.Errorf("decode tags: %w", err)
