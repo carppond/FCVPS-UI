@@ -404,6 +404,11 @@ PagedResponse<T> {
 | `created_at` | int64 | 是 | - | - |
 | `updated_at` | int64 | 是 | - | - |
 
+> **流量/到期来源**：`type=url` 订阅每次同步时，服务端解析上游响应头
+> `Subscription-Userinfo`（`upload/download/total/expire`，3X-UI / sub-store 等通用），
+> 回填 `traffic_used`（=upload+download）/ `traffic_total` / `expire_at`（秒→毫秒）。
+> 上游未返回该头时保持原值。`allow_insecure=true` 时该拉取跳过 TLS 校验。
+
 ### 2.5 SubscriptionDetail（含节点列表）
 
 继承 `Subscription` 全部字段，额外增加：
