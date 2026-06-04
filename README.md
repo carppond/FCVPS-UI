@@ -105,6 +105,12 @@ ssh root@<vps> "journalctl -u shiguang-vps -n 20 | grep ADMIN"
 ./scripts/deploy.sh --update
 ```
 
+忘记密码 / 丢失两步验证（SSH 到 VPS 重置账户，服务无需停止）：
+
+```bash
+./scripts/deploy.sh --reset-password          # 重置 admin（生成新密码并关闭 TOTP）
+```
+
 ### 方式 3：手动二进制
 
 从 [Releases](https://github.com/carppond/FCVPS-UI/releases) 下载对应平台二进制：

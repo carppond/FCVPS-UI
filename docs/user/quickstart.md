@@ -74,7 +74,7 @@ curl -fsSL https://get.shiguang-vps.example/install.sh | bash
 4. 创建 systemd 服务文件（`/etc/systemd/system/shiguang-vps.service`）
 5. 启动服务并设置开机自启
 
-**升级 / 卸载**：
+**升级 / 卸载 / 账户重置**：
 
 ```bash
 # 升级（一键脚本部署）
@@ -82,9 +82,12 @@ curl -fsSL https://get.shiguang-vps.example/install.sh | bash
 
 # 卸载（停服务、删 systemd/nginx 配置，数据目录单独确认）
 ./scripts/deploy.sh --uninstall
+
+# 忘记密码 / 丢失两步验证：重置账户（默认 admin，服务无需停止）
+./scripts/deploy.sh --reset-password
 ```
 
-各部署方式（Docker / 脚本 / 二进制）与探针的完整卸载步骤见 [卸载文档](./uninstall.md)。
+各部署方式（Docker / 脚本 / 二进制）与探针的完整卸载步骤见 [卸载文档](./uninstall.md)；账户重置的三种方式（deploy.sh / SSH 手动 / Docker）见 [常见问题](./troubleshooting.md#问题二忘记密码--丢失两步验证账户重置)。
 
 ---
 
