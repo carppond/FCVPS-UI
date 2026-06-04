@@ -2,7 +2,7 @@
   "expo": {
     "name": "拾光VPS",
     "slug": "shiguang-vps",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -15,7 +15,7 @@
           "NSAllowsArbitraryLoads": true
         }
       },
-      "buildNumber": "2"
+      "buildNumber": "3"
     },
     "android": {
       "package": "com.shiguang.vps",
@@ -26,7 +26,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "versionCode": 2
+      "versionCode": 3
     },
     "plugins": [
       "expo-router",
