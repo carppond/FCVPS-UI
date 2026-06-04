@@ -254,8 +254,7 @@ func extractChatIDs(raw string) []string {
 		return nil
 	}
 	if raw, ok := cfg["chat_ids"]; ok {
-		switch v := raw.(type) {
-		case []any:
+		if v, ok := raw.([]any); ok {
 			out := make([]string, 0, len(v))
 			for _, item := range v {
 				if s, ok := item.(string); ok && s != "" {

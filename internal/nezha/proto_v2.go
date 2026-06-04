@@ -98,7 +98,7 @@ func UnmarshalNezhaHeartbeat(raw []byte) (*NezhaHeartbeat, error) {
 	if err := json.Unmarshal(raw, &raw2); err != nil {
 		// Not a JSON object — leave Extra nil; the typed parse above already
 		// succeeded so the caller still gets the populated struct.
-		return hb, nil
+		return hb, nil //nolint:nilerr // 二次解析只为收集 Extra,失败可降级
 	}
 	delete(raw2, "secret")
 	delete(raw2, "state")

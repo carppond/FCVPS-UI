@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 )
 
 // TG_PARSE_MODE is the parse mode the bot uses for every outbound message.
@@ -504,13 +503,4 @@ func truncateForTG(s string) string {
 		return s
 	}
 	return s[:tgMaxMessageBytes] + "…"
-}
-
-// formatTGTime renders an epoch-millis timestamp in UTC RFC3339 — chosen
-// because it is unambiguous across the 4 supported locales.
-func formatTGTime(ms int64) string {
-	if ms <= 0 {
-		return "—"
-	}
-	return time.UnixMilli(ms).UTC().Format(time.RFC3339)
 }

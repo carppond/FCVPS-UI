@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -217,16 +216,4 @@ func (a *Applier) StageTo() (string, *os.File, error) {
 		return "", nil, fmt.Errorf("ota: stage: open: %w", err)
 	}
 	return stagePath, f, nil
-}
-
-// drainFile is a small helper used by tests: copies r to a newly-created file
-// at path and returns the byte count. Kept package-private so tests can build
-// fake binaries without dragging in an os.WriteFile dependency.
-func drainFile(path string, r io.Reader) (int64, error) {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
-	if err != nil {
-		return 0, err
-	}
-	defer f.Close()
-	return io.Copy(f, r)
 }

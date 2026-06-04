@@ -53,7 +53,8 @@ func Validate(ast *AST) error {
 	}
 
 	// Reassemble: non-output steps in original order + output at end.
-	ast.Operators = append(nonOutput, *outputStep)
+	nonOutput = append(nonOutput, *outputStep)
+	ast.Operators = nonOutput
 	return nil
 }
 

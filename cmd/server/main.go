@@ -63,12 +63,6 @@ var hubGitHubRepo = ""
 // to drain before forcing the server closed.
 const shutdownTimeout = 30 * time.Second
 
-// loginRatePerSecond is the per-(IP|username) login bucket refill rate
-// (5 attempts per hour ≈ 0.00139/s). burst=5 lets honest users tolerate a
-// quick mistyped-password retry without being rate-limited.
-const loginRatePerSecond = 5.0 / 3600.0
-const loginRateBurst = 5
-
 func main() {
 	if err := run(); err != nil {
 		// Use stderr because the logger may not yet be initialised.
@@ -546,7 +540,7 @@ func run() error {
 		TGBotSettingsHandler:  tgBotSettingsHandler,
 		VpsAssetHandler:       vpsAssetHandler,
 		FirewallHandler:       firewallHandler,
-		LoginRateLimit:        ratelimit.New(loginRatePerSecond, loginRateBurst, 0),
+		LoginRateLimit:        ratelimit.New(cfg.AuthRate.LoginPerSecond, cfg.AuthRate.LoginBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
 	}
 	mux := handler.NewRouter(deps)

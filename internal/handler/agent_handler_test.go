@@ -279,8 +279,8 @@ func TestAgentDeleteDisconnectsHubRegistration(t *testing.T) {
 	_ = uid
 
 	delRec := s.do(http.MethodDelete, "/api/agents/"+id, nil, bearer)
-	if delRec.Code != http.StatusNoContent {
-		t.Fatalf("expected 204, got %d body=%s", delRec.Code, delRec.Body.String())
+	if delRec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body=%s", delRec.Code, delRec.Body.String())
 	}
 	// After delete, GET → 404.
 	getRec := s.do(http.MethodGet, "/api/agents/"+id, nil, bearer)

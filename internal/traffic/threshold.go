@@ -179,7 +179,7 @@ func (t *Threshold) loadConfig(ctx context.Context) (int64, []int, error) {
 func (t *Threshold) loadState(ctx context.Context, key string) ([]int, error) {
 	raw, err := t.cfg.SettingsRepo.Get(ctx, key)
 	if err != nil {
-		return nil, nil // missing row → empty state
+		return nil, nil //nolint:nilerr // missing row → empty state
 	}
 	return parseLevels(raw), nil
 }

@@ -20,7 +20,7 @@ func Memory() (used, total, swapUsed, swapTotal uint64, err error) {
 	sm, swapErr := mem.SwapMemory()
 	if swapErr != nil {
 		// Treat missing swap as zero — see godoc above.
-		return vm.Used, vm.Total, 0, 0, nil
+		return vm.Used, vm.Total, 0, 0, nil //nolint:nilerr // 无 swap 的平台按 0 上报,主内存数据仍有效
 	}
 	return vm.Used, vm.Total, sm.Used, sm.Total, nil
 }

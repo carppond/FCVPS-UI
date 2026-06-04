@@ -94,34 +94,6 @@ func readChatIDs(cfg channelConfig) []string {
 	return nil
 }
 
-// chatIDsMatch reports whether chatID is present in any of the
-// telegram-kind channel configs in recs. Returns the owning user_id of the
-// first match. Used by the whitelist resolver to route inbound updates.
-func chatIDsMatch(recs []chatBinding, chatID int64) (userID, locale string, ok bool) {
-	target := chatID
-	for _, b := range recs {
-		for _, cid := range b.ChatIDs {
-			parsed, err := strconv.ParseInt(cid, 10, 64)
-			if err != nil {
-				continue
-			}
-			if parsed == target {
-				return b.UserID, b.Locale, true
-			}
-		}
-	}
-	return "", "", false
-}
-
-// chatBinding is the projection the whitelist resolver builds at refresh
-// time. Each entry pairs a user with the chat IDs registered on every one
-// of their telegram channels.
-type chatBinding struct {
-	UserID  string
-	Locale  string
-	ChatIDs []string
-}
-
 // ErrWhitelistEmpty signals "no telegram channels configured" — the bot
 // silently drops every update in this state.
 var ErrWhitelistEmpty = errors.New("notify: no telegram channels configured")

@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"sync"
@@ -409,21 +408,5 @@ func (c *Client) SendHelloAck(hubVersion string) error {
 		ID:      "hello-ack",
 		Payload: raw,
 		TS:      c.cfg.Now().UnixMilli(),
-	})
-}
-
-// encodeEnvelope is a small helper used by tests + the handler to ship a JSON
-// envelope without paying the (small) reflection cost of go json.Marshal at
-// every call site.
-func encodeEnvelope(t MessageType, id string, payload any, ts int64) ([]byte, error) {
-	raw, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-	return agentlib.MarshalEnvelope(&Envelope{
-		Type:    t,
-		ID:      id,
-		Payload: raw,
-		TS:      ts,
 	})
 }

@@ -48,6 +48,14 @@ const (
 	// DefaultBcryptCost is the bcrypt work factor used for password hashing.
 	DefaultBcryptCost = 10
 
+	// DefaultLoginRatePerSecond is the per-(IP|username) login bucket refill
+	// rate (5 attempts per hour ≈ 0.00139/s).
+	DefaultLoginRatePerSecond = 5.0 / 3600.0
+
+	// DefaultLoginRateBurst lets honest users tolerate a quick mistyped-
+	// password retry without being rate-limited.
+	DefaultLoginRateBurst = 5
+
 	// DefaultPaginationPage is the default page index when none is provided.
 	DefaultPaginationPage = 1
 

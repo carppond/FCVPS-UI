@@ -171,16 +171,15 @@ func (r *TrafficRepo) GetMonthSummary(ctx context.Context, userID string, year i
 	if err != nil {
 		return nil, fmt.Errorf("summary usage: %w", err)
 	}
+	defer urows.Close()
 	for urows.Next() {
 		var aid string
 		var u usage
 		if err := urows.Scan(&aid, &u.used, &u.in, &u.out); err != nil {
-			urows.Close()
 			return nil, fmt.Errorf("scan usage row: %w", err)
 		}
 		usageByID[aid] = u
 	}
-	urows.Close()
 	if err := urows.Err(); err != nil {
 		return nil, fmt.Errorf("iterate usage: %w", err)
 	}
@@ -202,12 +201,12 @@ func (r *TrafficRepo) GetMonthSummary(ctx context.Context, userID string, year i
 	if err != nil {
 		return nil, fmt.Errorf("summary agents: %w", err)
 	}
+	defer arows.Close()
 	seen := map[string]bool{}
 	for arows.Next() {
 		var id string
 		var tLimit, bwgUsed, bwgLimit, bwgSynced int64
 		if err := arows.Scan(&id, &tLimit, &bwgUsed, &bwgLimit, &bwgSynced); err != nil {
-			arows.Close()
 			return nil, fmt.Errorf("scan agent row: %w", err)
 		}
 		seen[id] = true
@@ -224,7 +223,6 @@ func (r *TrafficRepo) GetMonthSummary(ctx context.Context, userID string, year i
 		}
 		add(b)
 	}
-	arows.Close()
 	if err := arows.Err(); err != nil {
 		return nil, fmt.Errorf("iterate agents: %w", err)
 	}
@@ -382,28 +380,3 @@ func (r *TrafficRepo) DeleteByUser(ctx context.Context, userID string) (int64, e
 	n, _ := res.RowsAffected()
 	return n, nil
 }
-
-// debugList returns every row sorted by (date, user_id, agent_id) — only used
-// in tests. Kept here so the test file does not need a direct *sql.DB.
-func (r *TrafficRepo) debugList(ctx context.Context) ([]TrafficRecord, error) {
-	rows, err := r.db.Read.QueryContext(ctx, `
-		SELECT date, user_id, COALESCE(agent_id,''), COALESCE(total_limit,0),
-		       total_used, total_in, total_out
-		  FROM traffic_records
-		 ORDER BY date ASC, user_id ASC, agent_id ASC`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	out := make([]TrafficRecord, 0)
-	for rows.Next() {
-		var rec TrafficRecord
-		if err := rows.Scan(&rec.Date, &rec.UserID, &rec.AgentID,
-			&rec.TotalLimit, &rec.TotalUsed, &rec.TotalIn, &rec.TotalOut); err != nil {
-			return nil, err
-		}
-		out = append(out, rec)
-	}
-	return out, rows.Err()
-}
-

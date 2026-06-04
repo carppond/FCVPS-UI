@@ -27,6 +27,7 @@ type Config struct {
 	Log      LogConfig
 	Session  SessionConfig
 	Agent    AgentConfig
+	AuthRate AuthRateConfig
 
 	// ResetPassword, when non-empty, switches the binary into offline account
 	// recovery mode: reset that username's password (plus disable TOTP and
@@ -89,6 +90,16 @@ type AgentConfig struct {
 	HeartbeatInterval time.Duration
 }
 
+// AuthRateConfig tunes the per-(IP|username) login rate limiter. The defaults
+// (5 attempts/hour, burst 5) suit production; E2E/CI环境用环境变量放宽，
+// 否则一轮测试就会打满令牌桶。
+type AuthRateConfig struct {
+	// LoginPerSecond is the token-bucket refill rate for login attempts.
+	LoginPerSecond float64
+	// LoginBurst is the bucket size (max attempts in a quick burst).
+	LoginBurst int
+}
+
 // ErrInvalidConfig is returned when a required value cannot be parsed.
 var ErrInvalidConfig = errors.New("invalid configuration")
 
@@ -147,6 +158,10 @@ func defaultConfig() Config {
 		},
 		Session: SessionConfig{TTL: DefaultSessionTTL},
 		Agent:   AgentConfig{HeartbeatInterval: DefaultAgentHeartbeatInterval},
+		AuthRate: AuthRateConfig{
+			LoginPerSecond: DefaultLoginRatePerSecond,
+			LoginBurst:     DefaultLoginRateBurst,
+		},
 	}
 }
 
@@ -189,6 +204,16 @@ func applyEnv(cfg *Config) {
 	if v := os.Getenv("SHIGUANG_AGENT_HEARTBEAT_SECONDS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			cfg.Agent.HeartbeatInterval = time.Duration(n) * time.Second
+		}
+	}
+	if v := os.Getenv("SHIGUANG_LOGIN_RATE_PER_SEC"); v != "" {
+		if f, err := strconv.ParseFloat(v, 64); err == nil && f > 0 {
+			cfg.AuthRate.LoginPerSecond = f
+		}
+	}
+	if v := os.Getenv("SHIGUANG_LOGIN_RATE_BURST"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			cfg.AuthRate.LoginBurst = n
 		}
 	}
 }
