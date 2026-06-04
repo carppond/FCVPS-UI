@@ -23,10 +23,9 @@ jobs:
         run: go vet ./...
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
-          args: --timeout=5m
 
       - name: Size check (Go)
         run: bash scripts/check-size.sh
@@ -43,6 +42,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: false
+          package_json_file: web/package.json
 
       - name: Set up Node
         uses: actions/setup-node@v4

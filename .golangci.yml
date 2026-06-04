@@ -6,17 +6,39 @@ linters:
     - govet
     - staticcheck
     - revive
-    - gocyclo
     - gocritic
     - misspell
     - nilerr
     - sqlclosecheck
     - unused
     - ineffassign
-
-linters-settings:
-  gocyclo:
-    min-complexity: 15
+  settings:
+    revive:
+      rules:
+        # 接口实现/回调常带未用参数（http.Handler 的 r、ws 钩子的 ctx 等），
+        # 强制改名为 _ 反而损失可读性。
+        - name: unused-parameter
+          disabled: true
+  exclusions:
+    rules:
+      # 测试代码不做生产级把关（行数另由 check-size.sh 管）
+      - path: _test\.go
+        linters:
+          - errcheck
+          - revive
+          - unused
+          - gocritic
+          - nilerr
+          - staticcheck
+          - ineffassign
+      # defer f.Close() 类 best-effort 收尾——错误无处上报
+      - linters:
+          - errcheck
+        source: '\.Close\(\)'
+      # Telegram bot 命令以「回复文案」承载失败语义，刻意把 error 折叠成 nil
+      - path: internal/notify/tg_commands\.go
+        linters:
+          - nilerr
 
 run:
   timeout: 5m

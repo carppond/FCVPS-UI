@@ -14,7 +14,7 @@ jobs:
       # Keep all hub state in a tmp dir so the workflow starts from a clean
       # slate every run (avoids relying on whatever data/ shape exists in the
       # checkout).
-      SGVPS_DATA_DIR: ${{ github.workspace }}/.e2e-data
+      SHIGUANG_DATA_DIR: ${{ github.workspace }}/.e2e-data
       E2E_API_URL: http://localhost:8080
       E2E_BASE_URL: http://localhost:5173
       CI: "true"
@@ -30,6 +30,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           run_install: false
+          package_json_file: web/package.json
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -47,9 +48,14 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Prepare hub data dir
-        run: mkdir -p "$SGVPS_DATA_DIR"
+        run: mkdir -p "$SHIGUANG_DATA_DIR"
 
       - name: Start hub backend
+        env:
+          # The production login limiter is 5 attempts/hour — one E2E run
+          # makes far more than that, so relax it for the suite.
+          SHIGUANG_LOGIN_RATE_PER_SEC: "10"
+          SHIGUANG_LOGIN_RATE_BURST: "100"
         run: |
           mkdir -p hub-logs
           go run ./cmd/server > hub-logs/hub.log 2>&1 &
@@ -61,13 +67,14 @@ jobs:
       - name: Extract bootstrap admin password from hub log
         id: bootstrap
         run: |
-          # Best-effort parse: the EnsureAdmin step prints
-          #   "Admin password: <secret>"
-          # to stdout on first boot. If the line is missing we keep going with
-          # the default fallback in fixtures/auth.ts.
-          PASS=$(grep -oE 'Admin password: [^ ]+' hub-logs/hub.log | head -1 | awk '{print $3}' || true)
+          # First boot prints (json log, default format):
+          #   {"msg":"ADMIN BOOTSTRAPPED","username":"admin","password":"<secret>",...}
+          # If the line is missing we keep going with the default fallback in
+          # fixtures/auth.ts.
+          PASS=$(grep -o '"password":"[^"]*"' hub-logs/hub.log | head -1 | cut -d'"' -f4 || true)
           if [ -n "$PASS" ]; then
             echo "E2E_ADMIN_PASS=$PASS" >> "$GITHUB_ENV"
+            echo "::add-mask::$PASS"
           fi
 
       - name: Start vite dev server
