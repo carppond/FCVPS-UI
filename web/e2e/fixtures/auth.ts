@@ -41,10 +41,22 @@ export function apiBaseURL(): string {
  * on the next navigation. The shape mirrors zustand's `persist` middleware:
  *   { state: { user, token }, version: 0 }
  */
+/**
+ * Module-level session cache. With workers=1 every spec runs in the same
+ * process, so one real login covers the whole suite — important because the
+ * hub rate-limits login attempts per (IP|username).
+ */
+let cachedSession: { username: string; token: string; user: unknown } | null =
+  null;
+
 export async function apiLogin(
   page: Page,
   creds: E2ECreds = defaultAdminCreds(),
 ): Promise<{ token: string; user: unknown }> {
+  if (cachedSession && cachedSession.username === creds.username) {
+    await seedAuthStorage(page, cachedSession.user, cachedSession.token);
+    return { token: cachedSession.token, user: cachedSession.user };
+  }
   const res = await page.request.post(`${apiBaseURL()}/api/auth/login`, {
     data: { username: creds.username, password: creds.password },
     headers: { "Content-Type": "application/json" },
@@ -52,21 +64,41 @@ export async function apiLogin(
   expect(res.ok(), `login failed: ${res.status()} ${await res.text()}`).toBe(
     true,
   );
-  const body = (await res.json()) as {
-    access_token?: string;
-    user?: unknown;
-    totp_required?: boolean;
+  // All hub responses use the APIResponse envelope: { code, data, ... }.
+  const envelope = (await res.json()) as {
+    data?: {
+      access_token?: string;
+      user?: unknown;
+      totp_required?: boolean;
+    } | null;
   };
+  const body = envelope.data ?? {};
   if (body.totp_required) {
     throw new Error(
       "API login returned totp_required; the admin used by E2E must have 2FA disabled",
     );
   }
   if (!body.access_token || !body.user) {
-    throw new Error(`malformed login response: ${JSON.stringify(body)}`);
+    throw new Error(`malformed login response: ${JSON.stringify(envelope)}`);
   }
-  // Seed the zustand-persist payload BEFORE navigation so the auth store
-  // initialises with a session on first paint (no flash of /login).
+  cachedSession = {
+    username: creds.username,
+    token: body.access_token,
+    user: body.user,
+  };
+  await seedAuthStorage(page, body.user, body.access_token);
+  return { token: body.access_token, user: body.user };
+}
+
+/**
+ * Seed the zustand-persist payload BEFORE navigation so the auth store
+ * initialises with a session on first paint (no flash of /login).
+ */
+async function seedAuthStorage(
+  page: Page,
+  user: unknown,
+  token: string,
+): Promise<void> {
   await page.addInitScript(
     (seed) => {
       try {
@@ -76,12 +108,8 @@ export async function apiLogin(
         // so the test can still proceed to the failure assertion.
       }
     },
-    JSON.stringify({
-      state: { user: body.user, token: body.access_token },
-      version: 0,
-    }),
+    JSON.stringify({ state: { user, token }, version: 0 }),
   );
-  return { token: body.access_token, user: body.user };
 }
 
 interface AuthFixtures {

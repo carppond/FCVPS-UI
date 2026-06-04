@@ -107,7 +107,7 @@ function NodesPage() {
   });
   const subscriptions = subsData?.items ?? [];
 
-  const allItems = nodesData?.items ?? [];
+  const allItems = React.useMemo(() => nodesData?.items ?? [], [nodesData]);
 
   // ── Client-side filtering ──
   const filtered = React.useMemo(() => {

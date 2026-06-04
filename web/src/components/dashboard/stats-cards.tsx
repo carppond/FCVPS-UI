@@ -122,7 +122,7 @@ function NodesCard() {
   const { t } = useTranslation("dashboard");
   const agentsQ = useAgentsQuery({ page: 1, pageSize: 200 });
   const nodesQ = useNodesQuery({ page: 1, pageSize: 200 });
-  const nodeItems = nodesQ.data?.items ?? [];
+  const nodeItems = useMemo(() => nodesQ.data?.items ?? [], [nodesQ.data]);
   const total = nodesQ.data?.total ?? nodeItems.length;
 
   // For "online" count, we use the agents (probes) that test reachability,
@@ -236,7 +236,7 @@ function AlertsCard() {
   const from = useMemo(() => Date.now() - 24 * 60 * 60 * 1000, []);
   const query = useEvents({ status: "failed", from, page: 1, pageSize: 5 });
   const total = query.data?.total ?? 0;
-  const items = query.data?.items ?? [];
+  const items = useMemo(() => query.data?.items ?? [], [query.data]);
 
   // Build a short detail summary from event types
   const detailParts = useMemo(() => {

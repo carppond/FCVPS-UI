@@ -27,7 +27,6 @@ export function RegexRenameForm({
   const regexError = React.useMemo(() => {
     if (!args.pattern) return null;
     try {
-      // eslint-disable-next-line no-new
       new RegExp(args.pattern);
       return null;
     } catch (err) {

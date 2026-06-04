@@ -50,14 +50,17 @@ export function DatePicker({
   className,
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
-  const selected = value ? new Date(value + "T00:00:00") : null;
+  const selected = React.useMemo(
+    () => (value ? new Date(value + "T00:00:00") : null),
+    [value],
+  );
   const [viewMonth, setViewMonth] = React.useState(
     () => selected ?? new Date(),
   );
 
   React.useEffect(() => {
     if (open && selected) setViewMonth(selected);
-  }, [open]);
+  }, [open, selected]);
 
   const locale = getLocale();
   const monthStart = startOfMonth(viewMonth);

@@ -98,7 +98,7 @@ function HeroStat({ label, children }: HeroStatProps) {
 export function HeroProbe() {
   const { t, i18n } = useTranslation("dashboard");
   const query = useAgentsQuery({ page: 1, pageSize: 200 });
-  const items: AgentListItem[] = query.data?.items ?? [];
+  const items = useMemo<AgentListItem[]>(() => query.data?.items ?? [], [query.data]);
 
   const totalAgents = items.length;
   const onlineAgents = items.filter(

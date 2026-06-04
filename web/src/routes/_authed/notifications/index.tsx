@@ -63,7 +63,7 @@ function NotificationsPage() {
   const updateMutation = useUpdateChannel();
   const deleteMutation = useDeleteChannel();
 
-  const channels = channelsQ.data ?? [];
+  const channels = React.useMemo(() => channelsQ.data ?? [], [channelsQ.data]);
 
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const selected = React.useMemo(

@@ -84,7 +84,7 @@ function VpsAssetsPage() {
     return m;
   }, [trafficSummary]);
 
-  const allItems = data?.items ?? [];
+  const allItems = React.useMemo(() => data?.items ?? [], [data]);
 
   const filtered = React.useMemo(() => {
     let items = allItems;

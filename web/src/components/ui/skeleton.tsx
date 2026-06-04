@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
+type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
 
 /** Placeholder skeleton with a pulse animation. */
 function Skeleton({ className, ...props }: SkeletonProps) {

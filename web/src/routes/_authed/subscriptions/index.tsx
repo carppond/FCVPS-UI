@@ -109,7 +109,7 @@ function SubscriptionsPage() {
     pageSize: 500,
   });
 
-  const allItems = data?.items ?? [];
+  const allItems = React.useMemo(() => data?.items ?? [], [data]);
 
   // Client-side filtering
   const filtered = React.useMemo(() => {

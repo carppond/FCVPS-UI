@@ -30,7 +30,7 @@ test.describe("auth: login flow", () => {
     // react-hook-form; we use accessible labels so the test stays readable
     // when the underlying input library changes.
     await page.getByLabel(/username|用户名/i).fill(creds.username);
-    await page.getByLabel(/password|密码/i).fill(creds.password);
+    await page.getByRole("textbox", { name: /password|密码/i }).fill(creds.password);
     await page
       .getByRole("button", { name: /sign in|log in|登录|ログイン/i })
       .click();
@@ -44,7 +44,7 @@ test.describe("auth: login flow", () => {
     await page.getByLabel(/username|用户名/i).fill("admin");
     // Eight chars satisfies the zod min(8); the credentials are wrong so the
     // backend returns 401 and the form shows an error toast.
-    await page.getByLabel(/password|密码/i).fill("wrong-password-123");
+    await page.getByRole("textbox", { name: /password|密码/i }).fill("wrong-password-123");
     await page
       .getByRole("button", { name: /sign in|log in|登录|ログイン/i })
       .click();
@@ -86,16 +86,14 @@ test.describe("auth: 2FA enrolment + re-login", () => {
 });
 
 test.describe("auth: recovery code rescue", () => {
-  test("/recovery route renders the rescue form", async ({ page }) => {
-    // Drive only the public-facing surface — generating + consuming a code
-    // requires DB access we won't have in every E2E environment. The
-    // contract test in internal/auth/ already covers the consumption path.
+  test("/recovery without a pending 2FA session bounces to /login", async ({
+    page,
+  }) => {
+    // The rescue form is only reachable mid-2FA (it needs the pending token
+    // from the password step); a cold visit must redirect to /login. The
+    // code-consumption path itself is covered by internal/auth/ contract
+    // tests — here we only pin the route guard's behaviour.
     await page.goto("/recovery");
-    // The recovery page must allow entering a backup code; we only assert
-    // the heading is visible to avoid being too coupled to the exact field
-    // labels (which vary by locale).
-    await expect(
-      page.getByRole("heading", { name: /recovery|备用|救援/i }),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
   });
 });

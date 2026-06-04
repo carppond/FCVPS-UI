@@ -33,7 +33,7 @@ export function RulePreviewPane({ className }: RulePreviewPaneProps) {
   );
 
   const subsQuery = useSubscriptionsQuery({ page: 1, pageSize: 100 });
-  const subs = subsQuery.data?.items ?? [];
+  const subs = React.useMemo(() => subsQuery.data?.items ?? [], [subsQuery.data]);
 
   // Auto-select the first subscription when the dropdown gets populated.
   React.useEffect(() => {

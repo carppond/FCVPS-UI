@@ -19,13 +19,16 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      // shadcn 派生的 variants/常量与组件同文件导出是既定模式;
+      // 该规则只影响 HMR 粒度,不影响构建产物,关闭。
+      "react-refresh/only-export-components": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { argsIgnorePattern: "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
       ],
     },
   },
