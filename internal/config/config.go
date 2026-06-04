@@ -27,6 +27,14 @@ type Config struct {
 	Log      LogConfig
 	Session  SessionConfig
 	Agent    AgentConfig
+
+	// ResetPassword, when non-empty, switches the binary into offline account
+	// recovery mode: reset that username's password (plus disable TOTP and
+	// re-activate the account), print the new credentials once, then exit
+	// without starting the server. Meant to be run on the host (e.g. via SSH)
+	// against the same --data-dir — the escape hatch when the operator is
+	// locked out (forgotten password / lost authenticator).
+	ResetPassword string
 }
 
 // HTTPConfig holds settings for the public HTTP server.
@@ -104,6 +112,8 @@ func Load(args []string) (Config, error) {
 	fs.StringVar(&cfg.Log.Level, "log-level", cfg.Log.Level, "Log level (debug/info/warn/error)")
 	fs.StringVar(&cfg.Log.Format, "log-format", cfg.Log.Format, "Log format (json/text)")
 	fs.StringVar(&cfg.Log.File, "log-file", cfg.Log.File, "Optional rotated log file path")
+	fs.StringVar(&cfg.ResetPassword, "reset-password", "",
+		"Recovery mode: reset this username's password (and disable TOTP), print it, then exit")
 
 	applyEnv(&cfg)
 

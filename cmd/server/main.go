@@ -90,10 +90,12 @@ func run() error {
 		return fmt.Errorf("init logger: %w", err)
 	}
 	log := logger.Default()
-	log.Info("shiguang-vps server starting",
-		slog.String("http_addr", cfg.HTTP.Addr),
-		slog.String("data_dir", cfg.Database.DataDir),
-	)
+	if cfg.ResetPassword == "" { // recovery mode prints to stdout only
+		log.Info("shiguang-vps server starting",
+			slog.String("http_addr", cfg.HTTP.Addr),
+			slog.String("data_dir", cfg.Database.DataDir),
+		)
+	}
 
 	db, err := storage.Open(cfg.Database)
 	if err != nil {
@@ -144,6 +146,14 @@ func run() error {
 			slog.String("password", plain),
 			slog.String("note", "save this password; it will not be shown again"),
 		)
+	}
+
+	// Offline account recovery (-reset-password <username>): performed after
+	// migrations + EnsureAdmin so it also works on a fresh data dir, but
+	// before any server wiring — the process prints the new credentials and
+	// exits without listening.
+	if cfg.ResetPassword != "" {
+		return resetAccount(context.Background(), users, authMgr, cfg.ResetPassword)
 	}
 
 	// Silent mode initialization (T-26). EnsureInitial seeds the
@@ -638,6 +648,41 @@ func run() error {
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Error("http shutdown", slog.String("err", err.Error()))
 	}
+	return nil
+}
+
+// resetAccount implements the offline recovery mode (-reset-password). It is
+// intended to be run on the hub host (e.g. over SSH) with the same
+// --data-dir/SHIGUANG_DATA_DIR as the live service: filesystem access to the
+// data directory IS the authorization. Besides the password itself it also
+// clears every other way an operator can be locked out of the account:
+// TOTP is disabled, the account is re-activated, and all existing sessions
+// are revoked (done inside Manager.ResetPassword).
+//
+// Output goes to stdout (not the logger) — the operator is reading a
+// terminal, not a log pipeline.
+func resetAccount(ctx context.Context, users *storage.UserRepo, mgr *auth.Manager, username string) error {
+	rec, err := users.GetByUsername(ctx, username)
+	if err != nil {
+		return fmt.Errorf("reset-password: user %q not found: %w", username, err)
+	}
+	plain, err := mgr.ResetPassword(ctx, rec.ID)
+	if err != nil {
+		return fmt.Errorf("reset-password: %w", err)
+	}
+	if err := users.DisableTOTP(ctx, rec.ID); err != nil {
+		return fmt.Errorf("reset-password: disable totp: %w", err)
+	}
+	if err := users.SetActive(ctx, rec.ID, true); err != nil {
+		return fmt.Errorf("reset-password: activate: %w", err)
+	}
+	fmt.Println("==================== ACCOUNT RESET ====================")
+	fmt.Printf("  username : %s\n", rec.Username)
+	fmt.Printf("  password : %s\n", plain)
+	fmt.Println("  totp     : disabled")
+	fmt.Println("  status   : active (all existing sessions revoked)")
+	fmt.Println("  note     : log in and change this password immediately")
+	fmt.Println("=======================================================")
 	return nil
 }
 

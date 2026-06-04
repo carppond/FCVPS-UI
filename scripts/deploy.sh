@@ -5,6 +5,9 @@
 #   ./scripts/deploy.sh             # 首次部署（域名 → Nginx+SSL；留空 → IP+HTTP）
 #   ./scripts/deploy.sh --update    # 更新代码（只替换二进制+前端，重启服务）
 #   ./scripts/deploy.sh --uninstall # 卸载（停服务、删 systemd/nginx，数据目录另问）
+#   ./scripts/deploy.sh --reset-password [用户名]
+#                                   # 忘记密码/丢失两步验证：SSH 到 VPS 重置账户（默认 admin），
+#                                   # 生成新密码并关闭 TOTP，服务无需停止
 #
 # 不影响已有的 3X-UI 等服务：访问端口 / 后端端口均可自定义，且部署前实时探测占用
 set -euo pipefail
@@ -217,10 +220,15 @@ do_uninstall() {
 # ── 模式判断 ──
 UPDATE_ONLY=false
 UNINSTALL=false
+RESET_MODE=false
+RESET_USER=""
 if [[ "${1:-}" == "--update" || "${1:-}" == "-u" ]]; then
   UPDATE_ONLY=true
 elif [[ "${1:-}" == "--uninstall" ]]; then
   UNINSTALL=true
+elif [[ "${1:-}" == "--reset-password" ]]; then
+  RESET_MODE=true
+  RESET_USER="${2:-admin}"
 fi
 
 # ── 交互输入：基础连接信息 ──
@@ -228,6 +236,8 @@ echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════${NC}"
 if $UNINSTALL; then
   echo -e "${CYAN}   拾光VPS 卸载${NC}"
+elif $RESET_MODE; then
+  echo -e "${CYAN}   拾光VPS 账户重置（用户: ${RESET_USER}）${NC}"
 elif $UPDATE_ONLY; then
   echo -e "${CYAN}   拾光VPS 更新部署（跳过 Nginx/SSL）${NC}"
 else
@@ -241,7 +251,7 @@ read -rp "SSH 端口 [22]: " SSH_PORT
 SSH_PORT="${SSH_PORT:-22}"
 read -rp "SSH 用户 [root]: " SSH_USER
 SSH_USER="${SSH_USER:-root}"
-if ! $UNINSTALL; then
+if ! $UNINSTALL && ! $RESET_MODE; then
   read -rp "VPS 架构 amd64/arm64 [amd64]: " VPS_ARCH
   VPS_ARCH="${VPS_ARCH:-amd64}"
 fi
@@ -265,6 +275,24 @@ $SSH_CMD echo connected >/dev/null
 # ── 卸载模式:清理远程后退出 ──
 if $UNINSTALL; then
   do_uninstall
+  exit 0
+fi
+
+# ── 账户重置模式:远程执行 hub -reset-password 后退出 ──
+if $RESET_MODE; then
+  if ! $SSH_CMD "test -x ${REMOTE_DIR}/hub"; then
+    err "未找到 ${REMOTE_DIR}/hub —— 该 VPS 不是 deploy.sh 部署的。"
+    err "Docker 部署请在 VPS 上执行: docker compose exec hub hub -reset-password ${RESET_USER}"
+    exit 1
+  fi
+  # 从 systemd 单元读回实际 data-dir，防止首次部署后被手动改过
+  RESET_DATA_DIR=$($SSH_CMD "grep -oE -- '--data-dir [^ ]+' /etc/systemd/system/shiguang-vps.service 2>/dev/null | awk '{print \$2}' | head -1" || true)
+  RESET_DATA_DIR="${RESET_DATA_DIR:-${REMOTE_DIR}/data}"
+  log "重置账户 ${RESET_USER}（data-dir: ${RESET_DATA_DIR}，服务无需停止）..."
+  echo ""
+  $SSH_CMD "${REMOTE_DIR}/hub --data-dir '${RESET_DATA_DIR}' -reset-password '${RESET_USER}'"
+  echo ""
+  log "完成。请立即用上面的新密码登录，并在「设置」中改成自己的密码。"
   exit 0
 fi
 

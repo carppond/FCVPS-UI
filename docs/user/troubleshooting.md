@@ -49,43 +49,49 @@ SHIGUANG_SILENT_MODE=false ./shiguang-vps-linux-amd64
 
 ---
 
-## 问题二：忘记 admin 密码
+## 问题二：忘记密码 / 丢失两步验证（账户重置）
 
-**注意**：重建 admin 账号会删除原账号并重新生成密码，操作前确保已备份重要数据。
+hub 二进制内置恢复模式 `-reset-password <用户名>`：在 **VPS 本机**（SSH 登录后）对同一数据目录执行，会生成一个新的强密码、**关闭该账户的 TOTP 两步验证**、恢复账户为启用状态，并吊销所有旧会话。账户本身和所有数据（订阅、节点、agent、资产）原样保留，**服务无需停止**，新密码即时生效。
 
-**步骤**：
+> 安全模型：能读写数据目录（即能 SSH 到这台机器）即视为有权重置——和 Linux 单用户模式改 root 密码同理。
 
-1. 停止拾光VPS 服务：
-
-```bash
-# Docker
-docker stop shiguang
-
-# systemd
-sudo systemctl stop shiguang-vps
-```
-
-2. 使用管理命令删除 admin 账号（数据库位于 `./data/shiguang.db` 或挂载的 `/data/` 目录）：
+**方法 A：deploy.sh 部署（最省事，本地电脑直接跑）**
 
 ```bash
-# 方法 A：使用内置恢复命令
-./shiguang-vps-linux-amd64 --reset-admin
-
-# 方法 B：手动操作 SQLite（需要安装 sqlite3）
-sqlite3 /data/shiguang.db "DELETE FROM users WHERE username='admin';"
+./scripts/deploy.sh --reset-password          # 重置 admin
+./scripts/deploy.sh --reset-password alice    # 重置指定用户
 ```
 
-3. 重新启动服务：
+脚本会 SSH 到 VPS、自动找到二进制和数据目录并执行重置，新密码打印在终端。
+
+**方法 B：SSH 到 VPS 手动执行（deploy.sh / 二进制部署）**
 
 ```bash
-sudo systemctl start shiguang-vps
+/opt/shiguang-vps/hub --data-dir /opt/shiguang-vps/data -reset-password admin
+# 二进制手动部署的，把路径换成你自己的 --data-dir
 ```
 
-4. 服务重启后会自动检测 admin 账号不存在，重新创建并在日志中打印新密码：
+**方法 C：Docker 部署**
+
+```bash
+docker compose exec hub hub -reset-password admin
+# 或不在 compose 目录时：
+docker exec shiguang-vps hub -reset-password admin
+```
+
+成功后输出：
 
 ```
-level=INFO msg="ADMIN BOOTSTRAPPED" username=admin password=NewPassword123
+==================== ACCOUNT RESET ====================
+  username : admin
+  password : <新的随机强密码>
+  totp     : disabled
+  status   : active (all existing sessions revoked)
+  note     : log in and change this password immediately
+=======================================================
 ```
+
+用新密码登录后，请立即在「设置 → 账户」里改成自己的密码，需要的话重新绑定两步验证。
 
 ---
 
