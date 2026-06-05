@@ -86,6 +86,7 @@
   "shortlink_deleted": "Deleted",
   "shortlink_deleted_one": "Short link deleted",
   "shortlink_empty": "No short links yet",
+  "shortlink_subscription": "Subscription · {{name}}",
   "shortlink_expires_invalid": "Invalid expiry format, use YYYY-MM-DD",
   "shortlink_expires_placeholder": "YYYY-MM-DD (leave empty for permanent)",
   "shortlink_label_expires": "Expiry",

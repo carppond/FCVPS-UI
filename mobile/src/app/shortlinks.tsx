@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import * as Clipboard from "expo-clipboard";
 import { useShortLinksQuery, useCreateShortLink, useDeleteShortLink } from "../api/shortlink";
+import { parseShortLinkTarget } from "../lib/shortlink-target";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 import type { ShortLink } from "../types/api";
@@ -97,12 +98,22 @@ export default function ShortLinksScreen() {
     ]);
   };
 
-  const renderItem = ({ item }: { item: ShortLink }) => (
+  const renderItem = ({ item }: { item: ShortLink }) => {
+    const target = parseShortLinkTarget(item.target_url);
+    return (
     <View style={styles.card}>
       <View style={styles.cardBody}>
         <Text style={styles.shortUrl} numberOfLines={1}>
           {item.short_url}
         </Text>
+        {target ? (
+          <View style={styles.subBadge}>
+            <Text style={styles.subBadgeText} numberOfLines={1}>
+              {t("shortlink_subscription", { name: target.subscriptionName })}
+              {target.client ? ` · ${target.client}` : ""}
+            </Text>
+          </View>
+        ) : null}
         <Text style={styles.targetUrl} numberOfLines={1}>
           {item.target_url}
         </Text>
@@ -132,7 +143,8 @@ export default function ShortLinksScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -267,6 +279,18 @@ const makeStyles = (colors: AppColors) =>
     fontWeight: "700",
     color: colors.primary,
     fontFamily: "monospace",
+  },
+  subBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  subBadgeText: {
+    fontSize: fontSize.xs,
+    fontWeight: "600",
+    color: colors.primary,
   },
   targetUrl: {
     fontSize: fontSize.sm,

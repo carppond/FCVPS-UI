@@ -18,7 +18,10 @@
     "copied": "短縮 URL をコピーしました",
     "copy_failed": "クリップボードへのコピーに失敗しました",
     "copy_short_url": "短縮 URL をコピー",
-    "deleted": "短縮 URL を削除しました"
+    "deleted": "短縮 URL を削除しました",
+    "subscription": "サブスクリプション",
+    "expired": "期限切れ",
+    "expires_on": "{{date}} に期限切れ"
   },
   "create": {
     "title": "短縮 URL を作成",

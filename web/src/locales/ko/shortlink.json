@@ -18,7 +18,10 @@
     "copied": "단축 URL이 복사되었습니다",
     "copy_failed": "클립보드 복사에 실패했습니다",
     "copy_short_url": "단축 URL 복사",
-    "deleted": "단축 URL이 삭제되었습니다"
+    "deleted": "단축 URL이 삭제되었습니다",
+    "subscription": "구독",
+    "expired": "만료됨",
+    "expires_on": "{{date}} 만료"
   },
   "create": {
     "title": "단축 URL 만들기",

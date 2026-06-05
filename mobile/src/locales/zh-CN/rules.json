@@ -86,6 +86,7 @@
   "shortlink_deleted": "已删除",
   "shortlink_deleted_one": "短链已删除",
   "shortlink_empty": "暂无短链",
+  "shortlink_subscription": "订阅 · {{name}}",
   "shortlink_expires_invalid": "过期时间格式无效，请使用 YYYY-MM-DD",
   "shortlink_expires_placeholder": "YYYY-MM-DD（留空为永久）",
   "shortlink_label_expires": "过期时间",

@@ -18,7 +18,10 @@
     "copied": "Short URL copied",
     "copy_failed": "Could not copy to clipboard",
     "copy_short_url": "Copy short URL",
-    "deleted": "Short link deleted"
+    "deleted": "Short link deleted",
+    "subscription": "Subscription",
+    "expired": "Expired",
+    "expires_on": "Expires {{date}}"
   },
   "create": {
     "title": "Create short link",

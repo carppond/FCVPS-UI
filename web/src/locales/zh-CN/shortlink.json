@@ -18,7 +18,10 @@
     "copied": "短链已复制",
     "copy_failed": "复制到剪贴板失败",
     "copy_short_url": "复制短链",
-    "deleted": "短链已删除"
+    "deleted": "短链已删除",
+    "subscription": "订阅",
+    "expired": "已过期",
+    "expires_on": "{{date}} 过期"
   },
   "create": {
     "title": "新建短链",

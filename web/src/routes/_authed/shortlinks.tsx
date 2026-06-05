@@ -25,6 +25,7 @@ import { toast } from "@/components/ui/toast";
 import { useApiError } from "@/hooks/use-api-error";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
+import { parseShortLinkTarget } from "@/lib/shortlink-target";
 import {
   useShortLinks,
   useCreateShortLink,
@@ -222,6 +223,10 @@ function LinkCard({
 }) {
   const { t } = useTranslation(["shortlink", "common"]);
   const isExpired = link.expires_at ? link.expires_at < Date.now() : false;
+  const target = React.useMemo(
+    () => parseShortLinkTarget(link.target_url),
+    [link.target_url],
+  );
 
   return (
     <div
@@ -262,11 +267,24 @@ function LinkCard({
           </a>
           {/* Meta row */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-[var(--color-text-disabled)]">
+            {target && (
+              <>
+                <span className="rounded bg-[var(--color-primary-soft)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-primary)]">
+                  {t("shortlink:list.subscription")} · {target.subscriptionName}
+                  {target.client ? ` · ${target.client}` : ""}
+                </span>
+                <span className="h-3 w-px bg-[var(--color-border)]" />
+              </>
+            )}
             <span>{formatDate(link.created_at)}</span>
             <span className="h-3 w-px bg-[var(--color-border)]" />
             {link.expires_at ? (
               <span className={isExpired ? "text-[var(--color-error)]" : ""}>
-                {isExpired ? "Expired" : `Expires ${formatDate(link.expires_at)}`}
+                {isExpired
+                  ? t("shortlink:list.expired")
+                  : t("shortlink:list.expires_on", {
+                      date: formatDate(link.expires_at),
+                    })}
               </span>
             ) : (
               <span className="rounded bg-white/[.04] px-1.5 py-0.5 text-[10px] font-medium">
