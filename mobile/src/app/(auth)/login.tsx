@@ -203,7 +203,9 @@ const makeStyles = (colors: AppColors) =>
   scroll: { flexGrow: 1, justifyContent: "center", paddingBottom: spacing.xxl },
   hero: { height: 280, alignItems: "center", justifyContent: "flex-end" },
   mascot: { height: 280, width: "100%" },
-  form: { paddingHorizontal: spacing.xxxl, gap: spacing.md, marginTop: -spacing.lg },
+  // 不要负 margin 顶进立绘区域:中文标题短看不出来,英文 "Welcome back ♡"
+  // 更长,会被立绘下缘盖住
+  form: { paddingHorizontal: spacing.xxxl, gap: spacing.md, marginTop: spacing.sm },
   title: { fontSize: fontSize.xxl, fontWeight: "800", color: colors.textPrimary, letterSpacing: -0.5 },
   subtitle: { fontSize: fontSize.sm, color: colors.textTertiary, marginTop: spacing.xs, marginBottom: spacing.sm },
   field: { gap: spacing.xs },
