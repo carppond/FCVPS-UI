@@ -73,7 +73,8 @@ void i18n.use(initReactI18next).init({
       settings: enSettings,
     },
   },
-  lng: resolveSystemLanguage(),
+  // 默认中文(主要用户群);英文/跟随系统在「设置 → 语言」里手动选
+  lng: "zh-CN",
   fallbackLng: "zh-CN",
   defaultNS: "common",
   interpolation: { escapeValue: false }, // RN 无 XSS 面,关闭转义

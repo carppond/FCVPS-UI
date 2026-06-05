@@ -16,7 +16,7 @@ function isPreference(v: string | null): v is LanguagePreference {
 }
 
 export const useLocaleStore = create<LocaleState>((set) => ({
-  preference: "system",
+  preference: "zh-CN", // 默认中文;「跟随系统」是显式选项
 
   setPreference: async (pref) => {
     await SecureStore.setItemAsync(STORAGE_KEY, pref);
