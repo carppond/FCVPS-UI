@@ -11,6 +11,7 @@ import {
   Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
   useRuleSetsQuery,
   useSyncAllRuleSets,
@@ -51,6 +52,7 @@ function behaviorColor(behavior: string, c: AppColors): string {
 }
 
 export default function RuleSetsScreen() {
+  const { t } = useTranslation(["rules", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useRuleSetsQuery();
@@ -77,10 +79,10 @@ export default function RuleSetsScreen() {
   const handleSyncAll = () => {
     syncAll.mutate(undefined, {
       onSuccess: () => {
-        Alert.alert("同步成功", "所有规则集已开始同步");
+        Alert.alert(t("ruleset_sync_success"), t("ruleset_sync_all_started"));
         refetch();
       },
-      onError: (err: any) => Alert.alert("同步失败", err.message),
+      onError: (err: any) => Alert.alert(t("ruleset_sync_failed"), err.message),
     });
   };
 
@@ -103,7 +105,7 @@ export default function RuleSetsScreen() {
     const presets = presetsQuery.data ?? [];
     const selected = presets.filter((p) => selectedPresets.has(p.id));
     if (selected.length === 0) {
-      Alert.alert("提示", "请至少选择一个预设");
+      Alert.alert(t("common:tip"), t("ruleset_select_at_least_one"));
       return;
     }
     try {
@@ -118,23 +120,23 @@ export default function RuleSetsScreen() {
         });
       }
       setPresetModalVisible(false);
-      Alert.alert("导入成功", `已导入 ${selected.length} 个规则集`);
+      Alert.alert(t("ruleset_import_success"), t("ruleset_imported_count", { count: selected.length }));
       refetch();
     } catch (err: any) {
-      Alert.alert("导入失败", err.message);
+      Alert.alert(t("ruleset_import_failed"), err.message);
     }
   };
 
   const handleDelete = (item: RuleSetProvider) => {
-    Alert.alert("删除确认", `确定删除规则集「${item.name}」吗？`, [
-      { text: "取消", style: "cancel" },
+    Alert.alert(t("common:delete_confirm_title"), t("ruleset_delete_confirm", { name: item.name }), [
+      { text: t("common:cancel"), style: "cancel" },
       {
-        text: "删除",
+        text: t("common:delete"),
         style: "destructive",
         onPress: () => {
           deleteMutation.mutate(item.id, {
             onSuccess: () => refetch(),
-            onError: (err: any) => Alert.alert("删除失败", err.message),
+            onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
           });
         },
       },
@@ -146,7 +148,7 @@ export default function RuleSetsScreen() {
       { id: item.id, data: { enabled: !item.enabled } },
       {
         onSuccess: () => refetch(),
-        onError: (err: any) => Alert.alert("操作失败", err.message),
+        onError: (err: any) => Alert.alert(t("common:operation_failed"), err.message),
       },
     );
   };
@@ -154,10 +156,10 @@ export default function RuleSetsScreen() {
   const handleSyncSingle = (item: RuleSetProvider) => {
     syncSingleMutation.mutate(item.id, {
       onSuccess: () => {
-        Alert.alert("同步成功", `规则集「${item.name}」已同步`);
+        Alert.alert(t("ruleset_sync_success"), t("ruleset_sync_single_done", { name: item.name }));
         refetch();
       },
-      onError: (err: any) => Alert.alert("同步失败", err.message),
+      onError: (err: any) => Alert.alert(t("ruleset_sync_failed"), err.message),
     });
   };
 
@@ -250,7 +252,7 @@ export default function RuleSetsScreen() {
             >
               <Ionicons name="sync-outline" size={16} color={colors.primary} />
               <Text style={styles.syncAllText}>
-                {syncAll.isPending ? "同步中..." : "一键同步"}
+                {syncAll.isPending ? t("ruleset_syncing") : t("ruleset_sync_all")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -263,7 +265,7 @@ export default function RuleSetsScreen() {
                 size={16}
                 color={colors.primary}
               />
-              <Text style={styles.syncAllText}>从预设</Text>
+              <Text style={styles.syncAllText}>{t("ruleset_from_preset")}</Text>
             </TouchableOpacity>
           </View>
         }
@@ -275,8 +277,8 @@ export default function RuleSetsScreen() {
                 size={48}
                 color={colors.textDisabled}
               />
-              <Text style={styles.emptyText}>暂无规则集</Text>
-              <Text style={styles.emptyHint}>点击上方「从预设」批量导入</Text>
+              <Text style={styles.emptyText}>{t("ruleset_empty")}</Text>
+              <Text style={styles.emptyHint}>{t("ruleset_empty_hint")}</Text>
             </View>
           ) : null
         }
@@ -293,9 +295,9 @@ export default function RuleSetsScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setPresetModalVisible(false)}>
-              <Text style={styles.modalCancel}>取消</Text>
+              <Text style={styles.modalCancel}>{t("common:cancel")}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>选择预设</Text>
+            <Text style={styles.modalTitle}>{t("ruleset_select_preset")}</Text>
             <TouchableOpacity
               onPress={handleBatchImport}
               disabled={createMutation.isPending}
@@ -307,8 +309,8 @@ export default function RuleSetsScreen() {
                 ]}
               >
                 {createMutation.isPending
-                  ? "导入中..."
-                  : `导入 (${selectedPresets.size})`}
+                  ? t("ruleset_importing")
+                  : t("ruleset_importing_count", { count: selectedPresets.size })}
               </Text>
             </TouchableOpacity>
           </View>
@@ -318,9 +320,9 @@ export default function RuleSetsScreen() {
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
               presetsQuery.isLoading ? (
-                <Text style={styles.loadingText}>加载中...</Text>
+                <Text style={styles.loadingText}>{t("common:loading")}</Text>
               ) : (
-                <Text style={styles.loadingText}>暂无预设</Text>
+                <Text style={styles.loadingText}>{t("ruleset_no_preset")}</Text>
               )
             }
             renderItem={({ item }: { item: RuleSetPreset }) => {

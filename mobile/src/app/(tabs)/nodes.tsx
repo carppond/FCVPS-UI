@@ -1,10 +1,14 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, TextInput, ScrollView } from "react-native";
 import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { useNodesQuery, useTcpingMutation } from "../../api/node";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { Node, NodeProtocol, TCPingResult } from "../../types/api";
+
+// 协议筛选「全部」用非中文哨兵值,展示文案走 i18n。
+const ALL = "__all__";
 
 function protocolColor(protocol: NodeProtocol, c: AppColors): string {
   switch (protocol) {
@@ -20,6 +24,7 @@ function protocolColor(protocol: NodeProtocol, c: AppColors): string {
 }
 
 export default function NodesScreen() {
+  const { t } = useTranslation(["nodes", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useNodesQuery();
@@ -27,7 +32,7 @@ export default function NodesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [latencyMap, setLatencyMap] = useState<Record<string, TCPingResult>>({});
   const [search, setSearch] = useState("");
-  const [selectedProtocol, setSelectedProtocol] = useState<string>("全部");
+  const [selectedProtocol, setSelectedProtocol] = useState<string>(ALL);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -39,12 +44,12 @@ export default function NodesScreen() {
 
   const protocols = useMemo(() => {
     const set = new Set(allItems.map((n) => n.protocol));
-    return ["全部", ...Array.from(set)];
+    return [ALL, ...Array.from(set)];
   }, [allItems]);
 
   const items = useMemo(() => {
     let filtered = allItems;
-    if (selectedProtocol !== "全部") {
+    if (selectedProtocol !== ALL) {
       filtered = filtered.filter((n) => n.protocol === selectedProtocol);
     }
     const q = search.trim().toLowerCase();
@@ -61,7 +66,7 @@ export default function NodesScreen() {
 
   const handleTcping = () => {
     if (items.length === 0) {
-      Alert.alert("提示", "暂无节点可测速");
+      Alert.alert(t("common:tip"), t("no_nodes_to_test"));
       return;
     }
     const nodeIds = items.map((n) => n.id);
@@ -74,9 +79,9 @@ export default function NodesScreen() {
             map[r.node_id] = r;
           }
           setLatencyMap(map);
-          Alert.alert("测速完成", `已测试 ${resp.results.length} 个节点`);
+          Alert.alert(t("tcping_done"), t("tcping_done_message", { count: resp.results.length }));
         },
-        onError: (err: any) => Alert.alert("测速失败", err.message),
+        onError: (err: any) => Alert.alert(t("tcping_failed"), err.message),
       },
     );
   };
@@ -84,7 +89,7 @@ export default function NodesScreen() {
   return (
     <FlatList
       style={styles.container}
-      contentContainerStyle={items.length === 0 && !search && selectedProtocol === "全部" ? styles.empty : styles.list}
+      contentContainerStyle={items.length === 0 && !search && selectedProtocol === ALL ? styles.empty : styles.list}
       data={items}
       keyExtractor={(item) => item.id}
       refreshControl={
@@ -99,7 +104,7 @@ export default function NodesScreen() {
                 style={styles.searchInput}
                 value={search}
                 onChangeText={setSearch}
-                placeholder="搜索节点..."
+                placeholder={t("search_placeholder")}
                 placeholderTextColor={colors.textDisabled}
               />
               {search ? (
@@ -117,7 +122,7 @@ export default function NodesScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.filterChipText, selectedProtocol === p && styles.filterChipTextActive]}>
-                    {p === "全部" ? "全部" : p.toUpperCase()}
+                    {p === ALL ? t("common:all") : p.toUpperCase()}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -130,7 +135,7 @@ export default function NodesScreen() {
             >
               <Ionicons name="speedometer-outline" size={16} color="#fff" />
               <Text style={styles.tcpingBtnText}>
-                {tcpingMutation.isPending ? "测速中..." : "测速"}
+                {tcpingMutation.isPending ? t("tcping_running") : t("tcping")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -140,7 +145,7 @@ export default function NodesScreen() {
         !isLoading ? (
           <View style={styles.emptyBox}>
             <Ionicons name="server-outline" size={48} color={colors.textDisabled} />
-            <Text style={styles.emptyText}>暂无节点</Text>
+            <Text style={styles.emptyText}>{t("no_nodes")}</Text>
           </View>
         ) : null
       }
@@ -150,6 +155,7 @@ export default function NodesScreen() {
 }
 
 function NodeCard({ node, latency }: { node: Node; latency?: TCPingResult }) {
+  const { t } = useTranslation("nodes");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const pc = protocolColor(node.protocol, colors);
@@ -170,7 +176,7 @@ function NodeCard({ node, latency }: { node: Node; latency?: TCPingResult }) {
               styles.latencyText,
               { color: latency.reachable ? colors.success : colors.error },
             ]}>
-              {latency.reachable ? `${latency.latency_ms}ms` : "超时"}
+              {latency.reachable ? `${latency.latency_ms}ms` : t("timeout")}
             </Text>
           </View>
         )}
@@ -180,9 +186,9 @@ function NodeCard({ node, latency }: { node: Node; latency?: TCPingResult }) {
       </Text>
       {node.tags.length > 0 && (
         <View style={styles.tagsRow}>
-          {node.tags.map((t) => (
-            <View key={t} style={styles.tagChip}>
-              <Text style={styles.tagText}>{t}</Text>
+          {node.tags.map((tag) => (
+            <View key={tag} style={styles.tagChip}>
+              <Text style={styles.tagText}>{tag}</Text>
             </View>
           ))}
         </View>

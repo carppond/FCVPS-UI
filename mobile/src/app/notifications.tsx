@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useNotificationChannelsQuery, useDeleteChannel } from "../api/notify";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
@@ -51,7 +52,7 @@ function channelLabel(kind: ChannelKind): string {
     bark: "Bark",
     gotify: "Gotify",
     webhook: "Webhook",
-    serverchan: "Server酱",
+    serverchan: "ServerChan",
     pushdeer: "PushDeer",
     ifttt: "IFTTT",
   };
@@ -59,6 +60,7 @@ function channelLabel(kind: ChannelKind): string {
 }
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation(["notify", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useNotificationChannelsQuery();
@@ -74,19 +76,24 @@ export default function NotificationsScreen() {
   const items = data?.items ?? [];
 
   const handleDelete = (item: NotificationChannel) => {
-    Alert.alert("删除确认", `确定删除通知渠道「${item.name}」吗？`, [
-      { text: "取消", style: "cancel" },
-      {
-        text: "删除",
-        style: "destructive",
-        onPress: () => {
-          deleteMutation.mutate(item.id, {
-            onSuccess: () => refetch(),
-            onError: (err: any) => Alert.alert("删除失败", err.message),
-          });
+    Alert.alert(
+      t("common:delete_confirm_title"),
+      t("delete_confirm_msg", { name: item.name }),
+      [
+        { text: t("common:cancel"), style: "cancel" },
+        {
+          text: t("common:delete"),
+          style: "destructive",
+          onPress: () => {
+            deleteMutation.mutate(item.id, {
+              onSuccess: () => refetch(),
+              onError: (err: any) =>
+                Alert.alert(t("common:delete_failed"), err.message),
+            });
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handleEdit = (item: NotificationChannel) => {
@@ -130,7 +137,7 @@ export default function NotificationsScreen() {
             <Text style={styles.kindText}>{channelLabel(item.kind)}</Text>
           </View>
           <Text style={styles.eventCount}>
-            {item.event_types.length} 个事件
+            {t("event_count", { count: item.event_types.length })}
           </Text>
         </View>
       </View>
@@ -165,7 +172,7 @@ export default function NotificationsScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="add-circle-outline" size={16} color={colors.primary} />
-            <Text style={styles.addBtnText}>新建渠道</Text>
+            <Text style={styles.addBtnText}>{t("create_title")}</Text>
           </TouchableOpacity>
         }
         ListEmptyComponent={
@@ -176,7 +183,7 @@ export default function NotificationsScreen() {
                 size={48}
                 color={colors.textDisabled}
               />
-              <Text style={styles.emptyText}>暂无通知渠道</Text>
+              <Text style={styles.emptyText}>{t("empty")}</Text>
             </View>
           ) : null
         }

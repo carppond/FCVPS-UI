@@ -13,33 +13,40 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useRuleTemplates, useCreateRule, useUpdateRule } from "../../api/rule";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { RuleTemplate, RuleType, RuleMode } from "../../types/api";
 
-const CATEGORIES = [
-  { key: "region", label: "地区" },
-  { key: "app", label: "应用" },
-  { key: "block", label: "拦截" },
-  { key: "common", label: "通用" },
-] as const;
+const buildCategories = (t: TFunction) =>
+  [
+    { key: "region", label: t("rule_create_category_region") },
+    { key: "app", label: t("rule_create_category_app") },
+    { key: "block", label: t("rule_create_category_block") },
+    { key: "common", label: t("rule_create_category_common") },
+  ] as const;
 
-const RULE_TYPES: { key: RuleType; label: string }[] = [
-  { key: "dns", label: "DNS" },
-  { key: "rules", label: "规则" },
-  { key: "rule-providers", label: "规则集" },
+const buildRuleTypes = (t: TFunction): { key: RuleType; label: string }[] => [
+  { key: "dns", label: t("rule_create_type_dns") },
+  { key: "rules", label: t("rule_create_type_rules") },
+  { key: "rule-providers", label: t("rule_create_type_rule_providers") },
 ];
 
-const RULE_MODES: { key: RuleMode; label: string }[] = [
-  { key: "replace", label: "替换" },
-  { key: "prepend", label: "前置" },
-  { key: "append", label: "追加" },
+const buildRuleModes = (t: TFunction): { key: RuleMode; label: string }[] => [
+  { key: "replace", label: t("rule_create_mode_replace") },
+  { key: "prepend", label: t("rule_create_mode_prepend") },
+  { key: "append", label: t("rule_create_mode_append") },
 ];
 
 export default function RuleCreateScreen() {
+  const { t } = useTranslation(["rules", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const CATEGORIES = useMemo(() => buildCategories(t), [t]);
+  const RULE_TYPES = useMemo(() => buildRuleTypes(t), [t]);
+  const RULE_MODES = useMemo(() => buildRuleModes(t), [t]);
   const params = useLocalSearchParams<{
     editId?: string;
     editName?: string;
@@ -83,7 +90,7 @@ export default function RuleCreateScreen() {
   const handleBatchCreate = async () => {
     const selected = templates.filter((t) => selectedTemplates.has(t.id));
     if (selected.length === 0) {
-      Alert.alert("提示", "请至少选择一个模板");
+      Alert.alert(t("common:tip"), t("rule_create_select_at_least_one"));
       return;
     }
     try {
@@ -96,21 +103,21 @@ export default function RuleCreateScreen() {
           enabled: true,
         });
       }
-      Alert.alert("创建成功", `已创建 ${selected.length} 条规则`, [
-        { text: "好", onPress: () => router.back() },
+      Alert.alert(t("rule_create_success_title"), t("rule_create_created_count", { count: selected.length }), [
+        { text: t("common:ok"), onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert("创建失败", err.message);
+      Alert.alert(t("common:create_failed"), err.message);
     }
   };
 
   const handleManualCreate = () => {
     if (!name.trim()) {
-      Alert.alert("提示", "请输入规则名称");
+      Alert.alert(t("common:tip"), t("rule_create_enter_name"));
       return;
     }
     if (!content.trim()) {
-      Alert.alert("提示", "请输入规则内容");
+      Alert.alert(t("common:tip"), t("rule_create_enter_content"));
       return;
     }
 
@@ -127,11 +134,11 @@ export default function RuleCreateScreen() {
         },
         {
           onSuccess: () => {
-            Alert.alert("保存成功", "规则已更新", [
-              { text: "好", onPress: () => router.back() },
+            Alert.alert(t("common:save_success"), t("rule_create_updated_one"), [
+              { text: t("common:ok"), onPress: () => router.back() },
             ]);
           },
-          onError: (err: any) => Alert.alert("保存失败", err.message),
+          onError: (err: any) => Alert.alert(t("common:save_failed"), err.message),
         },
       );
       return;
@@ -147,11 +154,11 @@ export default function RuleCreateScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert("创建成功", "规则已添加", [
-            { text: "好", onPress: () => router.back() },
+          Alert.alert(t("rule_create_success_title"), t("rule_create_created_one"), [
+            { text: t("common:ok"), onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => Alert.alert("创建失败", err.message),
+        onError: (err: any) => Alert.alert(t("common:create_failed"), err.message),
       },
     );
   };
@@ -171,7 +178,7 @@ export default function RuleCreateScreen() {
               mode === "template" && styles.modeTabTextActive,
             ]}
           >
-            模板
+            {t("rule_create_tab_template")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -185,7 +192,7 @@ export default function RuleCreateScreen() {
               mode === "manual" && styles.modeTabTextActive,
             ]}
           >
-            手动
+            {t("rule_create_tab_manual")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -229,9 +236,9 @@ export default function RuleCreateScreen() {
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
               templatesQuery.isLoading ? (
-                <Text style={styles.loadingText}>加载中...</Text>
+                <Text style={styles.loadingText}>{t("common:loading")}</Text>
               ) : (
-                <Text style={styles.loadingText}>该分类暂无模板</Text>
+                <Text style={styles.loadingText}>{t("rule_create_empty_category")}</Text>
               )
             }
             renderItem={({ item }: { item: RuleTemplate }) => {
@@ -281,8 +288,8 @@ export default function RuleCreateScreen() {
             >
               <Text style={styles.submitText}>
                 {createMutation.isPending
-                  ? "创建中..."
-                  : `创建选中规则 (${selectedTemplates.size})`}
+                  ? t("common:creating")
+                  : t("rule_create_creating_selected", { count: selectedTemplates.size })}
               </Text>
             </TouchableOpacity>
           </View>
@@ -308,17 +315,17 @@ export default function RuleCreateScreen() {
                     color={colors.primary}
                   />
                 </View>
-                <Text style={styles.cardTitle}>基本信息</Text>
+                <Text style={styles.cardTitle}>{t("rule_create_section_basic")}</Text>
               </View>
               <View style={styles.field}>
                 <Text style={styles.label}>
-                  名称 <Text style={styles.required}>*</Text>
+                  {t("rule_create_label_name")} <Text style={styles.required}>*</Text>
                 </Text>
                 <TextInput
                   style={styles.input}
                   value={name}
                   onChangeText={setName}
-                  placeholder="如：自定义规则"
+                  placeholder={t("rule_create_name_placeholder")}
                   placeholderTextColor={colors.textDisabled}
                 />
               </View>
@@ -339,10 +346,10 @@ export default function RuleCreateScreen() {
                     color={colors.info}
                   />
                 </View>
-                <Text style={styles.cardTitle}>类型与模式</Text>
+                <Text style={styles.cardTitle}>{t("rule_create_section_type_mode")}</Text>
               </View>
               <View style={styles.field}>
-                <Text style={styles.label}>类型</Text>
+                <Text style={styles.label}>{t("rule_create_label_type")}</Text>
                 <View style={styles.optionRow}>
                   {RULE_TYPES.map((rt) => (
                     <TouchableOpacity
@@ -367,7 +374,7 @@ export default function RuleCreateScreen() {
                 </View>
               </View>
               <View style={[styles.field, { marginTop: spacing.md }]}>
-                <Text style={styles.label}>模式</Text>
+                <Text style={styles.label}>{t("rule_create_label_mode")}</Text>
                 <View style={styles.optionRow}>
                   {RULE_MODES.map((rm) => (
                     <TouchableOpacity
@@ -408,14 +415,14 @@ export default function RuleCreateScreen() {
                     color={colors.warning}
                   />
                 </View>
-                <Text style={styles.cardTitle}>规则内容</Text>
+                <Text style={styles.cardTitle}>{t("rule_create_content_title")}</Text>
               </View>
               <View style={styles.field}>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={content}
                   onChangeText={setContent}
-                  placeholder="DOMAIN-SUFFIX,example.com,PROXY"
+                  placeholder={t("rule_create_content_placeholder")}
                   placeholderTextColor={colors.textDisabled}
                   multiline
                   numberOfLines={6}
@@ -436,8 +443,8 @@ export default function RuleCreateScreen() {
             >
               <Text style={styles.submitText}>
                 {isEdit
-                  ? updateMutation.isPending ? "保存中..." : "保存修改"
-                  : createMutation.isPending ? "创建中..." : "创建规则"}
+                  ? updateMutation.isPending ? t("common:saving") : t("rule_create_submit_edit")
+                  : createMutation.isPending ? t("common:creating") : t("rule_create_submit")}
               </Text>
             </TouchableOpacity>
           </ScrollView>

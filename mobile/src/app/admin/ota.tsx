@@ -10,6 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOtaStatus, useOtaHistory } from "../../api/admin";
 import { apiFetch } from "../../lib/api-client";
@@ -28,6 +29,7 @@ function formatTime(ts: number): string {
 }
 
 export default function AdminOtaScreen() {
+  const { t } = useTranslation(["settings", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const queryClient = useQueryClient();
@@ -41,9 +43,9 @@ export default function AdminOtaScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "ota"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "ota-history"] });
-      Alert.alert("检查完成", "已获取最新版本信息");
+      Alert.alert(t("ota_check_success_title"), t("ota_check_success_msg"));
     },
-    onError: (err: any) => Alert.alert("检查失败", err.message),
+    onError: (err: any) => Alert.alert(t("ota_check_failed"), err.message),
   });
 
   const onRefresh = useCallback(async () => {
@@ -76,7 +78,7 @@ export default function AdminOtaScreen() {
               },
             ]}
           >
-            {item.status === "success" ? "成功" : "失败"}
+            {item.status === "success" ? t("ota_success") : t("ota_failed")}
           </Text>
         </View>
       </View>
@@ -111,22 +113,22 @@ export default function AdminOtaScreen() {
               color={colors.info}
             />
           </View>
-          <Text style={styles.cardTitle}>版本信息</Text>
+          <Text style={styles.cardTitle}>{t("ota_version_info")}</Text>
           {status?.has_update ? (
             <View style={styles.updateBadge}>
-              <Text style={styles.updateText}>有更新</Text>
+              <Text style={styles.updateText}>{t("ota_has_update")}</Text>
             </View>
           ) : null}
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>当前版本</Text>
+          <Text style={styles.infoLabel}>{t("ota_current_version")}</Text>
           <Text style={styles.infoValue}>
             {status?.current_version ?? "--"}
           </Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>最新版本</Text>
+          <Text style={styles.infoLabel}>{t("ota_latest_version")}</Text>
           <Text style={styles.infoValue}>
             {status?.latest_version ?? "--"}
           </Text>
@@ -138,7 +140,7 @@ export default function AdminOtaScreen() {
             activeOpacity={0.6}
           >
             <Ionicons name="open-outline" size={14} color={colors.primary} />
-            <Text style={styles.linkText}>查看发布页</Text>
+            <Text style={styles.linkText}>{t("ota_view_release")}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -155,14 +157,14 @@ export default function AdminOtaScreen() {
       >
         <Ionicons name="refresh-outline" size={18} color="#fff" />
         <Text style={styles.checkBtnText}>
-          {checkMutation.isPending ? "检查中..." : "检查更新"}
+          {checkMutation.isPending ? t("ota_checking") : t("ota_check_btn")}
         </Text>
       </TouchableOpacity>
 
       {/* History */}
       {historyItems.length > 0 ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>更新历史</Text>
+          <Text style={styles.sectionTitle}>{t("ota_history_title")}</Text>
           {historyItems.map(renderHistoryItem)}
         </View>
       ) : !historyLoading ? (
@@ -172,7 +174,7 @@ export default function AdminOtaScreen() {
             size={36}
             color={colors.textDisabled}
           />
-          <Text style={styles.emptyText}>暂无更新历史</Text>
+          <Text style={styles.emptyText}>{t("ota_empty_history")}</Text>
         </View>
       ) : null}
     </ScrollView>

@@ -7,12 +7,14 @@ import {
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useUsersQuery } from "../../api/admin";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { User } from "../../types/api";
 
 export default function AdminUsersScreen() {
+  const { t } = useTranslation("settings");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useUsersQuery();
@@ -55,12 +57,12 @@ export default function AdminUsersScreen() {
                 },
               ]}
             >
-              {item.role === "admin" ? "管理员" : "用户"}
+              {item.role === "admin" ? t("role_admin") : t("role_user")}
             </Text>
           </View>
         </View>
         <Text style={styles.email} numberOfLines={1}>
-          {item.email || "未设置邮箱"}
+          {item.email || t("no_email")}
         </Text>
       </View>
       <View
@@ -97,7 +99,7 @@ export default function AdminUsersScreen() {
               size={48}
               color={colors.textDisabled}
             />
-            <Text style={styles.emptyText}>暂无用户</Text>
+            <Text style={styles.emptyText}>{t("admin_users_empty")}</Text>
           </View>
         ) : null
       }

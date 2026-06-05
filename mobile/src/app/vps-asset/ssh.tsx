@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useVpsAssetDetail } from "../../api/vps-asset";
@@ -37,6 +38,7 @@ interface LogLine {
 }
 
 export default function SSHTerminalScreen() {
+  const { t } = useTranslation("vps");
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: vps, isLoading } = useVpsAssetDetail(id ?? "");
   const [connecting, setConnecting] = useState(false);
@@ -68,15 +70,15 @@ export default function SSHTerminalScreen() {
 
   const connect = async () => {
     if (!SSHClient) {
-      Alert.alert("不支持", "SSH 功能需要使用 Dev Build（npx expo run:ios），Expo Go 不支持原生 SSH 模块");
+      Alert.alert(t("ssh_unsupported"), t("ssh_unsupported_message"));
       return;
     }
     if (!vps?.ip || !vps?.ssh_user) {
-      Alert.alert("缺少信息", "VPS 缺少 IP 或 SSH 用户名");
+      Alert.alert(t("ssh_missing_info"), t("ssh_missing_info_message"));
       return;
     }
     if (!vps.ssh_password && !vps.ssh_private_key) {
-      Alert.alert("缺少凭据", "请在 VPS 编辑页面填写 SSH 密码或私钥");
+      Alert.alert(t("ssh_missing_credentials"), t("ssh_missing_credentials_message"));
       return;
     }
     setConnecting(true);
@@ -141,7 +143,7 @@ export default function SSHTerminalScreen() {
         </Text>
         {connected ? (
           <TouchableOpacity onPress={disconnect} style={styles.headerBtn}>
-            <Text style={styles.disconnectText}>断开</Text>
+            <Text style={styles.disconnectText}>{t("to_disconnect")}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -149,7 +151,7 @@ export default function SSHTerminalScreen() {
             style={styles.headerBtn}
             disabled={connecting}
           >
-            <Text style={styles.connectText}>{connecting ? "..." : "连接"}</Text>
+            <Text style={styles.connectText}>{connecting ? "..." : t("to_connect")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -162,7 +164,7 @@ export default function SSHTerminalScreen() {
       >
         {logs.length === 0 && (
           <Text style={[styles.logLine, { color: TERM_DIM }]}>
-            点击右上角"连接"开始 SSH 会话
+            {t("ssh_empty_hint")}
           </Text>
         )}
         {logs.map((l, i) => (
@@ -188,7 +190,7 @@ export default function SSHTerminalScreen() {
           style={styles.input}
           value={command}
           onChangeText={setCommand}
-          placeholder={connected ? "输入命令..." : "未连接"}
+          placeholder={connected ? t("ssh_input_command") : t("ssh_not_connected")}
           placeholderTextColor={TERM_DIM}
           autoCapitalize="none"
           autoCorrect={false}

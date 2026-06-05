@@ -7,15 +7,17 @@ import {
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useScriptsQuery } from "../api/script";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 import type { Script, HookType } from "../types/api";
 
-function hookLabel(hook: HookType): string {
+function hookLabel(hook: HookType, t: TFunction): string {
   const map: Record<HookType, string> = {
-    pre_save_nodes: "保存前",
-    post_fetch: "抓取后",
+    pre_save_nodes: t("script_hook_pre_save_nodes"),
+    post_fetch: t("script_hook_post_fetch"),
   };
   return map[hook] ?? hook;
 }
@@ -31,13 +33,14 @@ function hookColor(hook: HookType, c: AppColors): string {
   }
 }
 
-function formatDate(ts?: number): string {
-  if (!ts) return "从未运行";
+function formatDate(ts: number | undefined, t: TFunction): string {
+  if (!ts) return t("script_never_run");
   const d = new Date(ts * 1000);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 export default function ScriptsScreen() {
+  const { t } = useTranslation("rules");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useScriptsQuery();
@@ -89,11 +92,11 @@ export default function ScriptsScreen() {
               <Text
                 style={[styles.badgeText, { color: hookColor(item.hook, colors) }]}
               >
-                {hookLabel(item.hook)}
+                {hookLabel(item.hook, t)}
               </Text>
             </View>
             <Text style={styles.runText}>
-              {formatDate(item.last_run_at)}
+              {formatDate(item.last_run_at, t)}
             </Text>
           </View>
         </View>
@@ -127,7 +130,7 @@ export default function ScriptsScreen() {
               size={48}
               color={colors.textDisabled}
             />
-            <Text style={styles.emptyText}>暂无脚本</Text>
+            <Text style={styles.emptyText}>{t("script_empty")}</Text>
           </View>
         ) : null
       }

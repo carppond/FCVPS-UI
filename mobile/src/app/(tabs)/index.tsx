@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Image } from "react-native";
 import { useState, useCallback, useMemo } from "react";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
@@ -16,6 +17,7 @@ import { Alert } from "react-native";
 const MASCOT = require("../../../assets/login-art.png");
 
 export default function DashboardScreen() {
+  const { t } = useTranslation(["dashboard", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const user = useAuthStore((s) => s.user);
@@ -39,7 +41,7 @@ export default function DashboardScreen() {
   const handleSyncAll = () => {
     const items = subs.data?.items ?? [];
     if (items.length === 0) {
-      Alert.alert("提示", "暂无订阅可同步");
+      Alert.alert(t("common:tip"), t("no_subscription_to_sync"));
       return;
     }
     let completed = 0;
@@ -49,14 +51,14 @@ export default function DashboardScreen() {
         onSuccess: () => {
           completed++;
           if (completed + failed === items.length) {
-            Alert.alert("同步完成", `成功: ${completed}，失败: ${failed}`);
+            Alert.alert(t("sync_done"), t("sync_result", { completed, failed }));
             subs.refetch();
           }
         },
         onError: () => {
           failed++;
           if (completed + failed === items.length) {
-            Alert.alert("同步完成", `成功: ${completed}，失败: ${failed}`);
+            Alert.alert(t("sync_done"), t("sync_result", { completed, failed }));
             subs.refetch();
           }
         },
@@ -84,14 +86,17 @@ export default function DashboardScreen() {
           <Image source={MASCOT} style={styles.avatarImg} resizeMode="cover" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.greeting}>你好，{user?.username ?? "Admin"}</Text>
-          <Text style={styles.greetingSub}>基础设施一览</Text>
+          <Text style={styles.greeting}>{t("greeting", { name: user?.username ?? "Admin" })}</Text>
+          <Text style={styles.greetingSub}>{t("greeting_sub")}</Text>
         </View>
       </View>
       <View style={styles.bubble}>
         <Text style={styles.bubbleText}>
-          今天 <Text style={styles.bubbleHi}>{agentOnline}/{agentTotal}</Text> 台探针在线
-          {vpsExpiring > 0 ? `，${vpsExpiring} 台 VPS 快到期啦` : "，一切正常哦"} ✦
+          {t("bubble_prefix")}
+          <Text style={styles.bubbleHi}>{agentOnline}/{agentTotal}</Text>
+          {t("bubble_suffix")}
+          {vpsExpiring > 0 ? t("bubble_vps_expiring", { count: vpsExpiring }) : t("bubble_all_good")}
+          {t("bubble_tail")}
         </Text>
       </View>
 
@@ -100,40 +105,40 @@ export default function DashboardScreen() {
           icon="book-outline"
           iconColor={colors.primary}
           iconBg={colors.primarySoft}
-          label="订阅"
+          label={t("card_subscription")}
           value={String(subCount)}
-          sub={`${nodeCount} 个节点`}
+          sub={t("card_subscription_nodes", { count: nodeCount })}
         />
         <StatCard
           icon="hardware-chip-outline"
           iconColor={colors.info}
           iconBg={colors.infoBg}
-          label="VPS 资产"
+          label={t("card_vps")}
           value={String(vpsTotal)}
-          sub={vpsExpiring > 0 ? `${vpsExpiring} 台即将到期` : "全部正常"}
+          sub={vpsExpiring > 0 ? t("card_vps_expiring_count", { count: vpsExpiring }) : t("card_vps_all_normal")}
           highlight={vpsExpiring > 0}
         />
         <StatCard
           icon="radio-outline"
           iconColor={colors.success}
           iconBg={colors.successBg}
-          label="探针"
+          label={t("card_probe")}
           value={`${agentOnline}/${agentTotal}`}
-          sub="在线"
+          sub={t("card_probe_online")}
         />
         <StatCard
           icon="shield-checkmark-outline"
           iconColor={colors.warning}
           iconBg={colors.warningBg}
-          label="即将到期"
+          label={t("card_expiring")}
           value={String(vpsExpiring)}
-          sub={vpsExpiring > 0 ? "需要关注" : "无"}
+          sub={vpsExpiring > 0 ? t("card_expiring_need_attention") : t("common:none")}
           highlight={vpsExpiring > 0}
         />
       </View>
 
       {/* Quick actions */}
-      <Text style={styles.sectionTitle}>快捷操作</Text>
+      <Text style={styles.sectionTitle}>{t("quick_actions")}</Text>
       <View style={styles.quickActions}>
         <TouchableOpacity
           style={styles.actionBtn}
@@ -143,7 +148,7 @@ export default function DashboardScreen() {
           <View style={[styles.actionIcon, { backgroundColor: colors.primarySoft }]}>
             <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
           </View>
-          <Text style={styles.actionText}>新建订阅</Text>
+          <Text style={styles.actionText}>{t("action_create_subscription")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionBtn}
@@ -153,7 +158,7 @@ export default function DashboardScreen() {
           <View style={[styles.actionIcon, { backgroundColor: colors.infoBg }]}>
             <Ionicons name="sync-outline" size={20} color={colors.info} />
           </View>
-          <Text style={styles.actionText}>同步全部</Text>
+          <Text style={styles.actionText}>{t("action_sync_all")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionBtn}
@@ -163,12 +168,12 @@ export default function DashboardScreen() {
           <View style={[styles.actionIcon, { backgroundColor: colors.successBg }]}>
             <Ionicons name="server-outline" size={20} color={colors.success} />
           </View>
-          <Text style={styles.actionText}>查看节点</Text>
+          <Text style={styles.actionText}>{t("action_view_nodes")}</Text>
         </TouchableOpacity>
       </View>
 
       {/* Recent events */}
-      <Text style={styles.sectionTitle}>近期动态</Text>
+      <Text style={styles.sectionTitle}>{t("recent_events")}</Text>
       {eventsQuery.data && eventsQuery.data.items && eventsQuery.data.items.length > 0 ? (
         <View style={styles.eventsList}>
           {eventsQuery.data.items.map((ev) => (
@@ -185,7 +190,13 @@ export default function DashboardScreen() {
               <Text style={[styles.eventStatus, {
                 color: ev.status === "sent" ? colors.success : ev.status === "failed" ? colors.error : colors.warning,
               }]}>
-                {ev.status === "sent" ? "成功" : ev.status === "failed" ? "失败" : ev.status === "pending" ? "排队中" : "去重"}
+                {ev.status === "sent"
+                  ? t("event_status_sent")
+                  : ev.status === "failed"
+                    ? t("event_status_failed")
+                    : ev.status === "pending"
+                      ? t("event_status_pending")
+                      : t("event_status_dedup")}
               </Text>
             </View>
           ))}
@@ -193,7 +204,7 @@ export default function DashboardScreen() {
       ) : (
         <View style={styles.eventsCard}>
           <Ionicons name="newspaper-outline" size={24} color={colors.textDisabled} />
-          <Text style={styles.eventsPlaceholder}>暂无近期动态</Text>
+          <Text style={styles.eventsPlaceholder}>{t("events_empty")}</Text>
         </View>
       )}
     </ScrollView>

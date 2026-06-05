@@ -13,18 +13,21 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import * as Clipboard from "expo-clipboard";
 import { useShortLinksQuery, useCreateShortLink, useDeleteShortLink } from "../api/shortlink";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 import type { ShortLink } from "../types/api";
 
-function formatDate(ts?: number): string {
-  if (!ts) return "永久";
+function formatDate(ts: number | undefined, t: TFunction): string {
+  if (!ts) return t("shortlink_permanent");
   return new Date(ts * 1000).toLocaleDateString("zh-CN");
 }
 
 export default function ShortLinksScreen() {
+  const { t } = useTranslation(["rules", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useShortLinksQuery();
@@ -45,12 +48,12 @@ export default function ShortLinksScreen() {
 
   const copyUrl = async (url: string) => {
     await Clipboard.setStringAsync(url);
-    Alert.alert("已复制", url);
+    Alert.alert(t("common:copied"), url);
   };
 
   const handleCreate = () => {
     if (!targetUrl.trim()) {
-      Alert.alert("提示", "请输入目标 URL");
+      Alert.alert(t("common:tip"), t("shortlink_target_required"));
       return;
     }
     const body: { target_url: string; expires_at?: number } = {
@@ -59,7 +62,7 @@ export default function ShortLinksScreen() {
     if (expiresAt.trim()) {
       const ts = Math.floor(new Date(expiresAt.trim()).getTime() / 1000);
       if (isNaN(ts)) {
-        Alert.alert("提示", "过期时间格式无效，请使用 YYYY-MM-DD");
+        Alert.alert(t("common:tip"), t("shortlink_expires_invalid"));
         return;
       }
       body.expires_at = ts;
@@ -69,24 +72,24 @@ export default function ShortLinksScreen() {
         setModalVisible(false);
         setTargetUrl("");
         setExpiresAt("");
-        Alert.alert("创建成功", "短链已添加");
+        Alert.alert(t("shortlink_create_success"), t("shortlink_created_one"));
       },
-      onError: (err: any) => Alert.alert("创建失败", err.message),
+      onError: (err: any) => Alert.alert(t("common:create_failed"), err.message),
     });
   };
 
   const handleDelete = (item: ShortLink) => {
-    Alert.alert("确认删除", `确定要删除此短链吗？\n${item.short_url}`, [
-      { text: "取消", style: "cancel" },
+    Alert.alert(t("common:delete_confirm_title"), t("shortlink_delete_confirm", { url: item.short_url }), [
+      { text: t("common:cancel"), style: "cancel" },
       {
-        text: "删除",
+        text: t("common:delete"),
         style: "destructive",
         onPress: () => {
           deleteMutation.mutate(
             { fileCode: item.file_code, userCode: item.user_code },
             {
-              onSuccess: () => Alert.alert("已删除", "短链已删除"),
-              onError: (err: any) => Alert.alert("删除失败", err.message),
+              onSuccess: () => Alert.alert(t("shortlink_deleted"), t("shortlink_deleted_one")),
+              onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
             },
           );
         },
@@ -105,10 +108,10 @@ export default function ShortLinksScreen() {
         </Text>
         <View style={styles.metaRow}>
           <Text style={styles.metaText}>
-            创建: {formatDate(item.created_at)}
+            {t("shortlink_meta_created", { date: formatDate(item.created_at, t) })}
           </Text>
           <Text style={styles.metaText}>
-            过期: {formatDate(item.expires_at)}
+            {t("shortlink_meta_expires", { date: formatDate(item.expires_at, t) })}
           </Text>
         </View>
       </View>
@@ -152,7 +155,7 @@ export default function ShortLinksScreen() {
                 size={48}
                 color={colors.textDisabled}
               />
-              <Text style={styles.emptyText}>暂无短链</Text>
+              <Text style={styles.emptyText}>{t("shortlink_empty")}</Text>
             </View>
           ) : null
         }
@@ -181,7 +184,7 @@ export default function ShortLinksScreen() {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>新建短链</Text>
+              <Text style={styles.modalTitle}>{t("shortlink_create_modal_title")}</Text>
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
                 activeOpacity={0.6}
@@ -196,13 +199,13 @@ export default function ShortLinksScreen() {
 
             <View style={styles.field}>
               <Text style={styles.label}>
-                目标 URL <Text style={styles.required}>*</Text>
+                {t("shortlink_label_target")} <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={styles.input}
                 value={targetUrl}
                 onChangeText={setTargetUrl}
-                placeholder="https://example.com/long-url"
+                placeholder={t("shortlink_target_placeholder")}
                 placeholderTextColor={colors.textDisabled}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -211,12 +214,12 @@ export default function ShortLinksScreen() {
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>过期时间</Text>
+              <Text style={styles.label}>{t("shortlink_label_expires")}</Text>
               <TextInput
                 style={styles.input}
                 value={expiresAt}
                 onChangeText={setExpiresAt}
-                placeholder="YYYY-MM-DD（留空为永久）"
+                placeholder={t("shortlink_expires_placeholder")}
                 placeholderTextColor={colors.textDisabled}
               />
             </View>
@@ -231,7 +234,7 @@ export default function ShortLinksScreen() {
               activeOpacity={0.8}
             >
               <Text style={styles.submitText}>
-                {createMutation.isPending ? "创建中..." : "创建短链"}
+                {createMutation.isPending ? t("common:creating") : t("shortlink_submit")}
               </Text>
             </TouchableOpacity>
           </View>

@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
@@ -16,14 +18,16 @@ import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { AgentKind, AgentCreateResponse } from "../../types/api";
 
-const KINDS: { key: AgentKind; label: string; desc: string }[] = [
-  { key: "native", label: "原生 Agent", desc: "使用拾光VPS 自带的探针二进制" },
-  { key: "nezha_compat", label: "哪吒兼容", desc: "兼容已有的哪吒 v2 Agent" },
+const buildKinds = (t: TFunction): { key: AgentKind; label: string; desc: string }[] => [
+  { key: "native", label: t("kind_native"), desc: t("kind_native_desc") },
+  { key: "nezha_compat", label: t("kind_nezha"), desc: t("kind_nezha_desc") },
 ];
 
 export default function CreateAgentScreen() {
+  const { t } = useTranslation(["agents", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const kinds = useMemo(() => buildKinds(t), [t]);
   const createMutation = useCreateAgent();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<AgentKind>("native");
@@ -31,20 +35,20 @@ export default function CreateAgentScreen() {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      Alert.alert("提示", "请输入探针名称");
+      Alert.alert(t("common:tip"), t("input_name_required"));
       return;
     }
     try {
       const res = await createMutation.mutateAsync({ name: name.trim(), kind });
       setResult(res);
     } catch (err: any) {
-      Alert.alert("创建失败", err.message);
+      Alert.alert(t("common:create_failed"), err.message);
     }
   };
 
   const copyText = async (text: string, label: string) => {
     await Clipboard.setStringAsync(text);
-    Alert.alert("已复制", `${label} 已复制到剪贴板`);
+    Alert.alert(t("common:copied"), t("command_copied", { label }));
   };
 
   // Show result after creation
@@ -53,7 +57,7 @@ export default function CreateAgentScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.successCard}>
           <Ionicons name="checkmark-circle" size={48} color={colors.success} />
-          <Text style={styles.successTitle}>探针已创建</Text>
+          <Text style={styles.successTitle}>{t("created")}</Text>
           <Text style={styles.successName}>{result.name}</Text>
         </View>
 
@@ -62,7 +66,7 @@ export default function CreateAgentScreen() {
             <View style={[styles.cardIcon, { backgroundColor: colors.warningBg }]}>
               <Ionicons name="key-outline" size={16} color={colors.warning} />
             </View>
-            <Text style={styles.cardTitle}>Token（仅显示一次）</Text>
+            <Text style={styles.cardTitle}>{t("token_once")}</Text>
           </View>
           <View style={styles.tokenBox}>
             <Text style={styles.tokenText} selectable>{result.token}</Text>
@@ -73,7 +77,7 @@ export default function CreateAgentScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="copy-outline" size={14} color={colors.primary} />
-            <Text style={styles.copyBtnText}>复制 Token</Text>
+            <Text style={styles.copyBtnText}>{t("copy_token")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -82,18 +86,18 @@ export default function CreateAgentScreen() {
             <View style={[styles.cardIcon, { backgroundColor: colors.infoBg }]}>
               <Ionicons name="terminal-outline" size={16} color={colors.info} />
             </View>
-            <Text style={styles.cardTitle}>安装命令</Text>
+            <Text style={styles.cardTitle}>{t("install_command")}</Text>
           </View>
           <View style={styles.tokenBox}>
             <Text style={styles.commandText} selectable>{result.install_command}</Text>
           </View>
           <TouchableOpacity
             style={styles.copyBtn}
-            onPress={() => copyText(result.install_command, "安装命令")}
+            onPress={() => copyText(result.install_command, t("install_command_label"))}
             activeOpacity={0.7}
           >
             <Ionicons name="copy-outline" size={14} color={colors.primary} />
-            <Text style={styles.copyBtnText}>复制命令</Text>
+            <Text style={styles.copyBtnText}>{t("copy_command")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -102,7 +106,7 @@ export default function CreateAgentScreen() {
           onPress={() => router.back()}
           activeOpacity={0.8}
         >
-          <Text style={styles.doneBtnText}>完成</Text>
+          <Text style={styles.doneBtnText}>{t("done")}</Text>
         </TouchableOpacity>
       </ScrollView>
     );
@@ -115,15 +119,15 @@ export default function CreateAgentScreen() {
           <View style={[styles.cardIcon, { backgroundColor: colors.primarySoft }]}>
             <Ionicons name="radio-outline" size={16} color={colors.primary} />
           </View>
-          <Text style={styles.cardTitle}>探针信息</Text>
+          <Text style={styles.cardTitle}>{t("info_section")}</Text>
         </View>
         <View style={styles.field}>
-          <Text style={styles.label}>名称 <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.label}>{t("name_label")} <Text style={styles.required}>*</Text></Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="如：hk-vps-01"
+            placeholder={t("name_placeholder_example")}
             placeholderTextColor={colors.textDisabled}
           />
         </View>
@@ -134,9 +138,9 @@ export default function CreateAgentScreen() {
           <View style={[styles.cardIcon, { backgroundColor: colors.infoBg }]}>
             <Ionicons name="options-outline" size={16} color={colors.info} />
           </View>
-          <Text style={styles.cardTitle}>类型</Text>
+          <Text style={styles.cardTitle}>{t("section_kind")}</Text>
         </View>
-        {KINDS.map((k) => (
+        {kinds.map((k) => (
           <TouchableOpacity
             key={k.key}
             style={[styles.kindOption, kind === k.key && styles.kindOptionActive]}
@@ -163,7 +167,7 @@ export default function CreateAgentScreen() {
         activeOpacity={0.8}
       >
         <Text style={styles.submitText}>
-          {createMutation.isPending ? "创建中..." : "创建探针"}
+          {createMutation.isPending ? t("common:creating") : t("submit_create")}
         </Text>
       </TouchableOpacity>
     </ScrollView>

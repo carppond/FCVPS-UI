@@ -1,0 +1,13 @@
+{
+  "download": "Download",
+  "empty": "No traffic data",
+  "encourage_high": "Almost out of data, go easy on it~",
+  "encourage_low": "{{percent}}% left, plenty to last the month~",
+  "encourage_mid": "{{percent}}% left, keep an eye on it~",
+  "per_agent_traffic": "Per-Agent Traffic",
+  "total": "Total",
+  "total_used": "Total Used",
+  "upload": "Upload",
+  "usage_percent": "Usage",
+  "used_percent": "{{percent}}% used"
+}

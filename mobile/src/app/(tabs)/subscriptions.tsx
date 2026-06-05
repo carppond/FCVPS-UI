@@ -1,5 +1,6 @@
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, RefreshControl, Platform, Alert, Modal, TextInput } from "react-native";
 import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSubscriptionsQuery, useSyncSubscription, useDeleteSubscription } from "../../api/subscription";
@@ -8,6 +9,7 @@ import { useColors } from "../../lib/useColors";
 import type { Subscription } from "../../types/api";
 
 export default function SubscriptionsScreen() {
+  const { t } = useTranslation(["subscription", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useSubscriptionsQuery();
@@ -56,9 +58,16 @@ export default function SubscriptionsScreen() {
     closeMenu();
     syncMutation.mutate(selectedSub.id, {
       onSuccess: (result) => {
-        Alert.alert("同步成功", `节点数: ${result.node_count}\n新增: ${result.added_count}\n移除: ${result.removed_count}`);
+        Alert.alert(
+          t("sync_success"),
+          t("sync_success_detail", {
+            nodes: result.node_count,
+            added: result.added_count,
+            removed: result.removed_count,
+          }),
+        );
       },
-      onError: (err: any) => Alert.alert("同步失败", err.message),
+      onError: (err: any) => Alert.alert(t("sync_failed"), err.message),
     });
   };
 
@@ -72,15 +81,15 @@ export default function SubscriptionsScreen() {
     if (!selectedSub) return;
     const subId = selectedSub.id;
     closeMenu();
-    Alert.alert("确认删除", `确定要删除订阅「${selectedSub.name}」吗？`, [
-      { text: "取消", style: "cancel" },
+    Alert.alert(t("common:delete_confirm_title"), t("delete_confirm_message", { name: selectedSub.name }), [
+      { text: t("common:cancel"), style: "cancel" },
       {
-        text: "删除",
+        text: t("common:delete"),
         style: "destructive",
         onPress: () => {
           deleteMutation.mutate(subId, {
-            onSuccess: () => Alert.alert("已删除", "订阅已删除"),
-            onError: (err: any) => Alert.alert("删除失败", err.message),
+            onSuccess: () => Alert.alert(t("deleted"), t("deleted_message")),
+            onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
           });
         },
       },
@@ -105,7 +114,7 @@ export default function SubscriptionsScreen() {
                 style={styles.searchInput}
                 value={search}
                 onChangeText={setSearch}
-                placeholder="搜索订阅..."
+                placeholder={t("search_placeholder")}
                 placeholderTextColor={colors.textDisabled}
               />
               {search ? (
@@ -120,14 +129,14 @@ export default function SubscriptionsScreen() {
           !isLoading ? (
             <View style={styles.emptyBox}>
               <Ionicons name="book-outline" size={48} color={colors.textDisabled} />
-              <Text style={styles.emptyText}>暂无订阅</Text>
+              <Text style={styles.emptyText}>{t("no_subscriptions")}</Text>
               <TouchableOpacity
                 style={styles.emptyBtn}
                 onPress={() => router.push("/subscription/create")}
                 activeOpacity={0.7}
               >
                 <Ionicons name="add-outline" size={16} color="#fff" />
-                <Text style={styles.emptyBtnText}>新建订阅</Text>
+                <Text style={styles.emptyBtnText}>{t("new_sub")}</Text>
               </TouchableOpacity>
             </View>
           ) : null
@@ -138,7 +147,7 @@ export default function SubscriptionsScreen() {
               <View style={[styles.statusDot, { backgroundColor: item.last_sync_status === "ok" ? colors.success : item.last_sync_status === "error" ? colors.error : colors.textDisabled }]} />
               <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.node_count} 个节点</Text>
+                <Text style={styles.badgeText}>{t("node_count", { count: item.node_count })}</Text>
               </View>
               <TouchableOpacity
                 style={styles.menuBtn}
@@ -174,18 +183,18 @@ export default function SubscriptionsScreen() {
             <Text style={styles.menuTitle} numberOfLines={1}>{selectedSub?.name}</Text>
             <TouchableOpacity style={styles.menuItem} onPress={handleSync} activeOpacity={0.6}>
               <Ionicons name="sync-outline" size={20} color={colors.info} />
-              <Text style={styles.menuItemText}>同步</Text>
+              <Text style={styles.menuItemText}>{t("menu_sync")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={handleEdit} activeOpacity={0.6}>
               <Ionicons name="create-outline" size={20} color={colors.primary} />
-              <Text style={styles.menuItemText}>编辑</Text>
+              <Text style={styles.menuItemText}>{t("menu_edit")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={handleDelete} activeOpacity={0.6}>
               <Ionicons name="trash-outline" size={20} color={colors.error} />
-              <Text style={[styles.menuItemText, { color: colors.error }]}>删除</Text>
+              <Text style={[styles.menuItemText, { color: colors.error }]}>{t("menu_delete")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuCancel} onPress={closeMenu} activeOpacity={0.6}>
-              <Text style={styles.menuCancelText}>取消</Text>
+              <Text style={styles.menuCancelText}>{t("common:cancel")}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

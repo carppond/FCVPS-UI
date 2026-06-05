@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, router } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -5,6 +6,7 @@ import { fontSize, spacing } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 
 export default function TabsLayout() {
+  const { t } = useTranslation("nav");
   const colors = useColors();
   return (
     <Tabs
@@ -29,7 +31,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "总览",
+          title: t("tab_home"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="grid-outline" size={size} color={color} />
           ),
@@ -38,7 +40,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="subscriptions"
         options={{
-          title: "订阅",
+          title: t("tab_subs"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="book-outline" size={size} color={color} />
           ),
@@ -56,7 +58,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="nodes"
         options={{
-          title: "节点",
+          title: t("tab_nodes"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="server-outline" size={size} color={color} />
           ),
@@ -83,17 +85,17 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="more"
         options={{
-          title: "更多",
+          title: t("tab_more"),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="menu-outline" size={size} color={color} />
           ),
         }}
       />
       {/* Hidden tabs — accessible as screens but not in tab bar */}
-      <Tabs.Screen name="agents" options={{ href: null, title: "探针" }} />
-      <Tabs.Screen name="rules" options={{ href: null, title: "规则" }} />
-      <Tabs.Screen name="traffic" options={{ href: null, title: "流量" }} />
-      <Tabs.Screen name="settings" options={{ href: null, title: "设置" }} />
+      <Tabs.Screen name="agents" options={{ href: null, title: t("agents") }} />
+      <Tabs.Screen name="rules" options={{ href: null, title: t("rules") }} />
+      <Tabs.Screen name="traffic" options={{ href: null, title: t("traffic") }} />
+      <Tabs.Screen name="settings" options={{ href: null, title: t("settings") }} />
     </Tabs>
   );
 }

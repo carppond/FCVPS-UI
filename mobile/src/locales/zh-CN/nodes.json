@@ -1,0 +1,11 @@
+{
+  "no_nodes": "暂无节点",
+  "no_nodes_to_test": "暂无节点可测速",
+  "search_placeholder": "搜索节点...",
+  "tcping": "测速",
+  "tcping_done": "测速完成",
+  "tcping_done_message": "已测试 {{count}} 个节点",
+  "tcping_failed": "测速失败",
+  "tcping_running": "测速中...",
+  "timeout": "超时"
+}

@@ -3,8 +3,11 @@ import { AppState } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import "../lib/i18n"; // side-effect: 初始化 i18next(必须在任何 useTranslation 之前)
 import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
+import { useLocaleStore } from "../stores/locale-store";
 import { type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 import { trafficSummaryQuery } from "../api/traffic";
@@ -20,13 +23,16 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
+  const { t } = useTranslation("nav");
   const colors = useColors();
   const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
   const loadTheme = useThemeStore((s) => s.loadFromStorage);
+  const loadLocale = useLocaleStore((s) => s.loadFromStorage);
 
   useEffect(() => {
     loadFromStorage();
     loadTheme();
+    loadLocale();
   }, []);
 
   // Refresh the home-screen widget whenever the app returns to the foreground:
@@ -53,7 +59,7 @@ export default function RootLayout() {
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.textPrimary,
           headerTitleStyle: { fontWeight: "700" },
-          headerBackTitle: "返回",
+          headerBackTitle: t("back"),
           headerBackButtonMenuEnabled: false,
           contentStyle: { backgroundColor: colors.bg },
           headerShadowVisible: false,
@@ -61,32 +67,32 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "" }} />
-        <Stack.Screen name="subscription/[id]" options={{ title: "订阅详情" }} />
-        <Stack.Screen name="subscription/create" options={{ title: "新建订阅", presentation: "modal" }} />
-        <Stack.Screen name="shortlinks" options={{ title: "短链" }} />
-        <Stack.Screen name="notifications" options={{ title: "通知" }} />
-        <Stack.Screen name="profile" options={{ title: "个人资料" }} />
-        <Stack.Screen name="rule-sets" options={{ title: "规则集" }} />
-        <Stack.Screen name="vps-asset/create" options={{ title: "新增 VPS", presentation: "modal" }} />
+        <Stack.Screen name="subscription/[id]" options={{ title: t("sub_detail") }} />
+        <Stack.Screen name="subscription/create" options={{ title: t("sub_create"), presentation: "modal" }} />
+        <Stack.Screen name="shortlinks" options={{ title: t("shortlinks") }} />
+        <Stack.Screen name="notifications" options={{ title: t("notifications") }} />
+        <Stack.Screen name="profile" options={{ title: t("profile") }} />
+        <Stack.Screen name="rule-sets" options={{ title: t("rule_sets") }} />
+        <Stack.Screen name="vps-asset/create" options={{ title: t("vps_create"), presentation: "modal" }} />
         <Stack.Screen name="vps-asset/ssh" options={{ headerShown: false, orientation: "landscape" }} />
-        <Stack.Screen name="subscription/edit" options={{ title: "编辑订阅" }} />
-        <Stack.Screen name="vps-asset/edit" options={{ title: "编辑 VPS" }} />
-        <Stack.Screen name="admin/users" options={{ title: "用户管理" }} />
-        <Stack.Screen name="admin/audit" options={{ title: "审计日志" }} />
-        <Stack.Screen name="admin/settings" options={{ title: "系统设置" }} />
-        <Stack.Screen name="admin/ota" options={{ title: "OTA 升级" }} />
-        <Stack.Screen name="proxy-groups" options={{ title: "代理组" }} />
-        <Stack.Screen name="rule/create" options={{ title: "新建规则", presentation: "modal" }} />
-        <Stack.Screen name="notification/create" options={{ title: "新建通知渠道", presentation: "modal" }} />
-        <Stack.Screen name="pipelines" options={{ title: "流水线" }} />
-        <Stack.Screen name="scripts" options={{ title: "脚本" }} />
-        <Stack.Screen name="agents-page" options={{ title: "探针" }} />
-        <Stack.Screen name="agent/[id]" options={{ title: "探针详情" }} />
-        <Stack.Screen name="agent/create" options={{ title: "新建探针", presentation: "modal" }} />
-        <Stack.Screen name="agent/edit" options={{ title: "编辑探针" }} />
-        <Stack.Screen name="traffic-page" options={{ title: "流量" }} />
-        <Stack.Screen name="rules-page" options={{ title: "规则" }} />
-        <Stack.Screen name="settings-page" options={{ title: "设置" }} />
+        <Stack.Screen name="subscription/edit" options={{ title: t("sub_edit") }} />
+        <Stack.Screen name="vps-asset/edit" options={{ title: t("vps_edit") }} />
+        <Stack.Screen name="admin/users" options={{ title: t("admin_users") }} />
+        <Stack.Screen name="admin/audit" options={{ title: t("admin_audit") }} />
+        <Stack.Screen name="admin/settings" options={{ title: t("admin_settings") }} />
+        <Stack.Screen name="admin/ota" options={{ title: t("admin_ota") }} />
+        <Stack.Screen name="proxy-groups" options={{ title: t("proxy_groups") }} />
+        <Stack.Screen name="rule/create" options={{ title: t("rule_create"), presentation: "modal" }} />
+        <Stack.Screen name="notification/create" options={{ title: t("notify_create"), presentation: "modal" }} />
+        <Stack.Screen name="pipelines" options={{ title: t("pipelines") }} />
+        <Stack.Screen name="scripts" options={{ title: t("scripts") }} />
+        <Stack.Screen name="agents-page" options={{ title: t("agents") }} />
+        <Stack.Screen name="agent/[id]" options={{ title: t("agent_detail") }} />
+        <Stack.Screen name="agent/create" options={{ title: t("agent_create"), presentation: "modal" }} />
+        <Stack.Screen name="agent/edit" options={{ title: t("agent_edit") }} />
+        <Stack.Screen name="traffic-page" options={{ title: t("traffic") }} />
+        <Stack.Screen name="rules-page" options={{ title: t("rules") }} />
+        <Stack.Screen name="settings-page" options={{ title: t("settings") }} />
       </Stack>
     </QueryClientProvider>
   );

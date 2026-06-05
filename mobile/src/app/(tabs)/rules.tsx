@@ -2,6 +2,8 @@ import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Ale
 import { useState, useCallback, useMemo } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useRulesQuery, useDeleteRule, useUpdateRule } from "../../api/rule";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
@@ -15,11 +17,11 @@ function typeColor(type: RuleType, c: AppColors): string {
   }
 }
 
-function modeLabel(mode: RuleMode): string {
+function modeLabel(mode: RuleMode, t: TFunction): string {
   switch (mode) {
-    case "replace": return "替换";
-    case "prepend": return "前置";
-    case "append": return "追加";
+    case "replace": return t("rule_mode_replace");
+    case "prepend": return t("rule_mode_prepend");
+    case "append": return t("rule_mode_append");
   }
 }
 
@@ -32,6 +34,7 @@ function modeColor(mode: RuleMode, c: AppColors): string {
 }
 
 export default function RulesScreen() {
+  const { t } = useTranslation(["rules", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useRulesQuery();
@@ -78,7 +81,7 @@ export default function RulesScreen() {
         onSuccess: () => {
           refetch();
         },
-        onError: (err: any) => Alert.alert("操作失败", err.message),
+        onError: (err: any) => Alert.alert(t("common:operation_failed"), err.message),
       },
     );
   };
@@ -87,15 +90,15 @@ export default function RulesScreen() {
     if (!selectedRule) return;
     const rule = selectedRule;
     closeMenu();
-    Alert.alert("删除确认", `确定删除规则「${rule.name}」吗？`, [
-      { text: "取消", style: "cancel" },
+    Alert.alert(t("common:delete_confirm_title"), t("rule_delete_confirm", { name: rule.name }), [
+      { text: t("common:cancel"), style: "cancel" },
       {
-        text: "删除",
+        text: t("common:delete"),
         style: "destructive",
         onPress: () => {
           deleteMutation.mutate(rule.id, {
             onSuccess: () => refetch(),
-            onError: (err: any) => Alert.alert("删除失败", err.message),
+            onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
           });
         },
       },
@@ -119,21 +122,21 @@ export default function RulesScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
-            <Text style={styles.addBtnText}>添加规则</Text>
+            <Text style={styles.addBtnText}>{t("rule_add")}</Text>
           </TouchableOpacity>
         }
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyBox}>
               <Ionicons name="shield-outline" size={48} color={colors.textDisabled} />
-              <Text style={styles.emptyText}>暂无规则</Text>
+              <Text style={styles.emptyText}>{t("rule_empty")}</Text>
               <TouchableOpacity
                 style={styles.emptyCreateBtn}
                 onPress={() => router.push("/rule/create")}
                 activeOpacity={0.7}
               >
                 <Ionicons name="add-outline" size={16} color="#fff" />
-                <Text style={styles.emptyCreateText}>添加规则</Text>
+                <Text style={styles.emptyCreateText}>{t("rule_add")}</Text>
               </TouchableOpacity>
             </View>
           ) : null
@@ -153,7 +156,7 @@ export default function RulesScreen() {
             <Text style={styles.menuTitle} numberOfLines={1}>{selectedRule?.name}</Text>
             <TouchableOpacity style={styles.menuItem} onPress={handleEdit} activeOpacity={0.6}>
               <Ionicons name="create-outline" size={20} color={colors.primary} />
-              <Text style={styles.menuItemText}>编辑</Text>
+              <Text style={styles.menuItemText}>{t("common:edit")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={handleToggleEnabled} activeOpacity={0.6}>
               <Ionicons
@@ -162,15 +165,15 @@ export default function RulesScreen() {
                 color={selectedRule?.enabled ? colors.warning : colors.success}
               />
               <Text style={styles.menuItemText}>
-                {selectedRule?.enabled ? "禁用" : "启用"}
+                {selectedRule?.enabled ? t("rule_disable") : t("rule_enable")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={handleDelete} activeOpacity={0.6}>
               <Ionicons name="trash-outline" size={20} color={colors.error} />
-              <Text style={[styles.menuItemText, { color: colors.error }]}>删除</Text>
+              <Text style={[styles.menuItemText, { color: colors.error }]}>{t("common:delete")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuCancel} onPress={closeMenu} activeOpacity={0.6}>
-              <Text style={styles.menuCancelText}>取消</Text>
+              <Text style={styles.menuCancelText}>{t("common:cancel")}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -180,6 +183,7 @@ export default function RulesScreen() {
 }
 
 function RuleCard({ rule, onMenu }: { rule: CustomRule; onMenu: (rule: CustomRule) => void }) {
+  const { t } = useTranslation("rules");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const tc = typeColor(rule.type, colors);
@@ -203,7 +207,7 @@ function RuleCard({ rule, onMenu }: { rule: CustomRule; onMenu: (rule: CustomRul
           <Text style={[styles.badgeText, { color: tc }]}>{rule.type.toUpperCase()}</Text>
         </View>
         <View style={[styles.badge, { backgroundColor: mc + "1a" }]}>
-          <Text style={[styles.badgeText, { color: mc }]}>{modeLabel(rule.mode)}</Text>
+          <Text style={[styles.badgeText, { color: mc }]}>{modeLabel(rule.mode, t)}</Text>
         </View>
         <View style={[styles.enabledDot, { backgroundColor: rule.enabled ? colors.success : colors.textDisabled }]} />
       </View>

@@ -1,5 +1,6 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, Modal } from "react-native";
 import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAgentsQuery, useDeleteAgent } from "../../api/agent";
@@ -8,6 +9,7 @@ import { useColors } from "../../lib/useColors";
 import type { AgentListItem } from "../../types/api";
 
 export default function AgentsScreen() {
+  const { t } = useTranslation(["agents", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useAgentsQuery();
@@ -45,15 +47,15 @@ export default function AgentsScreen() {
     const agentId = selectedAgent.id;
     const agentName = selectedAgent.name;
     closeMenu();
-    Alert.alert("确认删除", `确定要删除探针「${agentName}」吗？`, [
-      { text: "取消", style: "cancel" },
+    Alert.alert(t("common:delete_confirm_title"), t("delete_confirm_message", { name: agentName }), [
+      { text: t("common:cancel"), style: "cancel" },
       {
-        text: "删除",
+        text: t("common:delete"),
         style: "destructive",
         onPress: () => {
           deleteMutation.mutate(agentId, {
-            onSuccess: () => Alert.alert("已删除", "探针已删除"),
-            onError: (err: any) => Alert.alert("删除失败", err.message),
+            onSuccess: () => Alert.alert(t("deleted"), t("deleted_message")),
+            onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
           });
         },
       },
@@ -78,7 +80,7 @@ export default function AgentsScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
-            <Text style={styles.addBtnText}>新建探针</Text>
+            <Text style={styles.addBtnText}>{t("create_agent")}</Text>
           </TouchableOpacity>
         ) : null
       }
@@ -86,14 +88,14 @@ export default function AgentsScreen() {
         !isLoading ? (
           <View style={styles.emptyBox}>
             <Ionicons name="radio-outline" size={48} color={colors.textDisabled} />
-            <Text style={styles.emptyText}>暂无探针</Text>
+            <Text style={styles.emptyText}>{t("empty")}</Text>
             <TouchableOpacity
               style={styles.emptyBtn}
               onPress={() => router.push("/agent/create")}
               activeOpacity={0.7}
             >
               <Ionicons name="add-outline" size={16} color="#fff" />
-              <Text style={styles.emptyBtnText}>新建探针</Text>
+              <Text style={styles.emptyBtnText}>{t("create_agent")}</Text>
             </TouchableOpacity>
           </View>
         ) : null
@@ -108,14 +110,14 @@ export default function AgentsScreen() {
           <Text style={styles.menuTitle} numberOfLines={1}>{selectedAgent?.name}</Text>
           <TouchableOpacity style={styles.menuItem} onPress={handleEdit} activeOpacity={0.6}>
             <Ionicons name="create-outline" size={20} color={colors.primary} />
-            <Text style={styles.menuItemText}>编辑</Text>
+            <Text style={styles.menuItemText}>{t("common:edit")}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem} onPress={handleDelete} activeOpacity={0.6}>
             <Ionicons name="trash-outline" size={20} color={colors.error} />
-            <Text style={[styles.menuItemText, { color: colors.error }]}>删除</Text>
+            <Text style={[styles.menuItemText, { color: colors.error }]}>{t("common:delete")}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuCancel} onPress={closeMenu} activeOpacity={0.6}>
-            <Text style={styles.menuCancelText}>取消</Text>
+            <Text style={styles.menuCancelText}>{t("common:cancel")}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -125,6 +127,7 @@ export default function AgentsScreen() {
 }
 
 function AgentCard({ agent, onPress, onLongPress }: { agent: AgentListItem; onPress: (a: AgentListItem) => void; onLongPress: (a: AgentListItem) => void }) {
+  const { t } = useTranslation("agents");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const online = agent.online;
@@ -149,7 +152,7 @@ function AgentCard({ agent, onPress, onLongPress }: { agent: AgentListItem; onPr
         </View>
       )}
       {!online && (
-        <Text style={styles.offlineText}>离线</Text>
+        <Text style={styles.offlineText}>{t("offline")}</Text>
       )}
       <View style={styles.metaRow}>
         {agent.public_ip && <Text style={styles.metaText}>{agent.public_ip}</Text>}

@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateChannel, useUpdateChannel } from "../../api/notify";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
@@ -31,20 +33,22 @@ const CHANNEL_KINDS: { key: ChannelKind; label: string; icon: string }[] = [
   { key: "discord", label: "Discord", icon: "logo-discord" },
   { key: "slack", label: "Slack", icon: "chatbubbles-outline" },
   { key: "gotify", label: "Gotify", icon: "megaphone-outline" },
-  { key: "serverchan", label: "Server酱", icon: "server-outline" },
+  { key: "serverchan", label: "ServerChan", icon: "server-outline" },
   { key: "pushdeer", label: "PushDeer", icon: "push-outline" },
   { key: "ifttt", label: "IFTTT", icon: "git-network-outline" },
 ];
 
-const EVENT_TYPES: { key: EventType; label: string }[] = [
-  { key: "node_offline", label: "节点离线" },
-  { key: "traffic_threshold", label: "流量阈值" },
-  { key: "subscription_sync_failed", label: "订阅同步失败" },
-  { key: "backup_completed", label: "备份完成" },
-  { key: "login_anomaly", label: "登录异常" },
-  { key: "ota_available", label: "OTA 可用" },
-  { key: "script_alert", label: "脚本告警" },
-  { key: "vps_expiry", label: "VPS 到期" },
+const buildEventTypes = (
+  t: TFunction,
+): { key: EventType; label: string }[] => [
+  { key: "node_offline", label: t("event_node_offline") },
+  { key: "traffic_threshold", label: t("event_traffic_threshold") },
+  { key: "subscription_sync_failed", label: t("event_subscription_sync_failed") },
+  { key: "backup_completed", label: t("event_backup_completed") },
+  { key: "login_anomaly", label: t("event_login_anomaly") },
+  { key: "ota_available", label: t("event_ota_available") },
+  { key: "script_alert", label: t("event_script_alert") },
+  { key: "vps_expiry", label: t("event_vps_expiry") },
 ];
 
 interface ConfigField {
@@ -54,57 +58,60 @@ interface ConfigField {
   secure?: boolean;
 }
 
-function getConfigFields(kind: ChannelKind): ConfigField[] {
+function getConfigFields(
+  kind: ChannelKind,
+  t: TFunction,
+): ConfigField[] {
   switch (kind) {
     case "telegram":
       return [
-        { key: "bot_token", label: "Bot Token", placeholder: "123456:ABC-DEF...", secure: true },
-        { key: "chat_id", label: "Chat ID", placeholder: "如：-1001234567890" },
+        { key: "bot_token", label: t("field_bot_token"), placeholder: t("ph_bot_token"), secure: true },
+        { key: "chat_id", label: t("field_chat_id"), placeholder: t("ph_chat_id") },
       ];
     case "email":
       return [
-        { key: "smtp_host", label: "SMTP 主机", placeholder: "smtp.example.com" },
-        { key: "smtp_port", label: "SMTP 端口", placeholder: "465" },
-        { key: "smtp_user", label: "SMTP 用户", placeholder: "user@example.com" },
-        { key: "smtp_password", label: "SMTP 密码", placeholder: "密码", secure: true },
-        { key: "from", label: "发件人", placeholder: "noreply@example.com" },
-        { key: "to", label: "收件人", placeholder: "user@example.com" },
+        { key: "smtp_host", label: t("field_smtp_host"), placeholder: "smtp.example.com" },
+        { key: "smtp_port", label: t("field_smtp_port"), placeholder: "465" },
+        { key: "smtp_user", label: t("field_smtp_user"), placeholder: "user@example.com" },
+        { key: "smtp_password", label: t("field_smtp_password"), placeholder: t("ph_smtp_password"), secure: true },
+        { key: "from", label: t("field_from"), placeholder: "noreply@example.com" },
+        { key: "to", label: t("field_to"), placeholder: "user@example.com" },
       ];
     case "bark":
       return [
-        { key: "device_key", label: "Device Key", placeholder: "你的 Bark Key" },
-        { key: "server_url", label: "服务器地址 (可选)", placeholder: "https://api.day.app" },
+        { key: "device_key", label: t("field_device_key"), placeholder: t("ph_device_key") },
+        { key: "server_url", label: t("field_server_url_optional"), placeholder: "https://api.day.app" },
       ];
     case "webhook":
       return [
-        { key: "url", label: "Webhook URL", placeholder: "https://example.com/webhook" },
+        { key: "url", label: t("field_url"), placeholder: "https://example.com/webhook" },
       ];
     case "discord":
       return [
-        { key: "webhook_url", label: "Webhook URL", placeholder: "https://discord.com/api/webhooks/..." },
+        { key: "webhook_url", label: t("field_webhook_url"), placeholder: "https://discord.com/api/webhooks/..." },
       ];
     case "slack":
       return [
-        { key: "webhook_url", label: "Webhook URL", placeholder: "https://hooks.slack.com/..." },
+        { key: "webhook_url", label: t("field_webhook_url"), placeholder: "https://hooks.slack.com/..." },
       ];
     case "gotify":
       return [
-        { key: "server_url", label: "服务器地址", placeholder: "https://gotify.example.com" },
-        { key: "app_token", label: "App Token", placeholder: "你的 Token", secure: true },
+        { key: "server_url", label: t("field_server_url"), placeholder: "https://gotify.example.com" },
+        { key: "app_token", label: t("field_app_token"), placeholder: t("ph_app_token"), secure: true },
       ];
     case "serverchan":
       return [
-        { key: "send_key", label: "Send Key", placeholder: "你的 SendKey", secure: true },
+        { key: "send_key", label: t("field_send_key"), placeholder: t("ph_send_key"), secure: true },
       ];
     case "pushdeer":
       return [
-        { key: "push_key", label: "Push Key", placeholder: "你的 PushKey", secure: true },
-        { key: "server_url", label: "服务器地址 (可选)", placeholder: "https://api2.pushdeer.com" },
+        { key: "push_key", label: t("field_push_key"), placeholder: t("ph_push_key"), secure: true },
+        { key: "server_url", label: t("field_server_url_optional"), placeholder: "https://api2.pushdeer.com" },
       ];
     case "ifttt":
       return [
-        { key: "webhook_key", label: "Webhook Key", placeholder: "你的 Key", secure: true },
-        { key: "event_name", label: "Event Name", placeholder: "notification" },
+        { key: "webhook_key", label: t("field_webhook_key"), placeholder: t("ph_webhook_key"), secure: true },
+        { key: "event_name", label: t("field_event_name"), placeholder: t("ph_event_name") },
       ];
     default:
       return [];
@@ -130,8 +137,10 @@ function parseEditConfig(configStr?: string): Record<string, string> {
 }
 
 export default function NotificationCreateScreen() {
+  const { t } = useTranslation(["notify", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const eventTypes = useMemo(() => buildEventTypes(t), [t]);
   const params = useLocalSearchParams<{
     editId?: string;
     editName?: string;
@@ -160,7 +169,7 @@ export default function NotificationCreateScreen() {
     ),
   );
 
-  const configFields = getConfigFields(kind);
+  const configFields = useMemo(() => getConfigFields(kind, t), [kind, t]);
 
   const updateConfig = (key: string, value: string) => {
     setConfigValues((prev) => ({ ...prev, [key]: value }));
@@ -200,11 +209,11 @@ export default function NotificationCreateScreen() {
 
   const handleSubmit = () => {
     if (!name.trim()) {
-      Alert.alert("提示", "请输入渠道名称");
+      Alert.alert(t("common:tip"), t("validate_name_required"));
       return;
     }
     if (selectedEvents.size === 0) {
-      Alert.alert("提示", "请至少选择一个事件类型");
+      Alert.alert(t("common:tip"), t("validate_select_event"));
       return;
     }
 
@@ -222,11 +231,12 @@ export default function NotificationCreateScreen() {
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["notify"] });
-            Alert.alert("保存成功", "通知渠道已更新", [
-              { text: "好", onPress: () => router.back() },
+            Alert.alert(t("common:save_success"), t("saved_msg"), [
+              { text: t("common:ok"), onPress: () => router.back() },
             ]);
           },
-          onError: (err: any) => Alert.alert("保存失败", err.message),
+          onError: (err: any) =>
+            Alert.alert(t("common:save_failed"), err.message),
         },
       );
       return;
@@ -243,11 +253,12 @@ export default function NotificationCreateScreen() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["notify"] });
-          Alert.alert("创建成功", "通知渠道已添加", [
-            { text: "好", onPress: () => router.back() },
+          Alert.alert(t("common:success"), t("create_success_msg"), [
+            { text: t("common:ok"), onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => Alert.alert("创建失败", err.message),
+        onError: (err: any) =>
+          Alert.alert(t("common:create_failed"), err.message),
       },
     );
   };
@@ -272,14 +283,14 @@ export default function NotificationCreateScreen() {
                 color={colors.primary}
               />
             </View>
-            <Text style={styles.cardTitle}>渠道名称</Text>
+            <Text style={styles.cardTitle}>{t("name_title")}</Text>
           </View>
           <View style={styles.field}>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="如：我的 Telegram"
+              placeholder={t("name_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
@@ -295,7 +306,7 @@ export default function NotificationCreateScreen() {
                 color={colors.info}
               />
             </View>
-            <Text style={styles.cardTitle}>渠道类型</Text>
+            <Text style={styles.cardTitle}>{t("kind_title")}</Text>
           </View>
           <View style={styles.kindGrid}>
             {CHANNEL_KINDS.map((ck) => (
@@ -347,7 +358,7 @@ export default function NotificationCreateScreen() {
                   color={colors.warning}
                 />
               </View>
-              <Text style={styles.cardTitle}>配置</Text>
+              <Text style={styles.cardTitle}>{t("config_title")}</Text>
             </View>
             {configFields.map((field) => (
               <View key={field.key} style={[styles.field, { marginBottom: spacing.md }]}>
@@ -379,9 +390,9 @@ export default function NotificationCreateScreen() {
                 color={colors.success}
               />
             </View>
-            <Text style={styles.cardTitle}>事件类型</Text>
+            <Text style={styles.cardTitle}>{t("event_types_title")}</Text>
           </View>
-          {EVENT_TYPES.map((et) => (
+          {eventTypes.map((et) => (
             <TouchableOpacity
               key={et.key}
               style={styles.eventRow}
@@ -414,8 +425,8 @@ export default function NotificationCreateScreen() {
         >
           <Text style={styles.submitText}>
             {isEdit
-              ? isPending ? "保存中..." : "保存修改"
-              : isPending ? "创建中..." : "创建渠道"}
+              ? isPending ? t("common:saving") : t("edit_btn")
+              : isPending ? t("common:creating") : t("create_btn")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

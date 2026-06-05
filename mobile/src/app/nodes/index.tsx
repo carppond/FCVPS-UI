@@ -1,5 +1,6 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl } from "react-native";
 import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { useNodesQuery } from "../../api/node";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
@@ -20,6 +21,7 @@ function protocolColor(protocol: NodeProtocol, c: AppColors): string {
 }
 
 export default function NodesPage() {
+  const { t } = useTranslation("nodes");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useNodesQuery();
@@ -46,7 +48,7 @@ export default function NodesPage() {
         !isLoading ? (
           <View style={styles.emptyBox}>
             <Ionicons name="server-outline" size={48} color={colors.textDisabled} />
-            <Text style={styles.emptyText}>暂无节点</Text>
+            <Text style={styles.emptyText}>{t("no_nodes")}</Text>
           </View>
         ) : null
       }
@@ -73,9 +75,9 @@ function NodeCard({ node }: { node: Node }) {
       </Text>
       {node.tags.length > 0 && (
         <View style={styles.tagsRow}>
-          {node.tags.map((t) => (
-            <View key={t} style={styles.tagChip}>
-              <Text style={styles.tagText}>{t}</Text>
+          {node.tags.map((tag) => (
+            <View key={tag} style={styles.tagChip}>
+              <Text style={styles.tagText}>{tag}</Text>
             </View>
           ))}
         </View>

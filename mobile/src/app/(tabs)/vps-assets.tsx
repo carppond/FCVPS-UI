@@ -1,6 +1,7 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert, Modal, TextInput, ScrollView } from "react-native";
 import { useState, useCallback, useMemo } from "react";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useVpsAssetsQuery, useVpsAssetSummaryQuery, useDeleteVpsAsset } from "../../api/vps-asset";
@@ -41,7 +42,24 @@ function currencySymbol(c: string) {
   }
 }
 
+type StatusFilterKey = "all" | "normal" | "expiring" | "expired";
+
+const STATUS_FILTERS: { key: StatusFilterKey; status: VpsAssetStatus | null }[] = [
+  { key: "all", status: null },
+  { key: "normal", status: "normal" },
+  { key: "expiring", status: "expiring" },
+  { key: "expired", status: "expired" },
+];
+
+const STATUS_FILTER_LABEL: Record<StatusFilterKey, string> = {
+  all: "filter_all",
+  normal: "filter_normal",
+  expiring: "filter_expiring",
+  expired: "filter_expired",
+};
+
 export default function VpsAssetsScreen() {
+  const { t } = useTranslation(["vps", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useVpsAssetsQuery();
@@ -51,12 +69,7 @@ export default function VpsAssetsScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedVps, setSelectedVps] = useState<VpsAsset | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("全部");
-
-  const STATUS_FILTERS = ["全部", "正常", "即将到期", "已到期"] as const;
-  const STATUS_MAP: Record<string, VpsAssetStatus | null> = {
-    "全部": null, "正常": "normal", "即将到期": "expiring", "已到期": "expired",
-  };
+  const [statusFilter, setStatusFilter] = useState<StatusFilterKey>("all");
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -68,7 +81,7 @@ export default function VpsAssetsScreen() {
 
   const items = useMemo(() => {
     let filtered = allItems;
-    const mappedStatus = STATUS_MAP[statusFilter];
+    const mappedStatus = STATUS_FILTERS.find((f) => f.key === statusFilter)?.status ?? null;
     if (mappedStatus) {
       filtered = filtered.filter((v) => v.status === mappedStatus);
     }
@@ -86,7 +99,7 @@ export default function VpsAssetsScreen() {
 
   const copyIp = async (ip: string) => {
     await Clipboard.setStringAsync(ip);
-    Alert.alert("已复制", ip);
+    Alert.alert(t("copied"), ip);
   };
 
   const openMenu = (vps: VpsAsset) => {
@@ -116,15 +129,15 @@ export default function VpsAssetsScreen() {
     const vpsId = selectedVps.id;
     const vpsName = selectedVps.name;
     closeMenu();
-    Alert.alert("确认删除", `确定要删除 VPS「${vpsName}」吗？`, [
-      { text: "取消", style: "cancel" },
+    Alert.alert(t("delete_confirm_title"), t("delete_confirm_message", { name: vpsName }), [
+      { text: t("common:cancel"), style: "cancel" },
       {
-        text: "删除",
+        text: t("delete"),
         style: "destructive",
         onPress: () => {
           deleteMutation.mutate(vpsId, {
-            onSuccess: () => Alert.alert("已删除", "VPS 资产已删除"),
-            onError: (err: any) => Alert.alert("删除失败", err.message),
+            onSuccess: () => Alert.alert(t("delete_success"), t("delete_success_message")),
+            onError: (err: any) => Alert.alert(t("delete_failed"), err.message),
           });
         },
       },
@@ -135,7 +148,7 @@ export default function VpsAssetsScreen() {
     <View style={styles.wrapper}>
       <FlatList
         style={styles.container}
-        contentContainerStyle={items.length === 0 && !search && statusFilter === "全部" ? styles.empty : styles.list}
+        contentContainerStyle={items.length === 0 && !search && statusFilter === "all" ? styles.empty : styles.list}
         data={items}
         keyExtractor={(item) => item.id}
         refreshControl={
@@ -145,9 +158,9 @@ export default function VpsAssetsScreen() {
           <View>
             {summary.data ? (
               <View style={styles.summaryRow}>
-                <SumChip label="总数" value={String(summary.data.total)} />
-                <SumChip label="即将到期" value={String(summary.data.expiring)} color={summary.data.expiring > 0 ? colors.warning : undefined} />
-                <SumChip label="已到期" value={String(summary.data.expired)} color={summary.data.expired > 0 ? colors.error : undefined} />
+                <SumChip label={t("summary_total")} value={String(summary.data.total)} />
+                <SumChip label={t("summary_expiring")} value={String(summary.data.expiring)} color={summary.data.expiring > 0 ? colors.warning : undefined} />
+                <SumChip label={t("summary_expired")} value={String(summary.data.expired)} color={summary.data.expired > 0 ? colors.error : undefined} />
               </View>
             ) : null}
             {allItems.length > 0 ? (
@@ -158,7 +171,7 @@ export default function VpsAssetsScreen() {
                     style={styles.searchInput}
                     value={search}
                     onChangeText={setSearch}
-                    placeholder="搜索 VPS..."
+                    placeholder={t("search_placeholder")}
                     placeholderTextColor={colors.textDisabled}
                   />
                   {search ? (
@@ -170,12 +183,12 @@ export default function VpsAssetsScreen() {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={styles.filterRowContent}>
                   {STATUS_FILTERS.map((s) => (
                     <TouchableOpacity
-                      key={s}
-                      style={[styles.filterChip, statusFilter === s && styles.filterChipActive]}
-                      onPress={() => setStatusFilter(s)}
+                      key={s.key}
+                      style={[styles.filterChip, statusFilter === s.key && styles.filterChipActive]}
+                      onPress={() => setStatusFilter(s.key)}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.filterChipText, statusFilter === s && styles.filterChipTextActive]}>{s}</Text>
+                      <Text style={[styles.filterChipText, statusFilter === s.key && styles.filterChipTextActive]}>{t(STATUS_FILTER_LABEL[s.key])}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -187,7 +200,7 @@ export default function VpsAssetsScreen() {
           !isLoading ? (
             <View style={styles.emptyBox}>
               <Ionicons name="hardware-chip-outline" size={48} color={colors.textDisabled} />
-              <Text style={styles.emptyText}>暂无 VPS 资产</Text>
+              <Text style={styles.emptyText}>{t("empty")}</Text>
             </View>
           ) : null
         }
@@ -206,18 +219,18 @@ export default function VpsAssetsScreen() {
             <Text style={styles.menuTitle} numberOfLines={1}>{selectedVps?.name}</Text>
             <TouchableOpacity style={styles.menuItem} onPress={handleSSH} activeOpacity={0.6}>
               <Ionicons name="terminal-outline" size={20} color={colors.success} />
-              <Text style={styles.menuItemText}>SSH 连接</Text>
+              <Text style={styles.menuItemText}>{t("ssh_connect")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={handleEdit} activeOpacity={0.6}>
               <Ionicons name="create-outline" size={20} color={colors.primary} />
-              <Text style={styles.menuItemText}>编辑</Text>
+              <Text style={styles.menuItemText}>{t("edit")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={handleDelete} activeOpacity={0.6}>
               <Ionicons name="trash-outline" size={20} color={colors.error} />
-              <Text style={[styles.menuItemText, { color: colors.error }]}>删除</Text>
+              <Text style={[styles.menuItemText, { color: colors.error }]}>{t("delete")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuCancel} onPress={closeMenu} activeOpacity={0.6}>
-              <Text style={styles.menuCancelText}>取消</Text>
+              <Text style={styles.menuCancelText}>{t("common:cancel")}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -238,6 +251,7 @@ function SumChip({ label, value, color }: { label: string; value: string; color?
 }
 
 function VpsCard({ vps, onCopyIp, onLongPress }: { vps: VpsAsset; onCopyIp: (ip: string) => void; onLongPress: (vps: VpsAsset) => void }) {
+  const { t } = useTranslation("vps");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const sc = statusColor(vps.status, colors);
@@ -261,7 +275,7 @@ function VpsCard({ vps, onCopyIp, onLongPress }: { vps: VpsAsset; onCopyIp: (ip:
         <View style={styles.dayChip}>
           <Text style={[styles.dayNum, { color: sc }]}>{vps.days_until_expiry}</Text>
           <Text style={[styles.dayLabel, { color: sc }]}>
-            {vps.days_until_expiry <= 0 ? "已过期" : "天"}
+            {vps.days_until_expiry <= 0 ? t("expired") : t("unit_day")}
           </Text>
         </View>
       </View>

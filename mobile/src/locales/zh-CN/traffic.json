@@ -1,0 +1,13 @@
+{
+  "download": "下载",
+  "empty": "暂无流量数据",
+  "encourage_high": "流量快用完啦,省着点用哦～",
+  "encourage_low": "还剩 {{percent}}%,够用到月底啦~",
+  "encourage_mid": "还剩 {{percent}}%,留意一下哦",
+  "per_agent_traffic": "各探针流量",
+  "total": "总计",
+  "total_used": "总用量",
+  "upload": "上传",
+  "usage_percent": "使用率",
+  "used_percent": "{{percent}}% 已用"
+}

@@ -2,8 +2,11 @@
 # check-i18n.sh — Validate i18n completeness and absence of hardcoded CJK.
 #
 # Checks:
-#   1. All 4 locales (zh-CN / en / ja / ko) have identical key sets per namespace.
-#   2. No hardcoded CJK characters in web/src/ (excluding locales/ + comments).
+#   1. Web: all 4 locales (zh-CN / en / ja / ko) have identical key sets per namespace.
+#   2. Web: no hardcoded CJK characters in web/src/ (excluding locales/ + comments).
+#   3. Mobile: zh-CN / en key parity per namespace (mobile 仅双语).
+#   4. Mobile: no hardcoded CJK in mobile/src/ (excluding locales/, widgets/
+#      —— iOS 小组件运行时不支持模块导入,保持中文 —— and native-name whitelist).
 #
 # Usage:
 #   ./scripts/check-i18n.sh           # report only, exit 0
@@ -119,6 +122,80 @@ if [ -n "$CJK_HITS" ]; then
   FAILED=true
 else
   echo "[check-i18n] OK — no hardcoded CJK in source files."
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Mobile: zh-CN / en key parity (mobile 仅双语)
+# ---------------------------------------------------------------------------
+MOBILE_LOCALES_DIR="$REPO_ROOT/mobile/src/locales"
+MOBILE_SRC_DIR="$REPO_ROOT/mobile/src"
+
+echo "[check-i18n] Checking mobile key parity (zh-CN / en)..."
+
+for ns_file in "$MOBILE_LOCALES_DIR/zh-CN"/*.json; do
+  ns=$(basename "$ns_file")
+  target="$MOBILE_LOCALES_DIR/en/$ns"
+  if [ ! -f "$target" ]; then
+    echo "  MISSING FILE: $target"
+    FAILED=true
+    continue
+  fi
+
+  ref_keys=$(flatten_keys "$ns_file")
+  target_keys=$(flatten_keys "$target")
+
+  missing=$(comm -23 <(echo "$ref_keys") <(echo "$target_keys"))
+  extra=$(comm -13 <(echo "$ref_keys") <(echo "$target_keys"))
+
+  if [ -n "$missing" ]; then
+    echo "  MISSING KEYS [mobile en/$ns]:"
+    while IFS= read -r key; do echo "    - $key"; done <<< "$missing"
+    FAILED=true
+  fi
+  if [ -n "$extra" ]; then
+    echo "  EXTRA KEYS [mobile en/$ns]:"
+    while IFS= read -r key; do echo "    + $key"; done <<< "$extra"
+    FAILED=true
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# 4. Mobile: hardcoded CJK detection
+#    Exclusions beyond web's:
+#      - widgets/   — iOS 小组件运行时不支持模块导入(i18n 进不去),保持中文
+#      - profile.tsx — 服务端 locale 选择器的母语自称名(中文/日本語),与 web
+#        lang-switch 同属 native-name 白名单
+# ---------------------------------------------------------------------------
+echo "[check-i18n] Checking for hardcoded CJK characters in mobile/src/..."
+
+MOBILE_CJK_HITS=$(
+  find "$MOBILE_SRC_DIR" \
+    \( -name "*.ts" -o -name "*.tsx" \) \
+    -not -path "*/locales/*" \
+    -not -path "*/node_modules/*" \
+    -not -path "*/widgets/*" \
+    -not -path "*/app/profile.tsx" \
+    -print0 \
+  | xargs -0 perl -ne '
+      next if /^\s*\/\//;
+      s|//.*$||;
+      if (/[\x{4e00}-\x{9fff}]/u) {
+        print ARGV . ":" . $. . ": " . $_;
+      }
+    ' 2>/dev/null \
+  || true
+)
+
+if [ -n "$MOBILE_CJK_HITS" ]; then
+  echo ""
+  echo "=========================================================="
+  echo "[check-i18n] HARDCODED CJK FOUND (mobile):"
+  echo "----------------------------------------------------------"
+  echo "$MOBILE_CJK_HITS"
+  echo "=========================================================="
+  FAILED=true
+else
+  echo "[check-i18n] OK — no hardcoded CJK in mobile source files."
 fi
 
 # ---------------------------------------------------------------------------

@@ -12,6 +12,7 @@ import {
   Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
@@ -24,6 +25,7 @@ import { useColors } from "../../lib/useColors";
 const MASCOT = require("../../../assets/login-art.png");
 
 export default function LoginScreen() {
+  const { t } = useTranslation(["auth", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [serverUrl, setServerUrl] = useState(useAuthStore.getState().serverUrl);
@@ -51,7 +53,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
-      Alert.alert("提示", "请输入用户名和密码");
+      Alert.alert(t("common:tip"), t("enter_credentials"));
       return;
     }
     try {
@@ -68,7 +70,7 @@ export default function LoginScreen() {
 
       router.replace("/(tabs)");
     } catch (err: any) {
-      Alert.alert("登录失败", err.message || "请检查用户名和密码");
+      Alert.alert(t("login_failed"), err.message || t("login_failed_hint"));
     }
   };
 
@@ -95,11 +97,11 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.title}>欢迎回来 ♡</Text>
-          <Text style={styles.subtitle}>拾光娘在等你登录呢～</Text>
+          <Text style={styles.title}>{t("welcome_back")}</Text>
+          <Text style={styles.subtitle}>{t("subtitle")}</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>用户名</Text>
+            <Text style={styles.label}>{t("username")}</Text>
             <TextInput
               style={styles.input}
               value={username}
@@ -112,7 +114,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>密码</Text>
+            <Text style={styles.label}>{t("password")}</Text>
             <View style={styles.passwordWrap}>
               <TextInput
                 style={styles.passwordInput}
@@ -146,7 +148,7 @@ export default function LoginScreen() {
               size={20}
               color={rememberMe ? colors.primary : colors.textTertiary}
             />
-            <Text style={styles.rememberText}>记住账号密码</Text>
+            <Text style={styles.rememberText}>{t("remember_me")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -162,20 +164,20 @@ export default function LoginScreen() {
               style={[styles.button, loginMutation.isPending && styles.buttonDisabled]}
             >
               <Text style={styles.buttonText}>
-                {loginMutation.isPending ? "登录中..." : "登录"}
+                {loginMutation.isPending ? t("logging_in") : t("login")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setShowServer(!showServer)} activeOpacity={0.6}>
             <Text style={styles.serverToggle}>
-              {showServer ? "收起服务器设置 ▲" : "服务器设置 ▼"}
+              {showServer ? t("server_settings_collapse") : t("server_settings_expand")}
             </Text>
           </TouchableOpacity>
 
           {showServer && (
             <View style={styles.field}>
-              <Text style={styles.label}>服务器地址</Text>
+              <Text style={styles.label}>{t("server_address")}</Text>
               <TextInput
                 style={styles.input}
                 value={serverUrl}

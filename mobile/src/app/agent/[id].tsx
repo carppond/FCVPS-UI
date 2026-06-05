@@ -1,6 +1,8 @@
 import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
@@ -15,16 +17,17 @@ function formatBytes(bytes: number): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0)} ${units[i]}`;
 }
 
-function formatUptime(seconds: number): string {
+function formatUptime(seconds: number, t: TFunction): string {
   const d = Math.floor(seconds / 86400);
   const h = Math.floor((seconds % 86400) / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  if (d > 0) return `${d}天 ${h}小时`;
-  if (h > 0) return `${h}小时 ${m}分钟`;
-  return `${m}分钟`;
+  if (d > 0) return t("uptime_dh", { days: d, hours: h });
+  if (h > 0) return t("uptime_hm", { hours: h, minutes: m });
+  return t("uptime_m", { minutes: m });
 }
 
 export default function AgentDetailScreen() {
+  const { t } = useTranslation(["agents", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -68,67 +71,67 @@ export default function AgentDetailScreen() {
         <View style={[styles.statusDot, { backgroundColor: online ? colors.success : colors.error }]} />
         <View style={{ flex: 1 }}>
           <Text style={styles.agentName}>{data.name}</Text>
-          <Text style={styles.agentMeta}>{data.kind} · {online ? "在线" : "离线"}</Text>
+          <Text style={styles.agentMeta}>{data.kind} · {online ? t("common:online") : t("common:offline")}</Text>
         </View>
       </View>
 
       {/* Info section */}
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>基本信息</Text>
-        <InfoRow label="IP 地址" value={data.public_ip || "—"} mono />
-        <InfoRow label="操作系统" value={data.os ? `${data.os} ${data.arch ?? ""}` : "—"} />
-        <InfoRow label="版本" value={data.version || "—"} />
-        <InfoRow label="类型" value={data.kind === "native" ? "原生 Agent" : "哪吒兼容"} />
+        <Text style={styles.sectionTitle}>{t("basic_info")}</Text>
+        <InfoRow label={t("ip_address")} value={data.public_ip || "—"} mono />
+        <InfoRow label={t("os")} value={data.os ? `${data.os} ${data.arch ?? ""}` : "—"} />
+        <InfoRow label={t("version")} value={data.version || "—"} />
+        <InfoRow label={t("type")} value={data.kind === "native" ? t("kind_native_detail") : t("kind_nezha_detail")} />
       </View>
 
       {/* Metrics */}
       {online && m && (
         <>
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>系统指标</Text>
+            <Text style={styles.sectionTitle}>{t("system_metrics")}</Text>
             <View style={styles.metricsGrid}>
-              <MetricCard label="CPU" value={`${Math.round(m.cpu_percent)}%`} color={m.cpu_percent > 80 ? colors.error : m.cpu_percent > 50 ? colors.warning : colors.success} pct={m.cpu_percent} />
-              {memPct !== null && <MetricCard label="内存" value={`${memPct}%`} sub={`${formatBytes(m.mem_used)} / ${formatBytes(m.mem_total)}`} color={memPct > 80 ? colors.error : memPct > 50 ? colors.warning : colors.info} pct={memPct} />}
-              {diskPct !== null && <MetricCard label="磁盘" value={`${diskPct}%`} sub={`${formatBytes(m.disk_used)} / ${formatBytes(m.disk_total)}`} color={diskPct > 80 ? colors.error : colors.info} pct={diskPct} />}
+              <MetricCard label={t("cpu")} value={`${Math.round(m.cpu_percent)}%`} color={m.cpu_percent > 80 ? colors.error : m.cpu_percent > 50 ? colors.warning : colors.success} pct={m.cpu_percent} />
+              {memPct !== null && <MetricCard label={t("memory")} value={`${memPct}%`} sub={`${formatBytes(m.mem_used)} / ${formatBytes(m.mem_total)}`} color={memPct > 80 ? colors.error : memPct > 50 ? colors.warning : colors.info} pct={memPct} />}
+              {diskPct !== null && <MetricCard label={t("disk")} value={`${diskPct}%`} sub={`${formatBytes(m.disk_used)} / ${formatBytes(m.disk_total)}`} color={diskPct > 80 ? colors.error : colors.info} pct={diskPct} />}
               {swapPct !== null && m.swap_total > 0 && <MetricCard label="Swap" value={`${swapPct}%`} sub={`${formatBytes(m.swap_used)} / ${formatBytes(m.swap_total)}`} color={colors.textTertiary} pct={swapPct} />}
             </View>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>网络</Text>
+            <Text style={styles.sectionTitle}>{t("network")}</Text>
             <View style={styles.netRow}>
               <View style={styles.netItem}>
                 <Ionicons name="arrow-up-outline" size={14} color={colors.success} />
-                <Text style={styles.netLabel}>上行速度</Text>
+                <Text style={styles.netLabel}>{t("net_out_speed")}</Text>
                 <Text style={styles.netValue}>{formatBytes(m.net_out_speed)}/s</Text>
               </View>
               <View style={styles.netItem}>
                 <Ionicons name="arrow-down-outline" size={14} color={colors.info} />
-                <Text style={styles.netLabel}>下行速度</Text>
+                <Text style={styles.netLabel}>{t("net_in_speed")}</Text>
                 <Text style={styles.netValue}>{formatBytes(m.net_in_speed)}/s</Text>
               </View>
             </View>
             <View style={styles.netRow}>
               <View style={styles.netItem}>
                 <Ionicons name="cloud-upload-outline" size={14} color={colors.textTertiary} />
-                <Text style={styles.netLabel}>总上行</Text>
+                <Text style={styles.netLabel}>{t("net_out_total")}</Text>
                 <Text style={styles.netValue}>{formatBytes(m.net_out)}</Text>
               </View>
               <View style={styles.netItem}>
                 <Ionicons name="cloud-download-outline" size={14} color={colors.textTertiary} />
-                <Text style={styles.netLabel}>总下行</Text>
+                <Text style={styles.netLabel}>{t("net_in_total")}</Text>
                 <Text style={styles.netValue}>{formatBytes(m.net_in)}</Text>
               </View>
             </View>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>其他</Text>
-            <InfoRow label="运行时间" value={formatUptime(m.uptime)} />
-            <InfoRow label="负载 (1/5/15)" value={`${m.load1.toFixed(2)} / ${m.load5.toFixed(2)} / ${m.load15.toFixed(2)}`} />
-            <InfoRow label="TCP 连接" value={String(m.conn_tcp)} />
-            <InfoRow label="UDP 连接" value={String(m.conn_udp)} />
-            {m.process_count !== undefined && <InfoRow label="进程数" value={String(m.process_count)} />}
+            <Text style={styles.sectionTitle}>{t("other")}</Text>
+            <InfoRow label={t("uptime")} value={formatUptime(m.uptime, t)} />
+            <InfoRow label={t("load_1_5_15")} value={`${m.load1.toFixed(2)} / ${m.load5.toFixed(2)} / ${m.load15.toFixed(2)}`} />
+            <InfoRow label={t("tcp_conn")} value={String(m.conn_tcp)} />
+            <InfoRow label={t("udp_conn")} value={String(m.conn_udp)} />
+            {m.process_count !== undefined && <InfoRow label={t("process_count")} value={String(m.process_count)} />}
           </View>
         </>
       )}
@@ -136,7 +139,7 @@ export default function AgentDetailScreen() {
       {!online && (
         <View style={styles.offlineCard}>
           <Ionicons name="cloud-offline-outline" size={36} color={colors.error} />
-          <Text style={styles.offlineText}>探针离线，无法获取指标</Text>
+          <Text style={styles.offlineText}>{t("offline_no_metrics")}</Text>
         </View>
       )}
     </ScrollView>

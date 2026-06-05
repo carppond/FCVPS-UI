@@ -10,68 +10,39 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 
+type SectionKey = "account" | "traffic" | "agent" | "notify";
+
 interface SettingField {
   key: string;
-  label: string;
-  hint: string;
-  section: string;
+  section: SectionKey;
 }
 
 const FIELDS: SettingField[] = [
-  {
-    key: "session_ttl_seconds",
-    label: "会话有效期（秒）",
-    hint: "登录 Token 过期时间",
-    section: "账户",
-  },
-  {
-    key: "default_locale",
-    label: "默认语言",
-    hint: "新用户默认语言，如 zh-CN",
-    section: "账户",
-  },
-  {
-    key: "monthly_reset_day",
-    label: "月流量重置日",
-    hint: "每月第几天重置流量，1-28",
-    section: "流量",
-  },
-  {
-    key: "monthly_traffic_limit",
-    label: "月流量限额",
-    hint: "单位字节，0 为不限",
-    section: "流量",
-  },
-  {
-    key: "agent_heartbeat_interval",
-    label: "探针心跳间隔（秒）",
-    hint: "Agent 上报间隔",
-    section: "探针",
-  },
-  {
-    key: "notification_debounce",
-    label: "通知去抖（秒）",
-    hint: "相同通知最小间隔",
-    section: "通知",
-  },
+  { key: "session_ttl_seconds", section: "account" },
+  { key: "default_locale", section: "account" },
+  { key: "monthly_reset_day", section: "traffic" },
+  { key: "monthly_traffic_limit", section: "traffic" },
+  { key: "agent_heartbeat_interval", section: "agent" },
+  { key: "notification_debounce", section: "notify" },
 ];
 
-const SECTIONS = ["账户", "流量", "探针", "通知"];
+const SECTIONS: SectionKey[] = ["account", "traffic", "agent", "notify"];
 
-function sectionIcon(section: string): keyof typeof Ionicons.glyphMap {
+function sectionIcon(section: SectionKey): keyof typeof Ionicons.glyphMap {
   switch (section) {
-    case "账户":
+    case "account":
       return "person-outline";
-    case "流量":
+    case "traffic":
       return "analytics-outline";
-    case "探针":
+    case "agent":
       return "pulse-outline";
-    case "通知":
+    case "notify":
       return "notifications-outline";
     default:
       return "settings-outline";
@@ -79,6 +50,7 @@ function sectionIcon(section: string): keyof typeof Ionicons.glyphMap {
 }
 
 export default function AdminSettingsScreen() {
+  const { t } = useTranslation(["settings", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const queryClient = useQueryClient();
@@ -104,9 +76,9 @@ export default function AdminSettingsScreen() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
-      Alert.alert("保存成功", "系统设置已更新");
+      Alert.alert(t("common:save_success"), t("admin_settings_save_success_msg"));
     },
-    onError: (err: any) => Alert.alert("保存失败", err.message),
+    onError: (err: any) => Alert.alert(t("common:save_failed"), err.message),
   });
 
   const onRefresh = useCallback(async () => {
@@ -149,12 +121,18 @@ export default function AdminSettingsScreen() {
                   color={colors.info}
                 />
               </View>
-              <Text style={styles.cardTitle}>{section}</Text>
+              <Text style={styles.cardTitle}>
+                {t(`admin_settings_section_${section}`)}
+              </Text>
             </View>
             {sectionFields.map((field) => (
               <View key={field.key} style={styles.field}>
-                <Text style={styles.label}>{field.label}</Text>
-                <Text style={styles.hint}>{field.hint}</Text>
+                <Text style={styles.label}>
+                  {t(`admin_settings_field_${field.key}_label`)}
+                </Text>
+                <Text style={styles.hint}>
+                  {t(`admin_settings_field_${field.key}_hint`)}
+                </Text>
                 <TextInput
                   style={styles.input}
                   value={values[field.key] ?? ""}
@@ -181,7 +159,9 @@ export default function AdminSettingsScreen() {
       >
         <Ionicons name="save-outline" size={18} color="#fff" />
         <Text style={styles.saveBtnText}>
-          {saveMutation.isPending ? "保存中..." : "保存设置"}
+          {saveMutation.isPending
+            ? t("common:saving")
+            : t("admin_settings_save_btn")}
         </Text>
       </TouchableOpacity>
     </ScrollView>

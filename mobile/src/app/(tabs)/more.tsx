@@ -2,6 +2,8 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from "rea
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useAuthStore } from "../../stores/auth-store";
 import { spacing, radius, fontSize, glow, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
@@ -16,38 +18,44 @@ interface NavItem {
   route: string;
 }
 
-const buildTools = (c: AppColors): NavItem[] => [
-  { icon: "radio-outline", iconColor: c.success, iconBg: c.successBg, label: "探针", route: "/agents-page" },
-  { icon: "bar-chart-outline", iconColor: c.info, iconBg: c.infoBg, label: "流量", route: "/traffic-page" },
-  { icon: "shield-outline", iconColor: c.primary, iconBg: c.primarySoft, label: "规则", route: "/rules-page" },
-  { icon: "layers-outline", iconColor: c.warning, iconBg: c.warningBg, label: "规则集", route: "/rule-sets" },
-  { icon: "git-branch-outline", iconColor: c.purple, iconBg: "rgba(155,107,255,0.12)", label: "代理组", route: "/proxy-groups" },
-  { icon: "code-slash-outline", iconColor: c.info, iconBg: c.infoBg, label: "流水线", route: "/pipelines" },
-  { icon: "terminal-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: "脚本", route: "/scripts" },
+const buildTools = (c: AppColors, t: TFunction): NavItem[] => [
+  { icon: "radio-outline", iconColor: c.success, iconBg: c.successBg, label: t("more_tools_agents"), route: "/agents-page" },
+  { icon: "bar-chart-outline", iconColor: c.info, iconBg: c.infoBg, label: t("more_tools_traffic"), route: "/traffic-page" },
+  { icon: "shield-outline", iconColor: c.primary, iconBg: c.primarySoft, label: t("more_tools_rules"), route: "/rules-page" },
+  { icon: "layers-outline", iconColor: c.warning, iconBg: c.warningBg, label: t("more_tools_rule_sets"), route: "/rule-sets" },
+  { icon: "git-branch-outline", iconColor: c.purple, iconBg: "rgba(155,107,255,0.12)", label: t("more_tools_proxy_groups"), route: "/proxy-groups" },
+  { icon: "code-slash-outline", iconColor: c.info, iconBg: c.infoBg, label: t("more_tools_pipelines"), route: "/pipelines" },
+  { icon: "terminal-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: t("more_tools_scripts"), route: "/scripts" },
 ];
 
-const buildServices = (c: AppColors): NavItem[] => [
-  { icon: "link-outline", iconColor: c.primary, iconBg: c.primarySoft, label: "短链", route: "/shortlinks" },
-  { icon: "notifications-outline", iconColor: c.warning, iconBg: c.warningBg, label: "通知", route: "/notifications" },
+const buildServices = (c: AppColors, t: TFunction): NavItem[] => [
+  { icon: "link-outline", iconColor: c.primary, iconBg: c.primarySoft, label: t("more_services_shortlinks"), route: "/shortlinks" },
+  { icon: "notifications-outline", iconColor: c.warning, iconBg: c.warningBg, label: t("more_services_notifications"), route: "/notifications" },
 ];
 
-const buildAccount = (c: AppColors): NavItem[] => [
-  { icon: "person-outline", iconColor: c.info, iconBg: c.infoBg, label: "个人资料", route: "/profile" },
-  { icon: "settings-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: "设置", route: "/settings-page" },
+const buildAccount = (c: AppColors, t: TFunction): NavItem[] => [
+  { icon: "person-outline", iconColor: c.info, iconBg: c.infoBg, label: t("more_account_profile"), route: "/profile" },
+  { icon: "settings-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: t("more_account_settings"), route: "/settings-page" },
 ];
 
-const buildAdmin = (c: AppColors): NavItem[] => [
-  { icon: "people-outline", iconColor: c.primary, iconBg: c.primarySoft, label: "用户管理", route: "/admin/users" },
-  { icon: "document-text-outline", iconColor: c.warning, iconBg: c.warningBg, label: "审计日志", route: "/admin/audit" },
-  { icon: "construct-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: "系统设置", route: "/admin/settings" },
-  { icon: "cloud-download-outline", iconColor: c.success, iconBg: c.successBg, label: "OTA 升级", route: "/admin/ota" },
+const buildAdmin = (c: AppColors, t: TFunction): NavItem[] => [
+  { icon: "people-outline", iconColor: c.primary, iconBg: c.primarySoft, label: t("more_admin_users"), route: "/admin/users" },
+  { icon: "document-text-outline", iconColor: c.warning, iconBg: c.warningBg, label: t("more_admin_audit"), route: "/admin/audit" },
+  { icon: "construct-outline", iconColor: c.textSecondary, iconBg: c.surfaceHover, label: t("more_admin_settings"), route: "/admin/settings" },
+  { icon: "cloud-download-outline", iconColor: c.success, iconBg: c.successBg, label: t("more_admin_ota"), route: "/admin/ota" },
 ];
 
 export default function MoreScreen() {
+  const { t } = useTranslation("settings");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.role === "admin";
+
+  const tools = useMemo(() => buildTools(colors, t), [colors, t]);
+  const services = useMemo(() => buildServices(colors, t), [colors, t]);
+  const account = useMemo(() => buildAccount(colors, t), [colors, t]);
+  const admin = useMemo(() => buildAdmin(colors, t), [colors, t]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -61,15 +69,15 @@ export default function MoreScreen() {
         </View>
         <Text style={styles.profileName}>{user?.username ?? "Admin"}</Text>
         <Text style={styles.profileMeta}>
-          {isAdmin ? "管理员" : "用户"}
-          {user?.totp_enabled ? " · 已启用 2FA" : ""} · Lv.拾光
+          {isAdmin ? t("role_admin") : t("role_user")}
+          {user?.totp_enabled ? t("more_meta_2fa") : ""} · {t("more_meta_level")}
         </Text>
       </TouchableOpacity>
 
-      <Section title="工具" items={buildTools(colors)} />
-      <Section title="服务" items={buildServices(colors)} />
-      <Section title="账户" items={buildAccount(colors)} />
-      {isAdmin && <Section title="管理" items={buildAdmin(colors)} />}
+      <Section title={t("more_section_tools")} items={tools} />
+      <Section title={t("more_section_services")} items={services} />
+      <Section title={t("more_section_account")} items={account} />
+      {isAdmin && <Section title={t("more_section_admin")} items={admin} />}
     </ScrollView>
   );
 }

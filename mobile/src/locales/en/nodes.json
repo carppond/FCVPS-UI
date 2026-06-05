@@ -1,0 +1,11 @@
+{
+  "no_nodes": "No nodes",
+  "no_nodes_to_test": "No nodes to test",
+  "search_placeholder": "Search nodes...",
+  "tcping": "Test latency",
+  "tcping_done": "Test complete",
+  "tcping_done_message": "Tested {{count}} nodes",
+  "tcping_failed": "Test failed",
+  "tcping_running": "Testing...",
+  "timeout": "Timeout"
+}

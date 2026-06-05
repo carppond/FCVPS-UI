@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -19,16 +20,22 @@ import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { CreateSubscriptionRequest, Subscription, RuleTemplate } from "../../types/api";
 
-const TEMPLATE_CATEGORIES = [
-  { key: "region", label: "地区" },
-  { key: "app", label: "应用" },
-  { key: "block", label: "拦截" },
-  { key: "common", label: "通用" },
-] as const;
+type TFunc = (key: string) => string;
+
+// 分类标签含中文,改成接收 t 的工厂;key 保持稳定值不变。
+const buildTemplateCategories = (t: TFunc) =>
+  [
+    { key: "region", label: t("template_category_region") },
+    { key: "app", label: t("template_category_app") },
+    { key: "block", label: t("template_category_block") },
+    { key: "common", label: t("template_category_common") },
+  ] as const;
 
 export default function CreateSubscriptionScreen() {
+  const { t } = useTranslation(["subscription", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const templateCategories = useMemo(() => buildTemplateCategories(t), [t]);
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
 
@@ -70,7 +77,7 @@ export default function CreateSubscriptionScreen() {
 
   const handleNext = () => {
     if (!name.trim()) {
-      Alert.alert("提示", "请输入订阅名称");
+      Alert.alert(t("common:tip"), t("required_name"));
       return;
     }
     setStep(2);
@@ -105,14 +112,14 @@ export default function CreateSubscriptionScreen() {
 
       queryClient.invalidateQueries({ queryKey: ["rule"] });
       Alert.alert(
-        "创建成功",
+        t("create_success"),
         selected.length > 0
-          ? `订阅已添加，同时创建了 ${selected.length} 条规则`
-          : "订阅已添加",
-        [{ text: "好", onPress: () => router.back() }],
+          ? t("created_with_rules", { count: selected.length })
+          : t("created_without_rules"),
+        [{ text: t("common:ok"), onPress: () => router.back() }],
       );
     } catch (err: any) {
-      Alert.alert("创建失败", err.message);
+      Alert.alert(t("create_failed"), err.message);
     }
   };
 
@@ -135,8 +142,8 @@ export default function CreateSubscriptionScreen() {
           </View>
         </View>
         <View style={styles.stepLabels}>
-          <Text style={[styles.stepLabel, step === 1 && styles.stepLabelActive]}>基本信息</Text>
-          <Text style={[styles.stepLabel, step === 2 && styles.stepLabelActive]}>选择规则</Text>
+          <Text style={[styles.stepLabel, step === 1 && styles.stepLabelActive]}>{t("step_basic")}</Text>
+          <Text style={[styles.stepLabel, step === 2 && styles.stepLabelActive]}>{t("step_rules")}</Text>
         </View>
       </View>
 
@@ -148,15 +155,15 @@ export default function CreateSubscriptionScreen() {
               <View style={[styles.cardIcon, { backgroundColor: colors.primarySoft }]}>
                 <Ionicons name="book-outline" size={16} color={colors.primary} />
               </View>
-              <Text style={styles.cardTitle}>基本信息</Text>
+              <Text style={styles.cardTitle}>{t("basic_info")}</Text>
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>名称 <Text style={styles.required}>*</Text></Text>
+              <Text style={styles.label}>{t("name")} <Text style={styles.required}>*</Text></Text>
               <TextInput
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
-                placeholder="如：我的订阅"
+                placeholder={t("name_placeholder")}
                 placeholderTextColor={colors.textDisabled}
               />
             </View>
@@ -168,21 +175,21 @@ export default function CreateSubscriptionScreen() {
               <View style={[styles.cardIcon, { backgroundColor: colors.infoBg }]}>
                 <Ionicons name="link-outline" size={16} color={colors.info} />
               </View>
-              <Text style={styles.cardTitle}>订阅源</Text>
+              <Text style={styles.cardTitle}>{t("source")}</Text>
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>URL</Text>
+              <Text style={styles.label}>{t("url")}</Text>
               <TextInput
                 style={styles.input}
                 value={sourceUrl}
                 onChangeText={setSourceUrl}
-                placeholder="https://example.com/subscribe?token=xxx"
+                placeholder={t("url_placeholder")}
                 placeholderTextColor={colors.textDisabled}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
               />
-              <Text style={styles.hint}>留空则创建手动订阅</Text>
+              <Text style={styles.hint}>{t("source_hint")}</Text>
             </View>
           </View>
 
@@ -192,14 +199,14 @@ export default function CreateSubscriptionScreen() {
               <View style={[styles.cardIcon, { backgroundColor: "rgba(0,0,0,0.04)" }]}>
                 <Ionicons name="chatbubble-outline" size={16} color={colors.textTertiary} />
               </View>
-              <Text style={styles.cardTitle}>备注</Text>
+              <Text style={styles.cardTitle}>{t("remark")}</Text>
             </View>
             <View style={styles.field}>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={remark}
                 onChangeText={setRemark}
-                placeholder="可选备注"
+                placeholder={t("remark_placeholder")}
                 placeholderTextColor={colors.textDisabled}
                 multiline
                 numberOfLines={3}
@@ -209,7 +216,7 @@ export default function CreateSubscriptionScreen() {
           </View>
 
           <TouchableOpacity style={styles.submitBtn} onPress={handleNext} activeOpacity={0.8}>
-            <Text style={styles.submitText}>下一步 — 选择规则</Text>
+            <Text style={styles.submitText}>{t("next_select_rules")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -218,7 +225,7 @@ export default function CreateSubscriptionScreen() {
             disabled={isPending}
             activeOpacity={0.6}
           >
-            <Text style={styles.skipText}>{isPending ? "创建中..." : "跳过，直接创建"}</Text>
+            <Text style={styles.skipText}>{isPending ? t("common:creating") : t("skip_create")}</Text>
           </TouchableOpacity>
         </ScrollView>
       ) : (
@@ -226,7 +233,7 @@ export default function CreateSubscriptionScreen() {
           {/* Category tabs */}
           <View style={styles.categoryWrap}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryTabs}>
-              {TEMPLATE_CATEGORIES.map((cat) => (
+              {templateCategories.map((cat) => (
                 <TouchableOpacity
                   key={cat.key}
                   style={[styles.categoryTab, activeCategory === cat.key && styles.categoryTabActive]}
@@ -274,7 +281,7 @@ export default function CreateSubscriptionScreen() {
           <View style={styles.bottomBar}>
             <TouchableOpacity style={styles.backBtn} onPress={() => setStep(1)} activeOpacity={0.7}>
               <Ionicons name="arrow-back" size={16} color={colors.textSecondary} />
-              <Text style={styles.backBtnText}>上一步</Text>
+              <Text style={styles.backBtnText}>{t("previous_step")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.createBtn, isPending && styles.createBtnDisabled]}
@@ -283,7 +290,7 @@ export default function CreateSubscriptionScreen() {
               activeOpacity={0.8}
             >
               <Text style={styles.createBtnText}>
-                {isPending ? "创建中..." : selectedTemplates.size > 0 ? `创建订阅 + ${selectedTemplates.size} 条规则` : "创建订阅"}
+                {isPending ? t("common:creating") : selectedTemplates.size > 0 ? t("create_sub_with_rules", { count: selectedTemplates.size }) : t("create_sub")}
               </Text>
             </TouchableOpacity>
           </View>

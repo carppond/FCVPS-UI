@@ -10,6 +10,8 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   useProxyGroupsQuery,
   useProxyGroupPresets,
@@ -36,18 +38,19 @@ function typeColor(type: string, c: AppColors): string {
   }
 }
 
-function typeLabel(type: string): string {
+function typeLabel(type: string, t: TFunction): string {
   const map: Record<string, string> = {
-    select: "手动选择",
-    "url-test": "自动测速",
-    fallback: "故障转移",
-    "load-balance": "负载均衡",
-    relay: "链式代理",
+    select: t("proxygroup_type_select"),
+    "url-test": t("proxygroup_type_url_test"),
+    fallback: t("proxygroup_type_fallback"),
+    "load-balance": t("proxygroup_type_load_balance"),
+    relay: t("proxygroup_type_relay"),
   };
   return map[type] ?? type;
 }
 
 export default function ProxyGroupsScreen() {
+  const { t } = useTranslation(["rules", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useProxyGroupsQuery();
@@ -86,7 +89,7 @@ export default function ProxyGroupsScreen() {
     const presets = presetsQuery.data ?? [];
     const selected = presets.filter((p) => selectedPresets.has(p.id));
     if (selected.length === 0) {
-      Alert.alert("提示", "请至少选择一个预设");
+      Alert.alert(t("common:tip"), t("proxygroup_select_at_least_one"));
       return;
     }
     try {
@@ -104,10 +107,10 @@ export default function ProxyGroupsScreen() {
         });
       }
       setPresetModalVisible(false);
-      Alert.alert("创建成功", `已从预设创建 ${selected.length} 个代理组`);
+      Alert.alert(t("proxygroup_create_success"), t("proxygroup_created_from_preset", { count: selected.length }));
       refetch();
     } catch (err: any) {
-      Alert.alert("创建失败", err.message);
+      Alert.alert(t("common:create_failed"), err.message);
     }
   };
 
@@ -131,7 +134,7 @@ export default function ProxyGroupsScreen() {
                 <Text
                   style={[styles.badgeText, { color: typeColor(item.type, colors) }]}
                 >
-                  {typeLabel(item.type)}
+                  {typeLabel(item.type, t)}
                 </Text>
               </View>
               {item.include_all && (
@@ -142,11 +145,11 @@ export default function ProxyGroupsScreen() {
                   ]}
                 >
                   <Text style={[styles.badgeText, { color: colors.success }]}>
-                    全部节点
+                    {t("proxygroup_include_all")}
                   </Text>
                 </View>
               )}
-              <Text style={styles.memberCount}>{memberCount} 个成员</Text>
+              <Text style={styles.memberCount}>{t("proxygroup_member_count", { count: memberCount })}</Text>
             </View>
           </View>
         </View>
@@ -178,7 +181,7 @@ export default function ProxyGroupsScreen() {
               size={16}
               color={colors.primary}
             />
-            <Text style={styles.presetBtnText}>从预设</Text>
+            <Text style={styles.presetBtnText}>{t("proxygroup_from_preset")}</Text>
           </TouchableOpacity>
         }
         ListEmptyComponent={
@@ -189,7 +192,7 @@ export default function ProxyGroupsScreen() {
                 size={48}
                 color={colors.textDisabled}
               />
-              <Text style={styles.emptyText}>暂无代理组</Text>
+              <Text style={styles.emptyText}>{t("proxygroup_empty")}</Text>
             </View>
           ) : null
         }
@@ -206,9 +209,9 @@ export default function ProxyGroupsScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setPresetModalVisible(false)}>
-              <Text style={styles.modalCancel}>取消</Text>
+              <Text style={styles.modalCancel}>{t("common:cancel")}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>选择预设</Text>
+            <Text style={styles.modalTitle}>{t("proxygroup_select_preset")}</Text>
             <TouchableOpacity
               onPress={handleBatchCreate}
               disabled={createMutation.isPending}
@@ -220,8 +223,8 @@ export default function ProxyGroupsScreen() {
                 ]}
               >
                 {createMutation.isPending
-                  ? "创建中..."
-                  : `创建 (${selectedPresets.size})`}
+                  ? t("common:creating")
+                  : t("proxygroup_creating_count", { count: selectedPresets.size })}
               </Text>
             </TouchableOpacity>
           </View>
@@ -231,9 +234,9 @@ export default function ProxyGroupsScreen() {
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
               presetsQuery.isLoading ? (
-                <Text style={styles.loadingText}>加载中...</Text>
+                <Text style={styles.loadingText}>{t("common:loading")}</Text>
               ) : (
-                <Text style={styles.loadingText}>暂无预设</Text>
+                <Text style={styles.loadingText}>{t("proxygroup_no_preset")}</Text>
               )
             }
             renderItem={({ item }: { item: ProxyGroupPreset }) => {
@@ -264,7 +267,7 @@ export default function ProxyGroupsScreen() {
                             { color: typeColor(item.type, colors) },
                           ]}
                         >
-                          {typeLabel(item.type)}
+                          {typeLabel(item.type, t)}
                         </Text>
                       </View>
                       {item.description && (

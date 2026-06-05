@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { useTranslation } from "react-i18next";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useUpdateAgent } from "../../api/agent";
@@ -7,6 +8,7 @@ import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 
 export default function EditAgentScreen() {
+  const { t } = useTranslation(["agents", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id, name: initialName } = useLocalSearchParams<{ id: string; name: string }>();
@@ -15,18 +17,18 @@ export default function EditAgentScreen() {
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert("提示", "请输入探针名称");
+      Alert.alert(t("common:tip"), t("input_name_required"));
       return;
     }
     updateMutation.mutate(
       { id: id!, data: { name: name.trim() } },
       {
         onSuccess: () => {
-          Alert.alert("保存成功", "探针已更新", [
-            { text: "好", onPress: () => router.back() },
+          Alert.alert(t("common:save_success"), t("saved_message"), [
+            { text: t("common:ok"), onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => Alert.alert("保存失败", err.message),
+        onError: (err: any) => Alert.alert(t("common:save_failed"), err.message),
       },
     );
   };
@@ -38,15 +40,15 @@ export default function EditAgentScreen() {
           <View style={[styles.cardIcon, { backgroundColor: colors.primarySoft }]}>
             <Ionicons name="radio-outline" size={16} color={colors.primary} />
           </View>
-          <Text style={styles.cardTitle}>编辑探针</Text>
+          <Text style={styles.cardTitle}>{t("edit_agent")}</Text>
         </View>
         <View style={styles.field}>
-          <Text style={styles.label}>名称</Text>
+          <Text style={styles.label}>{t("name_label")}</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="探针名称"
+            placeholder={t("name_placeholder")}
             placeholderTextColor={colors.textDisabled}
           />
         </View>
@@ -59,7 +61,7 @@ export default function EditAgentScreen() {
         activeOpacity={0.8}
       >
         <Text style={styles.submitText}>
-          {updateMutation.isPending ? "保存中..." : "保存修改"}
+          {updateMutation.isPending ? t("common:saving") : t("submit_save")}
         </Text>
       </TouchableOpacity>
     </ScrollView>

@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import { useVpsAssetDetail, useUpdateVpsAsset } from "../../api/vps-asset";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
@@ -19,21 +20,28 @@ import { useColors } from "../../lib/useColors";
 import type { UpdateVpsAssetRequest, BillingCycle } from "../../types/api";
 
 const CURRENCY_OPTIONS = ["CNY", "USD", "EUR", "GBP"] as const;
-const BILLING_OPTIONS: { label: string; value: BillingCycle }[] = [
-  { label: "月付", value: "monthly" },
-  { label: "季付", value: "quarterly" },
-  { label: "半年付", value: "semi_annual" },
-  { label: "年付", value: "annual" },
-  { label: "两年付", value: "biennial" },
-  { label: "三年付", value: "triennial" },
-];
+
+type TFn = (key: string) => string;
+
+function buildBillingOptions(t: TFn): { label: string; value: BillingCycle }[] {
+  return [
+    { label: t("billing_cycle_monthly"), value: "monthly" },
+    { label: t("billing_cycle_quarterly"), value: "quarterly" },
+    { label: t("billing_cycle_semi_annual"), value: "semi_annual" },
+    { label: t("billing_cycle_annual"), value: "annual" },
+    { label: t("billing_cycle_biennial"), value: "biennial" },
+    { label: t("billing_cycle_triennial"), value: "triennial" },
+  ];
+}
 
 export default function EditVpsAssetScreen() {
+  const { t } = useTranslation("vps");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, isLoading } = useVpsAssetDetail(id ?? "");
   const updateMutation = useUpdateVpsAsset();
+  const BILLING_OPTIONS = useMemo(() => buildBillingOptions(t), [t]);
 
   const [name, setName] = useState("");
   const [provider, setProvider] = useState("");
@@ -77,15 +85,15 @@ export default function EditVpsAssetScreen() {
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert("提示", "请输入名称");
+      Alert.alert(t("tip"), t("tip_name_required"));
       return;
     }
     if (!provider.trim()) {
-      Alert.alert("提示", "请输入提供商");
+      Alert.alert(t("tip"), t("tip_provider_required"));
       return;
     }
     if (!expireAt.trim()) {
-      Alert.alert("提示", "请输入到期时间");
+      Alert.alert(t("tip"), t("tip_expire_at_required"));
       return;
     }
 
@@ -121,11 +129,11 @@ export default function EditVpsAssetScreen() {
       { id: id!, data: req },
       {
         onSuccess: () => {
-          Alert.alert("保存成功", "VPS 资产已更新", [
-            { text: "好", onPress: () => router.back() },
+          Alert.alert(t("save_success"), t("save_success_message"), [
+            { text: t("ok"), onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => Alert.alert("保存失败", err.message),
+        onError: (err: any) => Alert.alert(t("save_failed"), err.message),
       },
     );
   };
@@ -150,47 +158,47 @@ export default function EditVpsAssetScreen() {
             <View style={[styles.cardIcon, { backgroundColor: colors.primarySoft }]}>
               <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
             </View>
-            <Text style={styles.cardTitle}>基本信息</Text>
+            <Text style={styles.cardTitle}>{t("basic_info")}</Text>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>名称 <Text style={styles.required}>*</Text></Text>
+            <Text style={styles.label}>{t("name")} <Text style={styles.required}>*</Text></Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="如：香港 DMIT"
+              placeholder={t("name_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>提供商 <Text style={styles.required}>*</Text></Text>
+            <Text style={styles.label}>{t("provider")} <Text style={styles.required}>*</Text></Text>
             <TextInput
               style={styles.input}
               value={provider}
               onChangeText={setProvider}
-              placeholder="如：DMIT"
+              placeholder={t("provider_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>IP 地址</Text>
+            <Text style={styles.label}>{t("ip_address")}</Text>
             <TextInput
               style={styles.input}
               value={ip}
               onChangeText={setIp}
-              placeholder="如：1.2.3.4"
+              placeholder={t("ip_placeholder")}
               placeholderTextColor={colors.textDisabled}
               autoCapitalize="none"
               keyboardType="decimal-pad"
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>地区</Text>
+            <Text style={styles.label}>{t("location")}</Text>
             <TextInput
               style={styles.input}
               value={location}
               onChangeText={setLocation}
-              placeholder="如：Hong Kong"
+              placeholder={t("location_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
@@ -202,21 +210,21 @@ export default function EditVpsAssetScreen() {
             <View style={[styles.cardIcon, { backgroundColor: colors.warningBg }]}>
               <Ionicons name="cash-outline" size={16} color={colors.warning} />
             </View>
-            <Text style={styles.cardTitle}>费用与到期</Text>
+            <Text style={styles.cardTitle}>{t("cost_and_expiry")}</Text>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>价格</Text>
+            <Text style={styles.label}>{t("price")}</Text>
             <TextInput
               style={styles.input}
               value={price}
               onChangeText={setPrice}
-              placeholder="0.00"
+              placeholder={t("price_placeholder")}
               placeholderTextColor={colors.textDisabled}
               keyboardType="decimal-pad"
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>币种</Text>
+            <Text style={styles.label}>{t("currency")}</Text>
             <View style={styles.chipRow}>
               {CURRENCY_OPTIONS.map((c) => (
                 <TouchableOpacity
@@ -241,7 +249,7 @@ export default function EditVpsAssetScreen() {
             </View>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>付费周期</Text>
+            <Text style={styles.label}>{t("billing_cycle")}</Text>
             <View style={styles.chipRow}>
               {BILLING_OPTIONS.map((opt) => (
                 <TouchableOpacity
@@ -266,12 +274,12 @@ export default function EditVpsAssetScreen() {
             </View>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>到期时间 <Text style={styles.required}>*</Text></Text>
+            <Text style={styles.label}>{t("expire_at")} <Text style={styles.required}>*</Text></Text>
             <TextInput
               style={styles.input}
               value={expireAt}
               onChangeText={setExpireAt}
-              placeholder="YYYY-MM-DD"
+              placeholder={t("expire_at_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
@@ -283,45 +291,45 @@ export default function EditVpsAssetScreen() {
             <View style={[styles.cardIcon, { backgroundColor: colors.infoBg }]}>
               <Ionicons name="hardware-chip-outline" size={16} color={colors.info} />
             </View>
-            <Text style={styles.cardTitle}>硬件配置</Text>
+            <Text style={styles.cardTitle}>{t("hardware_config")}</Text>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>CPU</Text>
+            <Text style={styles.label}>{t("cpu")}</Text>
             <TextInput
               style={styles.input}
               value={cpu}
               onChangeText={setCpu}
-              placeholder="如：1C"
+              placeholder={t("cpu_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>内存</Text>
+            <Text style={styles.label}>{t("memory")}</Text>
             <TextInput
               style={styles.input}
               value={memory}
               onChangeText={setMemory}
-              placeholder="如：1G"
+              placeholder={t("memory_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>硬盘</Text>
+            <Text style={styles.label}>{t("disk")}</Text>
             <TextInput
               style={styles.input}
               value={disk}
               onChangeText={setDisk}
-              placeholder="如：20G SSD"
+              placeholder={t("disk_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>带宽</Text>
+            <Text style={styles.label}>{t("bandwidth")}</Text>
             <TextInput
               style={styles.input}
               value={bandwidth}
               onChangeText={setBandwidth}
-              placeholder="如：1Gbps"
+              placeholder={t("bandwidth_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
@@ -336,7 +344,7 @@ export default function EditVpsAssetScreen() {
             <Text style={styles.cardTitle}>SSH</Text>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>SSH 端口</Text>
+            <Text style={styles.label}>{t("ssh_port")}</Text>
             <TextInput
               style={styles.input}
               value={sshPort}
@@ -347,7 +355,7 @@ export default function EditVpsAssetScreen() {
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>SSH 用户</Text>
+            <Text style={styles.label}>{t("ssh_user")}</Text>
             <TextInput
               style={styles.input}
               value={sshUser}
@@ -358,22 +366,22 @@ export default function EditVpsAssetScreen() {
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>操作系统</Text>
+            <Text style={styles.label}>{t("os")}</Text>
             <TextInput
               style={styles.input}
               value={os}
               onChangeText={setOs}
-              placeholder="如：Ubuntu 22.04"
+              placeholder={t("os_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>备注</Text>
+            <Text style={styles.label}>{t("notes")}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={notes}
               onChangeText={setNotes}
-              placeholder="可选备注"
+              placeholder={t("notes_placeholder")}
               placeholderTextColor={colors.textDisabled}
               multiline
               numberOfLines={3}
@@ -390,7 +398,7 @@ export default function EditVpsAssetScreen() {
           activeOpacity={0.8}
         >
           <Text style={styles.submitText}>
-            {updateMutation.isPending ? "保存中..." : "保存修改"}
+            {updateMutation.isPending ? t("saving") : t("save_modify")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

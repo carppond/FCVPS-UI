@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { usePipelinesQuery } from "../api/pipeline";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
@@ -32,6 +33,7 @@ function countOperators(astJson: string): number {
 }
 
 export default function PipelinesScreen() {
+  const { t } = useTranslation("rules");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = usePipelinesQuery();
@@ -63,7 +65,7 @@ export default function PipelinesScreen() {
             </Text>
             <View style={styles.badgeRow}>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{opCount} 个算子</Text>
+                <Text style={styles.badgeText}>{t("pipeline_count_operators", { count: opCount })}</Text>
               </View>
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>v{item.version}</Text>
@@ -104,7 +106,7 @@ export default function PipelinesScreen() {
                 size={48}
                 color={colors.textDisabled}
               />
-              <Text style={styles.emptyText}>暂无流水线</Text>
+              <Text style={styles.emptyText}>{t("pipeline_empty")}</Text>
             </View>
           ) : null
         }
@@ -121,7 +123,7 @@ export default function PipelinesScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setSelectedPipeline(null)}>
-              <Text style={styles.modalCancel}>关闭</Text>
+              <Text style={styles.modalCancel}>{t("pipeline_modal_close")}</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle} numberOfLines={1}>
               {selectedPipeline?.name}
@@ -133,7 +135,7 @@ export default function PipelinesScreen() {
             contentContainerStyle={styles.yamlContent}
           >
             <Text style={styles.yamlText} selectable>
-              {selectedPipeline?.yaml_content || "暂无 YAML 内容"}
+              {selectedPipeline?.yaml_content || t("pipeline_no_yaml")}
             </Text>
           </ScrollView>
         </View>

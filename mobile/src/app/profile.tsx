@@ -12,12 +12,14 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useProfileQuery, useUpdateProfile, useChangePassword } from "../api/user";
 import { useAuthStore } from "../stores/auth-store";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 
 export default function ProfileScreen() {
+  const { t } = useTranslation(["settings", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data: profile, refetch } = useProfileQuery();
@@ -67,16 +69,17 @@ export default function ProfileScreen() {
       payload.locale = editLocale;
     }
     if (Object.keys(payload).length === 0) {
-      Alert.alert("提示", "没有需要保存的修改");
+      Alert.alert(t("common:tip"), t("profile_no_changes"));
       return;
     }
     updateMutation.mutate(payload, {
       onSuccess: () => {
-        Alert.alert("成功", "个人信息已更新");
+        Alert.alert(t("common:success"), t("profile_updated_msg"));
         setProfileDirty(false);
         refetch();
       },
-      onError: (err: any) => Alert.alert("更新失败", err.message),
+      onError: (err: any) =>
+        Alert.alert(t("profile_update_failed"), err.message),
     });
   };
 
@@ -84,36 +87,37 @@ export default function ProfileScreen() {
 
   const handleChangePassword = () => {
     if (!oldPassword.trim()) {
-      Alert.alert("提示", "请输入旧密码");
+      Alert.alert(t("common:tip"), t("profile_password_old_required"));
       return;
     }
     if (!newPassword.trim()) {
-      Alert.alert("提示", "请输入新密码");
+      Alert.alert(t("common:tip"), t("profile_password_new_required"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert("提示", "两次输入的新密码不一致");
+      Alert.alert(t("common:tip"), t("profile_password_mismatch"));
       return;
     }
     passwordMutation.mutate(
       { old_password: oldPassword, new_password: newPassword },
       {
         onSuccess: () => {
-          Alert.alert("成功", "密码已修改");
+          Alert.alert(t("common:success"), t("profile_password_changed_msg"));
           setOldPassword("");
           setNewPassword("");
           setConfirmPassword("");
         },
-        onError: (err: any) => Alert.alert("修改失败", err.message),
+        onError: (err: any) =>
+          Alert.alert(t("profile_change_failed"), err.message),
       },
     );
   };
 
   const handleLogout = () => {
-    Alert.alert("退出登录", "确定要退出吗？", [
-      { text: "取消", style: "cancel" },
+    Alert.alert(t("logout"), t("logout_confirm"), [
+      { text: t("common:cancel"), style: "cancel" },
       {
-        text: "退出",
+        text: t("logout_action"),
         style: "destructive",
         onPress: async () => {
           await clearSession();
@@ -137,7 +141,7 @@ export default function ProfileScreen() {
           <View style={styles.profileInfo}>
             <Text style={styles.username}>{profile?.username ?? "--"}</Text>
             <Text style={styles.email}>
-              {profile?.email || "未设置邮箱"}
+              {profile?.email || t("no_email")}
             </Text>
             <View style={styles.badgeRow}>
               <Text style={styles.roleBadge}>
@@ -158,32 +162,32 @@ export default function ProfileScreen() {
             >
               <Ionicons name="person-outline" size={16} color={colors.info} />
             </View>
-            <Text style={styles.cardTitle}>账号信息</Text>
+            <Text style={styles.cardTitle}>{t("profile_account_info")}</Text>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>用户名</Text>
+            <Text style={styles.label}>{t("profile_username_label")}</Text>
             <TextInput
               style={styles.input}
               value={editUsername}
               onChangeText={(v) => handleProfileChange("username", v)}
-              placeholder="请输入用户名"
+              placeholder={t("profile_username_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>邮箱</Text>
+            <Text style={styles.label}>{t("profile_email_label")}</Text>
             <TextInput
               style={styles.input}
               value={editEmail}
               onChangeText={(v) => handleProfileChange("email", v)}
-              placeholder="请输入邮箱"
+              placeholder={t("profile_email_placeholder")}
               placeholderTextColor={colors.textDisabled}
               keyboardType="email-address"
               autoCapitalize="none"
             />
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>语言</Text>
+            <Text style={styles.label}>{t("profile_lang_label")}</Text>
             <View style={styles.localeRow}>
               {LOCALE_OPTIONS.map((opt) => (
                 <TouchableOpacity
@@ -200,13 +204,13 @@ export default function ProfileScreen() {
             </View>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>角色</Text>
+            <Text style={styles.infoLabel}>{t("profile_role_label")}</Text>
             <Text style={styles.infoValue}>
               {profile?.role ?? "--"}
             </Text>
           </View>
           <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-            <Text style={styles.infoLabel}>两步验证</Text>
+            <Text style={styles.infoLabel}>{t("profile_totp_label")}</Text>
             <Text
               style={[
                 styles.infoValue,
@@ -217,7 +221,9 @@ export default function ProfileScreen() {
                 },
               ]}
             >
-              {profile?.totp_enabled ? "已开启" : "未开启"}
+              {profile?.totp_enabled
+                ? t("profile_totp_enabled")
+                : t("profile_totp_disabled")}
             </Text>
           </View>
           <TouchableOpacity
@@ -227,7 +233,9 @@ export default function ProfileScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.saveBtnText}>
-              {updateMutation.isPending ? "保存中..." : "保存修改"}
+              {updateMutation.isPending
+                ? t("common:saving")
+                : t("profile_save_btn")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -247,43 +255,46 @@ export default function ProfileScreen() {
                 color={colors.warning}
               />
             </View>
-            <Text style={styles.cardTitle}>修改密码</Text>
+            <Text style={styles.cardTitle}>{t("profile_change_password")}</Text>
           </View>
           <View style={styles.field}>
             <Text style={styles.label}>
-              旧密码 <Text style={styles.required}>*</Text>
+              {t("profile_old_password_label")}{" "}
+              <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
               value={oldPassword}
               onChangeText={setOldPassword}
-              placeholder="请输入旧密码"
+              placeholder={t("profile_old_password_placeholder")}
               placeholderTextColor={colors.textDisabled}
               secureTextEntry
             />
           </View>
           <View style={styles.field}>
             <Text style={styles.label}>
-              新密码 <Text style={styles.required}>*</Text>
+              {t("profile_new_password_label")}{" "}
+              <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
               value={newPassword}
               onChangeText={setNewPassword}
-              placeholder="请输入新密码"
+              placeholder={t("profile_new_password_placeholder")}
               placeholderTextColor={colors.textDisabled}
               secureTextEntry
             />
           </View>
           <View style={styles.field}>
             <Text style={styles.label}>
-              确认新密码 <Text style={styles.required}>*</Text>
+              {t("profile_confirm_password_label")}{" "}
+              <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              placeholder="再次输入新密码"
+              placeholder={t("profile_confirm_password_placeholder")}
               placeholderTextColor={colors.textDisabled}
               secureTextEntry
             />
@@ -298,7 +309,9 @@ export default function ProfileScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.submitText}>
-              {passwordMutation.isPending ? "修改中..." : "修改密码"}
+              {passwordMutation.isPending
+                ? t("profile_changing")
+                : t("profile_submit_change_password")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -310,7 +323,7 @@ export default function ProfileScreen() {
           activeOpacity={0.7}
         >
           <Ionicons name="log-out-outline" size={18} color={colors.error} />
-          <Text style={styles.logoutText}>退出登录</Text>
+          <Text style={styles.logoutText}>{t("logout")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

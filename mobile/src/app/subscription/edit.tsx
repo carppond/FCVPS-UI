@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -20,6 +21,7 @@ import { useColors } from "../../lib/useColors";
 import type { UpdateSubscriptionRequest } from "../../types/api";
 
 export default function EditSubscriptionScreen() {
+  const { t } = useTranslation(["subscription", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,7 +46,7 @@ export default function EditSubscriptionScreen() {
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert("提示", "请输入订阅名称");
+      Alert.alert(t("common:tip"), t("required_name"));
       return;
     }
     const req: UpdateSubscriptionRequest = {
@@ -59,11 +61,11 @@ export default function EditSubscriptionScreen() {
       { id: id!, data: req },
       {
         onSuccess: () => {
-          Alert.alert("保存成功", "订阅已更新", [
-            { text: "好", onPress: () => router.back() },
+          Alert.alert(t("save_success"), t("saved_message"), [
+            { text: t("common:ok"), onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => Alert.alert("保存失败", err.message),
+        onError: (err: any) => Alert.alert(t("save_failed"), err.message),
       },
     );
   };
@@ -88,15 +90,15 @@ export default function EditSubscriptionScreen() {
             <View style={[styles.cardIcon, { backgroundColor: colors.primarySoft }]}>
               <Ionicons name="book-outline" size={16} color={colors.primary} />
             </View>
-            <Text style={styles.cardTitle}>基本信息</Text>
+            <Text style={styles.cardTitle}>{t("basic_info")}</Text>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>名称 <Text style={styles.required}>*</Text></Text>
+            <Text style={styles.label}>{t("name")} <Text style={styles.required}>*</Text></Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="如：我的订阅"
+              placeholder={t("name_placeholder")}
               placeholderTextColor={colors.textDisabled}
             />
           </View>
@@ -108,15 +110,15 @@ export default function EditSubscriptionScreen() {
             <View style={[styles.cardIcon, { backgroundColor: colors.infoBg }]}>
               <Ionicons name="link-outline" size={16} color={colors.info} />
             </View>
-            <Text style={styles.cardTitle}>订阅源</Text>
+            <Text style={styles.cardTitle}>{t("source")}</Text>
           </View>
           <View style={styles.field}>
-            <Text style={styles.label}>URL</Text>
+            <Text style={styles.label}>{t("url")}</Text>
             <TextInput
               style={styles.input}
               value={sourceUrl}
               onChangeText={setSourceUrl}
-              placeholder="https://example.com/subscribe?token=xxx"
+              placeholder={t("url_placeholder")}
               placeholderTextColor={colors.textDisabled}
               autoCapitalize="none"
               autoCorrect={false}
@@ -131,14 +133,14 @@ export default function EditSubscriptionScreen() {
             <View style={[styles.cardIcon, { backgroundColor: "rgba(255,255,255,0.04)" }]}>
               <Ionicons name="chatbubble-outline" size={16} color={colors.textTertiary} />
             </View>
-            <Text style={styles.cardTitle}>备注</Text>
+            <Text style={styles.cardTitle}>{t("remark")}</Text>
           </View>
           <View style={styles.field}>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={remark}
               onChangeText={setRemark}
-              placeholder="可选备注"
+              placeholder={t("remark_placeholder")}
               placeholderTextColor={colors.textDisabled}
               multiline
               numberOfLines={3}
@@ -154,11 +156,11 @@ export default function EditSubscriptionScreen() {
               <View style={[styles.cardIcon, { backgroundColor: colors.warningBg }]}>
                 <Ionicons name="shield-outline" size={16} color={colors.warning} />
               </View>
-              <Text style={styles.cardTitle}>跳过 TLS 证书校验</Text>
+              <Text style={styles.cardTitle}>{t("allow_insecure_title")}</Text>
             </View>
             <View style={styles.insecureRow}>
               <Text style={styles.insecureHint}>
-                上游证书自签或过期时开启(仅限你信任的自有节点)。会失去该订阅拉取的 MITM 防护。
+                {t("allow_insecure_hint")}
               </Text>
               <Switch
                 value={allowInsecure}
@@ -178,7 +180,7 @@ export default function EditSubscriptionScreen() {
           activeOpacity={0.8}
         >
           <Text style={styles.submitText}>
-            {updateMutation.isPending ? "保存中..." : "保存修改"}
+            {updateMutation.isPending ? t("common:saving") : t("save_changes")}
           </Text>
         </TouchableOpacity>
       </ScrollView>

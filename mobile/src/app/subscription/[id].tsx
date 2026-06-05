@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share, Alert, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -45,6 +46,7 @@ function formatDate(epoch: number): string {
 }
 
 export default function SubscriptionDetailScreen() {
+  const { t } = useTranslation(["subscription", "common"]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -60,10 +62,13 @@ export default function SubscriptionDetailScreen() {
     mutationFn: () =>
       apiFetch<SyncResult>(`/api/subscriptions/${id}/sync`, { method: "POST" }),
     onSuccess: (res) => {
-      Alert.alert("同步成功", `新增 ${res.added_count} 个节点，移除 ${res.removed_count} 个`);
+      Alert.alert(
+        t("sync_success"),
+        t("sync_success_summary", { added: res.added_count, removed: res.removed_count }),
+      );
       refetch();
     },
-    onError: (err: any) => Alert.alert("同步失败", err.message),
+    onError: (err: any) => Alert.alert(t("sync_failed"), err.message),
   });
 
   // Download URL uses /download/{name}?token={share_token}&target=... (matches web)
@@ -85,7 +90,7 @@ export default function SubscriptionDetailScreen() {
   const copyLink = async (target: string, label: string) => {
     const url = getDownloadUrl(target);
     await Clipboard.setStringAsync(url);
-    Alert.alert("已复制", `${label} 订阅链接已复制到剪贴板`);
+    Alert.alert(t("common:copied"), t("copy_link_done", { label }));
   };
 
   const shareLink = async (target: string, label: string) => {
@@ -98,9 +103,9 @@ export default function SubscriptionDetailScreen() {
     try {
       const result = await shortLinkMutation.mutateAsync(url);
       await Clipboard.setStringAsync(result.short_url);
-      Alert.alert("短链已生成", `${result.short_url}\n\n已复制到剪贴板`);
+      Alert.alert(t("shortlink_generated"), t("shortlink_generated_message", { url: result.short_url }));
     } catch (err: any) {
-      Alert.alert("生成失败", err.message);
+      Alert.alert(t("shortlink_failed"), err.message);
     }
   };
 
@@ -132,7 +137,7 @@ export default function SubscriptionDetailScreen() {
           <Text style={styles.name}>{data.name}</Text>
         </View>
         <View style={styles.metaRow}>
-          <MetaChip icon="layers-outline" text={`${data.node_count} 个节点`} />
+          <MetaChip icon="layers-outline" text={t("node_count", { count: data.node_count })} />
           <MetaChip icon="sync-outline" text={data.type.toUpperCase()} />
         </View>
         {data.source_url && (
@@ -151,7 +156,7 @@ export default function SubscriptionDetailScreen() {
             style={syncMutation.isPending ? { opacity: 0.5 } : undefined}
           />
           <Text style={styles.syncBtnText}>
-            {syncMutation.isPending ? "同步中..." : "立即同步"}
+            {syncMutation.isPending ? t("syncing") : t("sync_now")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -160,9 +165,9 @@ export default function SubscriptionDetailScreen() {
       <View style={styles.trafficCard}>
         <View style={styles.trafficRow}>
           <Ionicons name="cloud-outline" size={14} color={colors.textTertiary} />
-          <Text style={styles.trafficLabel}>流量</Text>
+          <Text style={styles.trafficLabel}>{t("traffic")}</Text>
           <Text style={styles.trafficValue}>
-            {formatBytes(data.traffic_used ?? 0)} / {hasTraffic ? formatBytes(data.traffic_total!) : "无限制"}
+            {formatBytes(data.traffic_used ?? 0)} / {hasTraffic ? formatBytes(data.traffic_total!) : t("traffic_unlimited")}
           </Text>
         </View>
         {hasTraffic && (
@@ -177,55 +182,55 @@ export default function SubscriptionDetailScreen() {
         )}
         {hasTraffic && (
           <Text style={styles.trafficPctText}>
-            已使用 {trafficPct.toFixed(1)}%
+            {t("traffic_used_pct", { pct: trafficPct.toFixed(1) })}
           </Text>
         )}
         <View style={styles.trafficRow}>
           <Ionicons name="calendar-outline" size={14} color={colors.textTertiary} />
-          <Text style={styles.trafficLabel}>到期</Text>
+          <Text style={styles.trafficLabel}>{t("expire")}</Text>
           <Text style={styles.trafficValue}>
             {data.expire_at
-              ? `${formatDate(data.expire_at)} (剩余 ${daysUntil(data.expire_at)} 天)`
-              : "无期限"}
+              ? t("expire_value", { date: formatDate(data.expire_at), days: daysUntil(data.expire_at) })
+              : t("expire_no_limit")}
           </Text>
         </View>
       </View>
 
       {/* Download links */}
-      <Text style={styles.sectionTitle}>订阅链接</Text>
+      <Text style={styles.sectionTitle}>{t("download_links")}</Text>
       <View style={styles.linksGrid}>
-        {buildTargets(colors).map((t) => (
-          <View key={t.key} style={styles.linkCard}>
+        {buildTargets(colors).map((target) => (
+          <View key={target.key} style={styles.linkCard}>
             <View style={styles.linkHeader}>
-              <View style={[styles.linkIcon, { backgroundColor: t.color + "18" }]}>
-                <Ionicons name={t.icon} size={18} color={t.color} />
+              <View style={[styles.linkIcon, { backgroundColor: target.color + "18" }]}>
+                <Ionicons name={target.icon} size={18} color={target.color} />
               </View>
-              <Text style={styles.linkLabel} numberOfLines={1}>{t.label}</Text>
+              <Text style={styles.linkLabel} numberOfLines={1}>{target.label}</Text>
             </View>
             <View style={styles.linkActions}>
               <TouchableOpacity
                 style={styles.linkBtn}
-                onPress={() => copyLink(t.key, t.label)}
+                onPress={() => copyLink(target.key, target.label)}
                 activeOpacity={0.6}
               >
                 <Ionicons name="copy-outline" size={12} color={colors.textSecondary} />
-                <Text style={styles.linkBtnText}>复制</Text>
+                <Text style={styles.linkBtnText}>{t("copy")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.linkBtn}
-                onPress={() => createShortLink(t.key, t.label)}
+                onPress={() => createShortLink(target.key, target.label)}
                 activeOpacity={0.6}
               >
                 <Ionicons name="link-outline" size={12} color={colors.primary} />
-                <Text style={[styles.linkBtnText, { color: colors.primary }]}>短链</Text>
+                <Text style={[styles.linkBtnText, { color: colors.primary }]}>{t("shortlink")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.linkBtn}
-                onPress={() => shareLink(t.key, t.label)}
+                onPress={() => shareLink(target.key, target.label)}
                 activeOpacity={0.6}
               >
                 <Ionicons name="share-outline" size={14} color={colors.textSecondary} />
-                <Text style={styles.linkBtnText}>分享</Text>
+                <Text style={styles.linkBtnText}>{t("share")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -233,10 +238,10 @@ export default function SubscriptionDetailScreen() {
       </View>
 
       {/* Nodes */}
-      <Text style={styles.sectionTitle}>节点列表 ({data.nodes?.length ?? 0}) · 总计 {data.nodes_total ?? 0}</Text>
+      <Text style={styles.sectionTitle}>{t("nodes_section", { count: data.nodes?.length ?? 0, total: data.nodes_total ?? 0 })}</Text>
       {(!data.nodes || data.nodes.length === 0) && (
         <View style={{ padding: 20, alignItems: "center" }}>
-          <Text style={{ color: colors.textTertiary, fontSize: 13 }}>暂无节点，请先同步订阅</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 13 }}>{t("empty_nodes_hint")}</Text>
         </View>
       )}
       {(data.nodes ?? []).map((node) => (

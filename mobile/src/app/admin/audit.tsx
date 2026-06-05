@@ -7,6 +7,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useAuditLogs } from "../../api/admin";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
@@ -22,6 +23,7 @@ function formatTime(ts: number): string {
 }
 
 export default function AdminAuditScreen() {
+  const { t } = useTranslation("settings");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useAuditLogs();
@@ -60,7 +62,9 @@ export default function AdminAuditScreen() {
                 },
               ]}
             >
-              {item.success ? "成功" : "失败"}
+              {item.success
+                ? t("admin_audit_success")
+                : t("admin_audit_failed")}
             </Text>
           </View>
         </View>
@@ -124,7 +128,7 @@ export default function AdminAuditScreen() {
               size={48}
               color={colors.textDisabled}
             />
-            <Text style={styles.emptyText}>暂无审计日志</Text>
+            <Text style={styles.emptyText}>{t("admin_audit_empty")}</Text>
           </View>
         ) : null
       }

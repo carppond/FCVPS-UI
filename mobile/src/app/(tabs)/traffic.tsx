@@ -1,5 +1,6 @@
 import { View, Text, FlatList, StyleSheet, RefreshControl, Image } from "react-native";
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
 import { useTrafficSummary } from "../../api/traffic";
@@ -11,6 +12,7 @@ import { pushTrafficToWidget } from "../../lib/widget-sync";
 const MASCOT = require("../../../assets/login-art.png");
 
 function TrafficRing({ percent, used }: { percent: number; used: string }) {
+  const { t } = useTranslation("traffic");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const size = 156;
@@ -44,7 +46,7 @@ function TrafficRing({ percent, used }: { percent: number; used: string }) {
       </Svg>
       <View style={styles.ringCenter} pointerEvents="none">
         <Text style={styles.ringValue}>{used}</Text>
-        <Text style={styles.ringPct}>{Math.round(pct)}% 已用</Text>
+        <Text style={styles.ringPct}>{t("used_percent", { percent: Math.round(pct) })}</Text>
       </View>
     </View>
   );
@@ -59,6 +61,7 @@ function formatBytes(n: number): string {
 }
 
 export default function TrafficScreen() {
+  const { t } = useTranslation("traffic");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { data, isLoading, refetch } = useTrafficSummary();
@@ -98,28 +101,28 @@ export default function TrafficScreen() {
                 </View>
                 <Text style={styles.encourageText}>
                   {data.usage_percent >= 90
-                    ? "流量快用完啦,省着点用哦～"
+                    ? t("encourage_high")
                     : data.usage_percent >= 70
-                      ? `还剩 ${Math.round(100 - data.usage_percent)}%,留意一下哦`
-                      : `还剩 ${Math.round(100 - data.usage_percent)}%,够用到月底啦~`}
+                      ? t("encourage_mid", { percent: Math.round(100 - data.usage_percent) })
+                      : t("encourage_low", { percent: Math.round(100 - data.usage_percent) })}
                 </Text>
               </View>
             </View>
             <View style={styles.summaryRow}>
-              <SumChip label="上传" value={formatBytes(data.total_in)} icon="arrow-up-outline" />
-              <SumChip label="下载" value={formatBytes(data.total_out)} icon="arrow-down-outline" />
+              <SumChip label={t("upload")} value={formatBytes(data.total_in)} icon="arrow-up-outline" />
+              <SumChip label={t("download")} value={formatBytes(data.total_out)} icon="arrow-down-outline" />
             </View>
             <View style={styles.summaryRow}>
-              <SumChip label="总用量" value={formatBytes(data.total_used)} icon="swap-vertical-outline" />
+              <SumChip label={t("total_used")} value={formatBytes(data.total_used)} icon="swap-vertical-outline" />
               <SumChip
-                label="使用率"
+                label={t("usage_percent")}
                 value={`${Math.round(data.usage_percent)}%`}
                 icon="pie-chart-outline"
                 color={data.usage_percent > 80 ? colors.error : data.usage_percent > 50 ? colors.warning : colors.success}
               />
             </View>
             {agents.length > 0 && (
-              <Text style={styles.sectionTitle}>各探针流量</Text>
+              <Text style={styles.sectionTitle}>{t("per_agent_traffic")}</Text>
             )}
           </View>
         ) : null
@@ -128,7 +131,7 @@ export default function TrafficScreen() {
         !isLoading && !data ? (
           <View style={styles.emptyBox}>
             <Ionicons name="analytics-outline" size={48} color={colors.textDisabled} />
-            <Text style={styles.emptyText}>暂无流量数据</Text>
+            <Text style={styles.emptyText}>{t("empty")}</Text>
           </View>
         ) : null
       }
@@ -150,6 +153,7 @@ function SumChip({ label, value, icon, color }: { label: string; value: string; 
 }
 
 function AgentTrafficCard({ agent }: { agent: AgentTrafficSummary }) {
+  const { t } = useTranslation("traffic");
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
@@ -157,15 +161,15 @@ function AgentTrafficCard({ agent }: { agent: AgentTrafficSummary }) {
       <Text style={styles.cardName} numberOfLines={1}>{agent.agent_name}</Text>
       <View style={styles.metricsRow}>
         <View style={styles.metric}>
-          <Text style={styles.metricLabel}>上传</Text>
+          <Text style={styles.metricLabel}>{t("upload")}</Text>
           <Text style={styles.metricValue}>{formatBytes(agent.total_in)}</Text>
         </View>
         <View style={styles.metric}>
-          <Text style={styles.metricLabel}>下载</Text>
+          <Text style={styles.metricLabel}>{t("download")}</Text>
           <Text style={styles.metricValue}>{formatBytes(agent.total_out)}</Text>
         </View>
         <View style={styles.metric}>
-          <Text style={styles.metricLabel}>总计</Text>
+          <Text style={styles.metricLabel}>{t("total")}</Text>
           <Text style={[styles.metricValue, { color: colors.primary }]}>{formatBytes(agent.total_used)}</Text>
         </View>
       </View>
