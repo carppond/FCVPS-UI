@@ -3,8 +3,11 @@
 **自托管 Clash 订阅聚合 + VPS 资产管理 + 探针监控 + 通知系统一体化平台**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Telegram](https://img.shields.io/badge/Telegram-交流群-26A5E4?logo=telegram&logoColor=white)](https://t.me/fcvpss)
 
 把 sub-store（订阅）、Nezha（探针）、Uptime Kuma（通知）、VPS 资产管理收敛到一份 Go 单二进制 + React 网页 + 移动端 App。
+
+> 💬 **交流群**：[t.me/fcvpss](https://t.me/fcvpss) — 使用问题、需求反馈、新版本通知
 
 ---
 
