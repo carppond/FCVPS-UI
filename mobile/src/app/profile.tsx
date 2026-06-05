@@ -202,6 +202,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+            <Text style={styles.localeHint}>{t("profile_lang_hint")}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>{t("profile_role_label")}</Text>
@@ -465,6 +466,7 @@ const makeStyles = (colors: AppColors) =>
   localeRow: {
     flexDirection: "row", flexWrap: "wrap", gap: spacing.sm,
   },
+  localeHint: { fontSize: fontSize.xs, color: colors.textTertiary, marginTop: spacing.xs, lineHeight: 16 },
   localeChip: {
     paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
     borderRadius: radius.lg, backgroundColor: colors.elevated,
