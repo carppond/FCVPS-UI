@@ -362,6 +362,9 @@ func mountUserRoutes(mux *http.ServeMux, deps *Deps) {
 	uh := deps.UserHandler
 	mux.Handle("GET /api/me", required(http.HandlerFunc(uh.Me)))
 	mux.Handle("PATCH /api/me", required(http.HandlerFunc(uh.UpdateMe)))
+	// PUT alias — every other resource registers PUT+PATCH; also keeps the
+	// mobile app ≤ v1.1.1 (which sent PUT) working against newer hubs.
+	mux.Handle("PUT /api/me", required(http.HandlerFunc(uh.UpdateMe)))
 	mux.Handle("POST /api/me/password", required(http.HandlerFunc(uh.ChangePassword)))
 	mux.Handle("DELETE /api/me", required(http.HandlerFunc(uh.DeleteMe)))
 	// Contract §5.1.2 documents GET for /api/me/totp/setup (no body needed —

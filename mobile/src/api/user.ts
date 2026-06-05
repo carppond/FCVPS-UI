@@ -16,8 +16,9 @@ export function useProfileQuery() {
 export function useUpdateProfile() {
   return useMutation({
     mutationFn: (data: UpdateMeRequest) =>
+      // 合同 §:PATCH /api/me(PUT 会 405)
       apiFetch<UserPublicProfile>("/api/me", {
-        method: "PUT",
+        method: "PATCH",
         body: JSON.stringify(data),
       }),
   });
@@ -26,8 +27,9 @@ export function useUpdateProfile() {
 export function useChangePassword() {
   return useMutation({
     mutationFn: (data: ChangePasswordRequest) =>
+      // 合同 §:POST /api/me/password(PUT 会 405)
       apiFetch<void>("/api/me/password", {
-        method: "PUT",
+        method: "POST",
         body: JSON.stringify(data),
       }),
   });

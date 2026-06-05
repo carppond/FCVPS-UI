@@ -36,6 +36,13 @@ func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 		util.RespondError(w, types.ErrAuthTokenInvalid, "no user", nil, traceID)
 		return
 	}
+	// 上下文里的用户来自 token 校验的 60s LRU 缓存(auth/token_store.go)——
+	// PATCH /api/me 改完资料立刻 GET 会拿到旧快照,这里始终回源数据库。
+	if h.users != nil {
+		if fresh, err := h.users.GetByID(r.Context(), user.ID); err == nil {
+			user = fresh
+		}
+	}
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.UserPublicProfile]{
 		Data:      userRecordToPublic(user),
 		RequestID: traceID,
