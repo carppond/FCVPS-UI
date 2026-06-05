@@ -101,6 +101,12 @@ func ProduceClashYAML(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, 
 		root = mutated
 	}
 
+	// Drop RULE-SET rules whose provider is absent from rule-providers —
+	// mihomo rejects the whole document otherwise ("rule set [x] no found").
+	// Runs before ensureMissingProxyGroups so a dropped rule does not
+	// auto-create its now-unreferenced target group.
+	dropRulesMissingProviders(root, opts)
+
 	// Auto-supplement missing proxy groups: scan rules for referenced group
 	// names that don't exist in proxy-groups and create them as select-type
 	// groups. Without this, mihomo rejects the config with "proxy not found".

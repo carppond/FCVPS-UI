@@ -63,9 +63,10 @@ type ACLRule struct {
 
 // ClashProducerOpts controls behaviour of ProduceClashYAML.
 type ClashProducerOpts struct {
-	// OnWarning is invoked for every node that the producer chose to drop
-	// (e.g. vless+reality). It is safe to leave nil; warnings are then
-	// silently swallowed.
+	// OnWarning is invoked for everything the producer chose to drop: a node
+	// it cannot render, or a RULE-SET rule whose provider is missing (node is
+	// nil in that case — the warning concerns a rule, not a proxy). It is
+	// safe to leave nil; warnings are then silently swallowed.
 	OnWarning func(node *ParsedNode, reason string)
 	// ProxiesOnly skips the auto-seeded proxy-groups / rule-providers /
 	// rules sections. Used by the rule editor preview, which wants a bare
