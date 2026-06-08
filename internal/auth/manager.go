@@ -110,7 +110,7 @@ func (m *Manager) Login(ctx context.Context, username, password, ip, userAgent s
 
 // VerifyTOTP checks the six-digit code against the user identified by the
 // pending token and, on success, promotes the pending session to a full one.
-func (m *Manager) VerifyTOTP(ctx context.Context, pendingToken, code string) (*LoginResult, error) {
+func (m *Manager) VerifyTOTP(ctx context.Context, pendingToken, code, ip string) (*LoginResult, error) {
 	lookup, err := m.cfg.Tokens.LookupPending(ctx, pendingToken)
 	if err != nil {
 		if errors.Is(err, ErrSessionNotFound) {
@@ -118,7 +118,18 @@ func (m *Manager) VerifyTOTP(ctx context.Context, pendingToken, code string) (*L
 		}
 		return nil, err
 	}
+	// Brute-force guard on the 2FA step (userID axis survives IP spoofing):
+	// without it an attacker holding a pending token could brute-force the
+	// 6-digit code within the pending TTL.
+	if m.cfg.Brute != nil {
+		if blocked, _ := m.cfg.Brute.IsBlocked(ip, lookup.User.ID); blocked {
+			return nil, ErrBruteForceBlocked
+		}
+	}
 	if err := m.cfg.TOTP.Verify(ctx, lookup.User.ID, code); err != nil {
+		if m.cfg.Brute != nil {
+			m.cfg.Brute.RecordFailure(ip, lookup.User.ID)
+		}
 		return nil, err
 	}
 	access, exp, user, err := m.cfg.Tokens.PromoteFromPending(ctx, pendingToken)
@@ -133,7 +144,7 @@ func (m *Manager) VerifyTOTP(ctx context.Context, pendingToken, code string) (*L
 
 // VerifyRecovery burns one recovery code instead of a TOTP code. On success
 // the pending session is promoted exactly as for VerifyTOTP.
-func (m *Manager) VerifyRecovery(ctx context.Context, pendingToken, code string) (*LoginResult, int, error) {
+func (m *Manager) VerifyRecovery(ctx context.Context, pendingToken, code, ip string) (*LoginResult, int, error) {
 	lookup, err := m.cfg.Tokens.LookupPending(ctx, pendingToken)
 	if err != nil {
 		if errors.Is(err, ErrSessionNotFound) {
@@ -141,8 +152,18 @@ func (m *Manager) VerifyRecovery(ctx context.Context, pendingToken, code string)
 		}
 		return nil, 0, err
 	}
+	// Same brute-force guard as VerifyTOTP — recovery codes are low-entropy
+	// and must not be brute-forceable.
+	if m.cfg.Brute != nil {
+		if blocked, _ := m.cfg.Brute.IsBlocked(ip, lookup.User.ID); blocked {
+			return nil, 0, ErrBruteForceBlocked
+		}
+	}
 	remaining, err := VerifyAndConsumeRecoveryCode(ctx, m.cfg.Users, lookup.User.ID, code)
 	if err != nil {
+		if m.cfg.Brute != nil {
+			m.cfg.Brute.RecordFailure(ip, lookup.User.ID)
+		}
 		return nil, remaining, err
 	}
 	access, exp, user, err := m.cfg.Tokens.PromoteFromPending(ctx, pendingToken)

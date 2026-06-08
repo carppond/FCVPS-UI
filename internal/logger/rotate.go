@@ -43,7 +43,7 @@ func newRotator(path string, opts rotateOptions) (*fileRotator, error) {
 	if path == "" {
 		return nil, fmt.Errorf("log rotator: path is empty")
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return nil, fmt.Errorf("create log dir: %w", err)
 	}
 	r := &fileRotator{path: path, opts: opts}
@@ -94,7 +94,7 @@ func (r *fileRotator) Close() error {
 
 // open creates / re-opens the active file in append mode and seeds size.
 func (r *fileRotator) open() error {
-	f, err := os.OpenFile(r.path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o640)
+	f, err := os.OpenFile(r.path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
 	if err != nil {
 		return fmt.Errorf("open log file %q: %w", r.path, err)
 	}

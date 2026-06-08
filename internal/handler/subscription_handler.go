@@ -292,6 +292,9 @@ func (h *SubscriptionHandler) RotateShareToken(w http.ResponseWriter, r *http.Re
 func (h *SubscriptionHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	traceID := middleware.TraceIDFromContext(r.Context())
 	user := auth.MustUserFromContext(r.Context())
+	// Hard-cap the body BEFORE parsing — ParseMultipartForm's argument is only
+	// the in-memory threshold; oversize uploads otherwise spill to temp disk.
+	r.Body = http.MaxBytesReader(w, r.Body, maxUploadBytes)
 	if err := r.ParseMultipartForm(maxUploadBytes); err != nil {
 		util.RespondError(w, types.ErrValidationInvalidFormat, "invalid multipart body", nil, traceID)
 		return

@@ -18,6 +18,7 @@ import (
 
 	"shiguang-vps/internal/storage"
 	"shiguang-vps/internal/types"
+	"shiguang-vps/internal/util/safehttp"
 )
 
 // Default operational parameters for SyncService.
@@ -118,14 +119,21 @@ type SyncService struct {
 
 // SyncServiceConfig bundles SyncService dependencies.
 type SyncServiceConfig struct {
-	Repo       *storage.SubscriptionRepo
-	NodeRepo   NodeRepo
+	Repo     *storage.SubscriptionRepo
+	NodeRepo NodeRepo
+	// HTTPClient fetches over verified TLS. Inject the project's safehttp
+	// client so subscription URLs cannot reach internal/loopback addresses.
 	HTTPClient *http.Client
-	Hooks      ScriptHookRunner
-	Notify     NotifyHook
-	Events     EventBus
-	Logger     *slog.Logger
-	Now        func() time.Time
+	// InsecureHTTPClient is used only for subscriptions with AllowInsecure=true.
+	// It MUST still go through the safehttp dialer (SSRF guard) — only TLS
+	// verification is skipped. nil falls back to a safehttp transport with
+	// private networks blocked (fail-safe).
+	InsecureHTTPClient *http.Client
+	Hooks              ScriptHookRunner
+	Notify             NotifyHook
+	Events             EventBus
+	Logger             *slog.Logger
+	Now                func() time.Time
 }
 
 // NewSyncService wires the service. nil HTTPClient defaults to a fresh
@@ -141,11 +149,14 @@ func NewSyncService(cfg SyncServiceConfig) (*SyncService, error) {
 	if client == nil {
 		client = &http.Client{Timeout: DefaultHTTPTimeout}
 	}
-	insecureClient := &http.Client{
-		Timeout: client.Timeout,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // opt-in per subscription
-		},
+	insecureClient := cfg.InsecureHTTPClient
+	if insecureClient == nil {
+		// Fail-safe default: still SSRF-guarded (private nets blocked),
+		// only TLS verification skipped. Callers should inject one built
+		// from the deployment's allow_private_networks setting.
+		t := safehttp.NewTransport(safehttp.Config{AllowPrivate: false})
+		t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // opt-in per subscription
+		insecureClient = &http.Client{Timeout: client.Timeout, Transport: t}
 	}
 	now := cfg.Now
 	if now == nil {

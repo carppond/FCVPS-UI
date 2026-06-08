@@ -60,7 +60,10 @@
     "onlyBuiltDependencies": [
       "@swc/core",
       "esbuild"
-    ]
+    ],
+    "overrides": {
+      "dompurify": ">=3.3.2"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

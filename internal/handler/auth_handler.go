@@ -80,7 +80,11 @@ func (h *AuthHandler) VerifyTOTP(w http.ResponseWriter, r *http.Request) {
 		util.RespondError(w, types.ErrValidationInvalidFormat, "invalid body", nil, traceID)
 		return
 	}
-	res, err := h.manager.VerifyTOTP(r.Context(), req.PendingToken, req.Code)
+	ip := middleware.RemoteIPFromContext(r.Context())
+	if !h.checkVerifyLimiter(w, traceID, ip, req.PendingToken) {
+		return
+	}
+	res, err := h.manager.VerifyTOTP(r.Context(), req.PendingToken, req.Code, ip)
 	if err != nil {
 		h.respondVerifyError(w, traceID, err)
 		return
@@ -103,7 +107,11 @@ func (h *AuthHandler) VerifyRecovery(w http.ResponseWriter, r *http.Request) {
 		util.RespondError(w, types.ErrValidationInvalidFormat, "invalid body", nil, traceID)
 		return
 	}
-	res, remaining, err := h.manager.VerifyRecovery(r.Context(), req.PendingToken, req.Code)
+	ip := middleware.RemoteIPFromContext(r.Context())
+	if !h.checkVerifyLimiter(w, traceID, ip, req.PendingToken) {
+		return
+	}
+	res, remaining, err := h.manager.VerifyRecovery(r.Context(), req.PendingToken, req.Code, ip)
 	if err != nil {
 		h.respondVerifyError(w, traceID, err)
 		return
@@ -175,6 +183,23 @@ func (h *AuthHandler) checkLoginLimiter(w http.ResponseWriter, traceID, ip, user
 		if blocked, _ := h.brute.IsBlocked(ip, username); blocked {
 			util.RespondError(w, types.ErrAuthBruteForceBlocked,
 				"too many failed attempts", nil, traceID)
+			return false
+		}
+	}
+	return true
+}
+
+// checkVerifyLimiter throttles the 2FA verify step (totp / recovery). Keyed on
+// (ip|pendingToken) so a single login session — and a single source IP — can
+// only try a bounded number of codes per window. The per-userID brute counter
+// inside Manager.VerifyTOTP/VerifyRecovery is the spoofing-resistant backstop;
+// this is the cheap first line. Returns true when the request may proceed.
+func (h *AuthHandler) checkVerifyLimiter(w http.ResponseWriter, traceID, ip, pendingToken string) bool {
+	if h.loginLimiter != nil {
+		key := "2fa|" + ip + "|" + pendingToken
+		if ok, _ := h.loginLimiter.Allow(key); !ok {
+			util.RespondError(w, types.ErrAuthRateLimited,
+				"too many verification attempts", nil, traceID)
 			return false
 		}
 	}

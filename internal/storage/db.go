@@ -62,7 +62,7 @@ func Open(cfg config.DatabaseConfig) (*DB, error) {
 	if cfg.BusyTimeoutMs <= 0 {
 		cfg.BusyTimeoutMs = config.DefaultDBBusyTimeoutMs
 	}
-	if err := os.MkdirAll(cfg.DataDir, 0o755); err != nil {
+	if err := os.MkdirAll(cfg.DataDir, 0o750); err != nil {
 		return nil, fmt.Errorf("create data dir: %w", err)
 	}
 	dsn := buildDSN(filepath.Join(cfg.DataDir, cfg.Filename), cfg.BusyTimeoutMs)

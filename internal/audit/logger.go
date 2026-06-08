@@ -182,9 +182,11 @@ func (l *Logger) persist(ctx context.Context, entry middleware.AuditEntry) {
 		ResourceID:   entry.ResourceID,
 		IP:           entry.IP,
 		UserAgent:    entry.UserAgent,
-		Payload:      string(entry.Payload),
-		Success:      entry.Success,
-		CreatedAt:    l.now().UnixMilli(),
+		// 统一脱敏出口:遮蔽 password/token/secret 等敏感字段,绝不让
+		// 登录密码、改密、通知渠道凭据、2FA secret 明文落进 audit_logs。
+		Payload:   string(SummarizePayload(entry.Payload)),
+		Success:   entry.Success,
+		CreatedAt: l.now().UnixMilli(),
 	}
 	if _, err := l.repo.Insert(ctx, rec); err != nil {
 		l.logger.Warn("audit: persist failed",

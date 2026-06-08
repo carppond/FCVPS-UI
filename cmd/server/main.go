@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -198,11 +199,23 @@ func run() error {
 	subscriptionHTTPClient := safehttp.NewClient(safehttp.Config{
 		AllowPrivate: allowPrivate,
 	}, substore.DefaultHTTPTimeout)
+	// AllowInsecure subscriptions skip TLS verification but MUST keep the SSRF
+	// guard: build the insecure client on the same safehttp dialer, only
+	// overriding TLSClientConfig.
+	subscriptionInsecureTransport := safehttp.NewTransport(safehttp.Config{
+		AllowPrivate: allowPrivate,
+	})
+	subscriptionInsecureTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // opt-in per subscription
+	subscriptionInsecureClient := &http.Client{
+		Transport: subscriptionInsecureTransport,
+		Timeout:   substore.DefaultHTTPTimeout,
+	}
 	syncService, err := substore.NewSyncService(substore.SyncServiceConfig{
-		Repo:       subscriptions,
-		NodeRepo:   nodeAdapter,
-		HTTPClient: subscriptionHTTPClient,
-		Logger:     log,
+		Repo:               subscriptions,
+		NodeRepo:           nodeAdapter,
+		HTTPClient:         subscriptionHTTPClient,
+		InsecureHTTPClient: subscriptionInsecureClient,
+		Logger:             log,
 	})
 	if err != nil {
 		return fmt.Errorf("sync service: %w", err)

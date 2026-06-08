@@ -2,6 +2,11 @@ module shiguang-vps
 
 go 1.26
 
+// 钉最低构建工具链:go1.26.4 修了 net/http/x509/textproto 等 HTTP/2 死循环 DoS(GO-2026-4918)
+// 与 net NUL-byte panic(GO-2026-4971)。CI 的 setup-go 与 golang:1.26-alpine
+// 均会据此使用 ≥1.26.3。
+toolchain go1.26.4
+
 require (
 	github.com/dop251/goja v0.0.0-20260311135729-065cd970411c
 	github.com/gorilla/websocket v1.5.3

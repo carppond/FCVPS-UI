@@ -2,6 +2,7 @@ package audit_test
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -66,6 +67,41 @@ func TestLoggerLogPersists(t *testing.T) {
 	}
 	if rows[0].Action != "create_subscription" || rows[0].UserID != "u1" {
 		t.Fatalf("unexpected row: %+v", rows[0])
+	}
+}
+
+// TestLoggerMasksSensitivePayload is the regression guard for the audit
+// payload leak: the persisted audit_logs.payload must NOT contain the
+// plaintext password / token — SummarizePayload must run on the persist path.
+func TestLoggerMasksSensitivePayload(t *testing.T) {
+	repo := newTestRepo(t)
+	logger := audit.New(audit.Config{Repo: repo, QueueSize: 8})
+	logger.Start(context.Background())
+
+	raw := []byte(`{"username":"admin","password":"hunter2-SECRET","token":"tok-LEAK"}`)
+	if err := logger.Log(context.Background(), middleware.AuditEntry{
+		Action:  "login",
+		UserID:  "u1",
+		Payload: raw,
+		Success: true,
+	}); err != nil {
+		t.Fatalf("Log: %v", err)
+	}
+	logger.Stop()
+
+	rows, _, err := repo.List(context.Background(), storage.AuditLogFilter{Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 row, got %d", len(rows))
+	}
+	p := rows[0].Payload
+	if strings.Contains(p, "hunter2-SECRET") || strings.Contains(p, "tok-LEAK") {
+		t.Fatalf("sensitive value leaked into audit payload: %s", p)
+	}
+	if !strings.Contains(p, "admin") {
+		t.Fatalf("non-sensitive field should survive masking: %s", p)
 	}
 }
 

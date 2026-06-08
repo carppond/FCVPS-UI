@@ -172,6 +172,41 @@ func TestLoginRequires2FA(t *testing.T) {
 	}
 }
 
+// TestVerifyTOTPBruteForceBlocked is the regression guard for H-1: repeated
+// wrong TOTP codes against a pending session must trip the brute protector and
+// start returning ErrBruteForceBlocked, instead of allowing unlimited guesses.
+func TestVerifyTOTPBruteForceBlocked(t *testing.T) {
+	mgr, _, _, _ := newTestStack(t)
+	// Wire a brute protector with a low threshold for the test.
+	brute := NewBruteProtector(BruteConfig{Threshold: 3, Window: time.Minute, BanDuration: time.Hour})
+	brute.Start()
+	defer brute.Stop()
+	mgr.cfg.Brute = brute
+
+	hash, _ := HashPassword("Hunter2-AAAA")
+	_, _ = mgr.cfg.Users.Create(context.Background(), storage.UserRecord{
+		ID: "u1", Username: "alice", PasswordHash: hash, Role: "user",
+		IsActive: true, TOTPEnabled: true, TOTPSecret: "JBSWY3DPEHPK3PXP",
+	})
+	res, err := mgr.Login(context.Background(), "alice", "Hunter2-AAAA", "1.2.3.4", "go-test")
+	if err != nil || res.PendingToken == "" {
+		t.Fatalf("login (pending) failed: %v", err)
+	}
+
+	// Hammer wrong codes. Before the fix this would never block.
+	var blockedSeen bool
+	for i := 0; i < 10; i++ {
+		_, err := mgr.VerifyTOTP(context.Background(), res.PendingToken, "000000", "9.9.9.9")
+		if errors.Is(err, ErrBruteForceBlocked) {
+			blockedSeen = true
+			break
+		}
+	}
+	if !blockedSeen {
+		t.Fatal("expected ErrBruteForceBlocked after repeated wrong TOTP codes, never blocked")
+	}
+}
+
 func TestChangePasswordRevokesSessions(t *testing.T) {
 	mgr, _, sessions, tokens := newTestStack(t)
 	old := "Hunter2-AAAA"

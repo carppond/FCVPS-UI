@@ -22,6 +22,11 @@ import (
 // archives produced by a newer/incompatible writer.
 const backupSchemaVersion = 1
 
+// maxRestoreDBBytes caps how much an imported backup's DB entry may expand to,
+// preventing a decompression-bomb tarball from filling the disk during restore.
+// 2 GiB is far above any realistic shiguang.db.
+const maxRestoreDBBytes = 2 << 30
+
 // Canonical entry names inside the tar.gz so Restore can locate them without
 // scanning the archive.
 const (
@@ -228,7 +233,8 @@ func (b *Backup) Restore(ctx context.Context, tarPath string) error {
 			}
 			meta = &m
 		case backupSettingsName:
-			buf, err := io.ReadAll(tr)
+			// settings.json is tiny; cap the read so a bomb entry can't OOM us.
+			buf, err := io.ReadAll(io.LimitReader(tr, 8<<20))
 			if err != nil {
 				return fmt.Errorf("restore: read settings: %w", err)
 			}
@@ -238,10 +244,17 @@ func (b *Backup) Restore(ctx context.Context, tarPath string) error {
 			if err != nil {
 				return fmt.Errorf("restore: open staging: %w", err)
 			}
-			if _, err := io.Copy(out, tr); err != nil {
+			// Cap expansion to guard against a decompression-bomb archive.
+			n, err := io.Copy(out, io.LimitReader(tr, maxRestoreDBBytes+1))
+			if err != nil {
 				_ = out.Close()
 				_ = os.Remove(stagingPath)
 				return fmt.Errorf("restore: copy db: %w", err)
+			}
+			if n > maxRestoreDBBytes {
+				_ = out.Close()
+				_ = os.Remove(stagingPath)
+				return fmt.Errorf("restore: db entry exceeds %d bytes", maxRestoreDBBytes)
 			}
 			if err := out.Close(); err != nil {
 				_ = os.Remove(stagingPath)
@@ -249,8 +262,9 @@ func (b *Backup) Restore(ctx context.Context, tarPath string) error {
 			}
 			dbWritten = true
 		default:
-			// Forward-compat: skip unknown entries silently.
-			if _, err := io.Copy(io.Discard, tr); err != nil {
+			// Forward-compat: skip unknown entries silently. Cap the drained
+			// bytes so a bomb entry can't burn unbounded CPU during restore.
+			if _, err := io.Copy(io.Discard, io.LimitReader(tr, maxRestoreDBBytes)); err != nil {
 				return fmt.Errorf("restore: skip %q: %w", hdr.Name, err)
 			}
 		}
