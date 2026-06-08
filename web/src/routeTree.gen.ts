@@ -29,6 +29,7 @@ import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile
 import { Route as AuthedPipelinesIndexRouteImport } from './routes/_authed/pipelines/index'
 import { Route as AuthedNotificationsIndexRouteImport } from './routes/_authed/notifications/index'
 import { Route as AuthedNodesIndexRouteImport } from './routes/_authed/nodes/index'
+import { Route as AuthedAlertRulesIndexRouteImport } from './routes/_authed/alert-rules/index'
 import { Route as AuthedAgentsIndexRouteImport } from './routes/_authed/agents/index'
 import { Route as AuthedVpsAssetsNewRouteImport } from './routes/_authed/vps-assets/new'
 import { Route as AuthedSubscriptionsIdRouteImport } from './routes/_authed/subscriptions/$id'
@@ -144,6 +145,11 @@ const AuthedNodesIndexRoute = AuthedNodesIndexRouteImport.update({
   path: '/nodes/',
   getParentRoute: () => AuthedRouteRoute,
 } as any)
+const AuthedAlertRulesIndexRoute = AuthedAlertRulesIndexRouteImport.update({
+  id: '/alert-rules/',
+  path: '/alert-rules/',
+  getParentRoute: () => AuthedRouteRoute,
+} as any)
 const AuthedAgentsIndexRoute = AuthedAgentsIndexRouteImport.update({
   id: '/agents/',
   path: '/agents/',
@@ -243,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
   '/vps-assets/new': typeof AuthedVpsAssetsNewRoute
   '/agents/': typeof AuthedAgentsIndexRoute
+  '/alert-rules/': typeof AuthedAlertRulesIndexRoute
   '/nodes/': typeof AuthedNodesIndexRoute
   '/notifications/': typeof AuthedNotificationsIndexRoute
   '/pipelines/': typeof AuthedPipelinesIndexRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
   '/vps-assets/new': typeof AuthedVpsAssetsNewRoute
   '/agents': typeof AuthedAgentsIndexRoute
+  '/alert-rules': typeof AuthedAlertRulesIndexRoute
   '/nodes': typeof AuthedNodesIndexRoute
   '/notifications': typeof AuthedNotificationsIndexRoute
   '/pipelines': typeof AuthedPipelinesIndexRoute
@@ -314,6 +322,7 @@ export interface FileRoutesById {
   '/_authed/subscriptions/$id': typeof AuthedSubscriptionsIdRoute
   '/_authed/vps-assets/new': typeof AuthedVpsAssetsNewRoute
   '/_authed/agents/': typeof AuthedAgentsIndexRoute
+  '/_authed/alert-rules/': typeof AuthedAlertRulesIndexRoute
   '/_authed/nodes/': typeof AuthedNodesIndexRoute
   '/_authed/notifications/': typeof AuthedNotificationsIndexRoute
   '/_authed/pipelines/': typeof AuthedPipelinesIndexRoute
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/subscriptions/$id'
     | '/vps-assets/new'
     | '/agents/'
+    | '/alert-rules/'
     | '/nodes/'
     | '/notifications/'
     | '/pipelines/'
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/subscriptions/$id'
     | '/vps-assets/new'
     | '/agents'
+    | '/alert-rules'
     | '/nodes'
     | '/notifications'
     | '/pipelines'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/_authed/subscriptions/$id'
     | '/_authed/vps-assets/new'
     | '/_authed/agents/'
+    | '/_authed/alert-rules/'
     | '/_authed/nodes/'
     | '/_authed/notifications/'
     | '/_authed/pipelines/'
@@ -578,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedNodesIndexRouteImport
       parentRoute: typeof AuthedRouteRoute
     }
+    '/_authed/alert-rules/': {
+      id: '/_authed/alert-rules/'
+      path: '/alert-rules'
+      fullPath: '/alert-rules/'
+      preLoaderRoute: typeof AuthedAlertRulesIndexRouteImport
+      parentRoute: typeof AuthedRouteRoute
+    }
     '/_authed/agents/': {
       id: '/_authed/agents/'
       path: '/agents'
@@ -699,6 +718,7 @@ interface AuthedRouteRouteChildren {
   AuthedSubscriptionsIdRoute: typeof AuthedSubscriptionsIdRoute
   AuthedVpsAssetsNewRoute: typeof AuthedVpsAssetsNewRoute
   AuthedAgentsIndexRoute: typeof AuthedAgentsIndexRoute
+  AuthedAlertRulesIndexRoute: typeof AuthedAlertRulesIndexRoute
   AuthedNodesIndexRoute: typeof AuthedNodesIndexRoute
   AuthedNotificationsIndexRoute: typeof AuthedNotificationsIndexRoute
   AuthedPipelinesIndexRoute: typeof AuthedPipelinesIndexRoute
@@ -729,6 +749,7 @@ const AuthedRouteRouteChildren: AuthedRouteRouteChildren = {
   AuthedSubscriptionsIdRoute: AuthedSubscriptionsIdRoute,
   AuthedVpsAssetsNewRoute: AuthedVpsAssetsNewRoute,
   AuthedAgentsIndexRoute: AuthedAgentsIndexRoute,
+  AuthedAlertRulesIndexRoute: AuthedAlertRulesIndexRoute,
   AuthedNodesIndexRoute: AuthedNodesIndexRoute,
   AuthedNotificationsIndexRoute: AuthedNotificationsIndexRoute,
   AuthedPipelinesIndexRoute: AuthedPipelinesIndexRoute,

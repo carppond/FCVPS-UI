@@ -86,4 +86,10 @@ export const queryKeys = {
     detail: (id: string) => ["vps-asset", "detail", id] as const,
     summary: () => ["vps-asset", "summary"] as const,
   },
+
+  alertRule: {
+    all: () => ["alert-rule"] as const,
+    list: () => ["alert-rule", "list"] as const,
+    detail: (id: string) => ["alert-rule", "detail", id] as const,
+  },
 } as const;

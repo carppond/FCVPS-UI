@@ -39,7 +39,8 @@
     "profile": "Profile",
     "shortlinks": "Short Links",
     "ota": "OTA Upgrade",
-    "admin": "Admin"
+    "admin": "Admin",
+    "alert_rules": "Alert Rules"
   },
   "theme": {
     "light": "Light",

@@ -39,7 +39,8 @@
     "profile": "プロフィール",
     "shortlinks": "短縮リンク",
     "ota": "OTA アップグレード",
-    "admin": "管理"
+    "admin": "管理",
+    "alert_rules": "アラートルール"
   },
   "theme": {
     "light": "ライト",
