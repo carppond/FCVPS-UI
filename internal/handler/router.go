@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 
@@ -44,6 +45,13 @@ type Deps struct {
 	// Now returns the current wall-clock time. nil falls back to time.Now.
 	// Tests inject a fake clock here.
 	Now func() time.Time
+
+	// TrustedProxies is the set of CIDRs whose forwarded-IP headers
+	// (X-Real-IP / X-Forwarded-For) the hub will honour. Requests whose TCP
+	// peer is NOT in this set get their RemoteAddr used verbatim, so a direct
+	// attacker cannot spoof their IP to dodge per-IP rate limiting / bans.
+	// nil/empty → trust nothing (fail-safe).
+	TrustedProxies []*net.IPNet
 
 	// SilentPrefix is the initial 32-hex prefix loaded at startup. The
 	// middleware retains the value across enable/disable cycles so that
@@ -236,7 +244,7 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	deps.silent = silent
 	deps.chain = []middleware.Middleware{
 		middleware.Recover(deps.logger(), deps.DevMode),
-		middleware.RequestLog(deps.logger(), deps.Now),
+		middleware.RequestLog(deps.logger(), deps.Now, deps.TrustedProxies),
 		middleware.RateLimit(deps.GlobalRateLimit),
 		silent.Middleware(),
 		middleware.Audit(middleware.AuditConfig{

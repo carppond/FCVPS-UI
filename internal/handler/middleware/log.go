@@ -29,14 +29,14 @@ const TraceIDHeader = "X-Trace-Id"
 // docs/00-coding-standards.md §12).
 //
 // `now` defaults to time.Now when nil is passed.
-func RequestLog(logger *slog.Logger, now func() time.Time) Middleware {
+func RequestLog(logger *slog.Logger, now func() time.Time, trustedProxies []*net.IPNet) Middleware {
 	if now == nil {
 		now = time.Now
 	}
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			traceID := util.UUIDv7()
-			remoteIP := resolveClientIP(r)
+			remoteIP := resolveClientIP(r, trustedProxies)
 
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, CtxKeyTraceID, traceID)
@@ -83,26 +83,58 @@ func toLogAttrs(in []any) []slog.Attr {
 }
 
 // resolveClientIP returns the most-likely real client IP given the inbound
-// request. It honours the first entry of X-Forwarded-For when present,
-// otherwise falls back to RemoteAddr (host portion).
+// request. Forwarded-IP headers (X-Real-IP / X-Forwarded-For) are honoured
+// ONLY when the TCP peer (RemoteAddr) is in trustedProxies — otherwise a
+// direct attacker could spoof X-Forwarded-For to dodge per-IP rate limiting
+// and brute-force bans. With no trusted proxies configured the function
+// always returns the real RemoteAddr (fail-safe).
 //
-// The X-Forwarded-For trust decision is left to the deployment doc: any hub
-// running directly on the public internet should be put behind a TLS-
-// terminating proxy that normalises the header.
-func resolveClientIP(r *http.Request) string {
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// XFF is "client, proxy1, proxy2"; the client is the leftmost entry.
-		if idx := strings.IndexByte(xff, ','); idx >= 0 {
-			return strings.TrimSpace(xff[:idx])
+// Standard deployments run nginx → hub over loopback, so main wires loopback
+// into trustedProxies by default; operators behind an additional proxy / CDN
+// extend the set via SHIGUANG_TRUSTED_PROXIES.
+func resolveClientIP(r *http.Request, trustedProxies []*net.IPNet) string {
+	peer := remoteAddrHost(r.RemoteAddr)
+	if isTrustedProxy(peer, trustedProxies) {
+		// nginx sets X-Real-IP to the immediate client; prefer it, then fall
+		// back to the leftmost X-Forwarded-For entry.
+		if xr := strings.TrimSpace(r.Header.Get("X-Real-IP")); xr != "" {
+			return xr
 		}
-		return strings.TrimSpace(xff)
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			if idx := strings.IndexByte(xff, ','); idx >= 0 {
+				return strings.TrimSpace(xff[:idx])
+			}
+			return strings.TrimSpace(xff)
+		}
 	}
-	if r.RemoteAddr == "" {
+	return peer
+}
+
+// remoteAddrHost strips the port from a "host:port" RemoteAddr.
+func remoteAddrHost(remoteAddr string) string {
+	if remoteAddr == "" {
 		return ""
 	}
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	host, _, err := net.SplitHostPort(remoteAddr)
 	if err != nil {
-		return r.RemoteAddr
+		return remoteAddr
 	}
 	return host
+}
+
+// isTrustedProxy reports whether ip falls within any trusted-proxy CIDR.
+func isTrustedProxy(ip string, trusted []*net.IPNet) bool {
+	if len(trusted) == 0 || ip == "" {
+		return false
+	}
+	parsed := net.ParseIP(ip)
+	if parsed == nil {
+		return false
+	}
+	for _, n := range trusted {
+		if n != nil && n.Contains(parsed) {
+			return true
+		}
+	}
+	return false
 }

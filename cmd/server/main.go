@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -517,6 +518,7 @@ func run() error {
 
 	deps := &handler.Deps{
 		DB: db, Logger: log, Now: time.Now,
+		TrustedProxies:        parseTrustedProxies(cfg.HTTP.TrustedProxies, log),
 		Version:               "v0.0.0-dev",
 		SilentPrefix:          silentPrefix,
 		SilentEnabled:         silentEnabled,
@@ -796,6 +798,37 @@ func runAgentRecordsRetention(ctx context.Context, repo *storage.AgentRecordRepo
 // slice of valid port numbers. Invalid / out-of-range entries are skipped.
 // Used to seed the firewall service's always-protected port set from
 // SHIGUANG_FIREWALL_PROTECTED_PORTS.
+// parseTrustedProxies turns the config CIDR strings into *net.IPNet. A bare IP
+// (no "/mask") is accepted and treated as a /32 or /128. Invalid entries are
+// logged and skipped rather than aborting startup.
+func parseTrustedProxies(cidrs []string, log *slog.Logger) []*net.IPNet {
+	var out []*net.IPNet
+	for _, c := range cidrs {
+		c = strings.TrimSpace(c)
+		if c == "" {
+			continue
+		}
+		if !strings.Contains(c, "/") {
+			if ip := net.ParseIP(c); ip != nil {
+				if ip.To4() != nil {
+					c += "/32"
+				} else {
+					c += "/128"
+				}
+			}
+		}
+		_, n, err := net.ParseCIDR(c)
+		if err != nil {
+			if log != nil {
+				log.Warn("ignoring invalid trusted-proxy CIDR", slog.String("value", c), slog.String("err", err.Error()))
+			}
+			continue
+		}
+		out = append(out, n)
+	}
+	return out
+}
+
 func parsePortList(s string) []int {
 	if strings.TrimSpace(s) == "" {
 		return nil

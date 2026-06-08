@@ -16,7 +16,7 @@ func TestRateLimit_Allows100AndDenies101st(t *testing.T) {
 	mw := middleware.Chain(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}),
-		middleware.RequestLog(nil, nil),
+		middleware.RequestLog(nil, nil, nil),
 		middleware.RateLimit(limiter),
 	)
 
@@ -60,7 +60,7 @@ func TestRateLimit_IsolatesIPs(t *testing.T) {
 	mw := middleware.Chain(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}),
-		middleware.RequestLog(nil, nil),
+		middleware.RequestLog(nil, nil, nil),
 		middleware.RateLimit(limiter),
 	)
 

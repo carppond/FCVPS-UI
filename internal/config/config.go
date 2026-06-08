@@ -41,6 +41,11 @@ type Config struct {
 // HTTPConfig holds settings for the public HTTP server.
 type HTTPConfig struct {
 	Addr string
+	// TrustedProxies is the comma-separated list of CIDRs whose forwarded-IP
+	// headers (X-Real-IP / X-Forwarded-For) are trusted. Defaults to loopback
+	// (the standard nginx→hub topology). Set SHIGUANG_TRUSTED_PROXIES to add
+	// an upstream proxy / CDN egress range. Empty disables header trust.
+	TrustedProxies []string
 }
 
 // DatabaseConfig holds settings for the SQLite backing store.
@@ -141,7 +146,10 @@ func Load(args []string) (Config, error) {
 // defaultConfig returns a Config populated only with compiled defaults.
 func defaultConfig() Config {
 	return Config{
-		HTTP: HTTPConfig{Addr: DefaultHTTPAddr},
+		HTTP: HTTPConfig{
+			Addr:           DefaultHTTPAddr,
+			TrustedProxies: []string{"127.0.0.1/32", "::1/128"},
+		},
 		Database: DatabaseConfig{
 			DataDir:       DefaultDataDir,
 			Filename:      DefaultDBFilename,
@@ -170,6 +178,11 @@ func defaultConfig() Config {
 func applyEnv(cfg *Config) {
 	if v := os.Getenv("SHIGUANG_HTTP_ADDR"); v != "" {
 		cfg.HTTP.Addr = v
+	}
+	if v, ok := os.LookupEnv("SHIGUANG_TRUSTED_PROXIES"); ok {
+		// Explicitly set (even to empty) overrides the loopback default;
+		// empty string disables forwarded-header trust entirely.
+		cfg.HTTP.TrustedProxies = splitCSV(v)
 	}
 	if v := os.Getenv("SHIGUANG_DATA_DIR"); v != "" {
 		cfg.Database.DataDir = v
@@ -216,6 +229,18 @@ func applyEnv(cfg *Config) {
 			cfg.AuthRate.LoginBurst = n
 		}
 	}
+}
+
+// splitCSV splits a comma-separated env value into trimmed, non-empty parts.
+func splitCSV(v string) []string {
+	parts := strings.Split(v, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 // validate ensures required values are well-formed. Returns ErrInvalidConfig
