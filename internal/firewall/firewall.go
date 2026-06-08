@@ -1,8 +1,9 @@
-// Package firewall manages the local host's ufw firewall on behalf of the
-// admin panel. It is deliberately scoped to the machine the hub runs on (not
-// remote VPS assets) and only to ufw — the friendly frontend that persists
-// rules across reboots. Raw iptables / firewalld are detected but not managed
-// (see DetectStatus).
+// Package firewall manages the local host's firewall on behalf of the admin
+// panel. It is deliberately scoped to the machine the hub runs on (not remote
+// VPS assets) and to the two stateful frontends that persist rules across
+// reboots: ufw (Debian/Ubuntu) and firewalld (RHEL/Fedora family). Raw
+// iptables is detected but not managed (it is stateless and risky to mutate
+// blindly — see DetectStatus).
 //
 // Safety model:
 //   - Mutations require role=admin (enforced at the HTTP layer) and are
@@ -21,12 +22,10 @@ package firewall
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -34,9 +33,10 @@ import (
 
 // Errors returned by the service. Handlers map these onto API error codes.
 var (
-	// ErrUnavailable means ufw is not installed / not manageable in this
-	// environment (container, missing binary, no privilege).
-	ErrUnavailable = errors.New("firewall: ufw not available")
+	// ErrUnavailable means no manageable firewall (ufw / firewalld) is
+	// installed / manageable in this environment (container, missing binary,
+	// no privilege).
+	ErrUnavailable = errors.New("firewall: no manageable backend available")
 	// ErrProtectedPort means the caller tried to delete a rule for SSH or the
 	// panel access port.
 	ErrProtectedPort = errors.New("firewall: port is protected")
@@ -60,8 +60,8 @@ type runner func(ctx context.Context, name string, args ...string) (stdout, stde
 // Status is the environment probe surfaced to the UI so it can render the
 // feature as usable, read-only, or disabled-with-reason.
 type Status struct {
-	Available   bool   `json:"available"`    // ufw binary present and queryable
-	Active      bool   `json:"active"`       // ufw is enforcing rules
+	Available   bool   `json:"available"`    // backend binary present and queryable
+	Active      bool   `json:"active"`       // firewall is enforcing rules
 	CanManage   bool   `json:"can_manage"`   // hub may add/delete rules
 	InContainer bool   `json:"in_container"` // running inside a container
 	Backend     string `json:"backend"`      // "ufw" | "firewalld" | "iptables" | "none"
@@ -92,6 +92,9 @@ type Service struct {
 	run       runner
 	useSudo   bool
 	protected []int
+	// backend is the resolved firewall frontend (ufw / firewalld), or nil when
+	// none is manageable on this host.
+	backend backend
 }
 
 // New constructs a Service. It derives sudo usage from the effective uid:
@@ -114,7 +117,16 @@ func New(cfg Config) *Service {
 	if !useSudo && os.Geteuid() != 0 {
 		useSudo = true
 	}
-	return &Service{cfg: cfg, run: run, useSudo: useSudo, protected: cfg.ProtectedPorts}
+	s := &Service{cfg: cfg, run: run, useSudo: useSudo, protected: cfg.ProtectedPorts}
+	// Resolve the firewall backend once: ufw is preferred when both are present
+	// (preserves the prior default), otherwise firewalld.
+	for _, b := range allBackends() {
+		if b.detect(cfg.lookPath) {
+			s.backend = b
+			break
+		}
+	}
+	return s
 }
 
 func realRunner(ctx context.Context, name string, args ...string) (string, string, error) {
@@ -157,20 +169,6 @@ func (s *Service) exec(ctx context.Context, base string, args ...string) (string
 	return s.run(ctx, name, argv...)
 }
 
-// ufwPath locates the ufw binary, tolerating a sparse PATH for non-login
-// service users (ufw commonly lives in /usr/sbin).
-func (s *Service) ufwPath() (string, bool) {
-	if p, err := s.cfg.lookPath("ufw"); err == nil {
-		return p, true
-	}
-	for _, p := range []string{"/usr/sbin/ufw", "/sbin/ufw", "/usr/bin/ufw"} {
-		if _, err := os.Stat(p); err == nil {
-			return p, true
-		}
-	}
-	return "", false
-}
-
 // DetectStatus probes the environment. It never errors — every failure mode
 // maps onto a Status with CanManage=false and a human-readable Reason.
 func (s *Service) DetectStatus(ctx context.Context) Status {
@@ -179,38 +177,34 @@ func (s *Service) DetectStatus(ctx context.Context) Status {
 		st.Reason = "运行在容器内，无法管理宿主机防火墙；请在宿主机用 -p 端口映射"
 		return st
 	}
-	ufw, ok := s.ufwPath()
-	if !ok {
-		// ufw missing — note other backends if present so the UI can hint.
-		if _, err := s.cfg.lookPath("firewall-cmd"); err == nil {
-			st.Backend = "firewalld"
-			st.Reason = "检测到 firewalld（暂不支持面板管理），请手动配置或改用 ufw"
-		} else if _, err := s.cfg.lookPath("iptables"); err == nil {
+	if s.backend == nil {
+		// No manageable backend — note a detected-but-unsupported one so the
+		// UI can hint (raw iptables is intentionally unmanaged).
+		if findBinary(s.cfg.lookPath, "iptables", "/usr/sbin/iptables", "/sbin/iptables") {
 			st.Backend = "iptables"
-			st.Reason = "检测到裸 iptables（暂不支持面板管理），建议安装 ufw 统一管理"
+			st.Reason = "检测到裸 iptables（暂不支持面板管理），建议安装 ufw 或 firewalld 统一管理"
 		} else {
-			st.Reason = "未安装 ufw"
+			st.Reason = "未安装 ufw 或 firewalld"
 		}
 		return st
 	}
-	_ = ufw
-	st.Backend = "ufw"
-	stdout, stderr, err := s.exec(ctx, "ufw", "status")
+	st.Backend = s.backend.name()
+	active, raw, err := s.backend.active(ctx, s.exec)
 	if err != nil {
 		// Distinguish "no privilege" from other failures for a useful message.
-		combined := stdout + stderr
-		if strings.Contains(combined, "ERROR: You need to be root") ||
-			strings.Contains(stderr, "sudo: a password is required") ||
-			strings.Contains(stderr, "Permission denied") {
+		if strings.Contains(raw, "ERROR: You need to be root") ||
+			strings.Contains(raw, "sudo: a password is required") ||
+			strings.Contains(raw, "Permission denied") ||
+			strings.Contains(raw, "Authorization failed") {
 			st.Available = true
-			st.Reason = "hub 无权限执行 ufw（需以 root 运行或配置 sudo 白名单：hub ALL=(root) NOPASSWD: /usr/sbin/ufw, /usr/bin/ss）"
+			st.Reason = "hub 无权限执行防火墙命令（需以 root 运行或配置 sudo 白名单:hub ALL=(root) NOPASSWD: /usr/sbin/ufw, /usr/bin/firewall-cmd, /usr/bin/ss）"
 			return st
 		}
-		st.Reason = "查询 ufw 状态失败：" + firstLine(combined)
+		st.Reason = "查询防火墙状态失败:" + firstLine(raw)
 		return st
 	}
 	st.Available = true
-	st.Active, _ = ParseUFWStatus(stdout)
+	st.Active = active
 	st.CanManage = true
 	return st
 }
@@ -218,11 +212,13 @@ func (s *Service) DetectStatus(ctx context.Context) Status {
 // ListRules returns the current ALLOW rules enriched with the live listener
 // for each numeric port and a Protected flag. Requires a manageable ufw.
 func (s *Service) ListRules(ctx context.Context) ([]Rule, error) {
-	stdout, stderr, err := s.exec(ctx, "ufw", "status")
-	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrUnavailable, firstLine(stdout+stderr))
+	if s.backend == nil {
+		return nil, ErrUnavailable
 	}
-	_, rules := ParseUFWStatus(stdout)
+	rules, err := s.backend.listAllow(ctx, s.exec)
+	if err != nil {
+		return nil, err
+	}
 	protected := s.protectedSet(ctx)
 	listeners := s.listeners(ctx)
 	for i := range rules {
@@ -253,14 +249,12 @@ func (s *Service) AllowPort(ctx context.Context, port int, proto string) error {
 	if proto != "tcp" && proto != "udp" {
 		return ErrInvalidProto
 	}
+	if s.backend == nil {
+		return ErrUnavailable
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	spec := strconv.Itoa(port) + "/" + proto
-	stdout, stderr, err := s.exec(ctx, "ufw", "allow", spec)
-	if err != nil {
-		return fmt.Errorf("ufw allow %s: %s", spec, firstLine(stdout+stderr))
-	}
-	return nil
+	return s.backend.allow(ctx, s.exec, port, proto)
 }
 
 // DeletePort removes an allow rule. spec must be a simple port or port/proto
@@ -277,13 +271,12 @@ func (s *Service) DeletePort(ctx context.Context, spec string) error {
 	if s.protectedSet(ctx)[port] {
 		return ErrProtectedPort
 	}
+	if s.backend == nil {
+		return ErrUnavailable
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	stdout, stderr, err := s.exec(ctx, "ufw", "delete", "allow", spec)
-	if err != nil {
-		return fmt.Errorf("ufw delete allow %s: %s", spec, firstLine(stdout+stderr))
-	}
-	return nil
+	return s.backend.remove(ctx, s.exec, spec)
 }
 
 // protectedSet is the union of configured protected ports, the always-on SSH

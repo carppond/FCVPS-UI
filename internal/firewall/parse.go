@@ -103,6 +103,25 @@ func IsSimplePortSpec(spec string) bool {
 	return simplePortSpec.MatchString(spec)
 }
 
+// parseFirewalldPorts parses the output of `firewall-cmd --list-ports`, a
+// single space-separated line like "80/tcp 443/tcp 53/udp" (may be empty or
+// span multiple lines). Each "port/proto" token becomes one Rule. Tokens that
+// aren't a simple numeric port/proto (e.g. ranges "1000-2000/tcp") get Port=0
+// so the UI can show but not delete them — matching the ufw behaviour.
+func parseFirewalldPorts(output string) []Rule {
+	var rules []Rule
+	seen := make(map[string]struct{})
+	for _, tok := range strings.Fields(output) {
+		if _, dup := seen[tok]; dup {
+			continue
+		}
+		seen[tok] = struct{}{}
+		port, proto := parseTarget(tok)
+		rules = append(rules, Rule{Spec: tok, Port: port, Proto: proto})
+	}
+	return rules
+}
+
 // ParseSSListeners parses `ss -ltnpH` / `ss -lunpH` output into a port→listener
 // map. proto labels which transport the rows belong to (informational; the
 // map key is the numeric port). Lines without a parseable port or process are
