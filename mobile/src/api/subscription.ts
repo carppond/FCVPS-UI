@@ -4,6 +4,7 @@ import type {
   PagedResponse,
   Subscription,
   SubscriptionDetail,
+  SubscriptionSyncLog,
   UpdateSubscriptionRequest,
   SyncResult,
 } from "../types/api";
@@ -20,6 +21,15 @@ export function useSubscriptionDetail(id: string) {
   return useQuery({
     queryKey: ["subscription", "detail", id],
     queryFn: () => apiFetch<SubscriptionDetail>(`/api/subscriptions/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useSubscriptionSyncLogs(id: string) {
+  return useQuery({
+    queryKey: ["subscription", "sync-logs", id],
+    queryFn: () =>
+      apiFetch<PagedResponse<SubscriptionSyncLog>>(`/api/subscriptions/${id}/sync-logs`),
     enabled: !!id,
   });
 }

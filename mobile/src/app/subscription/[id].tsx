@@ -9,7 +9,7 @@ import { apiFetch } from "../../lib/api-client";
 import { useAuthStore } from "../../stores/auth-store";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
-import type { SubscriptionDetail, SyncResult, ShortLink } from "../../types/api";
+import type { SubscriptionDetail, SyncResult, ShortLink, PagedResponse, SubscriptionSyncLog } from "../../types/api";
 
 const buildTargets = (c: AppColors): { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] => [
   { key: "clash", label: "Clash", icon: "flash-outline", color: c.primary },
@@ -57,6 +57,14 @@ export default function SubscriptionDetailScreen() {
     queryFn: () => apiFetch<SubscriptionDetail>(`/api/subscriptions/${id}`),
     enabled: !!id,
   });
+
+  const syncLogsQuery = useQuery({
+    queryKey: ["subscription", "sync-logs", id],
+    queryFn: () =>
+      apiFetch<PagedResponse<SubscriptionSyncLog>>(`/api/subscriptions/${id}/sync-logs`),
+    enabled: !!id,
+  });
+  const syncLogs = syncLogsQuery.data?.items ?? [];
 
   const syncMutation = useMutation({
     mutationFn: () =>
@@ -255,6 +263,40 @@ export default function SubscriptionDetailScreen() {
           <Text style={styles.nodeServer}>{node.server}:{node.port}</Text>
         </View>
       ))}
+
+      {/* Sync history */}
+      <Text style={styles.sectionTitle}>{t("sync_history_title")}</Text>
+      {syncLogs.length === 0 ? (
+        <View style={{ padding: 16, alignItems: "center" }}>
+          <Text style={{ color: colors.textTertiary, fontSize: 13 }}>{t("sync_history_empty")}</Text>
+        </View>
+      ) : (
+        <View style={styles.syncLogCard}>
+          {syncLogs.map((log, i) => {
+            const ok = log.status === "ok";
+            return (
+              <View
+                key={log.id}
+                style={[styles.syncLogRow, i > 0 && { borderTopWidth: 1, borderTopColor: colors.border }]}
+              >
+                <Ionicons
+                  name={ok ? "checkmark-circle" : "close-circle"}
+                  size={16}
+                  color={ok ? colors.success : colors.error}
+                />
+                <Text style={styles.syncLogTime}>
+                  {new Date(log.created_at).toLocaleString()}
+                </Text>
+                <Text style={styles.syncLogMsg} numberOfLines={1}>
+                  {ok
+                    ? t("sync_log_nodes", { count: log.node_count })
+                    : log.error || t("sync_log_error")}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -394,4 +436,14 @@ const makeStyles = (colors: AppColors) =>
   protoText: { fontSize: fontSize.xs, fontWeight: "700", color: colors.primary, textTransform: "uppercase" },
   nodeTag: { flex: 1, fontSize: fontSize.base, fontWeight: "600", color: colors.textPrimary },
   nodeServer: { fontSize: fontSize.xs, color: colors.textTertiary, fontFamily: "monospace" },
+  syncLogCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.lg,
+  },
+  syncLogRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingVertical: spacing.md },
+  syncLogTime: { fontSize: fontSize.xs, color: colors.textTertiary, fontVariant: ["tabular-nums"] },
+  syncLogMsg: { flex: 1, fontSize: fontSize.sm, color: colors.textSecondary },
 });
