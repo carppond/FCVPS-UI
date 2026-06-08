@@ -76,6 +76,7 @@ func newFirewalldService(protected ...int) (*Service, *fakeFirewalld) {
 			}
 			return "", errors.New("not found")
 		},
+		exists: func(string) bool { return false },
 	})
 	return svc, f
 }

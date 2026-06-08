@@ -136,6 +136,7 @@ func newTestService(protected ...int) (*Service, *fakeRunner) {
 		useSudo:        false,
 		inContainer:    func() bool { return false },
 		lookPath:       func(string) (string, error) { return "/usr/sbin/ufw", nil },
+		exists:         func(string) bool { return false },
 	})
 	return svc, f
 }

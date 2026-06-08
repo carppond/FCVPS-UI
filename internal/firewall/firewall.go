@@ -80,9 +80,13 @@ type Config struct {
 	// useSudo forces sudo prefixing; when the Config is built via New it is
 	// derived from the effective uid (root → false, otherwise true).
 	useSudo bool
-	// inContainerOverride / lookPath let tests bypass host probes. nil → real.
+	// inContainerOverride / lookPath / exists let tests bypass host probes.
+	// nil → real. exists reports whether an absolute path is present on disk
+	// (backend binary fallback probe); injectable so tests don't depend on
+	// whatever firewall binaries happen to exist on the CI runner.
 	inContainer func() bool
 	lookPath    func(string) (string, error)
+	exists      func(string) bool
 }
 
 // Service is safe for concurrent use; mutations are serialised.
@@ -113,6 +117,9 @@ func New(cfg Config) *Service {
 	if cfg.lookPath == nil {
 		cfg.lookPath = exec.LookPath
 	}
+	if cfg.exists == nil {
+		cfg.exists = func(p string) bool { _, err := os.Stat(p); return err == nil }
+	}
 	useSudo := cfg.useSudo
 	if !useSudo && os.Geteuid() != 0 {
 		useSudo = true
@@ -121,7 +128,7 @@ func New(cfg Config) *Service {
 	// Resolve the firewall backend once: ufw is preferred when both are present
 	// (preserves the prior default), otherwise firewalld.
 	for _, b := range allBackends() {
-		if b.detect(cfg.lookPath) {
+		if b.detect(cfg.lookPath, cfg.exists) {
 			s.backend = b
 			break
 		}
@@ -180,7 +187,7 @@ func (s *Service) DetectStatus(ctx context.Context) Status {
 	if s.backend == nil {
 		// No manageable backend — note a detected-but-unsupported one so the
 		// UI can hint (raw iptables is intentionally unmanaged).
-		if findBinary(s.cfg.lookPath, "iptables", "/usr/sbin/iptables", "/sbin/iptables") {
+		if findBinary(s.cfg.lookPath, s.cfg.exists, "iptables", "/usr/sbin/iptables", "/sbin/iptables") {
 			st.Backend = "iptables"
 			st.Reason = "检测到裸 iptables（暂不支持面板管理），建议安装 ufw 或 firewalld 统一管理"
 		} else {

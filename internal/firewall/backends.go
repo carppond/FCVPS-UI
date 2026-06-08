@@ -3,7 +3,6 @@ package firewall
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -19,7 +18,9 @@ type backend interface {
 	// name is the stable identifier surfaced in Status.Backend.
 	name() string
 	// detect reports whether this backend's CLI is present on the host.
-	detect(lookPath func(string) (string, error)) bool
+	// exists is the injectable absolute-path probe (so tests don't depend on
+	// the CI runner's installed firewall binaries).
+	detect(lookPath func(string) (string, error), exists func(string) bool) bool
 	// active reports whether the firewall is currently enforcing rules. raw is
 	// the combined CLI output, used only for diagnostics on error.
 	active(ctx context.Context, run execFunc) (active bool, raw string, err error)
@@ -34,16 +35,18 @@ type backend interface {
 }
 
 // findBinary resolves name via lookPath, falling back to common absolute paths
-// for sparse service-user PATHs.
-func findBinary(lookPath func(string) (string, error), name string, fallbacks ...string) bool {
+// (probed via exists) for sparse service-user PATHs.
+func findBinary(lookPath func(string) (string, error), exists func(string) bool, name string, fallbacks ...string) bool {
 	if lookPath != nil {
 		if _, err := lookPath(name); err == nil {
 			return true
 		}
 	}
-	for _, p := range fallbacks {
-		if _, err := os.Stat(p); err == nil {
-			return true
+	if exists != nil {
+		for _, p := range fallbacks {
+			if exists(p) {
+				return true
+			}
 		}
 	}
 	return false
@@ -61,8 +64,8 @@ type ufwBackend struct{}
 
 func (ufwBackend) name() string { return "ufw" }
 
-func (ufwBackend) detect(lookPath func(string) (string, error)) bool {
-	return findBinary(lookPath, "ufw", "/usr/sbin/ufw", "/sbin/ufw", "/usr/bin/ufw")
+func (ufwBackend) detect(lookPath func(string) (string, error), exists func(string) bool) bool {
+	return findBinary(lookPath, exists, "ufw", "/usr/sbin/ufw", "/sbin/ufw", "/usr/bin/ufw")
 }
 
 func (ufwBackend) active(ctx context.Context, run execFunc) (bool, string, error) {
@@ -106,8 +109,8 @@ type firewalldBackend struct{}
 
 func (firewalldBackend) name() string { return "firewalld" }
 
-func (firewalldBackend) detect(lookPath func(string) (string, error)) bool {
-	return findBinary(lookPath, "firewall-cmd",
+func (firewalldBackend) detect(lookPath func(string) (string, error), exists func(string) bool) bool {
+	return findBinary(lookPath, exists, "firewall-cmd",
 		"/usr/bin/firewall-cmd", "/usr/sbin/firewall-cmd", "/bin/firewall-cmd")
 }
 

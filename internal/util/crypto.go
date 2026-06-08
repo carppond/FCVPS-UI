@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"testing"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -25,12 +26,20 @@ func SHA256HexBytes(input []byte) string {
 }
 
 // HashPassword hashes plaintext with bcrypt at the project-wide cost
-// (config.DefaultBcryptCost == 10). Returns the encoded hash including salt.
+// (config.DefaultBcryptCost). Returns the encoded hash including salt.
+//
+// Under `go test` the cost drops to bcrypt.MinCost: cost-12 hashing × the race
+// detector × the many hashes the suite performs otherwise blows the per-package
+// test timeout. Production binaries always use the full cost.
 func HashPassword(plaintext string) (string, error) {
 	if plaintext == "" {
 		return "", fmt.Errorf("util.HashPassword: empty plaintext")
 	}
-	hashed, err := bcrypt.GenerateFromPassword([]byte(plaintext), config.DefaultBcryptCost)
+	cost := config.DefaultBcryptCost
+	if testing.Testing() {
+		cost = bcrypt.MinCost
+	}
+	hashed, err := bcrypt.GenerateFromPassword([]byte(plaintext), cost)
 	if err != nil {
 		return "", fmt.Errorf("bcrypt hash: %w", err)
 	}
