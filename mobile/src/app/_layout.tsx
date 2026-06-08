@@ -87,6 +87,7 @@ export default function RootLayout() {
         <Stack.Screen name="pipelines" options={{ title: t("pipelines") }} />
         <Stack.Screen name="scripts" options={{ title: t("scripts") }} />
         <Stack.Screen name="agents-page" options={{ title: t("agents") }} />
+        <Stack.Screen name="alert-rules" options={{ title: t("alert_rules") }} />
         <Stack.Screen name="agent/[id]" options={{ title: t("agent_detail") }} />
         <Stack.Screen name="agent/create" options={{ title: t("agent_create"), presentation: "modal" }} />
         <Stack.Screen name="agent/edit" options={{ title: t("agent_edit") }} />

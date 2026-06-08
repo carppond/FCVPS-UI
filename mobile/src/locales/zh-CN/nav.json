@@ -7,6 +7,7 @@
   "agent_detail": "探针详情",
   "agent_edit": "编辑探针",
   "agents": "探针",
+  "alert_rules": "告警规则",
   "back": "返回",
   "notifications": "通知",
   "notify_create": "新建通知渠道",

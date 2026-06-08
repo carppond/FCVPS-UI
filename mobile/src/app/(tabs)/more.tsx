@@ -20,6 +20,7 @@ interface NavItem {
 
 const buildTools = (c: AppColors, t: TFunction): NavItem[] => [
   { icon: "radio-outline", iconColor: c.success, iconBg: c.successBg, label: t("more_tools_agents"), route: "/agents-page" },
+  { icon: "notifications-circle-outline", iconColor: c.warning, iconBg: c.warningBg, label: t("more_tools_alerts"), route: "/alert-rules" },
   { icon: "bar-chart-outline", iconColor: c.info, iconBg: c.infoBg, label: t("more_tools_traffic"), route: "/traffic-page" },
   { icon: "shield-outline", iconColor: c.primary, iconBg: c.primarySoft, label: t("more_tools_rules"), route: "/rules-page" },
   { icon: "layers-outline", iconColor: c.warning, iconBg: c.warningBg, label: t("more_tools_rule_sets"), route: "/rule-sets" },
