@@ -19,6 +19,7 @@
 - **sub-store 兼容**：`/download/:name?token=<token>` 路由，原客户端无需改配置
 - **VPS 资产管理**：记录 VPS 费用、到期日、SSH 凭据，到期自动通知
 - **探针监控**：自写轻量 Go agent，上报 CPU / MEM / Disk / NetIO / Load
+- **探针告警**：CPU/内存/磁盘使用率阈值或离线触发，经通知渠道推送（可设持续时间 + 冷却）
 - **Nezha 兼容**：原 Nezha agent 只改 server 地址即可接入
 - **10 渠道通知**：Telegram / Discord / Slack / Email / Bark / Gotify / Webhook / Server酱 / PushDeer / IFTTT
 - **Telegram Bot 双向交互**：`/nodes`、`/refresh <sub>`、`/traffic` 等命令运维
@@ -180,6 +181,7 @@ npx expo run:ios --device --configuration Release
 | [从 sub-store 迁移](./docs/user/migration-from-substore.md) | sub-store 用户切换指引 |
 | [从 Nezha 迁移](./docs/user/migration-from-nezha.md) | Nezha agent 接入 |
 | [通知渠道配置](./docs/user/notification-setup.md) | 10 个渠道配置说明 |
+| [探针告警规则](./docs/user/alerting.md) | CPU/内存/磁盘阈值与离线告警 |
 | [iOS 编译与自签安装](./docs/user/ios-build.md) | 基础版/完整版两个 IPA、证书要求、编译打包与重签步骤 |
 | [Android 编译与打包](./docs/user/android-build.md) | APK 安装、编译环境、本地/EAS 云构建 |
 | [卸载](./docs/user/uninstall.md) | 探针 / Docker / 脚本 / 二进制各方式的卸载步骤 |
