@@ -1,0 +1,2 @@
+Agent "{{ .Payload.AgentName }}" triggered alert rule "{{ .Payload.RuleName }}".
+{{ if eq .Payload.Metric "offline" }}Status: offline{{ if .Payload.Detail }} ({{ .Payload.Detail }}){{ end }}{{ else }}Metric: {{ .Payload.Metric }} now {{ printf "%.1f" .Payload.Value }}%, threshold {{ printf "%.0f" .Payload.Threshold }}%{{ if .Payload.Detail }} ({{ .Payload.Detail }}){{ end }}{{ end }}

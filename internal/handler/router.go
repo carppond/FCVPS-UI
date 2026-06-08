@@ -206,6 +206,9 @@ type Deps struct {
 	// nil disables the routes (e.g. when no firewall service is wired).
 	FirewallHandler *FirewallHandler
 
+	// AlertRuleHandler hosts /api/alert-rules/* (M-ALERT). nil disables routes.
+	AlertRuleHandler *AlertRuleHandler
+
 	// Silent owns the live silent-mode prefix. Internal — populated by
 	// NewRouter when DB is supplied.
 	silent *middleware.SilentMode
@@ -279,6 +282,7 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	mountTGWebhookRoutes(mux, deps)
 	mountVpsAssetRoutes(mux, deps)
 	mountFirewallRoutes(mux, deps)
+	mountAlertRuleRoutes(mux, deps)
 
 	return mux
 }
@@ -912,6 +916,22 @@ func mountVpsAssetRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PUT /api/vps-assets/{id}", required(http.HandlerFunc(vh.Update)))
 	mux.Handle("PATCH /api/vps-assets/{id}", required(http.HandlerFunc(vh.Update)))
 	mux.Handle("DELETE /api/vps-assets/{id}", required(http.HandlerFunc(vh.Delete)))
+}
+
+// mountAlertRuleRoutes installs the probe alert-rule CRUD (M-ALERT), all
+// user-scoped via auth.Required.
+func mountAlertRuleRoutes(mux *http.ServeMux, deps *Deps) {
+	if deps == nil || deps.AlertRuleHandler == nil || deps.TokenStore == nil {
+		return
+	}
+	required := auth.Required(deps.TokenStore)
+	ah := deps.AlertRuleHandler
+	mux.Handle("GET /api/alert-rules", required(http.HandlerFunc(ah.List)))
+	mux.Handle("POST /api/alert-rules", required(http.HandlerFunc(ah.Create)))
+	mux.Handle("GET /api/alert-rules/{id}", required(http.HandlerFunc(ah.Get)))
+	mux.Handle("PUT /api/alert-rules/{id}", required(http.HandlerFunc(ah.Update)))
+	mux.Handle("PATCH /api/alert-rules/{id}", required(http.HandlerFunc(ah.Update)))
+	mux.Handle("DELETE /api/alert-rules/{id}", required(http.HandlerFunc(ah.Delete)))
 }
 
 // mountFirewallRoutes installs the local-host firewall surface (admin-only):

@@ -77,3 +77,4 @@ mobile/eas-project.local.json
 # Release 打包暂存(产物走 GitHub Release,不入库)
 dist-release/
 *.apk
+web/src/types/api.generated.ts

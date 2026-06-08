@@ -30,6 +30,7 @@ const (
 	EventOTAAvailable           = types.EventOTAAvailable
 	EventScriptAlert            = types.EventScriptAlert
 	EventVpsExpiry              = types.EventVpsExpiry
+	EventProbeAlert             = types.EventProbeAlert
 )
 
 // EventStatus is re-exported for the manager / repo layer.
@@ -78,6 +79,21 @@ type NodeOfflinePayload struct {
 	AgentName  string
 	LastSeenAt int64
 	Duration   string
+}
+
+// ProbeAlertPayload describes an agent metric/offline alert raised by an
+// alert_rules rule (探针告警). Value/Threshold are percentages for
+// cpu/mem/disk; for the offline metric they are unused and Detail carries the
+// offline duration.
+type ProbeAlertPayload struct {
+	RuleID    string
+	RuleName  string
+	AgentID   string
+	AgentName string
+	Metric    string  // cpu | mem | disk | offline
+	Value     float64 // 当前值(%);offline 时为 0
+	Threshold float64 // 阈值(%);offline 时为 0
+	Detail    string  // 人类可读补充(如 "持续 5 分钟" / "离线 3 分钟")
 }
 
 // TrafficThresholdPayload describes a flux threshold breach (PRD M-NOTIFY.2).

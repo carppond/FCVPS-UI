@@ -163,6 +163,7 @@ const (
 	EventOTAAvailable           EventType = "ota_available"
 	EventScriptAlert            EventType = "script_alert"
 	EventVpsExpiry              EventType = "vps_expiry"
+	EventProbeAlert             EventType = "probe_alert"
 )
 
 // EventStatus 通知投递状态。
@@ -218,6 +219,7 @@ const (
 	ErrNotFoundProxyGroup   ErrorCode = "ERR_NOT_FOUND_PROXY_GROUP"
 	ErrNotFoundRuleSet      ErrorCode = "ERR_NOT_FOUND_RULE_SET"
 	ErrNotFoundShortLink    ErrorCode = "ERR_NOT_FOUND_SHORT_LINK"
+	ErrNotFoundAlertRule    ErrorCode = "ERR_NOT_FOUND_ALERT_RULE"
 
 	// CONFLICT
 	ErrConflictUsername        ErrorCode = "ERR_CONFLICT_USERNAME"
@@ -1429,6 +1431,53 @@ type UpdateVpsAssetRequest struct {
 	Notes          *string      `json:"notes,omitempty"`
 	AgentID        *string      `json:"agent_id,omitempty"`
 	Tags           *[]string    `json:"tags,omitempty"`
+}
+
+// AlertMetric 是告警规则评估的指标维度。
+type AlertMetric string
+
+const (
+	AlertMetricCPU     AlertMetric = "cpu"     // CPU 使用率 %
+	AlertMetricMem     AlertMetric = "mem"     // 内存使用率 %
+	AlertMetricDisk    AlertMetric = "disk"    // 磁盘使用率 %
+	AlertMetricOffline AlertMetric = "offline" // 探针离线
+)
+
+// AlertRule 探针告警规则。AgentID 为空表示作用于该用户的所有探针。
+type AlertRule struct {
+	ID          string      `json:"id"`
+	UserID      string      `json:"user_id"`
+	Name        string      `json:"name"`
+	Enabled     bool        `json:"enabled"`
+	AgentID     string      `json:"agent_id,omitempty"` // "" = 全部探针
+	Metric      AlertMetric `json:"metric"`
+	Threshold   float64     `json:"threshold"`    // 百分比;offline 忽略
+	DurationSec int         `json:"duration_sec"` // 持续多久才触发(秒)
+	CooldownSec int         `json:"cooldown_sec"` // 再次告警冷却(秒)
+	CreatedAt   int64       `json:"created_at"`
+	UpdatedAt   int64       `json:"updated_at"`
+}
+
+// CreateAlertRuleRequest 新建告警规则请求。
+type CreateAlertRuleRequest struct {
+	Name        string      `json:"name"`
+	AgentID     string      `json:"agent_id,omitempty"`
+	Metric      AlertMetric `json:"metric"`
+	Threshold   float64     `json:"threshold,omitempty"`
+	DurationSec int         `json:"duration_sec,omitempty"`
+	CooldownSec int         `json:"cooldown_sec,omitempty"`
+	Enabled     *bool       `json:"enabled,omitempty"`
+}
+
+// UpdateAlertRuleRequest 修改告警规则请求(指针字段表示可选覆盖)。
+type UpdateAlertRuleRequest struct {
+	Name        string       `json:"name,omitempty"`
+	AgentID     *string      `json:"agent_id,omitempty"`
+	Metric      AlertMetric  `json:"metric,omitempty"`
+	Threshold   *float64     `json:"threshold,omitempty"`
+	DurationSec *int         `json:"duration_sec,omitempty"`
+	CooldownSec *int         `json:"cooldown_sec,omitempty"`
+	Enabled     *bool        `json:"enabled,omitempty"`
 }
 
 // VpsAssetSummary VPS 资产汇总统计。

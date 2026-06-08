@@ -90,6 +90,7 @@ var errorStatusMap = map[types.ErrorCode]int{
 	types.ErrNotFoundProxyGroup:   http.StatusNotFound,
 	types.ErrNotFoundRuleSet:      http.StatusNotFound,
 	types.ErrNotFoundShortLink:    http.StatusNotFound,
+	types.ErrNotFoundAlertRule:    http.StatusNotFound,
 
 	// CONFLICT
 	types.ErrConflictUsername:        http.StatusConflict,

@@ -264,6 +264,20 @@
 
 ---
 
+### M-ALERT：探针告警规则
+
+针对探针 CPU / 内存 / 磁盘使用率(%)或离线状态设阈值;后台引擎每 60s 评估,命中且过冷却期则经通知系统发 `probe_alert` 事件。`agent_id` 为空表示规则作用于该用户的所有探针。`metric` ∈ `cpu|mem|disk|offline`;`duration_sec` 为需持续多久才触发(0=即时);`cooldown_sec` 为再次告警冷却(默认 3600)。
+
+| # | 方法 | 路径 | 用途 | 鉴权 |
+|---|------|------|------|------|
+| 71a | GET | `/api/alert-rules` | 列出我的告警规则 | `[user]` |
+| 71b | POST | `/api/alert-rules` | 创建规则 | `[user]` |
+| 71c | GET | `/api/alert-rules/:id` | 规则详情 | `[user]` |
+| 71d | PUT / PATCH | `/api/alert-rules/:id` | 修改规则 | `[user]` |
+| 71e | DELETE | `/api/alert-rules/:id` | 删除规则 | `[user]` |
+
+---
+
 ### M-TRAFFIC：流量聚合
 
 | # | 方法 | 路径 | 用途 | 鉴权 |

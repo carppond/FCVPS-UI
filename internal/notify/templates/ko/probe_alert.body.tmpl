@@ -1,0 +1,2 @@
+프로브 "{{ .Payload.AgentName }}"이(가) 경고 규칙 "{{ .Payload.RuleName }}"을(를) 트리거했습니다.
+{{ if eq .Payload.Metric "offline" }}상태: 오프라인{{ if .Payload.Detail }} ({{ .Payload.Detail }}){{ end }}{{ else }}지표: {{ .Payload.Metric }} 현재 {{ printf "%.1f" .Payload.Value }}%, 임계값 {{ printf "%.0f" .Payload.Threshold }}%{{ if .Payload.Detail }} ({{ .Payload.Detail }}){{ end }}{{ end }}

@@ -1,0 +1,2 @@
+探针「{{ .Payload.AgentName }}」触发告警规则「{{ .Payload.RuleName }}」。
+{{ if eq .Payload.Metric "offline" }}状态:离线{{ if .Payload.Detail }}({{ .Payload.Detail }}){{ end }}{{ else }}指标:{{ .Payload.Metric }} 当前 {{ printf "%.1f" .Payload.Value }}%,阈值 {{ printf "%.0f" .Payload.Threshold }}%{{ if .Payload.Detail }}({{ .Payload.Detail }}){{ end }}{{ end }}

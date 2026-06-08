@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"shiguang-vps/internal/agent"
+	"shiguang-vps/internal/alert"
 	"shiguang-vps/internal/asset"
 	"shiguang-vps/internal/audit"
 	"shiguang-vps/internal/auth"
@@ -496,6 +497,22 @@ func run() error {
 	// M-ASSET: VPS asset management.
 	vpsAssetRepo := storage.NewVpsAssetRepo(db, time.Now)
 	vpsAssetHandler := handler.NewVpsAssetHandler(vpsAssetRepo, log)
+
+	// M-ALERT: probe alert rules + background evaluation engine.
+	alertRuleRepo := storage.NewAlertRuleRepo(db, time.Now)
+	alertRuleHandler := handler.NewAlertRuleHandler(alertRuleRepo, log)
+	alertEngine, err := alert.NewEngine(alert.Config{
+		Rules:    alertRuleRepo,
+		Agents:   agentRepo,
+		Records:  agentRecordRepo,
+		Settings: settingsRepo,
+		Notify:   notifyMgr,
+		Now:      time.Now,
+		Logger:   log,
+	})
+	if err != nil {
+		return fmt.Errorf("alert engine: %w", err)
+	}
 	expiryChecker, err := asset.NewExpiryChecker(asset.ExpiryCheckerConfig{
 		VpsRepo: vpsAssetRepo,
 		Notify:  notifyMgr,
@@ -554,6 +571,7 @@ func run() error {
 		TGWebhookHandler:      tgWebhookHandler,
 		TGBotSettingsHandler:  tgBotSettingsHandler,
 		VpsAssetHandler:       vpsAssetHandler,
+		AlertRuleHandler:      alertRuleHandler,
 		FirewallHandler:       firewallHandler,
 		LoginRateLimit:        ratelimit.New(cfg.AuthRate.LoginPerSecond, cfg.AuthRate.LoginBurst, 0),
 		GlobalRateLimit:       ratelimit.New(100, 200, 0),
@@ -600,6 +618,9 @@ func run() error {
 	defer stopMonthlyReset()
 	stopTrafficCleanup := trafficCleanup.StartDaily(rootCtx)
 	defer stopTrafficCleanup()
+	// Probe alert engine: evaluate alert rules every 60s.
+	stopAlertEngine := alertEngine.StartLoop(rootCtx, time.Minute)
+	defer stopAlertEngine()
 	// BandwagonHost traffic poller: every 30 min, refresh per-agent provider
 	// figures (used/limit) for agents with API credentials. The traffic summary
 	// prefers these over measured usage when synced.

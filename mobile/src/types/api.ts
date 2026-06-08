@@ -86,7 +86,8 @@ export type EventType =
   | "login_anomaly"
   | "ota_available"
   | "script_alert"
-  | "vps_expiry";
+  | "vps_expiry"
+  | "probe_alert";
 
 export type EventStatus = "pending" | "sent" | "failed" | "skipped_dedupe";
 
@@ -124,6 +125,7 @@ export type ErrorCode =
   | "ERR_NOT_FOUND_SCRIPT"
   | "ERR_NOT_FOUND_AGENT"
   | "ERR_NOT_FOUND_CHANNEL"
+  | "ERR_NOT_FOUND_ALERT_RULE"
   // CONFLICT
   | "ERR_CONFLICT_USERNAME"
   | "ERR_CONFLICT_PIPELINE_VERSION"
@@ -1175,6 +1177,42 @@ export interface UpdateVpsAssetRequest {
   notes?: string | null;
   agent_id?: string | null;
   tags?: string[];
+}
+
+export type AlertMetric = "cpu" | "mem" | "disk" | "offline";
+
+export interface AlertRule {
+  id: string;
+  user_id: string;
+  name: string;
+  enabled: boolean;
+  agent_id?: string;
+  metric: AlertMetric;
+  threshold: number;
+  duration_sec: number;
+  cooldown_sec: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface CreateAlertRuleRequest {
+  name: string;
+  agent_id?: string;
+  metric: AlertMetric;
+  threshold?: number;
+  duration_sec?: number;
+  cooldown_sec?: number;
+  enabled?: boolean;
+}
+
+export interface UpdateAlertRuleRequest {
+  name?: string;
+  agent_id?: string | null;
+  metric?: AlertMetric;
+  threshold?: number;
+  duration_sec?: number;
+  cooldown_sec?: number;
+  enabled?: boolean;
 }
 
 export interface VpsAssetMonthlyCost {
