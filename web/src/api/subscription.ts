@@ -18,6 +18,7 @@ import type {
   RotateShareTokenResponse,
   Subscription,
   SubscriptionDetail,
+  SubscriptionSyncLog,
   SyncResult,
   UpdateSubscriptionRequest,
 } from "@/types/api";
@@ -64,6 +65,18 @@ export function useSubscriptionQuery(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.subscription.detail(id ?? ""),
     queryFn: () => apiFetch<SubscriptionDetail>(`/api/subscriptions/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+/** GET /api/subscriptions/:id/sync-logs — recent sync history. */
+export function useSubscriptionSyncLogsQuery(id: string | undefined) {
+  return useQuery({
+    queryKey: [...queryKeys.subscription.detail(id ?? ""), "sync-logs"],
+    queryFn: () =>
+      apiFetch<PagedResponse<SubscriptionSyncLog>>(
+        `/api/subscriptions/${id}/sync-logs`,
+      ),
     enabled: Boolean(id),
   });
 }

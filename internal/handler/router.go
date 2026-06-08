@@ -414,6 +414,7 @@ func mountSubscriptionRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("POST /api/subscriptions", required(http.HandlerFunc(sh.Create)))
 	mux.Handle("POST /api/subscriptions/upload", required(http.HandlerFunc(sh.Upload)))
 	mux.Handle("GET /api/subscriptions/{id}", required(http.HandlerFunc(sh.Get)))
+	mux.Handle("GET /api/subscriptions/{id}/sync-logs", required(http.HandlerFunc(sh.SyncLogs)))
 	// Architecture §5.1 lists PATCH for the update verb. We additionally
 	// accept PUT (Tech Lead task spec) so the contract and the task spec are
 	// both satisfied.

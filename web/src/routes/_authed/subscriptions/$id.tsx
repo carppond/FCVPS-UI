@@ -34,6 +34,7 @@ import {
 } from "@/api/subscription";
 import { useNodesQuery, useTCPingBatchMutation } from "@/api/node";
 import { SubEditForm } from "@/components/subscription/sub-edit-form";
+import { SyncHistory } from "@/components/subscription/sync-history";
 import { NodeMiniCard } from "@/components/subscription/node-mini-card";
 import { ClientCard } from "@/components/subscription/client-card";
 import { CLIENT_CATALOG } from "@/components/subscription/client-catalog";
@@ -140,21 +141,6 @@ function fmtInterval(seconds: number): string {
 
 function daysUntil(epochMs: number): number {
   return Math.max(0, Math.ceil((epochMs - Date.now()) / 86_400_000));
-}
-
-// ── History item dot colour ────────────────────────────────────────────────
-
-function historyDotColor(status?: SyncStatus): string {
-  switch (status) {
-    case "ok":
-      return "bg-[var(--color-success)]";
-    case "error":
-      return "bg-[var(--color-error)]";
-    case "pending":
-      return "bg-[var(--color-warning)]";
-    default:
-      return "bg-[var(--color-text-disabled)]";
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -534,24 +520,7 @@ function SubscriptionDetailPage() {
                 "px-4 py-3",
               )}
             >
-              {data.last_synced_at ? (
-                <HistoryRow
-                  status={data.last_sync_status}
-                  message={
-                    data.last_sync_error
-                      ? data.last_sync_error
-                      : `${t(`subscription:status.${data.last_sync_status ?? "ok"}`)} · ${data.node_count} ${t("subscription:list.card.nodes")}`
-                  }
-                  timestamp={data.last_synced_at}
-                />
-              ) : (
-                <p className="py-3 text-center text-[11.5px] text-[var(--color-text-tertiary)]">
-                  {t("subscription:detail.sync_history.empty")}
-                </p>
-              )}
-              <p className="mt-2 text-[10px] text-[var(--color-text-tertiary)]">
-                {t("subscription:detail.sync_history.history_unavailable")}
-              </p>
+              <SyncHistory subscriptionId={data.id} />
             </div>
           </section>
         </main>
@@ -669,33 +638,6 @@ function SectionHeader({
 }
 
 /** A single history timeline row. */
-function HistoryRow({
-  status,
-  message,
-  timestamp,
-}: {
-  status?: SyncStatus;
-  message: string;
-  timestamp: number;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 border-b border-[var(--color-border)] py-[7px] last:border-b-0">
-      <span
-        className={cn(
-          "inline-block h-2 w-2 flex-shrink-0 rounded-full",
-          historyDotColor(status),
-        )}
-      />
-      <span className="flex-1 text-[11.5px] text-[var(--color-text-primary)]">
-        {message}
-      </span>
-      <span className="font-mono text-[11px] text-[var(--color-text-tertiary)]">
-        {formatRelativeTime(timestamp)}
-      </span>
-    </div>
-  );
-}
-
 // ── Skeleton ────────────────────────────────────────────────────────────────
 
 function DetailSkeleton() {

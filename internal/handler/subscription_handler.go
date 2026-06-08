@@ -25,8 +25,54 @@ type SubscriptionHandler struct {
 	repo         *storage.SubscriptionRepo
 	nodeRepo     *storage.NodeRepo
 	pipelineRepo *storage.PipelineRepo
+	syncLogRepo  *storage.SubscriptionSyncLogRepo
 	sync         *substore.SyncService
 	logger       *slog.Logger
+}
+
+// SetSyncLogRepo wires the sync-history store (optional; nil → GET /sync-logs
+// returns an empty list).
+func (h *SubscriptionHandler) SetSyncLogRepo(r *storage.SubscriptionSyncLogRepo) {
+	h.syncLogRepo = r
+}
+
+// SyncLogs implements GET /api/subscriptions/{id}/sync-logs — recent sync
+// history for a subscription owned by the caller.
+func (h *SubscriptionHandler) SyncLogs(w http.ResponseWriter, r *http.Request) {
+	traceID := middleware.TraceIDFromContext(r.Context())
+	user := auth.MustUserFromContext(r.Context())
+	id := r.PathValue("id")
+	// Ownership check via the subscription itself (also 404s unknown ids).
+	if _, err := h.repo.GetByID(r.Context(), id, user.ID); err != nil {
+		util.RespondError(w, types.ErrNotFoundSubscription, "subscription not found", nil, traceID)
+		return
+	}
+	items := []types.SubscriptionSyncLog{}
+	if h.syncLogRepo != nil {
+		recs, err := h.syncLogRepo.ListBySubscription(r.Context(), id, user.ID, 50)
+		if err != nil {
+			h.logger.Error("list sync logs", slog.String("err", err.Error()), slog.String("trace_id", traceID))
+			util.RespondError(w, types.ErrInternalDatabase, "list sync logs", nil, traceID)
+			return
+		}
+		items = make([]types.SubscriptionSyncLog, len(recs))
+		for i, rec := range recs {
+			items[i] = types.SubscriptionSyncLog{
+				ID:             rec.ID,
+				SubscriptionID: rec.SubscriptionID,
+				Status:         types.SyncStatus(rec.Status),
+				NodeCount:      rec.NodeCount,
+				Error:          rec.Error,
+				CreatedAt:      rec.CreatedAt,
+			}
+		}
+	}
+	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.PagedResponse[types.SubscriptionSyncLog]]{
+		Data: types.PagedResponse[types.SubscriptionSyncLog]{
+			Items: items, Total: int64(len(items)), Page: 1, PageSize: len(items),
+		},
+		RequestID: traceID,
+	})
 }
 
 // NewSubscriptionHandler wires the handler. sync may be nil; manual-create

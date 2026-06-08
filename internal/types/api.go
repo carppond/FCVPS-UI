@@ -459,6 +459,16 @@ type SyncResult struct {
 	SyncedAt       int64  `json:"synced_at"`
 }
 
+// SubscriptionSyncLog 是订阅一次同步的历史记录(GET /api/subscriptions/:id/sync-logs)。
+type SubscriptionSyncLog struct {
+	ID             string     `json:"id"`
+	SubscriptionID string     `json:"subscription_id"`
+	Status         SyncStatus `json:"status"`
+	NodeCount      int        `json:"node_count"`
+	Error          string     `json:"error,omitempty"`
+	CreatedAt      int64      `json:"created_at"`
+}
+
 // UpdatePipelineBindingsRequest 重置订阅绑定流水线请求。
 type UpdatePipelineBindingsRequest struct {
 	Bindings []PipelineBindingInput `json:"bindings"`

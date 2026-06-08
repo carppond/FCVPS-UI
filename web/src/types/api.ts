@@ -360,6 +360,15 @@ export interface SyncResult {
   synced_at: number;
 }
 
+export interface SubscriptionSyncLog {
+  id: string;
+  subscription_id: string;
+  status: SyncStatus;
+  node_count: number;
+  error?: string;
+  created_at: number;
+}
+
 export interface PipelineBindingInput {
   pipeline_id: string;
   position: number;

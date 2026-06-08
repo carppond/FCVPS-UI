@@ -132,6 +132,7 @@
 | 29 | GET | `/api/subscriptions/:id/raw` | 查看原始内容（YAML/Base64） | `[user]` |
 | 30 | GET | `/api/subscriptions/:id/output` | 输出 Clash YAML（经流水线处理） | `[user]` |
 | 31 | POST | `/api/subscriptions/upload` | 上传 YAML 文件（multipart/form-data） | `[user]` |
+| 31a | GET | `/api/subscriptions/:id/sync-logs` | 同步历史(最近 50 条,status/node_count/error/created_at) | `[user]` |
 | 32 | GET | `/api/subscriptions/:id/pipelines` | 列出绑定的流水线 | `[user]` |
 | 33 | PUT | `/api/subscriptions/:id/pipelines` | 重置绑定（全量替换，含排序） | `[user]` |
 

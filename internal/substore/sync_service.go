@@ -113,8 +113,15 @@ type SyncService struct {
 	hooks          ScriptHookRunner
 	notify         NotifyHook
 	events         EventBus
+	syncLog        SyncLogRecorder
 	logger         *slog.Logger
 	now            func() time.Time
+}
+
+// SyncLogRecorder appends a sync-history row. Implemented by
+// storage.SubscriptionSyncLogRepo; optional (nil → history disabled).
+type SyncLogRecorder interface {
+	Record(ctx context.Context, rec storage.SubscriptionSyncLogRecord) error
 }
 
 // SyncServiceConfig bundles SyncService dependencies.
@@ -132,6 +139,7 @@ type SyncServiceConfig struct {
 	Hooks              ScriptHookRunner
 	Notify             NotifyHook
 	Events             EventBus
+	SyncLog            SyncLogRecorder
 	Logger             *slog.Logger
 	Now                func() time.Time
 }
@@ -170,6 +178,7 @@ func NewSyncService(cfg SyncServiceConfig) (*SyncService, error) {
 		hooks:          cfg.Hooks,
 		notify:         cfg.Notify,
 		events:         cfg.Events,
+		syncLog:        cfg.SyncLog,
 		logger:         cfg.Logger,
 		now:            now,
 	}, nil
@@ -234,6 +243,7 @@ func (s *SyncService) SyncOne(ctx context.Context, sub *storage.SubscriptionReco
 		// Sync ran but state metadata failed: still surface to caller.
 		return nil, fmt.Errorf("update sync state: %w", err)
 	}
+	s.recordSyncLog(ctx, sub, string(types.SyncStatusOK), upsertResult.Total, "")
 	// Best-effort: refresh traffic/expiry from the upstream Subscription-Userinfo
 	// header (so used/limit match the source panel, e.g. 3X-UI).
 	if info != nil {
@@ -406,8 +416,30 @@ func (s *SyncService) failSync(ctx context.Context, sub *storage.SubscriptionRec
 			slog.String("err", err.Error()),
 		)
 	}
+	s.recordSyncLog(ctx, sub, string(types.SyncStatusError), 0, msg)
 	if s.notify != nil {
 		s.notify.EmitSubscriptionSyncFailed(ctx, sub, msg)
+	}
+}
+
+// recordSyncLog appends a sync-history row (best-effort; nil recorder or write
+// failure is non-fatal — history must never break a sync).
+func (s *SyncService) recordSyncLog(ctx context.Context, sub *storage.SubscriptionRecord, status string, nodeCount int, errMsg string) {
+	if s.syncLog == nil {
+		return
+	}
+	if err := s.syncLog.Record(ctx, storage.SubscriptionSyncLogRecord{
+		SubscriptionID: sub.ID,
+		UserID:         sub.UserID,
+		Status:         status,
+		NodeCount:      nodeCount,
+		Error:          errMsg,
+		CreatedAt:      s.now().UnixMilli(),
+	}); err != nil && s.logger != nil {
+		s.logger.Warn("subscription record sync log failed",
+			slog.String("subscription_id", sub.ID),
+			slog.String("err", err.Error()),
+		)
 	}
 }
 

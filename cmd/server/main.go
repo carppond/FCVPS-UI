@@ -212,11 +212,13 @@ func run() error {
 		Transport: subscriptionInsecureTransport,
 		Timeout:   substore.DefaultHTTPTimeout,
 	}
+	syncLogRepo := storage.NewSubscriptionSyncLogRepo(db, time.Now)
 	syncService, err := substore.NewSyncService(substore.SyncServiceConfig{
 		Repo:               subscriptions,
 		NodeRepo:           nodeAdapter,
 		HTTPClient:         subscriptionHTTPClient,
 		InsecureHTTPClient: subscriptionInsecureClient,
+		SyncLog:            syncLogRepo,
 		Logger:             log,
 	})
 	if err != nil {
@@ -427,6 +429,7 @@ func run() error {
 	pipelineRepo := storage.NewPipelineRepo(db, time.Now)
 	pipelineHandler := handler.NewPipelineHandler(pipelineRepo, subscriptions, log)
 	subHandler.SetPipelineRepo(pipelineRepo)
+	subHandler.SetSyncLogRepo(syncLogRepo)
 	subHandler.SetNodeRepo(nodeRepo)
 
 	// T-12: M-RULE handler. Reuses the substore NodeRepoAdapter from above so
