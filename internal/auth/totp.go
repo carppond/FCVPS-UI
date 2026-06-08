@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"image/png"
@@ -52,6 +53,7 @@ type totpUserRepository interface {
 	UpdateTOTPSecret(ctx context.Context, userID, secret string) error
 	EnableTOTP(ctx context.Context, userID string) error
 	DisableTOTP(ctx context.Context, userID string) error
+	UpdateTOTPLastStep(ctx context.Context, userID string, step int64) error
 }
 
 // StoredUser is the internal projection auth needs from the users row. It is
@@ -67,6 +69,7 @@ type StoredUser struct {
 	Locale            string
 	TOTPSecret        string
 	TOTPEnabled       bool
+	TOTPLastStep      int64
 	RecoveryCodesHash string
 	CreatedAt         int64
 	UpdatedAt         int64
@@ -191,28 +194,54 @@ func (m *defaultTOTPManager) Verify(ctx context.Context, userID, code string) er
 	if !user.TOTPEnabled || user.TOTPSecret == "" {
 		return ErrTOTPNotEnabled
 	}
-	if !validateCode(user.TOTPSecret, code, m.now()) {
+	step, ok := matchCodeStep(user.TOTPSecret, code, m.now())
+	if !ok {
 		return ErrTOTPInvalid
+	}
+	// Replay protection: reject any code from a step at or before the last
+	// successfully consumed one (a code stays valid for ~90s with skew=1, so
+	// the same digits must not be accepted twice).
+	if step <= user.TOTPLastStep {
+		return ErrTOTPInvalid
+	}
+	if err := m.users.UpdateTOTPLastStep(ctx, userID, step); err != nil {
+		return err
 	}
 	return nil
 }
 
 // validateCode runs the pquerna/otp validator with the project skew.
 func validateCode(secret, code string, now time.Time) bool {
+	_, ok := matchCodeStep(secret, code, now)
+	return ok
+}
+
+// matchCodeStep validates code against secret and, on success, returns the
+// 30-second time-step (unix/period) the code corresponds to — used for replay
+// protection. Checks the current step plus ±totpSkew neighbours.
+func matchCodeStep(secret, code string, now time.Time) (int64, bool) {
 	code = strings.TrimSpace(code)
 	if len(code) != 6 {
-		return false
+		return 0, false
 	}
-	ok, err := totp.ValidateCustom(code, secret, now, totp.ValidateOpts{
-		Period:    30,
-		Skew:      totpSkew,
-		Digits:    otp.DigitsSix,
-		Algorithm: otp.AlgorithmSHA1,
-	})
-	if err != nil {
-		return false
+	const period = 30
+	base := now.Unix() / period
+	for d := int64(-totpSkew); d <= int64(totpSkew); d++ {
+		step := base + d
+		want, err := totp.GenerateCodeCustom(secret, time.Unix(step*period, 0), totp.ValidateOpts{
+			Period:    period,
+			Skew:      0,
+			Digits:    otp.DigitsSix,
+			Algorithm: otp.AlgorithmSHA1,
+		})
+		if err != nil {
+			continue
+		}
+		if subtle.ConstantTimeCompare([]byte(want), []byte(code)) == 1 {
+			return step, true
+		}
 	}
-	return ok
+	return 0, false
 }
 
 // renderQR encodes the otpauth URI as a 256x256 PNG.

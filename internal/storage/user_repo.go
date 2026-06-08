@@ -22,6 +22,7 @@ type UserRecord struct {
 	Locale            string
 	TOTPSecret        string
 	TOTPEnabled       bool
+	TOTPLastStep      int64
 	RecoveryCodesHash string
 	CreatedAt         int64
 	UpdatedAt         int64
@@ -232,6 +233,21 @@ func (r *UserRepo) EnableTOTP(ctx context.Context, id string) error {
 	return r.touch(ctx, id, "totp_enabled = 1", nil)
 }
 
+// UpdateTOTPLastStep records the time-step of the most recently consumed TOTP
+// code (replay protection). Deliberately does NOT bump updated_at — a login is
+// not a profile change.
+func (r *UserRepo) UpdateTOTPLastStep(ctx context.Context, id string, step int64) error {
+	res, err := r.db.Write.ExecContext(ctx,
+		"UPDATE users SET totp_last_step = ? WHERE id = ?", step, id)
+	if err != nil {
+		return fmt.Errorf("update totp_last_step: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
 // DisableTOTP clears totp_enabled and totp_secret.
 func (r *UserRepo) DisableTOTP(ctx context.Context, id string) error {
 	now := r.now().UnixMilli()
@@ -319,7 +335,7 @@ func (r *UserRepo) touch(ctx context.Context, id, fragment string, extra any) er
 // List. Keeping it in one constant guarantees column order matches scanUserRow.
 const selectUserSQL = `SELECT id, username, password_hash, role, is_active,
 		COALESCE(email,''), locale, COALESCE(totp_secret,''),
-		totp_enabled, COALESCE(recovery_codes_hash,''),
+		totp_enabled, COALESCE(totp_last_step,0), COALESCE(recovery_codes_hash,''),
 		created_at, updated_at FROM users`
 
 // scanUserRow consumes a single QueryRow result.
@@ -327,7 +343,7 @@ func scanUserRow(row *sql.Row) (*UserRecord, error) {
 	var u UserRecord
 	var active, totpOn int
 	err := row.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.Role, &active,
-		&u.Email, &u.Locale, &u.TOTPSecret, &totpOn, &u.RecoveryCodesHash,
+		&u.Email, &u.Locale, &u.TOTPSecret, &totpOn, &u.TOTPLastStep, &u.RecoveryCodesHash,
 		&u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -345,7 +361,7 @@ func scanUserRowMulti(rows *sql.Rows) (*UserRecord, error) {
 	var u UserRecord
 	var active, totpOn int
 	if err := rows.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.Role, &active,
-		&u.Email, &u.Locale, &u.TOTPSecret, &totpOn, &u.RecoveryCodesHash,
+		&u.Email, &u.Locale, &u.TOTPSecret, &totpOn, &u.TOTPLastStep, &u.RecoveryCodesHash,
 		&u.CreatedAt, &u.UpdatedAt); err != nil {
 		return nil, fmt.Errorf("scan user: %w", err)
 	}

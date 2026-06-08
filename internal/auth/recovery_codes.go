@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -14,10 +15,12 @@ import (
 // regenerate; PRD M-USER-3 specifies 8.
 const RecoveryCodeCount = 8
 
-// RecoveryCodeLength is the textual length of each code (hex chars). 8 hex
-// characters → 32 bits of entropy, sufficient given the 5-failure brute-force
-// lockout (~2^28 effective attempts per ban window).
-const RecoveryCodeLength = 8
+// RecoveryCodeLength is the textual length of each code (hex chars). 16 hex
+// characters → 64 bits of entropy, so a leaked recovery_codes_hash column
+// cannot be brute-forced/enumerated offline (unsalted sha256 of a 64-bit
+// value has a 2^64 preimage cost). Older 8-hex codes minted before this bump
+// keep verifying — they are hashed the same way.
+const RecoveryCodeLength = 16
 
 // GenerateRecoveryCodes returns RecoveryCodeCount distinct codes in plaintext.
 // Caller must hash them via HashRecoveryCodes before persisting; the plaintext
@@ -91,11 +94,12 @@ func VerifyAndConsumeRecoveryCode(ctx context.Context, repo RecoveryCodeReposito
 		return 0, ErrRecoveryExhausted
 	}
 	want := util.SHA256Hex(normaliseRecoveryCode(code))
+	// Constant-time scan: compare every entry without an early break so the
+	// matched index isn't revealed through timing.
 	idx := -1
 	for i, h := range hashes {
-		if h == want {
+		if subtle.ConstantTimeCompare([]byte(h), []byte(want)) == 1 {
 			idx = i
-			break
 		}
 	}
 	if idx < 0 {

@@ -47,6 +47,11 @@ func (a *StorageUserAdapter) DisableTOTP(ctx context.Context, userID string) err
 	return a.Repo.DisableTOTP(ctx, userID)
 }
 
+// UpdateTOTPLastStep implements totpUserRepository.UpdateTOTPLastStep.
+func (a *StorageUserAdapter) UpdateTOTPLastStep(ctx context.Context, userID string, step int64) error {
+	return a.Repo.UpdateTOTPLastStep(ctx, userID, step)
+}
+
 // GetRecoveryCodesHash implements RecoveryCodeRepository.GetRecoveryCodesHash.
 func (a *StorageUserAdapter) GetRecoveryCodesHash(ctx context.Context, userID string) (string, error) {
 	return a.Repo.GetRecoveryCodesHash(ctx, userID)
@@ -72,6 +77,7 @@ func recordToStoredUser(rec *storage.UserRecord) *StoredUser {
 		Locale:            rec.Locale,
 		TOTPSecret:        rec.TOTPSecret,
 		TOTPEnabled:       rec.TOTPEnabled,
+		TOTPLastStep:      rec.TOTPLastStep,
 		RecoveryCodesHash: rec.RecoveryCodesHash,
 		CreatedAt:         rec.CreatedAt,
 		UpdatedAt:         rec.UpdatedAt,

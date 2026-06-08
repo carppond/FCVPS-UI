@@ -8,8 +8,9 @@ import (
 	"testing"
 )
 
-// recoveryCodeRE matches the expected lowercase hex format for a single code.
-var recoveryCodeRE = regexp.MustCompile(`^[0-9a-f]{8}$`)
+// recoveryCodeRE matches the expected lowercase hex format for a single code
+// (RecoveryCodeLength hex chars).
+var recoveryCodeRE = regexp.MustCompile(`^[0-9a-f]{16}$`)
 
 func TestGenerateRecoveryCodesShape(t *testing.T) {
 	codes := GenerateRecoveryCodes()
@@ -19,7 +20,7 @@ func TestGenerateRecoveryCodesShape(t *testing.T) {
 	seen := make(map[string]struct{}, len(codes))
 	for _, c := range codes {
 		if !recoveryCodeRE.MatchString(c) {
-			t.Fatalf("code %q does not match lowercase 8-hex pattern", c)
+			t.Fatalf("code %q does not match lowercase 16-hex pattern", c)
 		}
 		if _, dup := seen[c]; dup {
 			t.Fatalf("duplicate code generated: %q", c)

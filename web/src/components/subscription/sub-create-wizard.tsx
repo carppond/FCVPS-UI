@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
@@ -61,6 +62,7 @@ interface WizardState {
   name: string;
   sourceUrl: string;
   ua: string;
+  allowInsecure: boolean;
   file: File | null;
   tags: string[];
   syncInterval: number; // seconds; 0 = manual only
@@ -100,6 +102,7 @@ function initialState(): WizardState {
     name: "",
     sourceUrl: "",
     ua: "",
+    allowInsecure: false,
     file: null,
     tags: [],
     syncInterval: 21600,
@@ -217,6 +220,8 @@ export function SubCreateWizard({
             state.source === "url" ? state.sourceUrl.trim() : undefined,
           ua:
             state.source === "url" ? state.ua.trim() || undefined : undefined,
+          allow_insecure:
+            state.source === "url" ? state.allowInsecure : undefined,
           sync_interval: state.syncInterval || undefined,
           tags: state.tags,
         });
@@ -514,6 +519,20 @@ function StepDetails({ state, onChange }: StepDetailsProps) {
             />
             <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
               {t("subscription:wizard.form.ua_hint")}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2">
+              <Checkbox
+                checked={state.allowInsecure}
+                onCheckedChange={(c) => onChange({ allowInsecure: c === true })}
+              />
+              <span className="text-[var(--font-size-sm)]">
+                {t("subscription:edit.allow_insecure_label")}
+              </span>
+            </label>
+            <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+              {t("subscription:edit.allow_insecure_hint")}
             </p>
           </div>
         </>

@@ -46,7 +46,10 @@ const (
 	DefaultAgentHeartbeatInterval = 30 * time.Second
 
 	// DefaultBcryptCost is the bcrypt work factor used for password hashing.
-	DefaultBcryptCost = 10
+	// 12 per OWASP's current guidance (~250ms/hash). Existing cost-10 hashes
+	// keep verifying — bcrypt encodes its cost in the hash — and silently
+	// upgrade to 12 the next time the user changes their password.
+	DefaultBcryptCost = 12
 
 	// DefaultLoginRatePerSecond is the per-(IP|username) login bucket refill
 	// rate (5 attempts per hour ≈ 0.00139/s).

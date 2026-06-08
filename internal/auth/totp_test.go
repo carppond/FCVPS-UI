@@ -49,6 +49,13 @@ func (s *stubTOTPRepo) DisableTOTP(_ context.Context, _ string) error {
 	return nil
 }
 
+func (s *stubTOTPRepo) UpdateTOTPLastStep(_ context.Context, _ string, step int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.user.TOTPLastStep = step
+	return nil
+}
+
 func (s *stubTOTPRepo) GetRecoveryCodesHash(_ context.Context, _ string) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -131,6 +138,30 @@ func TestTOTPEnableAndVerify(t *testing.T) {
 	// A wrong code rejects.
 	if err := m.Verify(context.Background(), "u-1", "000000"); !errors.Is(err, ErrTOTPInvalid) {
 		t.Fatalf("expected ErrTOTPInvalid for wrong code, got %v", err)
+	}
+}
+
+// TestTOTPVerifyRejectsReplay is the regression guard: the same 6-digit code
+// must not be accepted twice (replay protection via totp_last_step).
+func TestTOTPVerifyRejectsReplay(t *testing.T) {
+	repo := newStubTOTPRepo("")
+	now := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	m := NewTOTPManager(repo, func() time.Time { return now })
+	setup, _ := m.Setup(context.Background(), "u-1", "alice")
+	enroll, _ := totp.GenerateCode(setup.Secret, now)
+	if _, err := m.Enable(context.Background(), "u-1", enroll); err != nil {
+		t.Fatalf("Enable: %v", err)
+	}
+	// First use of a login code at a later step succeeds...
+	t1 := now.Add(60 * time.Second)
+	m1 := NewTOTPManager(repo, func() time.Time { return t1 })
+	code, _ := totp.GenerateCode(setup.Secret, t1)
+	if err := m1.Verify(context.Background(), "u-1", code); err != nil {
+		t.Fatalf("first use should succeed: %v", err)
+	}
+	// ...reusing the exact same code (same step) must now be rejected.
+	if err := m1.Verify(context.Background(), "u-1", code); !errors.Is(err, ErrTOTPInvalid) {
+		t.Fatalf("replay of same code must fail, got %v", err)
 	}
 }
 

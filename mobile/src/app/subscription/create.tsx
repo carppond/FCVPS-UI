@@ -10,6 +10,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -43,6 +44,7 @@ export default function CreateSubscriptionScreen() {
   const [name, setName] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [remark, setRemark] = useState("");
+  const [allowInsecure, setAllowInsecure] = useState(false);
 
   // Step 2: rule templates
   const [activeCategory, setActiveCategory] = useState("region");
@@ -90,7 +92,10 @@ export default function CreateSubscriptionScreen() {
         name: name.trim(),
         type: sourceUrl.trim() ? "url" : "manual",
       };
-      if (sourceUrl.trim()) req.source_url = sourceUrl.trim();
+      if (sourceUrl.trim()) {
+        req.source_url = sourceUrl.trim();
+        req.allow_insecure = allowInsecure;
+      }
       if (remark.trim()) req.remark = remark.trim();
       await createMutation.mutateAsync(req);
 
@@ -192,6 +197,27 @@ export default function CreateSubscriptionScreen() {
               <Text style={styles.hint}>{t("source_hint")}</Text>
             </View>
           </View>
+
+          {/* Allow insecure TLS (only relevant for URL subscriptions) */}
+          {sourceUrl.trim() !== "" && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={[styles.cardIcon, { backgroundColor: colors.warningBg }]}>
+                  <Ionicons name="shield-outline" size={16} color={colors.warning} />
+                </View>
+                <Text style={styles.cardTitle}>{t("allow_insecure_title")}</Text>
+              </View>
+              <View style={styles.insecureRow}>
+                <Text style={styles.insecureHint}>{t("allow_insecure_hint")}</Text>
+                <Switch
+                  value={allowInsecure}
+                  onValueChange={setAllowInsecure}
+                  trackColor={{ false: colors.border, true: colors.primarySoft }}
+                  thumbColor={allowInsecure ? colors.primary : colors.textDisabled}
+                />
+              </View>
+            </View>
+          )}
 
           {/* Remark */}
           <View style={styles.card}>
@@ -339,6 +365,8 @@ const makeStyles = (colors: AppColors) =>
   },
   textArea: { height: 80, paddingTop: spacing.md },
   hint: { fontSize: fontSize.xs, color: colors.textDisabled, marginTop: 2 },
+  insecureRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  insecureHint: { flex: 1, fontSize: fontSize.sm, color: colors.textTertiary, lineHeight: 18 },
 
   submitBtn: {
     height: 50, borderRadius: radius.lg, backgroundColor: colors.primary,
