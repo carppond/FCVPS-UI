@@ -46,7 +46,11 @@
     "sort_created_desc": "新しい順",
     "sort_created_asc": "古い順",
     "no_match_title": "一致するノードがありません",
-    "no_match_desc": "検索条件やフィルターを変更してください"
+    "no_match_desc": "検索条件やフィルターを変更してください",
+    "latency_fast": "高速 <100ms",
+    "latency_medium": "中速 100–300ms",
+    "latency_slow": "低速 ≥300ms",
+    "latency_timeout": "タイムアウト"
   },
   "latency": {
     "untested": "未測定",

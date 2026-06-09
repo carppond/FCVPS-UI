@@ -46,7 +46,11 @@
     "sort_created_desc": "최신순",
     "sort_created_asc": "오래된 순",
     "no_match_title": "일치하는 노드 없음",
-    "no_match_desc": "검색어나 필터를 조정해 보세요"
+    "no_match_desc": "검색어나 필터를 조정해 보세요",
+    "latency_fast": "빠름 <100ms",
+    "latency_medium": "보통 100–300ms",
+    "latency_slow": "느림 ≥300ms",
+    "latency_timeout": "시간 초과"
   },
   "latency": {
     "untested": "미측정",

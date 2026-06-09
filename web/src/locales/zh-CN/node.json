@@ -46,7 +46,11 @@
     "sort_created_desc": "新到旧",
     "sort_created_asc": "旧到新",
     "no_match_title": "无匹配节点",
-    "no_match_desc": "试试调整搜索条件或筛选器"
+    "no_match_desc": "试试调整搜索条件或筛选器",
+    "latency_fast": "快速 <100ms",
+    "latency_medium": "中等 100–300ms",
+    "latency_slow": "慢 ≥300ms",
+    "latency_timeout": "超时"
   },
   "latency": {
     "untested": "未测",

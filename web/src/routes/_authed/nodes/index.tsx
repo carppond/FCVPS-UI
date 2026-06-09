@@ -51,6 +51,9 @@ export const Route = createFileRoute("/_authed/nodes/")({
 // ---------------------------------------------------------------------------
 
 type StatusFilter = "all" | "online" | "offline";
+// Latency-quality buckets (client-side; latency_ms: <0 timeout, 0 = untested):
+//   fast <100ms · medium 100–300ms · slow ≥300ms · timeout <0
+type LatencyFilter = "all" | "fast" | "medium" | "slow" | "timeout";
 
 const PROTOCOL_OPTIONS: NodeProtocol[] = [
   "vless",
@@ -81,6 +84,7 @@ function NodesPage() {
   const [searchInput, setSearchInput] = React.useState("");
   const keyword = useDebounce(searchInput, 300);
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all");
+  const [latencyFilter, setLatencyFilter] = React.useState<LatencyFilter>("all");
   const [protocolFilter, setProtocolFilter] = React.useState<string>("");
   const [subFilter, setSubFilter] = React.useState<string>("");
 
@@ -131,6 +135,17 @@ function NodesPage() {
       items = items.filter((n) => !n.reachable);
     }
 
+    // Latency-quality filter (latency_ms: <0 timeout, 0 untested, else ms).
+    if (latencyFilter === "fast") {
+      items = items.filter((n) => n.latency_ms > 0 && n.latency_ms < 100);
+    } else if (latencyFilter === "medium") {
+      items = items.filter((n) => n.latency_ms >= 100 && n.latency_ms < 300);
+    } else if (latencyFilter === "slow") {
+      items = items.filter((n) => n.latency_ms >= 300);
+    } else if (latencyFilter === "timeout") {
+      items = items.filter((n) => n.latency_ms < 0);
+    }
+
     // Protocol filter
     if (protocolFilter) {
       items = items.filter((n) => n.protocol === protocolFilter);
@@ -142,7 +157,7 @@ function NodesPage() {
     }
 
     return items;
-  }, [allItems, keyword, statusFilter, protocolFilter, subFilter]);
+  }, [allItems, keyword, statusFilter, latencyFilter, protocolFilter, subFilter]);
 
   // ── Summary computations (from all items, not filtered) ──
   const summary = React.useMemo(() => {
@@ -313,6 +328,22 @@ function NodesPage() {
         >
           {t("node:filters.status_offline")}
         </FilterChip>
+
+        {/* Separator */}
+        <span className="mx-0.5 h-4 w-px bg-[var(--color-border)]" />
+
+        {/* Latency-quality chips */}
+        {(["fast", "medium", "slow", "timeout"] as const).map((q) => (
+          <FilterChip
+            key={q}
+            active={latencyFilter === q}
+            onClick={() =>
+              setLatencyFilter((prev) => (prev === q ? "all" : q))
+            }
+          >
+            {t(`node:filters.latency_${q}`)}
+          </FilterChip>
+        ))}
 
         {/* Separator */}
         <span className="mx-0.5 h-4 w-px bg-[var(--color-border)]" />
