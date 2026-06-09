@@ -28,6 +28,7 @@ type Config struct {
 	Session  SessionConfig
 	Agent    AgentConfig
 	AuthRate AuthRateConfig
+	Backup   BackupConfig
 
 	// ResetPassword, when non-empty, switches the binary into offline account
 	// recovery mode: reset that username's password (plus disable TOTP and
@@ -105,6 +106,19 @@ type AuthRateConfig struct {
 	LoginBurst int
 }
 
+// BackupConfig configures the nightly auto-backup scheduler. The feature is
+// off unless Dir is set (via SHIGUANG_BACKUP_DIR), keeping a plain
+// `go run ./cmd/server` side-effect-free.
+type BackupConfig struct {
+	// Dir is the destination directory for nightly archives. Empty disables
+	// scheduled backups entirely.
+	Dir string
+	// Keep is how many newest archives to retain (default 7).
+	Keep int
+	// Hour is the UTC hour (0-23) at which the backup runs (default 4).
+	Hour int
+}
+
 // ErrInvalidConfig is returned when a required value cannot be parsed.
 var ErrInvalidConfig = errors.New("invalid configuration")
 
@@ -170,6 +184,7 @@ func defaultConfig() Config {
 			LoginPerSecond: DefaultLoginRatePerSecond,
 			LoginBurst:     DefaultLoginRateBurst,
 		},
+		Backup: BackupConfig{Keep: DefaultBackupKeep, Hour: DefaultBackupHour},
 	}
 }
 
@@ -227,6 +242,19 @@ func applyEnv(cfg *Config) {
 	if v := os.Getenv("SHIGUANG_LOGIN_RATE_BURST"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			cfg.AuthRate.LoginBurst = n
+		}
+	}
+	if v := os.Getenv("SHIGUANG_BACKUP_DIR"); v != "" {
+		cfg.Backup.Dir = v
+	}
+	if v := os.Getenv("SHIGUANG_BACKUP_KEEP"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			cfg.Backup.Keep = n
+		}
+	}
+	if v := os.Getenv("SHIGUANG_BACKUP_HOUR"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 && n <= 23 {
+			cfg.Backup.Hour = n
 		}
 	}
 }

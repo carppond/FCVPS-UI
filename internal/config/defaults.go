@@ -59,6 +59,11 @@ const (
 	// password retry without being rate-limited.
 	DefaultLoginRateBurst = 5
 
+	// DefaultBackupKeep is how many nightly archives the scheduler retains.
+	DefaultBackupKeep = 7
+	// DefaultBackupHour is the UTC hour the nightly backup runs at.
+	DefaultBackupHour = 4
+
 	// DefaultPaginationPage is the default page index when none is provided.
 	DefaultPaginationPage = 1
 

@@ -350,6 +350,29 @@ SHIGUANG_TRUSTED_PROXIES="127.0.0.1/32,::1/128,10.0.0.0/8"
 
 ---
 
+## 问题 N：开启定时自动备份
+
+除了在面板里手动「导出备份」，hub 也支持每天定时把完整快照（SQLite 数据库 + system_settings）写到指定目录，并自动滚动保留最近 N 份。该功能默认**关闭**，仅当设置了备份目录环境变量时才启用：
+
+```bash
+# 必填:备份目录(设了才启用);其余可选
+SHIGUANG_BACKUP_DIR=/data/backups   # 归档写到这里,文件名形如 shiguang-backup-20260609-040000.tar.gz
+SHIGUANG_BACKUP_KEEP=7              # 保留最近几份(默认 7),更早的自动删除
+SHIGUANG_BACKUP_HOUR=4             # 每天运行的 UTC 小时 0-23(默认 4,即 UTC 04:00)
+```
+
+systemd 部署时把它们写进 `Environment=`，Docker 部署时用 `-e` / `environment:` 传入，并记得把宿主目录挂载进容器（例如 `-v /data/backups:/data/backups`）。
+
+要点：
+
+- 启用后启动日志会打印一行 `scheduled backup enabled dir=… keep=… hour_utc=…`，可据此确认生效。
+- 滚动删除只针对本功能生成的 `shiguang-backup-*.tar.gz` 文件,目录内其他文件不受影响。
+- 归档是**明文**的(含 system_settings 里的敏感字段),请把备份目录放在受控位置,或对归档目录做静态加密。
+- 备份目录建议放在与数据盘不同的磁盘/挂载点,跨盘时 hub 会自动从临时目录拷贝过去。
+- 恢复仍走面板「导入备份」或离线流程,定时任务只负责产出归档、不会自动恢复。
+
+---
+
 ## 获取帮助
 
 如果以上排查步骤无法解决问题：

@@ -88,7 +88,8 @@ func run() error {
 	}
 	log := logger.Default()
 	if cfg.ResetPassword == "" { // recovery mode prints to stdout only
-		log.Info("shiguang-vps server starting",
+		log.Info(
+			"shiguang-vps server starting",
 			slog.String("http_addr", cfg.HTTP.Addr),
 			slog.String("data_dir", cfg.Database.DataDir),
 		)
@@ -138,7 +139,8 @@ func run() error {
 	if username != "" {
 		// First-boot bootstrap: print the generated password exactly once.
 		// Operators must capture this from the log; there is no second chance.
-		log.Warn("ADMIN BOOTSTRAPPED",
+		log.Warn(
+			"ADMIN BOOTSTRAPPED",
 			slog.String("username", username),
 			slog.String("password", plain),
 			slog.String("note", "save this password; it will not be shown again"),
@@ -179,7 +181,8 @@ func run() error {
 	if silentEnabled && silentPrefix != "" {
 		// Silent mode is actively enforced — print the entry URL so the
 		// operator can recover the value without touching the DB.
-		log.Warn("SILENT MODE READY",
+		log.Warn(
+			"SILENT MODE READY",
 			slog.String("entry_url", fmt.Sprintf("http://%s/_app/%s/", cfg.HTTP.Addr, silentPrefix)),
 			slog.String("prefix", silentPrefix),
 			slog.String("note", "this URL is required to reach the login page"),
@@ -471,6 +474,19 @@ func run() error {
 	}
 	backupHandler := handler.NewBackupHandler(backupSvc, log)
 
+	// Scheduled nightly backup — only constructed when SHIGUANG_BACKUP_DIR is
+	// set; nil (disabled) otherwise. Reuses backupSvc.Create.
+	scheduledBackup, err := ops.NewScheduledBackup(ops.ScheduledBackupConfig{
+		Backup: backupSvc,
+		Dir:    cfg.Backup.Dir,
+		Keep:   cfg.Backup.Keep,
+		Hour:   cfg.Backup.Hour,
+		Log:    log,
+	})
+	if err != nil {
+		return fmt.Errorf("scheduled backup: %w", err)
+	}
+
 	// T-28: short-link / audit / install-script handlers.
 	//
 	// audit.Logger drains middleware AuditEntry values onto a worker goroutine
@@ -621,6 +637,15 @@ func run() error {
 	defer stopMonthlyReset()
 	stopTrafficCleanup := trafficCleanup.StartDaily(rootCtx)
 	defer stopTrafficCleanup()
+	// Nightly auto-backup (only when SHIGUANG_BACKUP_DIR is configured).
+	if scheduledBackup != nil {
+		stopScheduledBackup := scheduledBackup.StartDaily(rootCtx)
+		defer stopScheduledBackup()
+		log.Info("scheduled backup enabled",
+			slog.String("dir", cfg.Backup.Dir),
+			slog.Int("keep", cfg.Backup.Keep),
+			slog.Int("hour_utc", cfg.Backup.Hour))
+	}
 	// Probe alert engine: evaluate alert rules every 60s.
 	stopAlertEngine := alertEngine.StartLoop(rootCtx, time.Minute)
 	defer stopAlertEngine()
