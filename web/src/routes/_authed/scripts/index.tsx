@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { toast } from "@/components/ui/toast";
-import { useApiError } from "@/hooks/use-api-error";
+import { useApiError, formatApiError } from "@/hooks/use-api-error";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ScriptList } from "@/components/script/script-list";
 import {
@@ -166,7 +166,7 @@ function ScriptsListPage() {
       ) : isError ? (
         <ErrorState
           message={
-            error instanceof Error ? error.message : t("common:no_data")
+            formatApiError(error, t)
           }
           onRetry={() => refetch()}
           retryLabel={t("common:actions.retry")}

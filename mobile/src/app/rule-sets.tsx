@@ -24,6 +24,7 @@ import {
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 import type { RuleSetProvider, RuleSetPreset } from "../types/api";
+import { formatApiError } from "../lib/format-api-error";
 
 function syncStatusColor(status: string | undefined, c: AppColors): string {
   switch (status) {
@@ -82,7 +83,7 @@ export default function RuleSetsScreen() {
         Alert.alert(t("ruleset_sync_success"), t("ruleset_sync_all_started"));
         refetch();
       },
-      onError: (err: any) => Alert.alert(t("ruleset_sync_failed"), err.message),
+      onError: (err: any) => Alert.alert(t("ruleset_sync_failed"), formatApiError(err, t)),
     });
   };
 
@@ -123,7 +124,7 @@ export default function RuleSetsScreen() {
       Alert.alert(t("ruleset_import_success"), t("ruleset_imported_count", { count: selected.length }));
       refetch();
     } catch (err: any) {
-      Alert.alert(t("ruleset_import_failed"), err.message);
+      Alert.alert(t("ruleset_import_failed"), formatApiError(err, t));
     }
   };
 
@@ -136,7 +137,7 @@ export default function RuleSetsScreen() {
         onPress: () => {
           deleteMutation.mutate(item.id, {
             onSuccess: () => refetch(),
-            onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
+            onError: (err: any) => Alert.alert(t("common:delete_failed"), formatApiError(err, t)),
           });
         },
       },
@@ -148,7 +149,7 @@ export default function RuleSetsScreen() {
       { id: item.id, data: { enabled: !item.enabled } },
       {
         onSuccess: () => refetch(),
-        onError: (err: any) => Alert.alert(t("common:operation_failed"), err.message),
+        onError: (err: any) => Alert.alert(t("common:operation_failed"), formatApiError(err, t)),
       },
     );
   };
@@ -159,7 +160,7 @@ export default function RuleSetsScreen() {
         Alert.alert(t("ruleset_sync_success"), t("ruleset_sync_single_done", { name: item.name }));
         refetch();
       },
-      onError: (err: any) => Alert.alert(t("ruleset_sync_failed"), err.message),
+      onError: (err: any) => Alert.alert(t("ruleset_sync_failed"), formatApiError(err, t)),
     });
   };
 

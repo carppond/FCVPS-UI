@@ -25,7 +25,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
-import { useApiError } from "@/hooks/use-api-error";
+import { useApiError, formatApiError } from "@/hooks/use-api-error";
 import {
   useDeleteSubscriptionMutation,
   useSubscriptionQuery,
@@ -174,7 +174,7 @@ function SubscriptionDetailPage() {
   // ── Loading / error states ──
   if (isLoading) return <DetailSkeleton />;
   if (isError || !data) {
-    const errMsg = error instanceof Error ? error.message : String(error ?? "");
+    const errMsg = formatApiError(error, t);
     return (
       <div className="p-2">
         <ErrorState

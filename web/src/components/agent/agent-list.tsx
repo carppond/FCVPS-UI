@@ -19,6 +19,7 @@ import { useAgentsQuery, type ListAgentsParams } from "@/api/agent";
 import type { AgentListItem, AgentStatus } from "@/types/api";
 import { AgentStatusDot } from "./agent-status-dot";
 import { AgentKindBadge } from "./agent-kind-badge";
+import { formatApiError } from "@/hooks/use-api-error";
 
 const PAGE_SIZE = 25;
 
@@ -58,7 +59,7 @@ export function AgentList({
 
   if (isLoading) return <AgentTableSkeleton />;
   if (isError) {
-    const errMsg = error instanceof Error ? error.message : String(error ?? "");
+    const errMsg = formatApiError(error, t);
     return (
       <ErrorState
         message={t("agent:error.load_failed") + (errMsg ? ` (${errMsg})` : "")}

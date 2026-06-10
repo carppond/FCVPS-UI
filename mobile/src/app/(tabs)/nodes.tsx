@@ -6,6 +6,7 @@ import { useNodesQuery, useTcpingMutation } from "../../api/node";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { Node, NodeProtocol, TCPingResult } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 // 协议筛选「全部」用非中文哨兵值,展示文案走 i18n。
 const ALL = "__all__";
@@ -81,7 +82,7 @@ export default function NodesScreen() {
           setLatencyMap(map);
           Alert.alert(t("tcping_done"), t("tcping_done_message", { count: resp.results.length }));
         },
-        onError: (err: any) => Alert.alert(t("tcping_failed"), err.message),
+        onError: (err: any) => Alert.alert(t("tcping_failed"), formatApiError(err, t)),
       },
     );
   };

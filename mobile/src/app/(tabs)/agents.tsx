@@ -7,6 +7,7 @@ import { useAgentsQuery, useDeleteAgent } from "../../api/agent";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { AgentListItem } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 export default function AgentsScreen() {
   const { t } = useTranslation(["agents", "common"]);
@@ -55,7 +56,7 @@ export default function AgentsScreen() {
         onPress: () => {
           deleteMutation.mutate(agentId, {
             onSuccess: () => Alert.alert(t("deleted"), t("deleted_message")),
-            onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
+            onError: (err: any) => Alert.alert(t("common:delete_failed"), formatApiError(err, t)),
           });
         },
       },

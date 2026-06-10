@@ -30,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { toast } from "@/components/ui/toast";
-import { useApiError } from "@/hooks/use-api-error";
+import { useApiError, formatApiError } from "@/hooks/use-api-error";
 import { useEventStream, type SSEHandlers } from "@/hooks/use-event-stream";
 import { AgentDetailTabs } from "@/components/agent/agent-detail-tabs";
 import { AgentStatusDot } from "@/components/agent/agent-status-dot";
@@ -206,7 +206,7 @@ function AgentDetailPage() {
 
   if (isLoading) return <DetailSkeleton />;
   if (isError) {
-    const errMsg = error instanceof Error ? error.message : String(error ?? "");
+    const errMsg = formatApiError(error, t);
     return (
       <div className="p-6">
         <ErrorState

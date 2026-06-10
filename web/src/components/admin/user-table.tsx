@@ -16,6 +16,7 @@ import {
 import { useListUsersQuery } from "@/api/user";
 import { formatDate } from "@/lib/format";
 import type { User } from "@/types/api";
+import { formatApiError } from "@/hooks/use-api-error";
 
 export interface UserTableProps {
   /** Search keyword applied to /api/admin/users?keyword=. */
@@ -57,7 +58,7 @@ export function UserTable({
 
   if (isError) {
     const errMsg =
-      error instanceof Error ? error.message : String(error ?? "");
+      formatApiError(error, t);
     return (
       <ErrorState
         message={t("auth:admin_users.error.load_failed") + (errMsg ? ` (${errMsg})` : "")}

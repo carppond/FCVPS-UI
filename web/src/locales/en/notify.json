@@ -266,7 +266,8 @@
       "failed": "Failed",
       "pending": "Pending",
       "skipped_dedupe": "Skipped"
-    }
+    },
+    "send_failed": "Send failed"
   },
   "page": {
     "filter_label": "Filter by kind",

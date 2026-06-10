@@ -15,6 +15,7 @@ import { useNotificationChannelsQuery, useDeleteChannel } from "../api/notify";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 import type { NotificationChannel, ChannelKind } from "../types/api";
+import { formatApiError } from "../lib/format-api-error";
 
 function channelIcon(kind: ChannelKind): keyof typeof Ionicons.glyphMap {
   switch (kind) {
@@ -88,7 +89,7 @@ export default function NotificationsScreen() {
             deleteMutation.mutate(item.id, {
               onSuccess: () => refetch(),
               onError: (err: any) =>
-                Alert.alert(t("common:delete_failed"), err.message),
+                Alert.alert(t("common:delete_failed"), formatApiError(err, t)),
             });
           },
         },

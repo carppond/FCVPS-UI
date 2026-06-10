@@ -19,6 +19,7 @@ import { useRuleTemplates, useCreateRule, useUpdateRule } from "../../api/rule";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { RuleTemplate, RuleType, RuleMode } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 const buildCategories = (t: TFunction) =>
   [
@@ -107,7 +108,7 @@ export default function RuleCreateScreen() {
         { text: t("common:ok"), onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert(t("common:create_failed"), err.message);
+      Alert.alert(t("common:create_failed"), formatApiError(err, t));
     }
   };
 
@@ -138,7 +139,7 @@ export default function RuleCreateScreen() {
               { text: t("common:ok"), onPress: () => router.back() },
             ]);
           },
-          onError: (err: any) => Alert.alert(t("common:save_failed"), err.message),
+          onError: (err: any) => Alert.alert(t("common:save_failed"), formatApiError(err, t)),
         },
       );
       return;
@@ -158,7 +159,7 @@ export default function RuleCreateScreen() {
             { text: t("common:ok"), onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => Alert.alert(t("common:create_failed"), err.message),
+        onError: (err: any) => Alert.alert(t("common:create_failed"), formatApiError(err, t)),
       },
     );
   };

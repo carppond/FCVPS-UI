@@ -20,6 +20,7 @@ import {
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 import type { ProxyGroupCategory, ProxyGroupPreset } from "../types/api";
+import { formatApiError } from "../lib/format-api-error";
 
 function typeColor(type: string, c: AppColors): string {
   switch (type) {
@@ -110,7 +111,7 @@ export default function ProxyGroupsScreen() {
       Alert.alert(t("proxygroup_create_success"), t("proxygroup_created_from_preset", { count: selected.length }));
       refetch();
     } catch (err: any) {
-      Alert.alert(t("common:create_failed"), err.message);
+      Alert.alert(t("common:create_failed"), formatApiError(err, t));
     }
   };
 

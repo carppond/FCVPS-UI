@@ -18,6 +18,7 @@ import { apiFetch } from "../../lib/api-client";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { CreateVpsAssetRequest, VpsAsset, BillingCycle } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 const CURRENCY_OPTIONS = ["CNY", "USD", "EUR", "GBP"] as const;
 
@@ -72,7 +73,7 @@ export default function CreateVpsAssetScreen() {
         { text: t("ok"), onPress: () => router.back() },
       ]);
     },
-    onError: (err: any) => Alert.alert(t("create_failed"), err.message),
+    onError: (err: any) => Alert.alert(t("create_failed"), formatApiError(err, t)),
   });
 
   const handleCreate = () => {

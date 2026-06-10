@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
-import { useApiError } from "@/hooks/use-api-error";
+import { useApiError, formatApiError } from "@/hooks/use-api-error";
 import { ScriptEditor } from "@/components/script/script-editor";
 import { ScriptTestPanel } from "@/components/script/script-test-panel";
 import {
@@ -154,7 +154,7 @@ function ScriptDetailPage() {
     return (
       <ErrorState
         message={
-          error instanceof Error ? error.message : t("common:no_data")
+          formatApiError(error, t)
         }
         onRetry={() => refetch()}
         retryLabel={t("common:actions.retry")}

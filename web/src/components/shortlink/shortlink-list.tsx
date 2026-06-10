@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { toast } from "@/components/ui/toast";
-import { useApiError } from "@/hooks/use-api-error";
+import { useApiError, formatApiError } from "@/hooks/use-api-error";
 import { useDeleteShortLink, useShortLinks } from "@/api/shortlink";
 import { formatDate } from "@/lib/format";
 import type { ShortLink } from "@/types/api";
@@ -64,7 +64,7 @@ export function ShortLinkList({ onCreate }: ShortLinkListProps) {
   }
 
   if (isError) {
-    const msg = error instanceof Error ? error.message : String(error ?? "");
+    const msg = formatApiError(error, t);
     return (
       <ErrorState
         message={t("shortlink:list.error_load") + (msg ? ` (${msg})` : "")}

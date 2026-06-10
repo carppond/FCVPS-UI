@@ -20,6 +20,7 @@ import { ProtocolBadge } from "./protocol-badge";
 import { LatencyBadge } from "./latency-badge";
 import { TCPingButton } from "./tcping-button";
 import type { NodeWithLatency } from "@/types/api";
+import { formatApiError } from "@/hooks/use-api-error";
 
 const PAGE_SIZE = 25;
 
@@ -58,7 +59,7 @@ export function NodeTable({
 
   if (isLoading) return <NodeTableSkeleton />;
   if (isError) {
-    const errMsg = error instanceof Error ? error.message : String(error ?? "");
+    const errMsg = formatApiError(error, t);
     return (
       <ErrorState
         message={t("node:error.load_failed") + (errMsg ? ` (${errMsg})` : "")}

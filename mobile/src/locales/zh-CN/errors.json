@@ -1,0 +1,16 @@
+{
+  "NETWORK_ERROR": "网络请求失败，请检查与服务器的连接",
+  "AUTH_UNAUTHORIZED": "登录已失效，请重新登录",
+  "NOT_FOUND": "资源不存在或已被删除",
+  "VALIDATION_FAILED": "参数校验失败，请检查输入",
+  "CONFLICT": "操作冲突，请刷新后重试",
+  "RATE_LIMITED": "请求过于频繁，请稍后再试",
+  "FORBIDDEN": "没有权限执行该操作",
+  "INTERNAL": "服务器内部错误，请稍后重试",
+  "INTERNAL_UNKNOWN": "操作失败，请稍后重试",
+  "NET_TLS_CERT": "目标服务器 TLS 证书无效（已过期或自签）。若信任该服务器，可在编辑时开启「跳过 TLS 证书校验」",
+  "NET_TIMEOUT": "连接目标服务器超时，请检查源站是否在线",
+  "NET_REFUSED": "目标服务器拒绝连接，请检查端口与服务状态",
+  "NET_DNS": "域名无法解析，请检查地址是否正确",
+  "AUTH_INVALID_PASSWORD": "用户名或密码错误"
+}

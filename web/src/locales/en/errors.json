@@ -16,5 +16,9 @@
   "HTTP_503": "Service unavailable (503), please try again later",
   "HTTP_504": "Gateway timeout (504), please try again later",
   "RATE_LIMITED": "Too many requests, please try again later",
-  "FORBIDDEN": "You do not have permission to perform this action"
+  "FORBIDDEN": "You do not have permission to perform this action",
+  "NET_TLS_CERT": "The target server's TLS certificate is invalid (expired or self-signed)",
+  "NET_TIMEOUT": "Connection to the target server timed out — check that it is online",
+  "NET_REFUSED": "The target server refused the connection — check the port and service status",
+  "NET_DNS": "The hostname could not be resolved — check the address"
 }

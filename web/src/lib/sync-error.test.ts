@@ -24,9 +24,15 @@ describe("classifySyncError", () => {
     ).toBe("tls_cert");
   });
 
+  it("detects timeouts / refused / dns failures", () => {
+    expect(classifySyncError("context deadline exceeded (Client.Timeout exceeded)")).toBe("timeout");
+    expect(classifySyncError("read tcp 10.0.0.1:443: i/o timeout")).toBe("timeout");
+    expect(classifySyncError("dial tcp 1.2.3.4:443: connect: connection refused")).toBe("refused");
+    expect(classifySyncError("lookup sub.example.com: no such host")).toBe("dns");
+  });
+
   it("returns null for unrelated errors", () => {
-    expect(classifySyncError("http get …: context deadline exceeded")).toBeNull();
-    expect(classifySyncError("connection refused")).toBeNull();
+    expect(classifySyncError("yaml: unmarshal error at line 3")).toBeNull();
     expect(classifySyncError("")).toBeNull();
     expect(classifySyncError(undefined)).toBeNull();
   });

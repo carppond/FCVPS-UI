@@ -8,6 +8,7 @@ import { useRulesQuery, useDeleteRule, useUpdateRule } from "../../api/rule";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { CustomRule, RuleType, RuleMode } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 function typeColor(type: RuleType, c: AppColors): string {
   switch (type) {
@@ -81,7 +82,7 @@ export default function RulesScreen() {
         onSuccess: () => {
           refetch();
         },
-        onError: (err: any) => Alert.alert(t("common:operation_failed"), err.message),
+        onError: (err: any) => Alert.alert(t("common:operation_failed"), formatApiError(err, t)),
       },
     );
   };
@@ -98,7 +99,7 @@ export default function RulesScreen() {
         onPress: () => {
           deleteMutation.mutate(rule.id, {
             onSuccess: () => refetch(),
-            onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
+            onError: (err: any) => Alert.alert(t("common:delete_failed"), formatApiError(err, t)),
           });
         },
       },

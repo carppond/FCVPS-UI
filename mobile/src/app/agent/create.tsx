@@ -17,6 +17,7 @@ import { useCreateAgent } from "../../api/agent";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { AgentKind, AgentCreateResponse } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 const buildKinds = (t: TFunction): { key: AgentKind; label: string; desc: string }[] => [
   { key: "native", label: t("kind_native"), desc: t("kind_native_desc") },
@@ -42,7 +43,7 @@ export default function CreateAgentScreen() {
       const res = await createMutation.mutateAsync({ name: name.trim(), kind });
       setResult(res);
     } catch (err: any) {
-      Alert.alert(t("common:create_failed"), err.message);
+      Alert.alert(t("common:create_failed"), formatApiError(err, t));
     }
   };
 

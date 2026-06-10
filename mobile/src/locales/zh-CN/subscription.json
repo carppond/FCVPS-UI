@@ -67,5 +67,8 @@
   "traffic_used_pct": "已使用 {{pct}}%",
   "url": "URL",
   "url_placeholder": "https://example.com/subscribe?token=xxx",
-  "sync_hint_tls_cert": "上游 TLS 证书无效（已过期或自签）。若信任该服务器，可在编辑订阅时开启「跳过 TLS 证书校验」后重试；更推荐为源服务器续期证书。"
+  "sync_hint_tls_cert": "上游 TLS 证书无效（已过期或自签）。若信任该服务器，可在编辑订阅时开启「跳过 TLS 证书校验」后重试；更推荐为源服务器续期证书。",
+  "sync_hint_timeout": "源服务器连接超时。请确认源站在线、网络可达后重试。",
+  "sync_hint_refused": "源服务器拒绝连接。请检查订阅地址端口是否正确、服务是否在运行。",
+  "sync_hint_dns": "订阅域名无法解析。请检查订阅地址拼写或源站 DNS 配置。"
 }

@@ -21,6 +21,7 @@ import { useAuthStore } from "../../stores/auth-store";
 import { STORAGE_KEYS } from "../../lib/constants";
 import { spacing, radius, fontSize, gradients, glow, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
+import { formatApiError } from "../../lib/format-api-error";
 
 const MASCOT = require("../../../assets/login-art.png");
 
@@ -70,7 +71,7 @@ export default function LoginScreen() {
 
       router.replace("/(tabs)");
     } catch (err: any) {
-      Alert.alert(t("login_failed"), err.message || t("login_failed_hint"));
+      Alert.alert(t("login_failed"), formatApiError(err, t));
     }
   };
 

@@ -19,6 +19,7 @@ import { useSubscriptionDetail, useUpdateSubscription } from "../../api/subscrip
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { UpdateSubscriptionRequest } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 export default function EditSubscriptionScreen() {
   const { t } = useTranslation(["subscription", "common"]);
@@ -65,7 +66,7 @@ export default function EditSubscriptionScreen() {
             { text: t("common:ok"), onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => Alert.alert(t("save_failed"), err.message),
+        onError: (err: any) => Alert.alert(t("save_failed"), formatApiError(err, t)),
       },
     );
   };

@@ -15,6 +15,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api-client";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
+import { formatApiError } from "../../lib/format-api-error";
 
 type SectionKey = "account" | "traffic" | "agent" | "notify";
 
@@ -78,7 +79,7 @@ export default function AdminSettingsScreen() {
       queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
       Alert.alert(t("common:save_success"), t("admin_settings_save_success_msg"));
     },
-    onError: (err: any) => Alert.alert(t("common:save_failed"), err.message),
+    onError: (err: any) => Alert.alert(t("common:save_failed"), formatApiError(err, t)),
   });
 
   const onRefresh = useCallback(async () => {

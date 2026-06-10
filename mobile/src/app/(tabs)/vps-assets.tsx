@@ -8,6 +8,7 @@ import { useVpsAssetsQuery, useVpsAssetSummaryQuery, useDeleteVpsAsset } from ".
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { VpsAsset, VpsAssetStatus } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 const FLAG_MAP: Record<string, string> = {
   hk: "🇭🇰", "hong kong": "🇭🇰", jp: "🇯🇵", japan: "🇯🇵", tokyo: "🇯🇵",
@@ -137,7 +138,7 @@ export default function VpsAssetsScreen() {
         onPress: () => {
           deleteMutation.mutate(vpsId, {
             onSuccess: () => Alert.alert(t("delete_success"), t("delete_success_message")),
-            onError: (err: any) => Alert.alert(t("delete_failed"), err.message),
+            onError: (err: any) => Alert.alert(t("delete_failed"), formatApiError(err, t)),
           });
         },
       },

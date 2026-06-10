@@ -266,7 +266,8 @@
       "failed": "失敗",
       "pending": "待機中",
       "skipped_dedupe": "重複スキップ"
-    }
+    },
+    "send_failed": "送信失敗"
   },
   "page": {
     "filter_label": "種類で絞り込み",

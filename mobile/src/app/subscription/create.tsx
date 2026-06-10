@@ -20,6 +20,7 @@ import { useRuleTemplates, useCreateRule } from "../../api/rule";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { CreateSubscriptionRequest, Subscription, RuleTemplate } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 type TFunc = (key: string) => string;
 
@@ -124,7 +125,7 @@ export default function CreateSubscriptionScreen() {
         [{ text: t("common:ok"), onPress: () => router.back() }],
       );
     } catch (err: any) {
-      Alert.alert(t("create_failed"), err.message);
+      Alert.alert(t("create_failed"), formatApiError(err, t));
     }
   };
 

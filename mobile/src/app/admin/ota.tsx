@@ -17,6 +17,7 @@ import { apiFetch } from "../../lib/api-client";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { OTAHistoryItem } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 function formatTime(ts: number): string {
   return new Date(ts * 1000).toLocaleString("zh-CN", {
@@ -45,7 +46,7 @@ export default function AdminOtaScreen() {
       queryClient.invalidateQueries({ queryKey: ["admin", "ota-history"] });
       Alert.alert(t("ota_check_success_title"), t("ota_check_success_msg"));
     },
-    onError: (err: any) => Alert.alert(t("ota_check_failed"), err.message),
+    onError: (err: any) => Alert.alert(t("ota_check_failed"), formatApiError(err, t)),
   });
 
   const onRefresh = useCallback(async () => {

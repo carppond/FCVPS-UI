@@ -11,6 +11,7 @@ import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import { classifySyncError } from "../../lib/sync-error";
 import type { SubscriptionDetail, SyncResult, ShortLink, PagedResponse, SubscriptionSyncLog } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 const buildTargets = (c: AppColors): { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] => [
   { key: "clash", label: "Clash", icon: "flash-outline", color: c.primary },
@@ -77,7 +78,7 @@ export default function SubscriptionDetailScreen() {
       );
       refetch();
     },
-    onError: (err: any) => Alert.alert(t("sync_failed"), err.message),
+    onError: (err: any) => Alert.alert(t("sync_failed"), formatApiError(err, t)),
   });
 
   // Download URL uses /download/{name}?token={share_token}&target=... (matches web)
@@ -114,7 +115,7 @@ export default function SubscriptionDetailScreen() {
       await Clipboard.setStringAsync(result.short_url);
       Alert.alert(t("shortlink_generated"), t("shortlink_generated_message", { url: result.short_url }));
     } catch (err: any) {
-      Alert.alert(t("shortlink_failed"), err.message);
+      Alert.alert(t("shortlink_failed"), formatApiError(err, t));
     }
   };
 
@@ -300,9 +301,7 @@ export default function SubscriptionDetailScreen() {
                   </View>
                 ) : (
                   <Text style={styles.syncLogMsg} numberOfLines={1}>
-                    {ok
-                      ? t("sync_log_nodes", { count: log.node_count })
-                      : log.error || t("sync_log_error")}
+                    {ok ? t("sync_log_nodes", { count: log.node_count }) : t("sync_log_error")}
                   </Text>
                 )}
               </View>

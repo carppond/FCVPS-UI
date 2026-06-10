@@ -19,6 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCreateChannel, useUpdateChannel } from "../../api/notify";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
+import { formatApiError } from "../../lib/format-api-error";
 import type {
   ChannelKind,
   EventType,
@@ -236,7 +237,7 @@ export default function NotificationCreateScreen() {
             ]);
           },
           onError: (err: any) =>
-            Alert.alert(t("common:save_failed"), err.message),
+            Alert.alert(t("common:save_failed"), formatApiError(err, t)),
         },
       );
       return;
@@ -258,7 +259,7 @@ export default function NotificationCreateScreen() {
           ]);
         },
         onError: (err: any) =>
-          Alert.alert(t("common:create_failed"), err.message),
+          Alert.alert(t("common:create_failed"), formatApiError(err, t)),
       },
     );
   };

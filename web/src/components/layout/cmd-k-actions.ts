@@ -13,6 +13,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { useSubscriptionsQuery, useSyncSubscriptionMutation } from "@/api/subscription";
 import { useOtaCheck } from "@/api/ota";
 import { downloadBackup, useRotateSilentMode } from "@/api/settings";
+import { formatApiError } from "@/hooks/use-api-error";
 
 const LANGS = ["zh-CN", "en", "ja", "ko"] as const;
 
@@ -110,8 +111,7 @@ export function useCmdKActions(close: () => void): CmdActions {
       URL.revokeObjectURL(url);
       toast.success(t("cmdk:toast.backup_started"));
     } catch (err) {
-      const msg = err instanceof Error ? err.message : t("cmdk:toast.sync_all_failed");
-      toast.error(msg);
+      toast.error(formatApiError(err, t));
     }
   };
 
@@ -121,7 +121,7 @@ export function useCmdKActions(close: () => void): CmdActions {
       await otaCheck.mutateAsync();
       toast.success(t("cmdk:toast.ota_started"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "OTA failed");
+      toast.error(formatApiError(err, t));
     }
   };
 
@@ -130,7 +130,7 @@ export function useCmdKActions(close: () => void): CmdActions {
     try {
       await rotateSilent.mutateAsync();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Rotate failed");
+      toast.error(formatApiError(err, t));
     }
   };
 

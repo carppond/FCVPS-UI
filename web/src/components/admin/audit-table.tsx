@@ -15,6 +15,7 @@ import {
 import { useAdminAuditLogs, type AuditListParams } from "@/api/audit";
 import { formatDate } from "@/lib/format";
 import type { AuditLog } from "@/types/api";
+import { formatApiError } from "@/hooks/use-api-error";
 
 const PAGE_SIZE = 50;
 
@@ -56,7 +57,7 @@ export function AuditTable({ filter }: AuditTableProps) {
   }
 
   if (isError) {
-    const msg = error instanceof Error ? error.message : String(error ?? "");
+    const msg = formatApiError(error, t);
     return (
       <ErrorState
         message={t("audit:table.error_load") + (msg ? ` (${msg})` : "")}

@@ -57,21 +57,13 @@ export function SyncHistory({ subscriptionId }: { subscriptionId: string }) {
                   {t("subscription:status.ok")} ·{" "}
                   {t("subscription:detail.sync_history.node_count", { count: log.node_count })}
                 </span>
-              ) : hintKind ? (
-                <>
-                  <span className="block">
-                    {t(`subscription:detail.sync_history.hint_${hintKind}`)}
-                  </span>
-                  <span
-                    className="block truncate text-[11px] text-[var(--color-text-tertiary)]"
-                    title={log.error}
-                  >
-                    {log.error}
-                  </span>
-                </>
               ) : (
-                <span className="block truncate" title={log.error}>
-                  {log.error || t("subscription:status.error")}
+                // Localized hint only; the raw error is available via hover
+                // tooltip but never rendered inline.
+                <span className="block" title={log.error}>
+                  {hintKind
+                    ? t(`subscription:detail.sync_history.hint_${hintKind}`)
+                    : t("subscription:status.error")}
                 </span>
               )}
             </span>

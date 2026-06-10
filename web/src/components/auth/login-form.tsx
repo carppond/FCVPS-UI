@@ -8,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api-client";
+import { formatApiError } from "@/hooks/use-api-error";
 import { useLoginMutation } from "@/api/auth";
 import { useAuthStore } from "@/stores/auth-store";
 import type { UserPublicProfile, User } from "@/types/api";
@@ -222,7 +223,9 @@ function errorMessageForLogin(
       case "ERR_AUTH_BRUTE_FORCE_BLOCKED":
         return t("auth:login.error.rate_limit");
       default:
-        return err.message || t("auth:login.error.invalid_credentials");
+        // Never surface the raw backend message — fall through to the
+        // localized generic handler (family/code based).
+        return formatApiError(err, t);
     }
   }
   return t("auth:login.error.invalid_credentials");

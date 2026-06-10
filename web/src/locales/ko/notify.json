@@ -266,7 +266,8 @@
       "failed": "실패",
       "pending": "대기",
       "skipped_dedupe": "중복 스킵"
-    }
+    },
+    "send_failed": "전송 실패"
   },
   "page": {
     "filter_label": "종류 필터",

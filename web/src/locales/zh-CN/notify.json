@@ -31,77 +31,135 @@
       "name": "Discord",
       "description": "通过 Webhook 推送到频道",
       "fields": {
-        "webhook_url": { "label": "Webhook URL", "help": "频道集成中获取" },
-        "username": { "label": "显示名称", "help": "可选" }
+        "webhook_url": {
+          "label": "Webhook URL",
+          "help": "频道集成中获取"
+        },
+        "username": {
+          "label": "显示名称",
+          "help": "可选"
+        }
       }
     },
     "slack": {
       "name": "Slack",
       "description": "通过 Incoming Webhook 推送",
       "fields": {
-        "webhook_url": { "label": "Webhook URL" },
-        "channel": { "label": "频道", "help": "如 #general，可选" }
+        "webhook_url": {
+          "label": "Webhook URL"
+        },
+        "channel": {
+          "label": "频道",
+          "help": "如 #general，可选"
+        }
       }
     },
     "email": {
       "name": "邮件",
       "description": "通过 SMTP 发送邮件通知",
       "fields": {
-        "smtp_host": { "label": "SMTP 主机" },
-        "smtp_port": { "label": "SMTP 端口", "help": "通常 465 / 587" },
-        "smtp_user": { "label": "SMTP 用户名" },
-        "smtp_password": { "label": "SMTP 密码", "help": "加密存储" },
-        "smtp_tls": { "label": "启用 TLS" },
-        "from": { "label": "发件人地址" },
-        "to": { "label": "收件人列表", "help": "多个地址用逗号分隔" }
+        "smtp_host": {
+          "label": "SMTP 主机"
+        },
+        "smtp_port": {
+          "label": "SMTP 端口",
+          "help": "通常 465 / 587"
+        },
+        "smtp_user": {
+          "label": "SMTP 用户名"
+        },
+        "smtp_password": {
+          "label": "SMTP 密码",
+          "help": "加密存储"
+        },
+        "smtp_tls": {
+          "label": "启用 TLS"
+        },
+        "from": {
+          "label": "发件人地址"
+        },
+        "to": {
+          "label": "收件人列表",
+          "help": "多个地址用逗号分隔"
+        }
       }
     },
     "bark": {
       "name": "Bark",
       "description": "iOS 推送（Bark App）",
       "fields": {
-        "device_key": { "label": "Device Key", "help": "Bark App 中的设备码" },
-        "server_url": { "label": "服务器地址", "help": "默认 https://api.day.app，可填自建" }
+        "device_key": {
+          "label": "Device Key",
+          "help": "Bark App 中的设备码"
+        },
+        "server_url": {
+          "label": "服务器地址",
+          "help": "默认 https://api.day.app，可填自建"
+        }
       }
     },
     "gotify": {
       "name": "Gotify",
       "description": "自建消息推送",
       "fields": {
-        "server_url": { "label": "Gotify 地址" },
-        "app_token": { "label": "应用 Token" }
+        "server_url": {
+          "label": "Gotify 地址"
+        },
+        "app_token": {
+          "label": "应用 Token"
+        }
       }
     },
     "webhook": {
       "name": "自定义 Webhook",
       "description": "通用 HTTP 推送",
       "fields": {
-        "url": { "label": "请求 URL" },
-        "method": { "label": "HTTP 方法", "help": "POST / GET" },
-        "headers": { "label": "请求头", "help": "每行 key: value" }
+        "url": {
+          "label": "请求 URL"
+        },
+        "method": {
+          "label": "HTTP 方法",
+          "help": "POST / GET"
+        },
+        "headers": {
+          "label": "请求头",
+          "help": "每行 key: value"
+        }
       }
     },
     "serverchan": {
       "name": "Server酱",
       "description": "通过 Server酱 推送到微信",
       "fields": {
-        "send_key": { "label": "SendKey", "help": "从 Server酱后台获取" }
+        "send_key": {
+          "label": "SendKey",
+          "help": "从 Server酱后台获取"
+        }
       }
     },
     "pushdeer": {
       "name": "PushDeer",
       "description": "开源跨平台推送",
       "fields": {
-        "push_key": { "label": "PushKey" },
-        "server_url": { "label": "服务器地址", "help": "可填自建" }
+        "push_key": {
+          "label": "PushKey"
+        },
+        "server_url": {
+          "label": "服务器地址",
+          "help": "可填自建"
+        }
       }
     },
     "ifttt": {
       "name": "IFTTT",
       "description": "通过 IFTTT Webhook 触发自动化",
       "fields": {
-        "webhook_key": { "label": "Webhook Key" },
-        "event_name": { "label": "Event 名称" }
+        "webhook_key": {
+          "label": "Webhook Key"
+        },
+        "event_name": {
+          "label": "Event 名称"
+        }
       }
     }
   },
@@ -208,7 +266,8 @@
       "failed": "失败",
       "pending": "排队中",
       "skipped_dedupe": "已去重"
-    }
+    },
+    "send_failed": "发送失败"
   },
   "page": {
     "filter_label": "类型筛选",

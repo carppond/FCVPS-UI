@@ -30,6 +30,8 @@ import zhSettings from "../locales/zh-CN/settings.json";
 import enSettings from "../locales/en/settings.json";
 import zhAlert from "../locales/zh-CN/alert.json";
 import enAlert from "../locales/en/alert.json";
+import zhErrors from "../locales/zh-CN/errors.json";
+import enErrors from "../locales/en/errors.json";
 
 export type AppLanguage = "zh-CN" | "en";
 export type LanguagePreference = AppLanguage | "system";
@@ -60,6 +62,7 @@ void i18n.use(initReactI18next).init({
       notify: zhNotify,
       settings: zhSettings,
       alert: zhAlert,
+      errors: zhErrors,
     },
     en: {
       common: enCommon,
@@ -75,6 +78,7 @@ void i18n.use(initReactI18next).init({
       notify: enNotify,
       settings: enSettings,
       alert: enAlert,
+      errors: enErrors,
     },
   },
   // 默认中文(主要用户群);英文/跟随系统在「设置 → 语言」里手动选

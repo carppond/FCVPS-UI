@@ -191,7 +191,10 @@
       "title": "Latest sync",
       "empty": "Never synced",
       "node_count": "{{count}} nodes",
-      "hint_tls_cert": "The upstream TLS certificate is invalid (expired or self-signed). If you trust this server, enable “Skip TLS certificate verification” in Edit Subscription and retry — or better, renew the certificate on the source server."
+      "hint_tls_cert": "The upstream TLS certificate is invalid (expired or self-signed). If you trust this server, enable “Skip TLS certificate verification” in Edit Subscription and retry — or better, renew the certificate on the source server.",
+      "hint_timeout": "Connection to the source server timed out. Confirm it is online and reachable, then retry.",
+      "hint_refused": "The source server refused the connection. Check the subscription URL port and that the service is running.",
+      "hint_dns": "The subscription hostname could not be resolved. Check the URL spelling or the source DNS."
     },
     "pipeline": {
       "placeholder_title": "Pipeline bindings",

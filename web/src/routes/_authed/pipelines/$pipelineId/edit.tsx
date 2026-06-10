@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { toast } from "@/components/ui/toast";
-import { useApiError } from "@/hooks/use-api-error";
+import { useApiError, formatApiError } from "@/hooks/use-api-error";
 import { OperatorLibrary } from "@/components/pipeline/operator-library";
 import {
   PipelineCanvas,
@@ -131,7 +131,7 @@ function PipelineEditorPage() {
     return (
       <ErrorState
         message={
-          error instanceof Error ? error.message : t("common:no_data")
+          formatApiError(error, t)
         }
         onRetry={() => refetch()}
         retryLabel={t("common:actions.retry")}

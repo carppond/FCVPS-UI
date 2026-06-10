@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
 import { toast } from "@/components/ui/toast";
-import { useApiError } from "@/hooks/use-api-error";
+import { useApiError, formatApiError } from "@/hooks/use-api-error";
 import { ProtocolBadge } from "@/components/nodes/protocol-badge";
 import { LatencyBadge } from "@/components/nodes/latency-badge";
 import { TCPingButton } from "@/components/nodes/tcping-button";
@@ -49,7 +49,7 @@ function NodeDetailPage() {
 
   if (isLoading) return <DetailSkeleton />;
   if (isError) {
-    const errMsg = error instanceof Error ? error.message : String(error ?? "");
+    const errMsg = formatApiError(error, t);
     return (
       <div className="p-6">
         <ErrorState

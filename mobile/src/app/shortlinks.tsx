@@ -21,6 +21,7 @@ import { parseShortLinkTarget } from "../lib/shortlink-target";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
 import type { ShortLink } from "../types/api";
+import { formatApiError } from "../lib/format-api-error";
 
 function formatDate(ts: number | undefined, t: TFunction): string {
   if (!ts) return t("shortlink_permanent");
@@ -75,7 +76,7 @@ export default function ShortLinksScreen() {
         setExpiresAt("");
         Alert.alert(t("shortlink_create_success"), t("shortlink_created_one"));
       },
-      onError: (err: any) => Alert.alert(t("common:create_failed"), err.message),
+      onError: (err: any) => Alert.alert(t("common:create_failed"), formatApiError(err, t)),
     });
   };
 
@@ -90,7 +91,7 @@ export default function ShortLinksScreen() {
             { fileCode: item.file_code, userCode: item.user_code },
             {
               onSuccess: () => Alert.alert(t("shortlink_deleted"), t("shortlink_deleted_one")),
-              onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
+              onError: (err: any) => Alert.alert(t("common:delete_failed"), formatApiError(err, t)),
             },
           );
         },

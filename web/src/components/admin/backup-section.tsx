@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
+import { formatApiError } from "@/hooks/use-api-error";
 import { downloadBackup, restoreBackup } from "@/api/settings";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -47,9 +48,7 @@ export function BackupSection() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : t("errors:INTERNAL_UNKNOWN"),
-      );
+      toast.error(formatApiError(err, t));
     } finally {
       setCreating(false);
     }
@@ -73,7 +72,7 @@ export function BackupSection() {
     } catch (err) {
       toast.error(
         t("settings:backup.restore_failed", {
-          message: err instanceof Error ? err.message : "unknown",
+          message: formatApiError(err, t),
         }),
       );
     } finally {

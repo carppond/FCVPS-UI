@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useUpdateAgent } from "../../api/agent";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
+import { formatApiError } from "../../lib/format-api-error";
 
 export default function EditAgentScreen() {
   const { t } = useTranslation(["agents", "common"]);
@@ -28,7 +29,7 @@ export default function EditAgentScreen() {
             { text: t("common:ok"), onPress: () => router.back() },
           ]);
         },
-        onError: (err: any) => Alert.alert(t("common:save_failed"), err.message),
+        onError: (err: any) => Alert.alert(t("common:save_failed"), formatApiError(err, t)),
       },
     );
   };

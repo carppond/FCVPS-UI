@@ -10,6 +10,7 @@ import { ChannelIcon } from "@/components/notify/channel-icon";
 import { EVENT_TYPES } from "@/components/notify/channel-form";
 import { useEvents } from "@/api/notify";
 import { formatDate } from "@/lib/format";
+import { classifySyncError } from "@/lib/sync-error";
 import { cn } from "@/lib/cn";
 import type {
   EventStatus,
@@ -195,11 +196,17 @@ export function EventHistory({
                       </td>
                       <td className="px-[var(--spacing-3)] py-[var(--spacing-2)] text-[var(--color-text-secondary)]">
                         {ev.error ? (
+                          // Localized summary only; raw error via tooltip.
                           <span
                             title={ev.error}
                             className="truncate text-[var(--color-error)]"
                           >
-                            {ev.error}
+                            {(() => {
+                              const kind = classifySyncError(ev.error);
+                              return kind
+                                ? t(`errors:NET_${kind.toUpperCase()}`)
+                                : t("notify:history.send_failed");
+                            })()}
                           </span>
                         ) : (
                           <span className="text-[var(--color-text-tertiary)]">

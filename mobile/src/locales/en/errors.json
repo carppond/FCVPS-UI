@@ -1,0 +1,16 @@
+{
+  "NETWORK_ERROR": "Network request failed — check the connection to your server",
+  "AUTH_UNAUTHORIZED": "Session expired — please sign in again",
+  "NOT_FOUND": "The resource does not exist or was deleted",
+  "VALIDATION_FAILED": "Validation failed — check your input",
+  "CONFLICT": "Conflicting operation — refresh and retry",
+  "RATE_LIMITED": "Too many requests — try again later",
+  "FORBIDDEN": "You do not have permission for this operation",
+  "INTERNAL": "Internal server error — try again later",
+  "INTERNAL_UNKNOWN": "The operation failed — try again later",
+  "NET_TLS_CERT": "The target server's TLS certificate is invalid (expired or self-signed). If you trust it, enable “Skip TLS certificate verification” when editing",
+  "NET_TIMEOUT": "Connection to the target server timed out — check that it is online",
+  "NET_REFUSED": "The target server refused the connection — check the port and service status",
+  "NET_DNS": "The hostname could not be resolved — check the address",
+  "AUTH_INVALID_PASSWORD": "Invalid username or password"
+}

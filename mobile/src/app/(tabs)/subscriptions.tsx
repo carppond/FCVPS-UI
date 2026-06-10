@@ -7,6 +7,7 @@ import { useSubscriptionsQuery, useSyncSubscription, useDeleteSubscription } fro
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
 import type { Subscription } from "../../types/api";
+import { formatApiError } from "../../lib/format-api-error";
 
 export default function SubscriptionsScreen() {
   const { t } = useTranslation(["subscription", "common"]);
@@ -67,7 +68,7 @@ export default function SubscriptionsScreen() {
           }),
         );
       },
-      onError: (err: any) => Alert.alert(t("sync_failed"), err.message),
+      onError: (err: any) => Alert.alert(t("sync_failed"), formatApiError(err, t)),
     });
   };
 
@@ -89,7 +90,7 @@ export default function SubscriptionsScreen() {
         onPress: () => {
           deleteMutation.mutate(subId, {
             onSuccess: () => Alert.alert(t("deleted"), t("deleted_message")),
-            onError: (err: any) => Alert.alert(t("common:delete_failed"), err.message),
+            onError: (err: any) => Alert.alert(t("common:delete_failed"), formatApiError(err, t)),
           });
         },
       },

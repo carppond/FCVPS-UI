@@ -17,6 +17,7 @@ import { useProfileQuery, useUpdateProfile, useChangePassword } from "../api/use
 import { useAuthStore } from "../stores/auth-store";
 import { spacing, radius, fontSize, type AppColors } from "../lib/theme";
 import { useColors } from "../lib/useColors";
+import { formatApiError } from "../lib/format-api-error";
 
 export default function ProfileScreen() {
   const { t } = useTranslation(["settings", "common"]);
@@ -79,7 +80,7 @@ export default function ProfileScreen() {
         refetch();
       },
       onError: (err: any) =>
-        Alert.alert(t("profile_update_failed"), err.message),
+        Alert.alert(t("profile_update_failed"), formatApiError(err, t)),
     });
   };
 
@@ -108,7 +109,7 @@ export default function ProfileScreen() {
           setConfirmPassword("");
         },
         onError: (err: any) =>
-          Alert.alert(t("profile_change_failed"), err.message),
+          Alert.alert(t("profile_change_failed"), formatApiError(err, t)),
       },
     );
   };
