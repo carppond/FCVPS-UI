@@ -191,7 +191,7 @@
       "title": "Latest sync",
       "empty": "Never synced",
       "node_count": "{{count}} nodes",
-      "history_unavailable": "Only the latest sync is currently shown; full history will arrive in a later release."
+      "hint_tls_cert": "The upstream TLS certificate is invalid (expired or self-signed). If you trust this server, enable “Skip TLS certificate verification” in Edit Subscription and retry — or better, renew the certificate on the source server."
     },
     "pipeline": {
       "placeholder_title": "Pipeline bindings",

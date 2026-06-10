@@ -9,6 +9,7 @@ import { apiFetch } from "../../lib/api-client";
 import { useAuthStore } from "../../stores/auth-store";
 import { spacing, radius, fontSize, type AppColors } from "../../lib/theme";
 import { useColors } from "../../lib/useColors";
+import { classifySyncError } from "../../lib/sync-error";
 import type { SubscriptionDetail, SyncResult, ShortLink, PagedResponse, SubscriptionSyncLog } from "../../types/api";
 
 const buildTargets = (c: AppColors): { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] => [
@@ -274,6 +275,9 @@ export default function SubscriptionDetailScreen() {
         <View style={styles.syncLogCard}>
           {syncLogs.map((log, i) => {
             const ok = log.status === "ok";
+            // Known failure causes (e.g. expired upstream TLS cert) get an
+            // actionable hint; the raw error drops to a secondary line.
+            const hintKind = ok ? null : classifySyncError(log.error);
             return (
               <View
                 key={log.id}
@@ -287,11 +291,20 @@ export default function SubscriptionDetailScreen() {
                 <Text style={styles.syncLogTime}>
                   {new Date(log.created_at).toLocaleString()}
                 </Text>
-                <Text style={styles.syncLogMsg} numberOfLines={1}>
-                  {ok
-                    ? t("sync_log_nodes", { count: log.node_count })
-                    : log.error || t("sync_log_error")}
-                </Text>
+                {hintKind ? (
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.syncLogHint}>{t(`sync_hint_${hintKind}`)}</Text>
+                    <Text style={styles.syncLogRaw} numberOfLines={1}>
+                      {log.error}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.syncLogMsg} numberOfLines={1}>
+                    {ok
+                      ? t("sync_log_nodes", { count: log.node_count })
+                      : log.error || t("sync_log_error")}
+                  </Text>
+                )}
               </View>
             );
           })}
@@ -446,4 +459,6 @@ const makeStyles = (colors: AppColors) =>
   syncLogRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingVertical: spacing.md },
   syncLogTime: { fontSize: fontSize.xs, color: colors.textTertiary, fontVariant: ["tabular-nums"] },
   syncLogMsg: { flex: 1, fontSize: fontSize.sm, color: colors.textSecondary },
+  syncLogHint: { fontSize: fontSize.sm, color: colors.textSecondary },
+  syncLogRaw: { marginTop: 2, fontSize: fontSize.xs, color: colors.textTertiary },
 });

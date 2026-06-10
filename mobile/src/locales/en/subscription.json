@@ -66,5 +66,6 @@
   "traffic_unlimited": "Unlimited",
   "traffic_used_pct": "{{pct}}% used",
   "url": "URL",
-  "url_placeholder": "https://example.com/subscribe?token=xxx"
+  "url_placeholder": "https://example.com/subscribe?token=xxx",
+  "sync_hint_tls_cert": "The upstream TLS certificate is invalid (expired or self-signed). If you trust this server, enable “Skip TLS certificate verification” when editing the subscription and retry — or better, renew the certificate on the source server."
 }

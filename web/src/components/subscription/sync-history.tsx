@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useSubscriptionSyncLogsQuery } from "@/api/subscription";
 import { Skeleton } from "@/components/ui/skeleton";
+import { classifySyncError } from "@/lib/sync-error";
 
 /**
  * Full sync-history list for the subscription detail page — replaces the old
@@ -34,23 +35,45 @@ export function SyncHistory({ subscriptionId }: { subscriptionId: string }) {
     <div className="flex flex-col divide-y divide-[var(--color-border)]">
       {logs.map((log) => {
         const ok = log.status === "ok";
+        // Known failure causes get an actionable, localized hint as the
+        // primary line; the raw error drops to a secondary line.
+        const hintKind = ok ? null : classifySyncError(log.error);
         return (
           <div
             key={log.id}
-            className="flex items-center gap-3 py-2 text-[var(--font-size-sm)] first:pt-0 last:pb-0"
+            className="flex items-start gap-3 py-2 text-[var(--font-size-sm)] first:pt-0 last:pb-0"
           >
             {ok ? (
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-success)]" />
             ) : (
-              <XCircle className="h-4 w-4 shrink-0 text-[var(--color-danger)]" />
+              <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-danger)]" />
             )}
             <span className="shrink-0 text-[var(--color-text-tertiary)] tabular-nums">
               {new Date(log.created_at).toLocaleString()}
             </span>
-            <span className="min-w-0 flex-1 truncate text-[var(--color-text-secondary)]">
-              {ok
-                ? `${t("subscription:status.ok")} · ${t("subscription:detail.sync_history.node_count", { count: log.node_count })}`
-                : (log.error || t("subscription:status.error"))}
+            <span className="min-w-0 flex-1 text-[var(--color-text-secondary)]">
+              {ok ? (
+                <span className="block truncate">
+                  {t("subscription:status.ok")} ·{" "}
+                  {t("subscription:detail.sync_history.node_count", { count: log.node_count })}
+                </span>
+              ) : hintKind ? (
+                <>
+                  <span className="block">
+                    {t(`subscription:detail.sync_history.hint_${hintKind}`)}
+                  </span>
+                  <span
+                    className="block truncate text-[11px] text-[var(--color-text-tertiary)]"
+                    title={log.error}
+                  >
+                    {log.error}
+                  </span>
+                </>
+              ) : (
+                <span className="block truncate" title={log.error}>
+                  {log.error || t("subscription:status.error")}
+                </span>
+              )}
             </span>
           </div>
         );

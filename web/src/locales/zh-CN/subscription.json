@@ -191,7 +191,7 @@
       "title": "最近同步",
       "empty": "尚未同步过",
       "node_count": "节点数 {{count}}",
-      "history_unavailable": "暂仅显示最近一次同步结果，完整历史将在后续版本提供。"
+      "hint_tls_cert": "上游 TLS 证书无效（已过期或自签）。若信任该服务器，可在「编辑订阅」勾选「跳过 TLS 证书校验」后重试；更推荐为源服务器续期证书。"
     },
     "pipeline": {
       "placeholder_title": "流水线挂载",

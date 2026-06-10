@@ -66,5 +66,6 @@
   "traffic_unlimited": "无限制",
   "traffic_used_pct": "已使用 {{pct}}%",
   "url": "URL",
-  "url_placeholder": "https://example.com/subscribe?token=xxx"
+  "url_placeholder": "https://example.com/subscribe?token=xxx",
+  "sync_hint_tls_cert": "上游 TLS 证书无效（已过期或自签）。若信任该服务器，可在编辑订阅时开启「跳过 TLS 证书校验」后重试；更推荐为源服务器续期证书。"
 }
