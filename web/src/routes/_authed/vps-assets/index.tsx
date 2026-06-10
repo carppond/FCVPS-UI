@@ -10,6 +10,7 @@ import {
   XCircle,
   Copy,
   Pencil,
+  Terminal as TerminalIcon,
   Trash2,
 } from "lucide-react";
 import {
@@ -35,6 +36,13 @@ import {
   useDeleteVpsAssetMutation,
 } from "@/api/vps-asset";
 import { VpsAssetFormDialog } from "@/components/vps-asset/vps-asset-form";
+
+// Lazy: xterm.js only downloads when a terminal is actually opened.
+const SshTerminalDialog = React.lazy(() =>
+  import("@/components/vps-asset/ssh-terminal").then((m) => ({
+    default: m.SshTerminalDialog,
+  })),
+);
 import { useAgentsQuery } from "@/api/agent";
 import { useTrafficSummaryQuery } from "@/api/traffic";
 import { formatBytes } from "@/lib/format";
@@ -62,6 +70,7 @@ function VpsAssetsPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editTarget, setEditTarget] = React.useState<VpsAsset | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<VpsAsset | null>(null);
+  const [terminalTarget, setTerminalTarget] = React.useState<VpsAsset | null>(null);
 
   const deleteMutation = useDeleteVpsAssetMutation();
 
@@ -242,9 +251,19 @@ function VpsAssetsPage() {
               onEdit={setEditTarget}
               onDelete={setDeleteTarget}
               onCopyIp={copyIp}
+              onTerminal={setTerminalTarget}
             />
           ))}
         </div>
+      )}
+
+      {terminalTarget && (
+        <React.Suspense fallback={null}>
+          <SshTerminalDialog
+            vps={terminalTarget}
+            onClose={() => setTerminalTarget(null)}
+          />
+        </React.Suspense>
       )}
 
       <VpsAssetFormDialog
@@ -378,6 +397,7 @@ function VpsCard({
   onEdit,
   onDelete,
   onCopyIp,
+  onTerminal,
 }: {
   vps: VpsAsset;
   agent?: AgentListItem;
@@ -385,6 +405,7 @@ function VpsCard({
   onEdit: (v: VpsAsset) => void;
   onDelete: (v: VpsAsset) => void;
   onCopyIp: (ip: string) => void;
+  onTerminal: (v: VpsAsset) => void;
 }) {
   const { t } = useTranslation(["vps-asset"]);
   const sc = statusColor(vps.status);
@@ -509,6 +530,16 @@ function VpsCard({
 
       {/* Actions row — shown on hover */}
       <div className="flex items-center justify-end gap-1 border-t border-[var(--color-border)] px-3 py-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+        {vps.ip && vps.ssh_user ? (
+          <button
+            type="button"
+            onClick={() => onTerminal(vps)}
+            className="flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[10px] text-[var(--color-text-tertiary)] transition hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+          >
+            <TerminalIcon className="h-3 w-3" />
+            {t("vps-asset:actions.terminal")}
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => onEdit(vps)}

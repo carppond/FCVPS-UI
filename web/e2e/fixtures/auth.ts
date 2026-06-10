@@ -121,10 +121,11 @@ interface AuthFixtures {
  * authenticated page can opt in by destructuring it from the callback.
  */
 export const test = base.extend<AuthFixtures>({
-  authedPage: async ({ page }, use) => {
+  // Playwright names this param `use`; rename to keep react-hooks lint quiet.
+  authedPage: async ({ page }, provide) => {
     await apiLogin(page);
     await page.goto("/dashboard");
-    await use(page);
+    await provide(page);
   },
 });
 

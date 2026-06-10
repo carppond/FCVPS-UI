@@ -6,7 +6,8 @@
     "edit": "편집",
     "delete": "삭제",
     "deploy_agent": "에이전트 배포",
-    "copy_ip": "IP 복사"
+    "copy_ip": "IP 복사",
+    "terminal": "터미널"
   },
   "summary": {
     "total": "VPS 총수",
@@ -27,7 +28,6 @@
     "days_left": "DAYS",
     "expired_label": "만료됨",
     "agent_online": "온라인",
-    "agent_offline": "오프라인",
     "agent_offline": "에이전트 오프라인",
     "no_agent": "에이전트 없음",
     "vps_may_recycled": "VPS가 회수되었을 수 있습니다"
@@ -80,7 +80,6 @@
     "notes": "메모",
     "notes_placeholder": "선택적 메모",
     "agent": "에이전트 연결",
-    "agent_none": "없음",
     "tags": "태그",
     "tags_placeholder": "Enter로 추가"
   },
@@ -105,5 +104,11 @@
     "created": "VPS 생성됨",
     "updated": "VPS 업데이트됨",
     "ip_copied": "IP 복사됨"
+  },
+  "terminal": {
+    "connecting": "연결 중…",
+    "closed": "연결 끊김",
+    "error": "연결 오류",
+    "reconnect": "다시 연결"
   }
 }

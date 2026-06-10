@@ -198,6 +198,11 @@ type Deps struct {
 	// inspecting / rotating the webhook token. nil disables those routes.
 	TGBotSettingsHandler *TGBotSettingsHandler
 
+	// SSHWSHandler hosts GET /api/vps-assets/{id}/ssh — the interactive SSH
+	// relay (PTY over WebSocket). nil disables it. Auth runs inside the handler
+	// (Bearer header OR ?token=) so browser WS clients can connect.
+	SSHWSHandler *SSHWSHandler
+
 	// VpsAssetHandler hosts /api/vps-assets/* (M-ASSET). nil disables the
 	// routes.
 	VpsAssetHandler *VpsAssetHandler
@@ -917,6 +922,11 @@ func mountVpsAssetRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("PUT /api/vps-assets/{id}", required(http.HandlerFunc(vh.Update)))
 	mux.Handle("PATCH /api/vps-assets/{id}", required(http.HandlerFunc(vh.Update)))
 	mux.Handle("DELETE /api/vps-assets/{id}", required(http.HandlerFunc(vh.Delete)))
+	// SSH relay: WS upgrade, auth handled inside the handler (header OR
+	// ?token=) so it is registered without the required() wrapper.
+	if deps.SSHWSHandler != nil {
+		mux.Handle("GET /api/vps-assets/{id}/ssh", http.HandlerFunc(deps.SSHWSHandler.ServeHTTP))
+	}
 }
 
 // mountAlertRuleRoutes installs the probe alert-rule CRUD (M-ALERT), all
@@ -965,7 +975,8 @@ func silentPrefixLoader(db *storage.DB) func(ctx context.Context) (string, error
 	}
 	return func(ctx context.Context) (string, error) {
 		var value string
-		err := db.Read.QueryRowContext(ctx,
+		err := db.Read.QueryRowContext(
+			ctx,
 			"SELECT value FROM system_settings WHERE key = ?",
 			silentPrefixSettingKey,
 		).Scan(&value)
@@ -989,7 +1000,8 @@ func silentEnabledLoader(db *storage.DB) func(ctx context.Context) (bool, error)
 	}
 	return func(ctx context.Context) (bool, error) {
 		var value string
-		err := db.Read.QueryRowContext(ctx,
+		err := db.Read.QueryRowContext(
+			ctx,
 			"SELECT value FROM system_settings WHERE key = ?",
 			silentEnabledSettingKey,
 		).Scan(&value)

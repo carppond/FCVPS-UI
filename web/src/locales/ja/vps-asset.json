@@ -6,7 +6,8 @@
     "edit": "編集",
     "delete": "削除",
     "deploy_agent": "エージェント配置",
-    "copy_ip": "IP コピー"
+    "copy_ip": "IP コピー",
+    "terminal": "ターミナル"
   },
   "summary": {
     "total": "VPS 合計",
@@ -27,7 +28,6 @@
     "days_left": "DAYS",
     "expired_label": "期限切れ",
     "agent_online": "オンライン",
-    "agent_offline": "オフライン",
     "agent_offline": "エージェントオフライン",
     "no_agent": "エージェント未設定",
     "vps_may_recycled": "VPSが回収された可能性があります"
@@ -80,7 +80,6 @@
     "notes": "メモ",
     "notes_placeholder": "任意のメモ",
     "agent": "エージェント紐付け",
-    "agent_none": "なし",
     "tags": "タグ",
     "tags_placeholder": "Enterで追加"
   },
@@ -105,5 +104,11 @@
     "created": "VPS を作成しました",
     "updated": "VPS を更新しました",
     "ip_copied": "IP をコピーしました"
+  },
+  "terminal": {
+    "connecting": "接続中…",
+    "closed": "切断されました",
+    "error": "接続エラー",
+    "reconnect": "再接続"
   }
 }

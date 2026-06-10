@@ -6,7 +6,8 @@
     "edit": "Edit",
     "delete": "Delete",
     "deploy_agent": "Deploy Agent",
-    "copy_ip": "Copy IP"
+    "copy_ip": "Copy IP",
+    "terminal": "Terminal"
   },
   "summary": {
     "total": "Total VPS",
@@ -27,7 +28,6 @@
     "days_left": "DAYS",
     "expired_label": "EXPIRED",
     "agent_online": "Online",
-    "agent_offline": "Offline",
     "agent_offline": "Agent Offline",
     "no_agent": "No Agent",
     "vps_may_recycled": "VPS may have been recycled"
@@ -80,7 +80,6 @@
     "notes": "Notes",
     "notes_placeholder": "Optional notes",
     "agent": "Link Agent",
-    "agent_none": "None",
     "tags": "Tags",
     "tags_placeholder": "Press Enter to add"
   },
@@ -105,5 +104,11 @@
     "created": "VPS created",
     "updated": "VPS updated",
     "ip_copied": "IP copied"
+  },
+  "terminal": {
+    "connecting": "Connecting…",
+    "closed": "Disconnected",
+    "error": "Connection error",
+    "reconnect": "Reconnect"
   }
 }

@@ -24,6 +24,8 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8080",
         changeOrigin: true,
+        // SSH terminal / agent WS ride the same /api prefix.
+        ws: true,
       },
       // sub-store compatible download path — clients (mihomo / sing-box / etc.)
       // hit this when consuming the share URL displayed in the UI.

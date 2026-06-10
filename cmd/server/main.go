@@ -516,6 +516,7 @@ func run() error {
 	// M-ASSET: VPS asset management.
 	vpsAssetRepo := storage.NewVpsAssetRepo(db, time.Now)
 	vpsAssetHandler := handler.NewVpsAssetHandler(vpsAssetRepo, log)
+	sshWSHandler := handler.NewSSHWSHandler(tokens, vpsAssetRepo, log)
 
 	// M-ALERT: probe alert rules + background evaluation engine.
 	alertRuleRepo := storage.NewAlertRuleRepo(db, time.Now)
@@ -590,6 +591,7 @@ func run() error {
 		TGWebhookHandler:      tgWebhookHandler,
 		TGBotSettingsHandler:  tgBotSettingsHandler,
 		VpsAssetHandler:       vpsAssetHandler,
+		SSHWSHandler:          sshWSHandler,
 		AlertRuleHandler:      alertRuleHandler,
 		FirewallHandler:       firewallHandler,
 		LoginRateLimit:        ratelimit.New(cfg.AuthRate.LoginPerSecond, cfg.AuthRate.LoginBurst, 0),

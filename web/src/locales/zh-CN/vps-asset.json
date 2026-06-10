@@ -6,7 +6,8 @@
     "edit": "编辑",
     "delete": "删除",
     "deploy_agent": "去部署探针",
-    "copy_ip": "复制 IP"
+    "copy_ip": "复制 IP",
+    "terminal": "终端"
   },
   "summary": {
     "total": "VPS 总数",
@@ -27,7 +28,6 @@
     "days_left": "DAYS",
     "expired_label": "已过期",
     "agent_online": "在线",
-    "agent_offline": "离线",
     "agent_offline": "探针离线",
     "no_agent": "未配置探针",
     "vps_may_recycled": "VPS 可能已被回收"
@@ -80,7 +80,6 @@
     "notes": "备注",
     "notes_placeholder": "可选备注信息",
     "agent": "关联探针",
-    "agent_none": "不关联",
     "tags": "标签",
     "tags_placeholder": "输入后回车添加"
   },
@@ -105,5 +104,11 @@
     "created": "VPS 已创建",
     "updated": "VPS 已更新",
     "ip_copied": "IP 已复制"
+  },
+  "terminal": {
+    "connecting": "连接中…",
+    "closed": "连接已断开",
+    "error": "连接出错",
+    "reconnect": "重新连接"
   }
 }

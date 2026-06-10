@@ -279,6 +279,22 @@
 
 ---
 
+### M-ASSET：VPS 资产 + SSH 终端
+
+VPS 资产记录(供应商/到期/价格/SSH 凭据等),可选 `agent_id` 关联探针。SSH 终端是 WebSocket 中继:hub 服务端用资产里存的凭据连目标机(凭据不下发客户端),浏览器/移动端 xterm 只搬运击键与 PTY 字节。
+
+| # | 方法 | 路径 | 用途 | 鉴权 |
+|---|------|------|------|------|
+| 71f | GET | `/api/vps-assets` | 列表(filters + 分页) | `[user]` |
+| 71g | POST | `/api/vps-assets` | 创建 | `[user]` |
+| 71h | GET | `/api/vps-assets/summary` | 汇总(总数/将到期/已到期/月成本) | `[user]` |
+| 71i | GET | `/api/vps-assets/:id` | 详情 | `[user]` |
+| 71j | PUT / PATCH | `/api/vps-assets/:id` | 修改 | `[user]` |
+| 71k | DELETE | `/api/vps-assets/:id` | 删除 | `[user]` |
+| 71l | GET | `/api/vps-assets/:id/ssh` | **WS** 交互式 SSH 终端中继。鉴权同 SSE:`Authorization: Bearer` 或 `?token=`(浏览器 WS 不能设 header)。升级后:客户端→服务端 binary 帧=原始击键、text 帧=`{"type":"resize","cols":N,"rows":M}`;服务端→客户端 binary 帧=PTY 输出、text 帧=人类可读错误(随后关闭)。空闲 30 分钟断开 | `[user]` |
+
+---
+
 ### M-TRAFFIC：流量聚合
 
 | # | 方法 | 路径 | 用途 | 鉴权 |
