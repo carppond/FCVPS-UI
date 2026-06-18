@@ -109,6 +109,7 @@
     "connecting": "接続中…",
     "closed": "切断されました",
     "error": "接続エラー",
-    "reconnect": "再接続"
+    "reconnect": "再接続",
+    "timeout": "接続がタイムアウトしました:hub が v1.4.0 に更新され、VPS の SSH ポートに hub から到達できることを確認してください。"
   }
 }

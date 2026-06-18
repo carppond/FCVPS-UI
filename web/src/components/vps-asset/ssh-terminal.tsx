@@ -39,6 +39,10 @@ export function SshTerminalDialog({
   onClose: () => void;
 }) {
   const { t } = useTranslation(["vps-asset"]);
+  // Keep the latest t in a ref so the WS effect can read it without listing t
+  // as a dependency (which could rebuild the socket on every render).
+  const tRef = useRef(t);
+  tRef.current = t;
   const token = useAuthStore((s) => s.token);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -77,6 +81,19 @@ export function SshTerminalDialog({
     wsRef.current = ws;
     const encoder = new TextEncoder();
 
+    // Watchdog: a WebSocket that never completes its upgrade stays in
+    // CONNECTING with no onerror/onclose, leaving the UI stuck on "connecting"
+    // forever. Surface an actionable error if onopen hasn't fired in time.
+    let opened = false;
+    const connectTimer = window.setTimeout(() => {
+      if (opened) return;
+      const msg = tRef.current("vps-asset:terminal.timeout");
+      setErrorText(msg);
+      term.writeln(`\r\n\x1b[31m${msg}\x1b[0m`);
+      setStatus("error");
+      ws.close();
+    }, 15000);
+
     const sendResize = () => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "resize", cols: term.cols, rows: term.rows }));
@@ -84,6 +101,8 @@ export function SshTerminalDialog({
     };
 
     ws.onopen = () => {
+      opened = true;
+      window.clearTimeout(connectTimer);
       setStatus("connected");
       sendResize();
       term.focus();
@@ -118,6 +137,7 @@ export function SshTerminalDialog({
     ro.observe(containerRef.current);
 
     return () => {
+      window.clearTimeout(connectTimer);
       ro.disconnect();
       dataSub.dispose();
       ws.close();

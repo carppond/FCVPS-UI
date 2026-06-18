@@ -109,6 +109,7 @@
     "connecting": "Connecting…",
     "closed": "Disconnected",
     "error": "Connection error",
-    "reconnect": "Reconnect"
+    "reconnect": "Reconnect",
+    "timeout": "Connection timed out: ensure the hub is upgraded to v1.4.0 and the VPS SSH port is reachable from the hub."
   }
 }
