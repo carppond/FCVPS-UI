@@ -66,13 +66,11 @@ export async function apiFetch<T>(
     ...(options.headers as Record<string, string> | undefined),
   };
 
-  if (store.token) {
-    headers["Authorization"] = `Bearer ${store.token}`;
-  }
-
   let response: Response;
   try {
-    response = await fetch(url, { ...options, headers });
+    // credentials: same-origin sends the httpOnly sg_session cookie (the web
+    // auth credential) — the access token is never read from JS storage.
+    response = await fetch(url, { ...options, headers, credentials: "same-origin" });
   } catch (err) {
     // Network failure / fetch abort / DNS error — no HTTP status available.
     throw new ApiError(

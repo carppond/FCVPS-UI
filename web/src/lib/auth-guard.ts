@@ -38,24 +38,20 @@ export async function requireAuth(
 ): Promise<User> {
   const store = useAuthStore.getState();
 
-  if (!store.token) {
-    throw redirect({
-      to: "/login",
-      search: { next: href },
-    });
-  }
-
+  // Auth is the httpOnly sg_session cookie, which JS cannot read — so there's
+  // no local token to short-circuit on. Always verify via /api/me; the browser
+  // attaches the cookie automatically, and a 401 means "not logged in".
   try {
     const user = await queryClient.ensureQueryData<User>({
       queryKey: meQueryKey,
       queryFn: fetchMe,
       // staleTime 0 ensures that after an explicit hydration request we always
-      // hit the server to verify the token is still valid.
+      // hit the server to verify the session is still valid.
       staleTime: 0,
     });
     // Keep auth-store user in sync with the verified `/api/me` payload.
     if (!store.user || store.user.id !== user.id) {
-      store.setSession(user, store.token);
+      store.setSession(user);
     }
     return user;
   } catch (err) {

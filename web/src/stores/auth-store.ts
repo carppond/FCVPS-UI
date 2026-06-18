@@ -4,14 +4,22 @@ import type { User } from "@/types/api";
 
 interface AuthState {
   user: User | null;
-  token: string | null;
-  /** Pending token issued after password auth when 2FA is required. */
+  /**
+   * Pending token issued after password auth when 2FA is required. Kept in
+   * memory only (never persisted) and sent in the verify-totp request body —
+   * it is short-lived and never the long-lived session credential.
+   */
   twoFactorPending: string | null;
 }
 
 interface AuthActions {
-  /** Set session after successful login (with or without 2FA). */
-  setSession: (user: User, token: string) => void;
+  /**
+   * Record the signed-in user. The access token is NOT stored here: the server
+   * sets an httpOnly `sg_session` cookie the browser sends automatically, so
+   * the token never touches JavaScript-reachable storage (defends against
+   * malicious extensions / XSS reading it).
+   */
+  setSession: (user: User) => void;
   /** Clear all auth state (logout). */
   clearSession: () => void;
   /** Store the pending_token while waiting for TOTP verification. */
@@ -20,7 +28,6 @@ interface AuthActions {
 
 const INITIAL_STATE: AuthState = {
   user: null,
-  token: null,
   twoFactorPending: null,
 };
 
@@ -29,21 +36,19 @@ export const useAuthStore = create<AuthState & AuthActions>()(
     (set) => ({
       ...INITIAL_STATE,
 
-      setSession: (user, token) =>
-        set({ user, token, twoFactorPending: null }),
+      setSession: (user) => set({ user, twoFactorPending: null }),
 
       clearSession: () => set(INITIAL_STATE),
 
       setTwoFactorPending: (pendingToken) =>
-        set({ twoFactorPending: pendingToken, token: null, user: null }),
+        set({ twoFactorPending: pendingToken, user: null }),
     }),
     {
       name: "sgvps_auth",
-      partialize: (state) => ({
-        user: state.user,
-        token: state.token,
-        // Do not persist twoFactorPending — it should expire with the tab.
-      }),
+      // Persist only the user for a no-flash reload; it is NOT an auth
+      // credential (the httpOnly cookie is). The route guard re-verifies via
+      // /api/me on every load, so a stale persisted user can't grant access.
+      partialize: (state) => ({ user: state.user }),
     },
   ),
 );

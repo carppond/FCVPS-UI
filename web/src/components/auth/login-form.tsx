@@ -90,7 +90,7 @@ export function LoginForm() {
         await navigate({ to: "/totp", search: next ? { next } : undefined });
         return;
       }
-      setSession(profileToUser(result.payload.user), result.payload.access_token);
+      setSession(profileToUser(result.payload.user));
       if (next) {
         // `next` is sanitized in the route's validateSearch and may be any
         // valid pathname (e.g. dynamic detail routes), so we can't satisfy

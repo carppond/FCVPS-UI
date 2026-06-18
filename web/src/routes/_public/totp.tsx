@@ -75,7 +75,7 @@ function TotpPage() {
           pending_token: pendingToken,
           code: value,
         });
-        setSession(profileToUser(data.user), data.access_token);
+        setSession(profileToUser(data.user));
         if (next) {
           await navigate({ to: next } as unknown as Parameters<
             typeof navigate

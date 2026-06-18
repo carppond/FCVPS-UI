@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "@/components/ui/toast";
 import i18n from "@/lib/i18n";
 import { pushRecent } from "@/hooks/use-cmd-k";
-import { useAuthStore } from "@/stores/auth-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useSubscriptionsQuery, useSyncSubscriptionMutation } from "@/api/subscription";
 import { useOtaCheck } from "@/api/ota";
@@ -32,7 +31,6 @@ export interface CmdActions {
 export function useCmdKActions(close: () => void): CmdActions {
   const { t, i18n: i18next } = useTranslation(["cmdk", "common"]);
   const navigate = useNavigate();
-  const { token } = useAuthStore();
   const { theme, setTheme } = useUIStore();
 
   const syncOne = useSyncSubscriptionMutation();
@@ -100,7 +98,7 @@ export function useCmdKActions(close: () => void): CmdActions {
   const handleBackup = async () => {
     close();
     try {
-      const blob = await downloadBackup(token ?? undefined);
+      const blob = await downloadBackup();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

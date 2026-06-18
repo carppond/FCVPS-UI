@@ -10,8 +10,8 @@ import { useAuthStore } from "@/stores/auth-store";
  */
 export const Route = createFileRoute("/_public")({
   beforeLoad: () => {
-    const { token, user } = useAuthStore.getState();
-    if (token && user) {
+    const { user } = useAuthStore.getState();
+    if (user) {
       throw redirect({ to: "/dashboard" });
     }
   },

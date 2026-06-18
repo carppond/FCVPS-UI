@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthStore } from "@/stores/auth-store";
 import { useUpdateVpsAssetMutation } from "@/api/vps-asset";
 import { useApiError } from "@/hooks/use-api-error";
 import { prefixedPath } from "@/lib/silent-prefix";
@@ -26,10 +25,12 @@ function cssVar(name: string, fallback: string): string {
   return v || fallback;
 }
 
-function buildWsUrl(assetId: string, token: string): string {
+function buildWsUrl(assetId: string): string {
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
   const path = prefixedPath(`/api/vps-assets/${assetId}/ssh`);
-  return `${proto}//${window.location.host}${path}?token=${encodeURIComponent(token)}`;
+  // No ?token=: the httpOnly sg_session cookie is sent automatically on the
+  // same-origin WebSocket handshake.
+  return `${proto}//${window.location.host}${path}`;
 }
 
 /**
@@ -52,7 +53,6 @@ export function SshTerminalDialog({
   // as a dependency (which could rebuild the socket on every render).
   const tRef = useRef(t);
   tRef.current = t;
-  const token = useAuthStore((s) => s.token);
   // Callback ref → state: the terminal <div> lives inside Radix's portal and
   // is NOT yet committed when a deps-on-[open] effect first runs, so a plain
   // useRef would read null and the effect would bail forever (terminal stuck
@@ -96,11 +96,6 @@ export function SshTerminalDialog({
 
   useEffect(() => {
     if (!open || !vps || !container || !credsReady) return;
-    if (!token) {
-      setErrorText(tRef.current("vps-asset:terminal.no_token"));
-      setStatus("error");
-      return;
-    }
 
     setStatus("connecting");
     setErrorText(null);
@@ -122,7 +117,7 @@ export function SshTerminalDialog({
     term.open(container);
     fit.fit();
 
-    const ws = new WebSocket(buildWsUrl(vps.id, token));
+    const ws = new WebSocket(buildWsUrl(vps.id));
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
     const encoder = new TextEncoder();
@@ -190,7 +185,7 @@ export function SshTerminalDialog({
       wsRef.current = null;
       term.dispose();
     };
-  }, [open, vps, token, sessionKey, container, credsReady]);
+  }, [open, vps, sessionKey, container, credsReady]);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {

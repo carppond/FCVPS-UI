@@ -10,7 +10,6 @@ import { apiFetch } from "@/lib/api-client";
 import { prefixedPath } from "@/lib/silent-prefix";
 import { queryClient } from "@/lib/query-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useAuthStore } from "@/stores/auth-store";
 import type {
   APIResponse,
   CreateSubscriptionRequest,
@@ -199,9 +198,7 @@ export function useUploadSubscriptionMutation() {
       }
 
       const url = prefixedPath("/api/subscriptions/upload");
-      const token = useAuthStore.getState().token;
       const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const response = await fetch(url, {
         method: "POST",

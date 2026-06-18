@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useAuthStore } from "@/stores/auth-store";
 import { prefixedPath } from "@/lib/silent-prefix";
 
 /**
@@ -35,7 +34,6 @@ export function useEventStream(
   options: EventStreamOptions = {},
 ): void {
   const enabled = options.enabled ?? true;
-  const token = useAuthStore((s) => s.token);
 
   // Mirror the latest handlers in a ref so the EventSource listeners can read
   // them without being torn down on every render.
@@ -45,16 +43,16 @@ export function useEventStream(
   }, [handlers]);
 
   React.useEffect(() => {
-    if (!enabled || !token) return;
+    if (!enabled) return;
     if (typeof window === "undefined" || typeof EventSource === "undefined") {
       return;
     }
-    const url = prefixedPath(
-      `${path}${path.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`,
-    );
+    // No ?token=: the httpOnly sg_session cookie is sent automatically on the
+    // same-origin EventSource connection (withCredentials for safety).
+    const url = prefixedPath(path);
     let es: EventSource;
     try {
-      es = new EventSource(url);
+      es = new EventSource(url, { withCredentials: true });
     } catch {
       // Some test environments (jsdom + restricted URLs) can throw — bail out
       // silently so the rest of the page keeps rendering.
@@ -85,5 +83,5 @@ export function useEventStream(
       }
       es.close();
     };
-  }, [path, token, enabled]);
+  }, [path, enabled]);
 }

@@ -73,7 +73,7 @@ function RecoveryPage() {
         pending_token: pendingToken,
         code: values.code.toLowerCase(),
       });
-      setSession(profileToUser(data.user), data.access_token);
+      setSession(profileToUser(data.user));
       await navigate({ to: "/dashboard" });
     } catch (err) {
       const message =

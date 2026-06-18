@@ -13,7 +13,6 @@ import {
 import { toast } from "@/components/ui/toast";
 import { formatApiError } from "@/hooks/use-api-error";
 import { downloadBackup, restoreBackup } from "@/api/settings";
-import { useAuthStore } from "@/stores/auth-store";
 
 /**
  * Backup + restore tile. v1 supports only local downloads (no remote history
@@ -22,7 +21,6 @@ import { useAuthStore } from "@/stores/auth-store";
  */
 export function BackupSection() {
   const { t } = useTranslation(["settings", "common", "errors"]);
-  const token = useAuthStore((s) => s.token);
 
   const [creating, setCreating] = React.useState(false);
   const [restoring, setRestoring] = React.useState(false);
@@ -32,7 +30,7 @@ export function BackupSection() {
   const handleCreate = async () => {
     setCreating(true);
     try {
-      const blob = await downloadBackup(token ?? undefined);
+      const blob = await downloadBackup();
       // Synthesise a downloadable anchor — keeps the flow inside the SPA
       // without an extra round-trip to a /download endpoint.
       const url = URL.createObjectURL(blob);
@@ -66,7 +64,7 @@ export function BackupSection() {
     if (!pendingFile) return;
     setRestoring(true);
     try {
-      await restoreBackup(pendingFile, token ?? undefined);
+      await restoreBackup(pendingFile);
       toast.success(t("settings:backup.restore_success"));
       setPendingFile(null);
     } catch (err) {

@@ -132,11 +132,10 @@ export function useDisableSilentMode() {
  *
  * Returns a Blob the caller can hand to URL.createObjectURL → <a download>.
  */
-export async function downloadBackup(token: string | undefined): Promise<Blob> {
+export async function downloadBackup(): Promise<Blob> {
   const url = prefixedPath("/api/admin/backup");
-  const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch(url, { method: "POST", headers });
+  // Auth via the httpOnly sg_session cookie (same-origin).
+  const res = await fetch(url, { method: "POST", credentials: "same-origin" });
   if (!res.ok) {
     // Best-effort JSON error body — fall back to status text otherwise.
     let message = `Backup failed (${res.status})`;
@@ -161,14 +160,15 @@ export async function downloadBackup(token: string | undefined): Promise<Blob> {
  */
 export async function restoreBackup(
   file: File,
-  token: string | undefined,
 ): Promise<{ restored: boolean; restart_required: boolean }> {
   const url = prefixedPath("/api/admin/backup/restore");
-  const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
   const formData = new FormData();
   formData.append("archive", file);
-  const res = await fetch(url, { method: "POST", headers, body: formData });
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData,
+    credentials: "same-origin",
+  });
   let body: { message?: string; data?: { restored: boolean; restart_required: boolean } };
   try {
     body = await res.json();

@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useAuthStore } from "@/stores/auth-store";
 import { prefixedPath } from "@/lib/silent-prefix";
 import { useApplyOta } from "@/api/ota";
 import type { OTAReleaseInfo } from "@/types/api";
@@ -55,7 +54,6 @@ export function OtaDialog({ open, release, onClose }: OtaDialogProps) {
   const [countdown, setCountdown] = React.useState(10);
 
   const applyMutation = useApplyOta();
-  const token = useAuthStore((s) => s.token);
 
   // Reset internal state when the dialog opens; otherwise the second upgrade
   // attempt would inherit stale progress from the previous run.
@@ -69,11 +67,11 @@ export function OtaDialog({ open, release, onClose }: OtaDialogProps) {
   // SSE subscription. Disabled when the dialog is closed so we don't keep
   // the EventSource alive in the background.
   React.useEffect(() => {
-    if (!open || !token || step === "confirm") return;
+    if (!open || step === "confirm") return;
     const url = prefixedPath(
-      `/api/notify/stream?token=${encodeURIComponent(token)}`,
+      `/api/notify/stream`,
     );
-    const es = new EventSource(url);
+    const es = new EventSource(url, { withCredentials: true });
     // Per backend contract, system events for OTA are emitted under either
     // "ota_progress" (typed) or "system" (broadcast). We listen for both so a
     // future contract refactor doesn't silently break the UI.
@@ -94,7 +92,7 @@ export function OtaDialog({ open, release, onClose }: OtaDialogProps) {
       es.removeEventListener("ota_progress", onProgress);
       es.close();
     };
-  }, [open, token, step]);
+  }, [open, step]);
 
   // Countdown timer that fires reload() once it hits zero. The reload is
   // wrapped in a try/catch so test environments without window.location
