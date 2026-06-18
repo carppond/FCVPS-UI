@@ -100,6 +100,7 @@ function SubscriptionsPage() {
   // Mutations
   const syncMutation = useSyncSubscriptionMutation();
   const deleteMutation = useDeleteSubscriptionMutation();
+  const [syncingAll, setSyncingAll] = React.useState(false);
 
   // Data — fetch ALL subscriptions (large page_size) for client-side filtering
   const { data, isLoading, isError, error, refetch } = useSubscriptionsQuery({
@@ -181,6 +182,33 @@ function SubscriptionsPage() {
     }
   };
 
+  // Sync every URL-type subscription at once. upload/manual subs have no
+  // remote source to fetch, so they are skipped. Reports a per-batch summary.
+  const onSyncAll = async () => {
+    const targets = allItems.filter((s) => s.type === "url");
+    if (targets.length === 0) {
+      toast.message(t("subscription:sync_all.empty"));
+      return;
+    }
+    setSyncingAll(true);
+    toast.message(t("subscription:sync_all.started", { count: targets.length }));
+    try {
+      const results = await Promise.allSettled(
+        targets.map((s) => syncMutation.mutateAsync(s.id)),
+      );
+      const ok = results.filter((r) => r.status === "fulfilled").length;
+      if (ok === targets.length) {
+        toast.success(t("subscription:sync_all.done", { count: ok }));
+      } else {
+        toast.message(
+          t("subscription:sync_all.partial", { ok, total: targets.length }),
+        );
+      }
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
   const onShare = (sub: Subscription) => {
     void navigate({
       to: "/subscriptions/$id" as never,
@@ -215,10 +243,22 @@ function SubscriptionsPage() {
             {t("subscription:subtitle")}
           </p>
         </div>
-        <Button onClick={() => setWizardOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          {t("subscription:actions.create")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={onSyncAll}
+            disabled={syncingAll || allItems.length === 0}
+          >
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${syncingAll ? "animate-spin" : ""}`}
+            />
+            {t("subscription:actions.sync_all")}
+          </Button>
+          <Button onClick={() => setWizardOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("subscription:actions.create")}
+          </Button>
+        </div>
       </header>
 
       {/* ── Summary strip ── */}

@@ -20,6 +20,7 @@ export default function SubscriptionsScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [search, setSearch] = useState("");
+  const [syncingAll, setSyncingAll] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -72,6 +73,31 @@ export default function SubscriptionsScreen() {
     });
   };
 
+  // Sync every URL-type subscription at once; upload/manual subs have no
+  // remote source so they are skipped.
+  const handleSyncAll = async () => {
+    const targets = allItems.filter((s) => s.type === "url");
+    if (targets.length === 0) {
+      Alert.alert(t("sync_all_title"), t("sync_all_empty"));
+      return;
+    }
+    setSyncingAll(true);
+    try {
+      const results = await Promise.allSettled(
+        targets.map((s) => syncMutation.mutateAsync(s.id)),
+      );
+      const ok = results.filter((r) => r.status === "fulfilled").length;
+      Alert.alert(
+        t("sync_all_title"),
+        ok === targets.length
+          ? t("sync_all_done", { count: ok })
+          : t("sync_all_partial", { ok, total: targets.length }),
+      );
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
   const handleEdit = () => {
     if (!selectedSub) return;
     closeMenu();
@@ -109,20 +135,38 @@ export default function SubscriptionsScreen() {
         }
         ListHeaderComponent={
           allItems.length > 0 ? (
-            <View style={styles.searchBar}>
-              <Ionicons name="search-outline" size={16} color={colors.textTertiary} />
-              <TextInput
-                style={styles.searchInput}
-                value={search}
-                onChangeText={setSearch}
-                placeholder={t("search_placeholder")}
-                placeholderTextColor={colors.textDisabled}
-              />
-              {search ? (
-                <TouchableOpacity onPress={() => setSearch("")}>
-                  <Ionicons name="close-circle" size={16} color={colors.textDisabled} />
-                </TouchableOpacity>
-              ) : null}
+            <View>
+              <TouchableOpacity
+                style={[styles.syncAllBtn, syncingAll && styles.syncAllBtnDisabled]}
+                onPress={handleSyncAll}
+                disabled={syncingAll}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="sync-outline"
+                  size={16}
+                  color={colors.primary}
+                  style={syncingAll ? { opacity: 0.5 } : undefined}
+                />
+                <Text style={styles.syncAllText}>
+                  {syncingAll ? t("sync_all_running") : t("sync_all_title")}
+                </Text>
+              </TouchableOpacity>
+              <View style={styles.searchBar}>
+                <Ionicons name="search-outline" size={16} color={colors.textTertiary} />
+                <TextInput
+                  style={styles.searchInput}
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder={t("search_placeholder")}
+                  placeholderTextColor={colors.textDisabled}
+                />
+                {search ? (
+                  <TouchableOpacity onPress={() => setSearch("")}>
+                    <Ionicons name="close-circle" size={16} color={colors.textDisabled} />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             </View>
           ) : null
         }
@@ -209,6 +253,14 @@ const makeStyles = (colors: AppColors) =>
   wrapper: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1, backgroundColor: colors.bg },
   list: { padding: spacing.lg, gap: spacing.md },
+  syncAllBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm,
+    backgroundColor: colors.primarySoft, borderRadius: radius.lg,
+    borderWidth: 1, borderColor: colors.border,
+    height: 40, marginBottom: spacing.sm,
+  },
+  syncAllBtnDisabled: { opacity: 0.6 },
+  syncAllText: { fontSize: fontSize.sm, fontWeight: "600", color: colors.primary },
   searchBar: {
     flexDirection: "row", alignItems: "center", gap: spacing.sm,
     backgroundColor: colors.surface, borderRadius: radius.lg,

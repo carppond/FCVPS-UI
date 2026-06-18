@@ -9,7 +9,8 @@
     "copy_url": "Copy share URL",
     "rotate_token": "Rotate token",
     "back_to_list": "Back to subscriptions",
-    "test_connection": "Test connection"
+    "test_connection": "Test connection",
+    "sync_all": "Sync all"
   },
   "columns": {
     "name": "Name",
@@ -240,5 +241,11 @@
     },
     "sync_success": "Sync complete: +{{added}} / −{{removed}}",
     "owner_unknown": "Unknown owner"
+  },
+  "sync_all": {
+    "empty": "No syncable subscriptions (only URL subscriptions can sync)",
+    "started": "Syncing {{count}} subscriptions…",
+    "done": "All {{count}} subscriptions synced",
+    "partial": "Sync finished: {{ok}} of {{total}} succeeded"
   }
 }

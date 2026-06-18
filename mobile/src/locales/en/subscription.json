@@ -72,5 +72,10 @@
   "sync_hint_refused": "The source server refused the connection. Check the subscription URL port and that the service is running.",
   "sync_hint_dns": "The subscription hostname could not be resolved. Check the URL spelling or the source DNS.",
   "required_url": "Please enter the subscription URL",
-  "url_invalid": "Enter a URL starting with http:// or https://"
+  "url_invalid": "Enter a URL starting with http:// or https://",
+  "sync_all_title": "Sync all",
+  "sync_all_running": "Syncing…",
+  "sync_all_empty": "No syncable subscriptions (only URL subscriptions can sync)",
+  "sync_all_done": "All {{count}} subscriptions synced",
+  "sync_all_partial": "Sync finished: {{ok}} of {{total}} succeeded"
 }

@@ -72,5 +72,10 @@
   "sync_hint_refused": "源服务器拒绝连接。请检查订阅地址端口是否正确、服务是否在运行。",
   "sync_hint_dns": "订阅域名无法解析。请检查订阅地址拼写或源站 DNS 配置。",
   "required_url": "请输入订阅 URL",
-  "url_invalid": "请输入以 http:// 或 https:// 开头的地址"
+  "url_invalid": "请输入以 http:// 或 https:// 开头的地址",
+  "sync_all_title": "一键同步",
+  "sync_all_running": "同步中…",
+  "sync_all_empty": "没有可同步的订阅(仅 URL 订阅支持同步)",
+  "sync_all_done": "{{count}} 条订阅已全部同步完成",
+  "sync_all_partial": "同步完成:成功 {{ok}} / 共 {{total}}"
 }

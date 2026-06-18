@@ -9,7 +9,8 @@
     "copy_url": "共有 URL をコピー",
     "rotate_token": "トークンを再生成",
     "back_to_list": "一覧へ戻る",
-    "test_connection": "接続テスト"
+    "test_connection": "接続テスト",
+    "sync_all": "一括同期"
   },
   "columns": {
     "name": "名前",
@@ -240,5 +241,11 @@
     },
     "sync_success": "同期完了: +{{added}} / −{{removed}}",
     "owner_unknown": "不明な所有者"
+  },
+  "sync_all": {
+    "empty": "同期可能なサブスクリプションがありません(URL のみ対応)",
+    "started": "{{count}} 件のサブスクリプションを同期中…",
+    "done": "{{count}} 件すべて同期しました",
+    "partial": "同期完了:成功 {{ok}} / 全 {{total}}"
   }
 }
