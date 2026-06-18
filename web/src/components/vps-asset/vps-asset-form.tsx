@@ -70,6 +70,8 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
   const [monthlyTraffic, setMonthlyTraffic] = React.useState("0");
   const [sshPort, setSshPort] = React.useState("22");
   const [sshUser, setSshUser] = React.useState("");
+  const [sshPassword, setSshPassword] = React.useState("");
+  const [sshPrivateKey, setSshPrivateKey] = React.useState("");
   const [os, setOs] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [agentId, setAgentId] = React.useState("");
@@ -92,6 +94,8 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
       setMonthlyTraffic(String(vps.monthly_traffic));
       setSshPort(String(vps.ssh_port));
       setSshUser(vps.ssh_user ?? "");
+      setSshPassword(vps.ssh_password ?? "");
+      setSshPrivateKey(vps.ssh_private_key ?? "");
       setOs(vps.os ?? "");
       setNotes(vps.notes ?? "");
       setAgentId(vps.agent_id ?? "");
@@ -100,7 +104,8 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
       setPrice(""); setCurrency("USD"); setBillingCycle("annual");
       setExpireAt(""); setCpu(""); setMemory(""); setDisk("");
       setBandwidth(""); setMonthlyTraffic("0"); setSshPort("22");
-      setSshUser(""); setOs(""); setNotes(""); setAgentId("");
+      setSshUser(""); setSshPassword(""); setSshPrivateKey("");
+      setOs(""); setNotes(""); setAgentId("");
     }
   }, [open, vps]);
 
@@ -117,7 +122,9 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
             ip: ip || null, location: location || null,
             price: Number(price), currency, billing_cycle: billingCycle,
             expire_at: expireAt,
-            ssh_port: Number(sshPort), ssh_user: sshUser || null, os: os || null,
+            ssh_port: Number(sshPort), ssh_user: sshUser || null,
+            ssh_password: sshPassword || null, ssh_private_key: sshPrivateKey || null,
+            os: os || null,
             cpu: cpu || null, memory: memory || null, disk: disk || null,
             bandwidth: bandwidth || null, monthly_traffic: Number(monthlyTraffic),
             notes: notes || null, agent_id: agentId || null,
@@ -134,6 +141,8 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
         if (location) req.location = location;
         if (sshPort !== "22") req.ssh_port = Number(sshPort);
         if (sshUser) req.ssh_user = sshUser;
+        if (sshPassword) req.ssh_password = sshPassword;
+        if (sshPrivateKey) req.ssh_private_key = sshPrivateKey;
         if (os) req.os = os;
         if (cpu) req.cpu = cpu;
         if (memory) req.memory = memory;
@@ -253,6 +262,32 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
                   <Field label={t("vps-asset:form.os")}>
                     <Input value={os} onChange={(e) => setOs(e.target.value)} placeholder={t("vps-asset:form.os_placeholder")} className="h-11" />
                   </Field>
+                </div>
+                <div className="mt-3">
+                  <Field label={t("vps-asset:form.ssh_password")}>
+                    <Input
+                      type="password"
+                      value={sshPassword}
+                      onChange={(e) => setSshPassword(e.target.value)}
+                      placeholder={t("vps-asset:form.ssh_password_placeholder")}
+                      autoComplete="new-password"
+                      className="h-11"
+                    />
+                  </Field>
+                </div>
+                <div className="mt-3">
+                  <Field label={t("vps-asset:form.ssh_private_key")}>
+                    <textarea
+                      value={sshPrivateKey}
+                      onChange={(e) => setSshPrivateKey(e.target.value)}
+                      placeholder={t("vps-asset:form.ssh_private_key_placeholder")}
+                      rows={3}
+                      className={`${selectClass} font-mono text-[var(--font-size-xs)]`}
+                    />
+                  </Field>
+                  <p className="mt-1 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+                    {t("vps-asset:form.ssh_cred_hint")}
+                  </p>
                 </div>
                 <div className="mt-3">
                   <Field label={t("vps-asset:form.agent_label")}>

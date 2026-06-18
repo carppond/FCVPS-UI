@@ -81,7 +81,12 @@
     "notes_placeholder": "可选备注信息",
     "agent": "关联探针",
     "tags": "标签",
-    "tags_placeholder": "输入后回车添加"
+    "tags_placeholder": "输入后回车添加",
+    "ssh_password": "SSH 密码",
+    "ssh_password_placeholder": "用密码登录时填写",
+    "ssh_private_key": "SSH 私钥",
+    "ssh_private_key_placeholder": "用密钥登录时粘贴私钥(-----BEGIN ...)",
+    "ssh_cred_hint": "Web 终端需要密码或私钥之一(私钥优先)。运行时由 hub 服务端直接连 VPS,密码不经终端通道传输。"
   },
   "delete_confirm": {
     "title": "删除 VPS",

@@ -81,7 +81,12 @@
     "notes_placeholder": "任意のメモ",
     "agent": "エージェント紐付け",
     "tags": "タグ",
-    "tags_placeholder": "Enterで追加"
+    "tags_placeholder": "Enterで追加",
+    "ssh_password": "SSH パスワード",
+    "ssh_password_placeholder": "パスワードログイン時に入力",
+    "ssh_private_key": "SSH 秘密鍵",
+    "ssh_private_key_placeholder": "鍵ログイン時に秘密鍵を貼り付け(-----BEGIN ...)",
+    "ssh_cred_hint": "Web ターミナルにはパスワードか秘密鍵のいずれかが必要です(鍵を優先)。実行時は hub がサーバー側で VPS に接続し、パスワードはターミナル経路を通りません。"
   },
   "delete_confirm": {
     "title": "VPS 削除",

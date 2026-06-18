@@ -1143,6 +1143,8 @@ export interface VpsAsset {
   ip?: string;
   ssh_port: number;
   ssh_user?: string;
+  ssh_password?: string;
+  ssh_private_key?: string;
   os?: string;
   location?: string;
   provider: string;
@@ -1169,6 +1171,8 @@ export interface CreateVpsAssetRequest {
   ip?: string;
   ssh_port?: number;
   ssh_user?: string;
+  ssh_password?: string;
+  ssh_private_key?: string;
   os?: string;
   location?: string;
   provider: string;
@@ -1191,6 +1195,8 @@ export interface UpdateVpsAssetRequest {
   ip?: string | null;
   ssh_port?: number;
   ssh_user?: string | null;
+  ssh_password?: string | null;
+  ssh_private_key?: string | null;
   os?: string | null;
   location?: string | null;
   provider?: string;
