@@ -85,7 +85,8 @@
     "yaml_parse_failed": "YAML の解析に失敗",
     "url_required": "URL は必須です",
     "name_required": "名前は必須です",
-    "file_required": "YAML ファイルを選択してください"
+    "file_required": "YAML ファイルを選択してください",
+    "url_invalid": "http:// または https:// で始まる URL を入力してください"
   },
   "wizard": {
     "title": "サブスクリプションを作成",
@@ -158,7 +159,9 @@
     "submit": "保存",
     "success": "保存しました",
     "allow_insecure_label": "TLS 証明書の検証をスキップ",
-    "allow_insecure_hint": "上流の証明書が自己署名/期限切れの場合に有効化(信頼できる自分のサーバーのみ)。この取得の MITM 保護がなくなります。"
+    "allow_insecure_hint": "上流の証明書が自己署名/期限切れの場合に有効化(信頼できる自分のサーバーのみ)。この取得の MITM 保護がなくなります。",
+    "source_url_label": "サブスクリプション URL",
+    "source_url_hint": "ソースのアドレスが変わったとき（証明書失効後に https から http へ切り替えるなど）に更新できます。"
   },
   "upload": {
     "drop_hint": "YAML をドロップまたはクリックして選択",

@@ -85,7 +85,8 @@
     "yaml_parse_failed": "Failed to parse YAML",
     "url_required": "URL is required",
     "name_required": "Name is required",
-    "file_required": "Please select a YAML file"
+    "file_required": "Please select a YAML file",
+    "url_invalid": "Enter a URL starting with http:// or https://"
   },
   "wizard": {
     "title": "Create subscription",
@@ -158,7 +159,9 @@
     "submit": "Save changes",
     "success": "Saved",
     "allow_insecure_label": "Skip TLS certificate verification",
-    "allow_insecure_hint": "Enable when the upstream cert is self-signed or expired (only for your own trusted servers). Removes MITM protection for this fetch."
+    "allow_insecure_hint": "Enable when the upstream cert is self-signed or expired (only for your own trusted servers). Removes MITM protection for this fetch.",
+    "source_url_label": "Subscription URL",
+    "source_url_hint": "Update this when the source address changes (e.g. switching from https to http after a cert breaks)."
   },
   "upload": {
     "drop_hint": "Drop a YAML file here or click to browse",

@@ -85,7 +85,8 @@
     "yaml_parse_failed": "YAML 解析失败",
     "url_required": "URL 不能为空",
     "name_required": "请填写订阅名称",
-    "file_required": "请选择 YAML 文件"
+    "file_required": "请选择 YAML 文件",
+    "url_invalid": "请输入以 http:// 或 https:// 开头的地址"
   },
   "wizard": {
     "title": "新建订阅",
@@ -158,7 +159,9 @@
     "submit": "保存修改",
     "success": "已保存",
     "allow_insecure_label": "跳过 TLS 证书校验",
-    "allow_insecure_hint": "上游证书自签或过期时勾选(仅限你信任的自有节点)。会失去该订阅拉取的 MITM 防护。"
+    "allow_insecure_hint": "上游证书自签或过期时勾选(仅限你信任的自有节点)。会失去该订阅拉取的 MITM 防护。",
+    "source_url_label": "订阅 URL",
+    "source_url_hint": "源站地址变化时（如证书失效后从 https 改为 http）可在此更新。"
   },
   "upload": {
     "drop_hint": "拖拽 YAML 文件到此或点击选择",

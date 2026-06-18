@@ -28,6 +28,7 @@ interface SubEditFormProps {
 
 interface FormValues {
   name: string;
+  sourceUrl: string;
   tags: string[];
   remark: string;
   syncInterval: number;
@@ -39,12 +40,24 @@ interface FormValues {
 
 const NAME_MAX = 100;
 
-function buildSchema(t: (key: string) => string) {
+function buildSchema(t: (key: string) => string, isUrl: boolean) {
   return z.object({
     name: z
       .string()
       .min(1, t("subscription:error.name_required"))
       .max(NAME_MAX),
+    // URL-type subscriptions must keep a non-empty, http(s) source URL so the
+    // operator can switch it (e.g. https→http when the upstream cert breaks).
+    sourceUrl: z
+      .string()
+      .refine(
+        (v) => !isUrl || v.trim().length > 0,
+        t("subscription:error.url_required"),
+      )
+      .refine(
+        (v) => !isUrl || /^https?:\/\//i.test(v.trim()),
+        t("subscription:error.url_invalid"),
+      ),
     tags: z.array(z.string()),
     remark: z.string(),
     syncInterval: z.number().nonnegative(),
@@ -60,12 +73,13 @@ export function SubEditForm({ open, subscription, onClose }: SubEditFormProps) {
   const { handle: handleError } = useApiError();
   const update = useUpdateSubscriptionMutation();
 
-  const schema = React.useMemo(() => buildSchema(t), [t]);
+  const isUrl = subscription.type === "url";
+  const schema = React.useMemo(() => buildSchema(t, isUrl), [t, isUrl]);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
+  const defaults = React.useMemo<FormValues>(
+    () => ({
       name: subscription.name,
+      sourceUrl: subscription.source_url ?? "",
       tags: subscription.tags ?? [],
       remark: subscription.remark ?? "",
       syncInterval: subscription.sync_interval,
@@ -75,25 +89,18 @@ export function SubEditForm({ open, subscription, onClose }: SubEditFormProps) {
         ? String(subscription.traffic_total)
         : "",
       allowInsecure: subscription.allow_insecure ?? false,
-    },
+    }),
+    [subscription],
+  );
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: defaults,
   });
 
   React.useEffect(() => {
-    if (open) {
-      form.reset({
-        name: subscription.name,
-        tags: subscription.tags ?? [],
-        remark: subscription.remark ?? "",
-        syncInterval: subscription.sync_interval,
-        ua: subscription.ua ?? "",
-        expireAt: subscription.expire_at ? String(subscription.expire_at) : "",
-        trafficTotal: subscription.traffic_total
-          ? String(subscription.traffic_total)
-          : "",
-        allowInsecure: subscription.allow_insecure ?? false,
-      });
-    }
-  }, [open, subscription, form]);
+    if (open) form.reset(defaults);
+  }, [open, defaults, form]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -105,6 +112,10 @@ export function SubEditForm({ open, subscription, onClose }: SubEditFormProps) {
         ua: values.ua || undefined,
         allow_insecure: values.allowInsecure,
       };
+      // Only URL-type subscriptions carry a fetchable source URL.
+      if (isUrl) {
+        payload.source_url = values.sourceUrl.trim();
+      }
       // expireAt + trafficTotal are not part of the contract's PATCH body strictly,
       // but the backend mirrors them through the subscription record. Skip sending
       // empty strings; coerce to numbers when populated.
@@ -133,6 +144,27 @@ export function SubEditForm({ open, subscription, onClose }: SubEditFormProps) {
               </p>
             )}
           </div>
+
+          {isUrl && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="edit-source-url">
+                {t("subscription:edit.source_url_label")}
+              </Label>
+              <Input
+                id="edit-source-url"
+                placeholder={t("subscription:wizard.form.source_url_placeholder")}
+                {...form.register("sourceUrl")}
+              />
+              {form.formState.errors.sourceUrl && (
+                <p className="text-[var(--font-size-xs)] text-[var(--color-error)]">
+                  {form.formState.errors.sourceUrl.message}
+                </p>
+              )}
+              <p className="text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+                {t("subscription:edit.source_url_hint")}
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-tags">{t("subscription:edit.tags_label")}</Label>

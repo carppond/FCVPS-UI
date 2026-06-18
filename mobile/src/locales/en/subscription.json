@@ -70,5 +70,7 @@
   "sync_hint_tls_cert": "The upstream TLS certificate is invalid (expired or self-signed). If you trust this server, enable “Skip TLS certificate verification” when editing the subscription and retry — or better, renew the certificate on the source server.",
   "sync_hint_timeout": "Connection to the source server timed out. Confirm it is online and reachable, then retry.",
   "sync_hint_refused": "The source server refused the connection. Check the subscription URL port and that the service is running.",
-  "sync_hint_dns": "The subscription hostname could not be resolved. Check the URL spelling or the source DNS."
+  "sync_hint_dns": "The subscription hostname could not be resolved. Check the URL spelling or the source DNS.",
+  "required_url": "Please enter the subscription URL",
+  "url_invalid": "Enter a URL starting with http:// or https://"
 }

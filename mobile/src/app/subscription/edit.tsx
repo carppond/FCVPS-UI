@@ -50,11 +50,24 @@ export default function EditSubscriptionScreen() {
       Alert.alert(t("common:tip"), t("required_name"));
       return;
     }
+    const trimmedUrl = sourceUrl.trim();
+    // URL-type subscriptions must keep a valid http(s) source so the operator
+    // can switch it (e.g. https→http when the upstream cert breaks).
+    if (data?.type === "url") {
+      if (!trimmedUrl) {
+        Alert.alert(t("common:tip"), t("required_url"));
+        return;
+      }
+      if (!/^https?:\/\//i.test(trimmedUrl)) {
+        Alert.alert(t("common:tip"), t("url_invalid"));
+        return;
+      }
+    }
     const req: UpdateSubscriptionRequest = {
       name: name.trim(),
     };
-    if (sourceUrl.trim()) {
-      req.source_url = sourceUrl.trim();
+    if (trimmedUrl) {
+      req.source_url = trimmedUrl;
     }
     req.remark = remark.trim() || undefined;
     req.allow_insecure = allowInsecure;
