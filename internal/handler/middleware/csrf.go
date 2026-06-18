@@ -1,8 +1,10 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // sessionCookieName must match auth.SessionCookieName. Duplicated here to avoid
@@ -64,12 +66,24 @@ func isSafeMethod(m string) bool {
 	return false
 }
 
-// originMatchesHost reports whether the Origin header's host equals the
-// request Host (the value nginx forwards via proxy_set_header Host $host).
+// originMatchesHost reports whether the Origin header's hostname equals the
+// request's hostname. Compares HOSTNAME ONLY (ignoring port): a cross-site CSRF
+// attacker is on a different hostname, while a legitimate same-host request may
+// differ only by port (non-standard HTTPS port, or nginx $host without a port
+// vs a browser Origin that carries one) — matching on port would 403 valid
+// writes (tcping / sync / …). SameSite=Lax remains the primary CSRF defense.
 func originMatchesHost(origin, host string) bool {
 	u, err := url.Parse(origin)
-	if err != nil || u.Host == "" {
+	if err != nil || u.Hostname() == "" {
 		return false
 	}
-	return u.Host == host
+	return strings.EqualFold(u.Hostname(), hostnameOnly(host))
+}
+
+// hostnameOnly strips an optional :port from a Host header value.
+func hostnameOnly(host string) string {
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		return h
+	}
+	return host
 }
