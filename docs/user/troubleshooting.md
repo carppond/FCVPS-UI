@@ -151,10 +151,13 @@ wss://your-hub.example/api/agent/ws
 ```bash
 # 测试 TLS 握手
 openssl s_client -connect your-hub.example:8080 -servername your-hub.example
-
-# 如果使用自签名证书，agent 需要跳过验证（不推荐生产环境）
-SHIGUANG_TLS_SKIP_VERIFY=true ./shiguang-agent
 ```
+
+agent 连接 hub 时**始终强制校验 TLS 证书，且没有跳过验证的开关**——这是刻意的安全设计：探针信任它配置的那个 hub，证书校验是防止中间人冒充 hub 下发命令的关键一环。因此：
+
+- **推荐**：给 hub 配一张受信任 CA 签发的证书（如 Let's Encrypt），agent 用 `wss://` 连接即可。
+- **自签名证书**：把你的自签 CA 安装到 agent 主机的系统信任库（`/usr/local/share/ca-certificates/` + `update-ca-certificates`,RHEL 系用 `/etc/pki/ca-trust/source/anchors/` + `update-ca-trust`),agent 即可正常校验。
+- 不要用裸 IP + 自签证书长期跑生产；证书过期或被接管时排查成本高。
 
 **Nezha 兼容模式额外检查**：
 

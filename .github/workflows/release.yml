@@ -52,7 +52,7 @@ jobs:
             OUT="dist/${BIN_NAME}-${{ matrix.os }}-${{ matrix.arch }}${EXT}"
             echo "Building $OUT..."
             go build \
-              -ldflags="-s -w -X main.version=${VERSION}" \
+              -ldflags="-s -w -X main.hubBinaryVersion=${VERSION}" \
               -trimpath \
               -o "$OUT" \
               "$BIN_PKG"

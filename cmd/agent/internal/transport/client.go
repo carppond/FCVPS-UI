@@ -66,6 +66,12 @@ type Config struct {
 	Now func() time.Time
 	// Logger may be nil; defaults to slog.Default().
 	Logger *slog.Logger
+
+	// DisableRemoteUninstall makes the agent refuse the hub's `uninstall`
+	// command (it acks a failure instead of self-removing). Opt-in hardening
+	// for operators who want a compromised / taken-over hub to be unable to
+	// wipe their agents — the agent must then be uninstalled locally on the host.
+	DisableRemoteUninstall bool
 }
 
 // Defaults applied lazily in NewClient.
@@ -222,7 +228,8 @@ func (c *Client) Connect(ctx context.Context) error {
 		if ack.HeartbeatInterval > 0 {
 			c.heartbeatInterval.Store(int64(time.Duration(ack.HeartbeatInterval) * time.Second))
 		}
-		c.cfg.Logger.Info("agent transport: connected",
+		c.cfg.Logger.Info(
+			"agent transport: connected",
 			slog.String("hub_url", c.cfg.HubURL),
 			slog.String("hub_version", ack.HubVersion),
 			slog.Duration("heartbeat", c.HeartbeatInterval()),
@@ -266,7 +273,8 @@ func (c *Client) ConnectWithBackoff(ctx context.Context) error {
 		if errors.Is(err, ErrStopReconnect) {
 			return err
 		}
-		c.cfg.Logger.Warn("agent transport: connect failed, retrying",
+		c.cfg.Logger.Warn(
+			"agent transport: connect failed, retrying",
 			slog.String("err", err.Error()),
 			slog.Duration("delay", delay),
 		)
@@ -418,7 +426,8 @@ func (c *Client) handleBye(env *agentlib.Envelope, conn *websocket.Conn) {
 	}
 	switch reason {
 	case agentlib.ByeReasonVersionUnsupported:
-		c.cfg.Logger.Warn("agent transport: hub rejected protocol version; need upgrade",
+		c.cfg.Logger.Warn(
+			"agent transport: hub rejected protocol version; need upgrade",
 			slog.String("agent_version", c.cfg.Version),
 			slog.String("reason", reason),
 		)

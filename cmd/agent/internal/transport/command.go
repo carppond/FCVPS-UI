@@ -65,6 +65,10 @@ func (h *DefaultCommandHandler) Handle(ctx context.Context, cmd agentlib.CmdPayl
 // command); the detached uninstaller (new session) survives that and tears the
 // agent down. Best-effort — the ack reports any spawn failure to the hub.
 func (h *DefaultCommandHandler) uninstall() error {
+	if h.client.cfg.DisableRemoteUninstall {
+		h.client.cfg.Logger.Warn("agent cmd: uninstall refused (remote uninstall disabled)")
+		return fmt.Errorf("remote uninstall disabled on this agent")
+	}
 	h.client.cfg.Logger.Warn("agent cmd: uninstall received; self-removing")
 	if err := spawnDetachedUninstall(os.Getpid()); err != nil {
 		return fmt.Errorf("uninstall: %w", err)

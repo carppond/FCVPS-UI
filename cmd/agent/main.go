@@ -33,10 +33,10 @@ import (
 
 // Exit codes — kept distinct so supervisors can tell why the agent died.
 const (
-	exitOK                = 0
-	exitConfig            = 1
+	exitOK                 = 0
+	exitConfig             = 1
 	exitVersionUnsupported = 2
-	exitRuntime           = 3
+	exitRuntime            = 3
 )
 
 func main() {
@@ -51,7 +51,8 @@ func run() int {
 		return exitConfig
 	}
 	log := buildLogger(cfg.LogLevel, cfg.LogFormat)
-	log.Info("shiguang-vps agent starting",
+	log.Info(
+		"shiguang-vps agent starting",
 		slog.String("protocol_version", agentlib.ProtocolVersion),
 		slog.String("agent_id", cfg.AgentID),
 		slog.String("hub_url", cfg.HubURL),
@@ -59,13 +60,14 @@ func run() int {
 	)
 
 	client, err := transport.NewClient(transport.Config{
-		HubURL:            cfg.HubURL,
-		Token:             cfg.Token,
-		AgentID:           cfg.AgentID,
-		Version:           agentlib.ProtocolVersion,
-		Tags:              cfg.Tags,
-		HeartbeatInterval: cfg.Interval,
-		Logger:            log,
+		HubURL:                 cfg.HubURL,
+		Token:                  cfg.Token,
+		AgentID:                cfg.AgentID,
+		Version:                agentlib.ProtocolVersion,
+		Tags:                   cfg.Tags,
+		HeartbeatInterval:      cfg.Interval,
+		DisableRemoteUninstall: cfg.NoRemoteUninstall,
+		Logger:                 log,
 	})
 	if err != nil {
 		log.Error("agent: build client failed", slog.String("err", err.Error()))
@@ -118,6 +120,8 @@ type agentConfig struct {
 	Interval  time.Duration
 	LogLevel  string
 	LogFormat string
+	// NoRemoteUninstall refuses the hub's uninstall command (hardening).
+	NoRemoteUninstall bool
 }
 
 // parseFlags resolves the precedence flag > env > default. Returns an error
@@ -131,6 +135,8 @@ func parseFlags(args []string) (agentConfig, error) {
 	interval := fs.Duration("interval", 30*time.Second, "heartbeat / metrics interval; hub may override (env: SHIGUANG_AGENT_INTERVAL)")
 	logLevel := fs.String("log-level", "info", "log level: debug|info|warn|error (env: SHIGUANG_LOG_LEVEL)")
 	logFormat := fs.String("log-format", "text", "log format: text|json (env: SHIGUANG_LOG_FORMAT)")
+	noRemoteUninstall := fs.Bool("no-remote-uninstall", false,
+		"refuse the hub's uninstall command; uninstall only locally (env: SHIGUANG_NO_REMOTE_UNINSTALL=1)")
 	if err := fs.Parse(args); err != nil {
 		return agentConfig{}, fmt.Errorf("parse flags: %w", err)
 	}
@@ -142,6 +148,8 @@ func parseFlags(args []string) (agentConfig, error) {
 		LogLevel:  firstNonEmpty(*logLevel, os.Getenv("SHIGUANG_LOG_LEVEL")),
 		LogFormat: firstNonEmpty(*logFormat, os.Getenv("SHIGUANG_LOG_FORMAT")),
 		Interval:  *interval,
+		NoRemoteUninstall: *noRemoteUninstall ||
+			envTrue(os.Getenv("SHIGUANG_NO_REMOTE_UNINSTALL")),
 	}
 	tagSrc := firstNonEmpty(*tags, os.Getenv("SHIGUANG_AGENT_TAGS"))
 	if tagSrc != "" {
@@ -161,6 +169,15 @@ func parseFlags(args []string) (agentConfig, error) {
 		return cfg, fmt.Errorf("agent ID is required (--agent-id or SHIGUANG_AGENT_ID)")
 	}
 	return cfg, nil
+}
+
+// envTrue reports whether an env value is a truthy flag (1/true/yes/on).
+func envTrue(v string) bool {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "1", "true", "yes", "on":
+		return true
+	}
+	return false
 }
 
 // firstNonEmpty returns the first non-empty string in the argument list.
