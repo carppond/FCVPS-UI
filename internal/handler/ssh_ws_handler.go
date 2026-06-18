@@ -63,9 +63,10 @@ func NewSSHWSHandler(tokens *auth.TokenStore, repo *storage.VpsAssetRepo, logger
 			HandshakeTimeout: 10 * time.Second,
 			ReadBufferSize:   4096,
 			WriteBufferSize:  4096,
-			// The bearer token authenticates the request; the browser's
-			// same-origin WS still carries it via ?token=. Mobile sends no Origin.
-			CheckOrigin: func(*http.Request) bool { return true },
+			// The session can authenticate via the httpOnly cookie, so reject
+			// cross-site browser Origins (CSWSH defense). Native/mobile clients
+			// send no Origin (or "null") and are allowed.
+			CheckOrigin: middleware.IsSameOriginRequest,
 		},
 		logger: logger,
 		now:    time.Now,

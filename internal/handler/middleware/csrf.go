@@ -58,6 +58,20 @@ func isHTTPSRequest(r *http.Request) bool {
 	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 }
 
+// IsSameOriginRequest reports whether a WebSocket/EventSource upgrade may be
+// treated as same-origin. Allows: no Origin (native/mobile clients), the
+// opaque "null" origin (e.g. a WebView html-string document), or an Origin
+// whose hostname matches the request host. Rejects only a present, foreign
+// browser Origin — defense-in-depth against cross-site WebSocket hijacking now
+// that browser WS connections can authenticate via the httpOnly cookie.
+func IsSameOriginRequest(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if origin == "" || origin == "null" {
+		return true
+	}
+	return originMatchesHost(origin, r.Host)
+}
+
 func isSafeMethod(m string) bool {
 	switch m {
 	case http.MethodGet, http.MethodHead, http.MethodOptions:
