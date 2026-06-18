@@ -70,7 +70,7 @@ export function SshTerminalDialog({
   // Credential gate: if the asset has neither a stored password nor a private
   // key, the relay can't authenticate. Rather than fail, prompt for a password
   // inline, save it to the asset, then connect.
-  const hasStoredCreds = !!(vps?.ssh_password || vps?.ssh_private_key);
+  const hasStoredCreds = !!(vps?.has_ssh_password || vps?.has_ssh_private_key);
   const [credsSaved, setCredsSaved] = useState(false);
   const credsReady = hasStoredCreds || credsSaved;
   const [pwInput, setPwInput] = useState("");

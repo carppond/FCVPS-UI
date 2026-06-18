@@ -86,7 +86,8 @@
     "ssh_password_placeholder": "Fill in for password login",
     "ssh_private_key": "SSH Private Key",
     "ssh_private_key_placeholder": "Paste the private key for key login (-----BEGIN ...)",
-    "ssh_cred_hint": "The web terminal needs a password OR a private key (key takes priority). At runtime the hub dials the VPS server-side; the password is never sent over the terminal channel."
+    "ssh_cred_hint": "The web terminal needs a password OR a private key (key takes priority). At runtime the hub dials the VPS server-side; the password is never sent over the terminal channel.",
+    "ssh_secret_set": "Set (leave blank to keep)"
   },
   "delete_confirm": {
     "title": "Delete VPS",

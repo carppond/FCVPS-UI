@@ -1364,33 +1364,38 @@ func (b BillingCycle) Months() int {
 
 // VpsAsset VPS 资产信息（含动态计算字段）。
 type VpsAsset struct {
-	ID              string         `json:"id"`
-	UserID          string         `json:"user_id"`
-	Name            string         `json:"name"`
-	IP              string         `json:"ip,omitempty"`
-	SSHPort         int            `json:"ssh_port"`
-	SSHUser         string         `json:"ssh_user,omitempty"`
-	SSHPassword     string         `json:"ssh_password,omitempty"`
-	SSHPrivateKey   string         `json:"ssh_private_key,omitempty"`
-	OS              string         `json:"os,omitempty"`
-	Location        string         `json:"location,omitempty"`
-	Provider        string         `json:"provider"`
-	Price           float64        `json:"price"`
-	Currency        string         `json:"currency"`
-	BillingCycle    BillingCycle   `json:"billing_cycle"`
-	Bandwidth       string         `json:"bandwidth,omitempty"`
-	MonthlyTraffic  int            `json:"monthly_traffic"`
-	CPU             string         `json:"cpu,omitempty"`
-	Memory          string         `json:"memory,omitempty"`
-	Disk            string         `json:"disk,omitempty"`
-	ExpireAt        string         `json:"expire_at"`
-	Notes           string         `json:"notes,omitempty"`
-	AgentID         string         `json:"agent_id,omitempty"`
-	Tags            []string       `json:"tags"`
-	CreatedAt       string         `json:"created_at"`
-	UpdatedAt       string         `json:"updated_at"`
-	DaysUntilExpiry int            `json:"days_until_expiry"`
-	Status          VpsAssetStatus `json:"status"`
+	ID      string `json:"id"`
+	UserID  string `json:"user_id"`
+	Name    string `json:"name"`
+	IP      string `json:"ip,omitempty"`
+	SSHPort int    `json:"ssh_port"`
+	SSHUser string `json:"ssh_user,omitempty"`
+	// SSH credentials are NEVER serialized in responses — a malicious browser
+	// extension or XSS could otherwise read the password / private key out of
+	// the page or network cache. The booleans below tell the UI whether each
+	// is configured; an edit with a blank field leaves it unchanged (pointer
+	// semantics in UpdateVpsAssetRequest).
+	HasSSHPassword   bool           `json:"has_ssh_password"`
+	HasSSHPrivateKey bool           `json:"has_ssh_private_key"`
+	OS               string         `json:"os,omitempty"`
+	Location         string         `json:"location,omitempty"`
+	Provider         string         `json:"provider"`
+	Price            float64        `json:"price"`
+	Currency         string         `json:"currency"`
+	BillingCycle     BillingCycle   `json:"billing_cycle"`
+	Bandwidth        string         `json:"bandwidth,omitempty"`
+	MonthlyTraffic   int            `json:"monthly_traffic"`
+	CPU              string         `json:"cpu,omitempty"`
+	Memory           string         `json:"memory,omitempty"`
+	Disk             string         `json:"disk,omitempty"`
+	ExpireAt         string         `json:"expire_at"`
+	Notes            string         `json:"notes,omitempty"`
+	AgentID          string         `json:"agent_id,omitempty"`
+	Tags             []string       `json:"tags"`
+	CreatedAt        string         `json:"created_at"`
+	UpdatedAt        string         `json:"updated_at"`
+	DaysUntilExpiry  int            `json:"days_until_expiry"`
+	Status           VpsAssetStatus `json:"status"`
 }
 
 // CreateVpsAssetRequest 创建 VPS 资产请求。
@@ -1481,13 +1486,13 @@ type CreateAlertRuleRequest struct {
 
 // UpdateAlertRuleRequest 修改告警规则请求(指针字段表示可选覆盖)。
 type UpdateAlertRuleRequest struct {
-	Name        string       `json:"name,omitempty"`
-	AgentID     *string      `json:"agent_id,omitempty"`
-	Metric      AlertMetric  `json:"metric,omitempty"`
-	Threshold   *float64     `json:"threshold,omitempty"`
-	DurationSec *int         `json:"duration_sec,omitempty"`
-	CooldownSec *int         `json:"cooldown_sec,omitempty"`
-	Enabled     *bool        `json:"enabled,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	AgentID     *string     `json:"agent_id,omitempty"`
+	Metric      AlertMetric `json:"metric,omitempty"`
+	Threshold   *float64    `json:"threshold,omitempty"`
+	DurationSec *int        `json:"duration_sec,omitempty"`
+	CooldownSec *int        `json:"cooldown_sec,omitempty"`
+	Enabled     *bool       `json:"enabled,omitempty"`
 }
 
 // VpsAssetSummary VPS 资产汇总统计。

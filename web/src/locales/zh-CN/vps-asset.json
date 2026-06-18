@@ -86,7 +86,8 @@
     "ssh_password_placeholder": "用密码登录时填写",
     "ssh_private_key": "SSH 私钥",
     "ssh_private_key_placeholder": "用密钥登录时粘贴私钥(-----BEGIN ...)",
-    "ssh_cred_hint": "Web 终端需要密码或私钥之一(私钥优先)。运行时由 hub 服务端直接连 VPS,密码不经终端通道传输。"
+    "ssh_cred_hint": "Web 终端需要密码或私钥之一(私钥优先)。运行时由 hub 服务端直接连 VPS,密码不经终端通道传输。",
+    "ssh_secret_set": "已设置(留空保留)"
   },
   "delete_confirm": {
     "title": "删除 VPS",

@@ -94,8 +94,10 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
       setMonthlyTraffic(String(vps.monthly_traffic));
       setSshPort(String(vps.ssh_port));
       setSshUser(vps.ssh_user ?? "");
-      setSshPassword(vps.ssh_password ?? "");
-      setSshPrivateKey(vps.ssh_private_key ?? "");
+      // SSH secrets are never returned by the API — leave blank on edit;
+      // submitting blank keeps the existing value (see onSubmit).
+      setSshPassword("");
+      setSshPrivateKey("");
       setOs(vps.os ?? "");
       setNotes(vps.notes ?? "");
       setAgentId(vps.agent_id ?? "");
@@ -269,7 +271,11 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
                       type="password"
                       value={sshPassword}
                       onChange={(e) => setSshPassword(e.target.value)}
-                      placeholder={t("vps-asset:form.ssh_password_placeholder")}
+                      placeholder={
+                        isEdit && vps?.has_ssh_password
+                          ? t("vps-asset:form.ssh_secret_set")
+                          : t("vps-asset:form.ssh_password_placeholder")
+                      }
                       autoComplete="new-password"
                       className="h-11"
                     />
@@ -280,7 +286,11 @@ export function VpsAssetFormDialog({ open, vps, onClose }: Props) {
                     <textarea
                       value={sshPrivateKey}
                       onChange={(e) => setSshPrivateKey(e.target.value)}
-                      placeholder={t("vps-asset:form.ssh_private_key_placeholder")}
+                      placeholder={
+                        isEdit && vps?.has_ssh_private_key
+                          ? t("vps-asset:form.ssh_secret_set")
+                          : t("vps-asset:form.ssh_private_key_placeholder")
+                      }
                       rows={3}
                       className={`${selectClass} font-mono text-[var(--font-size-xs)]`}
                     />

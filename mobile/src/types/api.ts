@@ -1117,8 +1117,10 @@ export interface VpsAsset {
   ip?: string;
   ssh_port: number;
   ssh_user?: string;
-  ssh_password?: string;
-  ssh_private_key?: string;
+  // SSH credentials are never returned by the API (extension/XSS exposure);
+  // these flags say whether each is configured.
+  has_ssh_password: boolean;
+  has_ssh_private_key: boolean;
   os?: string;
   location?: string;
   provider: string;

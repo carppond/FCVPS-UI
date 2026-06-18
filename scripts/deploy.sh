@@ -62,6 +62,15 @@ app_locations() {
     index index.html;
     client_max_body_size 50m;
 
+    # Security headers (safe for the SPA; do NOT stop browser extensions).
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "no-referrer" always;
+    # Enable once on HTTPS:
+    # add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    # Full SPA CSP — TEST before enabling (tight script-src can white-screen Vite):
+    # add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'none'; base-uri 'self'" always;
+
     location /api/ {
         proxy_pass http://127.0.0.1:__BP__;
         proxy_set_header Host $host;

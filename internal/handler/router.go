@@ -252,6 +252,7 @@ func NewRouter(deps *Deps) *http.ServeMux {
 	deps.silent = silent
 	deps.chain = []middleware.Middleware{
 		middleware.Recover(deps.logger(), deps.DevMode),
+		middleware.SecurityHeaders(),
 		middleware.RequestLog(deps.logger(), deps.Now, deps.TrustedProxies),
 		middleware.RateLimit(deps.GlobalRateLimit),
 		silent.Middleware(),
