@@ -158,6 +158,9 @@ func (h *NotifyHandler) UpdateChannel(w http.ResponseWriter, r *http.Request) {
 			util.RespondError(w, types.ErrValidationInvalidFormat, "config must be an object", nil, traceID)
 			return
 		}
+		// Restore any secret values the client sent back as the redaction
+		// sentinel (i.e. left unchanged) before validating + persisting.
+		mergeChannelSecrets(existing.Kind, cfgMap, existing.ConfigJSON)
 		if _, err := h.registry.Build(existing.Kind, cfgMap); err != nil {
 			util.RespondError(w, types.ErrValidationSchemaMismatch, err.Error(), nil, traceID)
 			return
@@ -295,7 +298,7 @@ func notifyChannelRecordToDTO(rec *storage.NotificationChannelRecord) types.Noti
 		UserID:     rec.UserID,
 		Kind:       types.ChannelKind(rec.Kind),
 		Name:       rec.Name,
-		Config:     cfg,
+		Config:     redactChannelConfig(rec.Kind, cfg),
 		Template:   rec.Template,
 		EventTypes: events,
 		Enabled:    rec.Enabled,
@@ -322,4 +325,3 @@ func notifyEventRecordToDTO(rec *storage.NotificationEventRecord) types.Notifica
 		CreatedAt: rec.CreatedAt,
 	}
 }
-
