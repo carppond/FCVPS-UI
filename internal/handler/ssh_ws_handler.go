@@ -238,7 +238,9 @@ func (h *SSHWSHandler) authenticate(r *http.Request) *storage.UserRecord {
 		return nil
 	}
 	token := ""
-	if v := r.Header.Get("Authorization"); len(v) > 7 && v[:7] == "Bearer " {
+	if c, err := r.Cookie(auth.SessionCookieName); err == nil && c.Value != "" {
+		token = c.Value // web: httpOnly cookie auto-sent on same-origin WS
+	} else if v := r.Header.Get("Authorization"); len(v) > 7 && v[:7] == "Bearer " {
 		token = v[7:]
 	} else if q := r.URL.Query().Get("token"); q != "" {
 		token = q

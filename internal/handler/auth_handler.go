@@ -62,6 +62,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	setSessionCookie(w, r, res.AccessToken, res.ExpiresAt)
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.LoginResponse]{
 		Data: types.LoginResponse{
 			AccessToken: res.AccessToken,
@@ -89,6 +90,7 @@ func (h *AuthHandler) VerifyTOTP(w http.ResponseWriter, r *http.Request) {
 		h.respondVerifyError(w, traceID, err)
 		return
 	}
+	setSessionCookie(w, r, res.AccessToken, res.ExpiresAt)
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[types.LoginResponse]{
 		Data: types.LoginResponse{
 			AccessToken: res.AccessToken,
@@ -116,6 +118,7 @@ func (h *AuthHandler) VerifyRecovery(w http.ResponseWriter, r *http.Request) {
 		h.respondVerifyError(w, traceID, err)
 		return
 	}
+	setSessionCookie(w, r, res.AccessToken, res.ExpiresAt)
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[recoveryLoginResponse]{
 		Data: recoveryLoginResponse{
 			LoginResponse: types.LoginResponse{
@@ -156,9 +159,14 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 // Logout implements POST /api/auth/logout.
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	traceID := middleware.TraceIDFromContext(r.Context())
-	token, ok := bearerFromHeader(r)
+	// Always clear the httpOnly cookie (web), regardless of how the token
+	// arrived or whether the server-side revoke succeeds.
+	clearSessionCookie(w, r)
+	token, ok := tokenFromCookieOrHeader(r)
 	if !ok {
-		util.RespondError(w, types.ErrAuthTokenInvalid, "missing token", nil, traceID)
+		// Nothing to revoke server-side (cookie already cleared) — treat as
+		// idempotent success so the client lands logged out.
+		util.RespondJSON(w, http.StatusOK, types.APIResponse[any]{RequestID: traceID})
 		return
 	}
 	if err := h.manager.Logout(r.Context(), token); err != nil && !errors.Is(err, auth.ErrSessionNotFound) {
@@ -166,6 +174,15 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	util.RespondJSON(w, http.StatusOK, types.APIResponse[any]{RequestID: traceID})
+}
+
+// tokenFromCookieOrHeader resolves the access token from the session cookie
+// (web) or the Authorization: Bearer header (native).
+func tokenFromCookieOrHeader(r *http.Request) (string, bool) {
+	if c, err := r.Cookie(auth.SessionCookieName); err == nil && c.Value != "" {
+		return c.Value, true
+	}
+	return bearerFromHeader(r)
 }
 
 // checkLoginLimiter enforces the per-IP/username login bucket. Returns true

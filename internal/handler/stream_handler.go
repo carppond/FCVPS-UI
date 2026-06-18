@@ -97,7 +97,8 @@ func (h *StreamHandler) Stream(w http.ResponseWriter, r *http.Request) {
 			}
 			if err := writeSSEEvent(w, ev.Kind, ev.Payload); err != nil {
 				if h.logger != nil {
-					h.logger.Debug("sse write failed",
+					h.logger.Debug(
+						"sse write failed",
 						slog.String("err", err.Error()),
 						slog.String("user_id", user.ID),
 					)
@@ -121,7 +122,9 @@ func (h *StreamHandler) authenticate(r *http.Request) (*storage.UserRecord, bool
 		return nil, false
 	}
 	token := ""
-	if v := r.Header.Get("Authorization"); len(v) > 7 && v[:7] == "Bearer " {
+	if c, err := r.Cookie(auth.SessionCookieName); err == nil && c.Value != "" {
+		token = c.Value // web: httpOnly cookie auto-sent on same-origin EventSource
+	} else if v := r.Header.Get("Authorization"); len(v) > 7 && v[:7] == "Bearer " {
 		token = v[7:]
 	} else if q := r.URL.Query().Get("token"); q != "" {
 		token = q

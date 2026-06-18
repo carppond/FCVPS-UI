@@ -125,9 +125,20 @@ func RequirePending2FA(store *TokenStore) middleware.Middleware {
 	}
 }
 
-// extractBearerToken pulls the value out of Authorization: Bearer <token>.
-// Empty / malformed headers return ("", false).
+// SessionCookieName is the httpOnly cookie the web client authenticates with
+// (so the access token is never exposed to JavaScript / browser extensions).
+// Native clients (mobile) keep using the Authorization: Bearer header.
+const SessionCookieName = "sg_session"
+
+// extractBearerToken resolves the access token from, in order: the httpOnly
+// session cookie (browser) then the Authorization: Bearer header (native /
+// legacy). Returns ("", false) when neither is present.
 func extractBearerToken(r *http.Request) (string, bool) {
+	if c, err := r.Cookie(SessionCookieName); err == nil {
+		if v := strings.TrimSpace(c.Value); v != "" {
+			return v, true
+		}
+	}
 	const prefix = "Bearer "
 	auth := r.Header.Get("Authorization")
 	if auth == "" {
