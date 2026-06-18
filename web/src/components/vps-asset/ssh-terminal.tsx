@@ -3,7 +3,13 @@ import { useTranslation } from "react-i18next";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/auth-store";
 import { prefixedPath } from "@/lib/silent-prefix";
@@ -44,7 +50,12 @@ export function SshTerminalDialog({
   const tRef = useRef(t);
   tRef.current = t;
   const token = useAuthStore((s) => s.token);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  // Callback ref → state: the terminal <div> lives inside Radix's portal and
+  // is NOT yet committed when a deps-on-[open] effect first runs, so a plain
+  // useRef would read null and the effect would bail forever (terminal stuck
+  // on "connecting", no WebSocket ever opened). Tracking the node in state
+  // re-runs the effect the moment the container actually mounts.
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const [status, setStatus] = useState<TermStatus>("connecting");
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -54,7 +65,12 @@ export function SshTerminalDialog({
   const open = vps !== null;
 
   useEffect(() => {
-    if (!open || !vps || !token || !containerRef.current) return;
+    if (!open || !vps || !container) return;
+    if (!token) {
+      setErrorText(tRef.current("vps-asset:terminal.no_token"));
+      setStatus("error");
+      return;
+    }
 
     setStatus("connecting");
     setErrorText(null);
@@ -73,7 +89,7 @@ export function SshTerminalDialog({
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
-    term.open(containerRef.current);
+    term.open(container);
     fit.fit();
 
     const ws = new WebSocket(buildWsUrl(vps.id, token));
@@ -134,7 +150,7 @@ export function SshTerminalDialog({
       fit.fit();
       sendResize();
     });
-    ro.observe(containerRef.current);
+    ro.observe(container);
 
     return () => {
       window.clearTimeout(connectTimer);
@@ -144,7 +160,7 @@ export function SshTerminalDialog({
       wsRef.current = null;
       term.dispose();
     };
-  }, [open, vps, token, sessionKey]);
+  }, [open, vps, token, sessionKey, container]);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
@@ -177,8 +193,11 @@ export function SshTerminalDialog({
             </Button>
           )}
         </DialogHeader>
+        <DialogDescription className="sr-only">
+          {t("vps-asset:terminal.aria_description")}
+        </DialogDescription>
         <div
-          ref={containerRef}
+          ref={setContainer}
           className="min-h-0 flex-1 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-neutral-50)] p-2"
         />
       </DialogContent>

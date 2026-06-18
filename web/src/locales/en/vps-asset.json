@@ -110,6 +110,8 @@
     "closed": "Disconnected",
     "error": "Connection error",
     "reconnect": "Reconnect",
-    "timeout": "Connection timed out: ensure the hub is upgraded to v1.4.0 and the VPS SSH port is reachable from the hub."
+    "timeout": "Connection timed out: ensure the hub is upgraded to v1.4.0 and the VPS SSH port is reachable from the hub.",
+    "no_token": "Not signed in or session expired — please sign in again",
+    "aria_description": "VPS SSH interactive terminal"
   }
 }

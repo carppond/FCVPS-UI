@@ -110,6 +110,8 @@
     "closed": "连接已断开",
     "error": "连接出错",
     "reconnect": "重新连接",
-    "timeout": "连接超时:请确认 hub 已升级到 v1.4.0,且该 VPS 的 SSH 端口可从 hub 访问。"
+    "timeout": "连接超时:请确认 hub 已升级到 v1.4.0,且该 VPS 的 SSH 端口可从 hub 访问。",
+    "no_token": "未登录或登录已失效,请重新登录后再试",
+    "aria_description": "VPS SSH 交互式终端"
   }
 }
