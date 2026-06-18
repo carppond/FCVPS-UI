@@ -117,6 +117,10 @@
     "reconnect": "다시 연결",
     "timeout": "연결 시간 초과: 허브가 v1.4.0로 업그레이드되었고 VPS의 SSH 포트에 허브에서 접근할 수 있는지 확인하세요.",
     "no_token": "로그인되지 않았거나 세션이 만료되었습니다. 다시 로그인하세요",
-    "aria_description": "VPS SSH 대화형 터미널"
+    "aria_description": "VPS SSH 대화형 터미널",
+    "no_creds_title": "이 자산에 SSH 자격 증명이 없습니다",
+    "no_creds_desc": "SSH 비밀번호를 입력하면 자산에 저장하고 바로 연결합니다. 개인 키는 자산 편집에서 설정할 수 있습니다.",
+    "saving": "저장 중…",
+    "save_and_connect": "저장 후 연결"
   }
 }

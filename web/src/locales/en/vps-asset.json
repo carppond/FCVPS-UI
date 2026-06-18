@@ -117,6 +117,10 @@
     "reconnect": "Reconnect",
     "timeout": "Connection timed out: ensure the hub is upgraded to v1.4.0 and the VPS SSH port is reachable from the hub.",
     "no_token": "Not signed in or session expired — please sign in again",
-    "aria_description": "VPS SSH interactive terminal"
+    "aria_description": "VPS SSH interactive terminal",
+    "no_creds_title": "This asset has no SSH credentials yet",
+    "no_creds_desc": "Enter an SSH password to save it to the asset and connect now; you can also set a private key in the asset editor.",
+    "saving": "Saving…",
+    "save_and_connect": "Save & connect"
   }
 }

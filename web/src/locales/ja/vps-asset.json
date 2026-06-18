@@ -117,6 +117,10 @@
     "reconnect": "再接続",
     "timeout": "接続がタイムアウトしました:hub が v1.4.0 に更新され、VPS の SSH ポートに hub から到達できることを確認してください。",
     "no_token": "未ログインまたはセッション切れです。再度ログインしてください",
-    "aria_description": "VPS SSH 対話型ターミナル"
+    "aria_description": "VPS SSH 対話型ターミナル",
+    "no_creds_title": "この資産には SSH 認証情報が未設定です",
+    "no_creds_desc": "SSH パスワードを入力すると資産に保存してすぐに接続します。秘密鍵は資産の編集画面で設定できます。",
+    "saving": "保存中…",
+    "save_and_connect": "保存して接続"
   }
 }

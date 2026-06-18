@@ -117,6 +117,10 @@
     "reconnect": "重新连接",
     "timeout": "连接超时:请确认 hub 已升级到 v1.4.0,且该 VPS 的 SSH 端口可从 hub 访问。",
     "no_token": "未登录或登录已失效,请重新登录后再试",
-    "aria_description": "VPS SSH 交互式终端"
+    "aria_description": "VPS SSH 交互式终端",
+    "no_creds_title": "该资产尚未配置 SSH 凭据",
+    "no_creds_desc": "输入 SSH 密码即可保存到该资产并立即连接;也可在编辑资产里配置私钥。",
+    "saving": "保存中…",
+    "save_and_connect": "保存并连接"
   }
 }

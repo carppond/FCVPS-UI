@@ -11,7 +11,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/auth-store";
+import { useUpdateVpsAssetMutation } from "@/api/vps-asset";
+import { useApiError } from "@/hooks/use-api-error";
 import { prefixedPath } from "@/lib/silent-prefix";
 import type { VpsAsset } from "@/types/api";
 
@@ -64,8 +67,35 @@ export function SshTerminalDialog({
 
   const open = vps !== null;
 
+  // Credential gate: if the asset has neither a stored password nor a private
+  // key, the relay can't authenticate. Rather than fail, prompt for a password
+  // inline, save it to the asset, then connect.
+  const hasStoredCreds = !!(vps?.ssh_password || vps?.ssh_private_key);
+  const [credsSaved, setCredsSaved] = useState(false);
+  const credsReady = hasStoredCreds || credsSaved;
+  const [pwInput, setPwInput] = useState("");
+  const updateAsset = useUpdateVpsAssetMutation();
+  const { handle: handleError } = useApiError();
+
+  // Reset the inline-credential state whenever the dialog targets a new asset.
   useEffect(() => {
-    if (!open || !vps || !container) return;
+    setCredsSaved(false);
+    setPwInput("");
+  }, [vps?.id]);
+
+  const saveCredentials = async () => {
+    if (!vps || !pwInput) return;
+    try {
+      await updateAsset.mutateAsync({ id: vps.id, data: { ssh_password: pwInput } });
+      setPwInput("");
+      setCredsSaved(true); // → connect effect fires once the terminal mounts
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  useEffect(() => {
+    if (!open || !vps || !container || !credsReady) return;
     if (!token) {
       setErrorText(tRef.current("vps-asset:terminal.no_token"));
       setStatus("error");
@@ -160,7 +190,7 @@ export function SshTerminalDialog({
       wsRef.current = null;
       term.dispose();
     };
-  }, [open, vps, token, sessionKey, container]);
+  }, [open, vps, token, sessionKey, container, credsReady]);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
@@ -174,15 +204,17 @@ export function SshTerminalDialog({
       <DialogContent className="flex h-[80vh] max-w-5xl flex-col gap-3 p-4">
         <DialogHeader className="flex-row items-center justify-between space-y-0">
           <DialogTitle className="flex items-center gap-2 font-mono text-sm">
-            <StatusDot status={status} />
+            <StatusDot status={credsReady ? status : "connecting"} />
             {vps ? `${vps.ssh_user ?? ""}@${vps.ip ?? ""}` : ""}
-            <span className="text-[var(--color-text-tertiary)]">
-              {status === "connecting" && t("vps-asset:terminal.connecting")}
-              {status === "closed" && t("vps-asset:terminal.closed")}
-              {status === "error" && (errorText ?? t("vps-asset:terminal.error"))}
-            </span>
+            {credsReady && (
+              <span className="text-[var(--color-text-tertiary)]">
+                {status === "connecting" && t("vps-asset:terminal.connecting")}
+                {status === "closed" && t("vps-asset:terminal.closed")}
+                {status === "error" && (errorText ?? t("vps-asset:terminal.error"))}
+              </span>
+            )}
           </DialogTitle>
-          {(status === "closed" || status === "error") && (
+          {credsReady && (status === "closed" || status === "error") && (
             <Button
               size="sm"
               variant="outline"
@@ -196,10 +228,44 @@ export function SshTerminalDialog({
         <DialogDescription className="sr-only">
           {t("vps-asset:terminal.aria_description")}
         </DialogDescription>
-        <div
-          ref={setContainer}
-          className="min-h-0 flex-1 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-neutral-50)] p-2"
-        />
+        {credsReady ? (
+          <div
+            ref={setContainer}
+            className="min-h-0 flex-1 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-neutral-50)] p-2"
+          />
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void saveCredentials();
+            }}
+            className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6"
+          >
+            <div className="max-w-md text-center">
+              <p className="text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)]">
+                {t("vps-asset:terminal.no_creds_title")}
+              </p>
+              <p className="mt-1 text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+                {t("vps-asset:terminal.no_creds_desc")}
+              </p>
+            </div>
+            <div className="flex w-full max-w-sm flex-col gap-2">
+              <Input
+                type="password"
+                value={pwInput}
+                onChange={(e) => setPwInput(e.target.value)}
+                placeholder={t("vps-asset:form.ssh_password")}
+                autoComplete="new-password"
+                autoFocus
+              />
+              <Button type="submit" disabled={!pwInput || updateAsset.isPending}>
+                {updateAsset.isPending
+                  ? t("vps-asset:terminal.saving")
+                  : t("vps-asset:terminal.save_and_connect")}
+              </Button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
