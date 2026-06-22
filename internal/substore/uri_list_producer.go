@@ -106,6 +106,10 @@ func vmessToURI(n *ParsedNode) string {
 // vlessToURI emits vless://uuid@host:port?security=&type=&...#name.
 func vlessToURI(n *ParsedNode) string {
 	q := url.Values{}
+	// VLESS carries no transport encryption of its own, but "encryption=none"
+	// is a MANDATORY field in the share-link format — Shadowrocket, v2rayN and
+	// others fail to import / connect when it is missing.
+	q.Set("encryption", "none")
 	if n.TLS {
 		if n.Reality {
 			q.Set("security", "reality")
