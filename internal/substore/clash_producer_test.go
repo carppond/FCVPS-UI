@@ -140,10 +140,14 @@ func TestProduceClashYAML_RawPreserved(t *testing.T) {
 // no records since mihomo dislikes an empty mapping).
 func TestProduceClashYAML_DefaultSectionsEmittedWhenEmpty(t *testing.T) {
 	nodes := []*ParsedNode{
-		{Name: "a", Protocol: "ss", Server: "1.1.1.1", Port: 80,
-			Method: "aes-256-gcm", Password: "pw"},
-		{Name: "b", Protocol: "trojan", Server: "2.2.2.2", Port: 443,
-			Password: "pw", TLS: true},
+		{
+			Name: "a", Protocol: "ss", Server: "1.1.1.1", Port: 80,
+			Method: "aes-256-gcm", Password: "pw",
+		},
+		{
+			Name: "b", Protocol: "trojan", Server: "2.2.2.2", Port: 443,
+			Password: "pw", TLS: true,
+		},
 	}
 	out, err := ProduceClashYAML(&ClashRenderInput{Nodes: nodes}, ClashProducerOpts{})
 	if err != nil {
@@ -181,8 +185,10 @@ func TestProduceClashYAML_DefaultSectionsEmittedWhenEmpty(t *testing.T) {
 func TestProduceClashYAML_FullInputEmitsAllFourSections(t *testing.T) {
 	input := &ClashRenderInput{
 		Nodes: []*ParsedNode{
-			{Name: "node-a", Protocol: "ss", Server: "1.1.1.1", Port: 80,
-				Method: "aes-256-gcm", Password: "pw"},
+			{
+				Name: "node-a", Protocol: "ss", Server: "1.1.1.1", Port: 80,
+				Method: "aes-256-gcm", Password: "pw",
+			},
 		},
 		ProxyGroups: []ProxyGroupRecord{
 			{
@@ -261,15 +267,21 @@ func TestProduceClashYAML_FullInputEmitsAllFourSections(t *testing.T) {
 func TestProduceClashYAML_ReplaceModeWipesDefaults(t *testing.T) {
 	input := &ClashRenderInput{
 		Nodes: []*ParsedNode{
-			{Name: "x", Protocol: "ss", Server: "1.1.1.1", Port: 80,
-				Method: "aes-256-gcm", Password: "pw"},
+			{
+				Name: "x", Protocol: "ss", Server: "1.1.1.1", Port: 80,
+				Method: "aes-256-gcm", Password: "pw",
+			},
 		},
 		CustomRules: []CustomRuleRecord{
 			// prepend first (Sort=1): will be wiped by the replace at Sort=2.
-			{Name: "p1", Type: "rules", Mode: "prepend", Sort: 1,
-				Content: "DOMAIN-SUFFIX,prepended.example,DIRECT"},
-			{Name: "r1", Type: "rules", Mode: "replace", Sort: 2,
-				Content: "DOMAIN-SUFFIX,replace.example,🚀 节点选择\nMATCH,DIRECT"},
+			{
+				Name: "p1", Type: "rules", Mode: "prepend", Sort: 1,
+				Content: "DOMAIN-SUFFIX,prepended.example,DIRECT",
+			},
+			{
+				Name: "r1", Type: "rules", Mode: "replace", Sort: 2,
+				Content: "DOMAIN-SUFFIX,replace.example,🚀 节点选择\nMATCH,DIRECT",
+			},
 		},
 	}
 	out, err := ProduceClashYAML(input, ClashProducerOpts{})
@@ -300,8 +312,10 @@ func TestProduceClashYAML_ReplaceModeWipesDefaults(t *testing.T) {
 func TestProduceClashYAML_MatchAlwaysLast(t *testing.T) {
 	input := &ClashRenderInput{
 		CustomRules: []CustomRuleRecord{
-			{Name: "tail", Type: "rules", Mode: "append", Sort: 1,
-				Content: "DOMAIN-SUFFIX,tail.example,DIRECT"},
+			{
+				Name: "tail", Type: "rules", Mode: "append", Sort: 1,
+				Content: "DOMAIN-SUFFIX,tail.example,DIRECT",
+			},
 		},
 	}
 	out, err := ProduceClashYAML(input, ClashProducerOpts{})
@@ -332,8 +346,10 @@ func TestProduceClashYAML_MatchAlwaysLast(t *testing.T) {
 func TestProduceClashYAML_ProxiesOnlyOpt(t *testing.T) {
 	input := &ClashRenderInput{
 		Nodes: []*ParsedNode{
-			{Name: "x", Protocol: "ss", Server: "1.1.1.1", Port: 80,
-				Method: "aes-256-gcm", Password: "pw"},
+			{
+				Name: "x", Protocol: "ss", Server: "1.1.1.1", Port: 80,
+				Method: "aes-256-gcm", Password: "pw",
+			},
 		},
 	}
 	out, err := ProduceClashYAML(input, ClashProducerOpts{ProxiesOnly: true})
@@ -348,5 +364,48 @@ func TestProduceClashYAML_ProxiesOnlyOpt(t *testing.T) {
 		if strings.Contains(s, banned) {
 			t.Errorf("ProxiesOnly should suppress %q, got:\n%s", banned, s)
 		}
+	}
+}
+
+// TestProduceClashYAML_SkipCertVerifyPromoted: when the parsed node carries a
+// "skip cert verify" intent in Raw (Clash key skip-cert-verify, or URI keys
+// allowInsecure / insecure), the producer must emit the real Clash field so
+// clients with a self-signed / expired upstream cert can still connect.
+func TestProduceClashYAML_SkipCertVerifyPromoted(t *testing.T) {
+	cases := []struct {
+		name string
+		raw  map[string]interface{}
+	}{
+		{"clash-bool", map[string]interface{}{"skip-cert-verify": true}},
+		{"uri-allowInsecure", map[string]interface{}{"allowInsecure": "1"}},
+		{"uri-insecure-true", map[string]interface{}{"insecure": "true"}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			nodes := []*ParsedNode{{
+				Name: "n", Protocol: "trojan", Server: "x.example.com",
+				Port: 443, Password: "p", TLS: true, SNI: "x.example.com",
+				Raw: c.raw,
+			}}
+			out, err := ProduceClashYAML(&ClashRenderInput{Nodes: nodes}, ClashProducerOpts{})
+			if err != nil {
+				t.Fatalf("ProduceClashYAML: %v", err)
+			}
+			if !strings.Contains(string(out), "skip-cert-verify: true") {
+				t.Errorf("skip-cert-verify not emitted for %s:\n%s", c.name, out)
+			}
+		})
+	}
+}
+
+// A node WITHOUT any insecure intent must NOT get skip-cert-verify.
+func TestProduceClashYAML_NoSkipCertVerifyByDefault(t *testing.T) {
+	nodes := []*ParsedNode{{
+		Name: "n", Protocol: "trojan", Server: "x", Port: 443,
+		Password: "p", TLS: true,
+	}}
+	out, _ := ProduceClashYAML(&ClashRenderInput{Nodes: nodes}, ClashProducerOpts{})
+	if strings.Contains(string(out), "skip-cert-verify") {
+		t.Errorf("skip-cert-verify must not appear by default:\n%s", out)
 	}
 }

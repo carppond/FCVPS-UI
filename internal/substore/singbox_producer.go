@@ -67,6 +67,11 @@ func nodeToSingbox(n *ParsedNode) (map[string]interface{}, bool) {
 		if len(n.ALPN) > 0 {
 			tls["alpn"] = n.ALPN
 		}
+		// Honour "skip certificate verification" (self-signed / expired upstream
+		// cert) — kept in Raw under the source format's key.
+		if rawBool(n.Raw, "skip-cert-verify", "allowInsecure", "insecure", "allow_insecure") {
+			tls["insecure"] = true
+		}
 		m["tls"] = tls
 	}
 	// Helper: attach a transport block when the node uses ws/grpc/h2.

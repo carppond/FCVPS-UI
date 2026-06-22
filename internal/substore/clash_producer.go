@@ -53,7 +53,8 @@ func ProduceClashYAML(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, 
 		proxiesVal.Content = append(proxiesVal.Content, ordered)
 		proxyNames = append(proxyNames, n.Name)
 	}
-	root.Content = append(root.Content,
+	root.Content = append(
+		root.Content,
 		&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "proxies"},
 		proxiesVal,
 	)
@@ -68,7 +69,8 @@ func ProduceClashYAML(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, 
 	// proxy-groups: — render user config; fall back to a sane default that
 	// references every proxy so the implicit MATCH rule below can resolve.
 	groupsVal := buildProxyGroups(input.ProxyGroups, proxyNames)
-	root.Content = append(root.Content,
+	root.Content = append(
+		root.Content,
 		&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "proxy-groups"},
 		groupsVal,
 	)
@@ -77,7 +79,8 @@ func ProduceClashYAML(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, 
 	// rule-set. mihomo tolerates the key being absent but rejects an empty
 	// mapping in some versions, so we skip it instead.
 	if providers := buildRuleProviders(input.RuleSets); providers != nil {
-		root.Content = append(root.Content,
+		root.Content = append(
+			root.Content,
 			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "rule-providers"},
 			providers,
 		)
@@ -86,7 +89,8 @@ func ProduceClashYAML(input *ClashRenderInput, opts ClashProducerOpts) ([]byte, 
 	// rules: — start with a single MATCH tail so even an empty input still
 	// produces a config the client can boot. CustomRules of type=rules are
 	// then layered via rule_injector (which honours mode=replace/prepend/append).
-	root.Content = append(root.Content,
+	root.Content = append(
+		root.Content,
 		&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "rules"},
 		defaultMatchRule(),
 	)
@@ -523,7 +527,8 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 				_ = util.SetMappingValue(realityOpts, "spider-x", spx)
 			}
 			if len(realityOpts.Content) > 0 {
-				m.Content = append(m.Content,
+				m.Content = append(
+					m.Content,
 					&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "reality-opts"},
 					realityOpts,
 				)
@@ -553,6 +558,15 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 	// skip the shared "sni" key to avoid duplicating the value in the output.
 	if n.SNI != "" && n.Protocol != "vless" {
 		_ = setStr(m, "sni", n.SNI)
+	}
+	// Re-emit "skip certificate verification" as the real Clash field. The
+	// parser keeps it in Raw under the source format's key (Clash:
+	// skip-cert-verify; URI: allowInsecure / insecure), which clash_producer
+	// otherwise only dumps under the client-ignored "_raw" bag — so a node
+	// pointing at a self-signed / expired upstream cert would fail TLS in the
+	// client and get no traffic.
+	if rawBool(n.Raw, "skip-cert-verify", "allowInsecure", "insecure", "allow_insecure") {
+		_ = setBool(m, "skip-cert-verify", true)
 	}
 	if len(n.ALPN) > 0 {
 		_ = util.SetMappingValue(m, "alpn", strSeq(n.ALPN))
@@ -591,6 +605,38 @@ func stringFromRaw(raw map[string]interface{}, keys ...string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// rawBool reports whether any of the given Raw keys holds a truthy value,
+// tolerating the bool / string / number forms different sources emit
+// (Clash YAML → bool true; URI query → "1"/"true").
+func rawBool(raw map[string]interface{}, keys ...string) bool {
+	for _, k := range keys {
+		v, ok := raw[k]
+		if !ok {
+			continue
+		}
+		switch t := v.(type) {
+		case bool:
+			if t {
+				return true
+			}
+		case string:
+			switch strings.ToLower(strings.TrimSpace(t)) {
+			case "1", "true", "yes", "on":
+				return true
+			}
+		case int:
+			if t != 0 {
+				return true
+			}
+		case float64:
+			if t != 0 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func setBool(m *yaml.Node, key string, value bool) error {
