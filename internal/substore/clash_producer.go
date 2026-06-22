@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -571,16 +572,49 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 	if len(n.ALPN) > 0 {
 		_ = util.SetMappingValue(m, "alpn", strSeq(n.ALPN))
 	}
-	if n.Path != "" {
-		_ = setStr(m, "ws-path", n.Path)
+	// WebSocket transport for URI-sourced nodes (vless://…?path=…&host=…): emit
+	// the modern ws-opts mapping. Clash-input nodes instead carry ws-opts in
+	// Raw and get it promoted below — so only emit here when it isn't already
+	// present and the node is actually ws.
+	if n.Network == "ws" && (n.Path != "" || n.Host != "") {
+		if _, exists := util.GetMappingValue(m, "ws-opts"); !exists {
+			wsOpts := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+			if n.Path != "" {
+				_ = util.SetMappingValue(wsOpts, "path", n.Path)
+			}
+			if n.Host != "" {
+				headers := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+				_ = util.SetMappingValue(headers, "Host", n.Host)
+				wsOpts.Content = append(wsOpts.Content,
+					&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "headers"}, headers)
+			}
+			m.Content = append(m.Content,
+				&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "ws-opts"}, wsOpts)
+		}
 	}
-	if n.Host != "" {
-		_ = setStr(m, "ws-headers", n.Host)
-	}
-	// Preserve unsupported fields verbatim under _raw so the parser is
-	// lossless (PRD M-SUB.3).
+	// Promote valid Clash fields kept in Raw (a Clash-format subscription's
+	// ws-opts / reality-opts / servername / alterId / …) to the node's TOP
+	// LEVEL so the client reads them. Genuinely-unknown keys stay under _raw
+	// for lossless round-trip (PRD M-SUB.3).
 	if len(n.Raw) > 0 {
-		_ = util.SetMappingValue(m, "_raw", rawToYAML(n.Raw))
+		unknown := make(map[string]interface{})
+		for k, v := range n.Raw {
+			// Already emitted explicitly above (as a normalized bool).
+			if k == "skip-cert-verify" || k == "allowInsecure" ||
+				k == "insecure" || k == "allow_insecure" {
+				continue
+			}
+			if clashPassthroughKeys[k] {
+				if _, exists := util.GetMappingValue(m, k); !exists {
+					_ = util.SetMappingValue(m, k, valueToYAML(v))
+				}
+				continue
+			}
+			unknown[k] = v
+		}
+		if len(unknown) > 0 {
+			_ = util.SetMappingValue(m, "_raw", rawToYAML(unknown))
+		}
 	}
 	return m, nil
 }
@@ -665,8 +699,21 @@ func rawToYAML(raw map[string]interface{}) *yaml.Node {
 
 func valueToYAML(v interface{}) *yaml.Node {
 	switch t := v.(type) {
+	case nil:
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!null", Value: "null"}
 	case string:
 		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: t}
+	case bool:
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!bool", Value: strconv.FormatBool(t)}
+	case int:
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: strconv.Itoa(t)}
+	case int64:
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: strconv.FormatInt(t, 10)}
+	case float64:
+		if t == float64(int64(t)) {
+			return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: strconv.FormatInt(int64(t), 10)}
+		}
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!float", Value: strconv.FormatFloat(t, 'g', -1, 64)}
 	case []string:
 		return strSeq(t)
 	case []interface{}:
@@ -675,9 +722,60 @@ func valueToYAML(v interface{}) *yaml.Node {
 			seq.Content = append(seq.Content, valueToYAML(e))
 		}
 		return seq
+	case map[string]interface{}:
+		return mapToYAML(t)
+	case map[interface{}]interface{}:
+		m2 := make(map[string]interface{}, len(t))
+		for k, val := range t {
+			m2[fmt.Sprintf("%v", k)] = val
+		}
+		return mapToYAML(m2)
 	default:
 		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: fmt.Sprintf("%v", t)}
 	}
+}
+
+// mapToYAML renders a generic map as a YAML mapping node, keys sorted for
+// deterministic output. Used for nested Clash objects (ws-opts, reality-opts,
+// headers, …) preserved verbatim from the source subscription.
+func mapToYAML(m map[string]interface{}) *yaml.Node {
+	node := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+	for _, k := range sortedKeys(m) {
+		node.Content = append(node.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: k},
+			valueToYAML(m[k]))
+	}
+	return node
+}
+
+// clashPassthroughKeys are valid Clash proxy fields the parser stashes in Raw
+// (a Clash-format subscription's transport / TLS / protocol options). They MUST
+// be re-emitted at the node's top level — burying them under the client-ignored
+// "_raw" bag silently drops a node's ws path, reality keys, servername, etc.,
+// which makes the node connect but carry no usable traffic.
+var clashPassthroughKeys = map[string]bool{
+	// transport
+	"ws-opts": true, "grpc-opts": true, "h2-opts": true, "http-opts": true,
+	"http2-opts": true, "reality-opts": true, "smux": true,
+	// tls / security
+	"servername": true, "alpn": true, "client-fingerprint": true,
+	"fingerprint": true, "flow": true,
+	// vmess / vless
+	"alterId": true, "packet-encoding": true, "global-padding": true,
+	"authenticated-length": true, "xudp": true,
+	// toggles
+	"udp": true, "tfo": true, "mptcp": true, "ip-version": true,
+	"udp-over-tcp": true,
+	// ss / ssr
+	"plugin": true, "plugin-opts": true, "obfs": true, "obfs-param": true,
+	"protocol": true, "protocol-param": true,
+	// hysteria / hysteria2 / tuic
+	"up": true, "down": true, "auth": true, "auth-str": true,
+	"obfs-password": true, "ports": true, "mport": true, "hop-interval": true,
+	"congestion-controller": true, "congestion-control": true,
+	"udp-relay-mode": true, "reduce-rtt": true, "ca": true, "ca-str": true,
+	"disable-mtu-discovery": true, "heartbeat-interval": true,
+	"max-udp-relay-packet-size": true, "ech-opts": true,
 }
 
 func sortedKeys(m map[string]interface{}) []string {
