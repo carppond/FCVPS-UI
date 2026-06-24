@@ -497,7 +497,15 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 	switch n.Protocol {
 	case "vmess":
 		_ = setStr(m, "uuid", n.UUID)
-		_ = setStr(m, "cipher", n.Method)
+		_ = setStr(m, "cipher", defaultStr(n.Method, "auto"))
+		// alterId is REQUIRED by mihomo for vmess; default 0 (VMess AEAD).
+		aid := 0
+		if v, ok := stringFromRaw(n.Raw, "aid", "alterId"); ok {
+			if parsed, err := strconv.Atoi(strings.TrimSpace(v)); err == nil {
+				aid = parsed
+			}
+		}
+		_ = util.SetMappingValue(m, "alterId", aid)
 		_ = setStr(m, "network", n.Network)
 		_ = setBool(m, "tls", n.TLS)
 	case "vless":
@@ -598,6 +606,18 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 			}
 			m.Content = append(m.Content,
 				&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "ws-opts"}, wsOpts)
+		}
+	}
+	// gRPC transport for URI-sourced nodes: emit grpc-opts.grpc-service-name.
+	// (Clash-input nodes carry grpc-opts in Raw, promoted below.)
+	if n.Network == "grpc" {
+		if _, exists := util.GetMappingValue(m, "grpc-opts"); !exists {
+			if sn, ok := stringFromRaw(n.Raw, "serviceName", "grpc-service-name", "path"); ok && sn != "" {
+				grpcOpts := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+				_ = util.SetMappingValue(grpcOpts, "grpc-service-name", sn)
+				m.Content = append(m.Content,
+					&yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "grpc-opts"}, grpcOpts)
+			}
 		}
 	}
 	// Promote valid Clash fields kept in Raw (a Clash-format subscription's
