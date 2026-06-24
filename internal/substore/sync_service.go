@@ -461,20 +461,37 @@ func parseSubscriptionBody(body []byte) ([]*ParsedNode, []*BulkError) {
 	if len(trimmed) == 0 {
 		return nil, nil
 	}
+	var clashErr error
+	// 1. Direct Clash YAML.
 	if isClashYAML(trimmed) {
 		nodes, err := parseClashYAML(trimmed)
 		if err == nil && len(nodes) > 0 {
 			return nodes, nil
 		}
-		if err != nil {
-			return nil, []*BulkError{{Line: 0, Err: err}}
-		}
+		clashErr = err // remember, but DON'T hard-fail — try other formats too
 	}
+	// 2. base64-wrapped — which may decode to a URI list OR a Clash YAML (some
+	//    providers return base64(clash.yaml)). Previously the Clash-in-base64
+	//    case was misdetected and the whole subscription parsed to 0 nodes.
 	if decoded, ok := tryBase64Decode(trimmed); ok {
-		nodes, errs := ParseBulk(string(decoded))
-		if len(nodes) > 0 {
+		if isClashYAML(decoded) {
+			if nodes, err := parseClashYAML(decoded); err == nil && len(nodes) > 0 {
+				return nodes, nil
+			} else if err != nil && clashErr == nil {
+				clashErr = err
+			}
+		}
+		if nodes, errs := ParseBulk(string(decoded)); len(nodes) > 0 {
 			return nodes, errs
 		}
+	}
+	// 3. Plaintext URI list.
+	if nodes, errs := ParseBulk(string(trimmed)); len(nodes) > 0 {
+		return nodes, errs
+	}
+	// Nothing parsed — surface the Clash error if we had one, else the URI errs.
+	if clashErr != nil {
+		return nil, []*BulkError{{Line: 0, Err: clashErr}}
 	}
 	return ParseBulk(string(trimmed))
 }
@@ -484,8 +501,8 @@ func parseSubscriptionBody(body []byte) ([]*ParsedNode, []*BulkError) {
 // through to base64/URI list paths.
 func isClashYAML(body []byte) bool {
 	head := body
-	if len(head) > 200 {
-		head = head[:200]
+	if len(head) > 4096 {
+		head = head[:4096]
 	}
 	return bytes.Contains(head, []byte("proxies:")) ||
 		bytes.Contains(head, []byte("Proxy:"))
@@ -512,7 +529,7 @@ func tryBase64Decode(body []byte) ([]byte, bool) {
 	}
 	for _, enc := range candidates {
 		out, err := enc.DecodeString(string(clean))
-		if err == nil && looksLikeURIList(out) {
+		if err == nil && (looksLikeURIList(out) || isClashYAML(out)) {
 			return out, true
 		}
 	}
@@ -520,7 +537,7 @@ func tryBase64Decode(body []byte) ([]byte, bool) {
 	padded := append([]byte(nil), clean...)
 	if pad := len(padded) % 4; pad != 0 {
 		padded = append(padded, bytes.Repeat([]byte("="), 4-pad)...)
-		if out, err := base64.StdEncoding.DecodeString(string(padded)); err == nil && looksLikeURIList(out) {
+		if out, err := base64.StdEncoding.DecodeString(string(padded)); err == nil && (looksLikeURIList(out) || isClashYAML(out)) {
 			return out, true
 		}
 	}
