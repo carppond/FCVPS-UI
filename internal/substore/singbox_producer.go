@@ -3,6 +3,7 @@ package substore
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 // ProduceSingboxJSON renders a slice of ParsedNode into a sing-box compatible
@@ -72,6 +73,26 @@ func nodeToSingbox(n *ParsedNode) (map[string]interface{}, bool) {
 		if rawBool(n.Raw, "skip-cert-verify", "allowInsecure", "insecure", "allow_insecure") {
 			tls["insecure"] = true
 		}
+		// uTLS fingerprint (anti-fingerprint TLS).
+		if fp, ok := stringFromRaw(n.Raw, "fp", "client-fingerprint"); ok && fp != "" {
+			tls["utls"] = map[string]interface{}{"enabled": true, "fingerprint": fp}
+		}
+		// Reality: render the public_key / short_id the parser keeps in Raw.
+		// (Previously the whole reality node was dropped on a stale assumption
+		// that these weren't retained.) Reality mandates uTLS — default chrome.
+		if n.Reality {
+			reality := map[string]interface{}{"enabled": true}
+			if pbk, ok := stringFromRaw(n.Raw, "pbk", "public-key"); ok && pbk != "" {
+				reality["public_key"] = pbk
+			}
+			if sid, ok := stringFromRaw(n.Raw, "sid", "short-id"); ok && sid != "" {
+				reality["short_id"] = sid
+			}
+			tls["reality"] = reality
+			if _, has := tls["utls"]; !has {
+				tls["utls"] = map[string]interface{}{"enabled": true, "fingerprint": "chrome"}
+			}
+		}
 		m["tls"] = tls
 	}
 	// Helper: attach a transport block when the node uses ws/grpc/h2.
@@ -88,8 +109,12 @@ func nodeToSingbox(n *ParsedNode) (map[string]interface{}, bool) {
 			m["transport"] = t
 		case "grpc":
 			t := map[string]interface{}{"type": "grpc"}
-			if n.Path != "" {
-				t["service_name"] = n.Path
+			sn := n.Path
+			if sn == "" {
+				sn, _ = stringFromRaw(n.Raw, "serviceName", "grpc-service-name")
+			}
+			if sn != "" {
+				t["service_name"] = sn
 			}
 			m["transport"] = t
 		case "h2", "http":
@@ -121,18 +146,10 @@ func nodeToSingbox(n *ParsedNode) (map[string]interface{}, bool) {
 		attachTransport(m)
 		return m, true
 	case "vless":
-		if n.Reality {
-			// sing-box supports reality but the parser does not currently
-			// retain reality public_key / short_id; drop to keep config valid.
-			return nil, false
-		}
 		m := base("vless")
 		m["uuid"] = n.UUID
-		// flow defaults to empty; honour Raw["flow"].
-		if n.Raw != nil {
-			if v, ok := n.Raw["flow"].(string); ok && v != "" {
-				m["flow"] = v
-			}
+		if v, ok := stringFromRaw(n.Raw, "flow"); ok && v != "" {
+			m["flow"] = v
 		}
 		attachTLS(m)
 		attachTransport(m)
@@ -141,6 +158,14 @@ func nodeToSingbox(n *ParsedNode) (map[string]interface{}, bool) {
 		m := base("shadowsocks")
 		m["method"] = n.Method
 		m["password"] = n.Password
+		// SIP002 plugin: "name;opt=val;..." → plugin + plugin_opts.
+		if plugin, ok := stringFromRaw(n.Raw, "plugin"); ok && plugin != "" {
+			name, opts, _ := strings.Cut(plugin, ";")
+			m["plugin"] = name
+			if opts != "" {
+				m["plugin_opts"] = opts
+			}
+		}
 		return m, true
 	case "trojan":
 		m := base("trojan")
@@ -161,16 +186,25 @@ func nodeToSingbox(n *ParsedNode) (map[string]interface{}, bool) {
 		if n.Password != "" {
 			m["password"] = n.Password
 		}
+		// Salamander obfs → nested object (else the node handshake-fails).
+		if obfs, ok := stringFromRaw(n.Raw, "obfs"); ok && obfs != "" {
+			o := map[string]interface{}{"type": obfs}
+			if pw, ok := stringFromRaw(n.Raw, "obfs-password"); ok && pw != "" {
+				o["password"] = pw
+			}
+			m["obfs"] = o
+		}
 		attachTLS(m)
 		return m, true
 	case "tuic":
 		m := base("tuic")
 		m["uuid"] = n.UUID
 		m["password"] = n.Password
-		if n.Raw != nil {
-			if v, ok := n.Raw["congestion-control"].(string); ok && v != "" {
-				m["congestion_control"] = v
-			}
+		if v, ok := stringFromRaw(n.Raw, "congestion-control", "congestion_control"); ok && v != "" {
+			m["congestion_control"] = v
+		}
+		if v, ok := stringFromRaw(n.Raw, "udp_relay_mode", "udp-relay-mode"); ok && v != "" {
+			m["udp_relay_mode"] = v
 		}
 		attachTLS(m)
 		return m, true
