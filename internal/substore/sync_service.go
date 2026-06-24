@@ -233,7 +233,8 @@ func (s *SyncService) SyncOne(ctx context.Context, sub *storage.SubscriptionReco
 		// Best-effort persist of the latest raw body; failure is logged but
 		// does not fail the sync (nodes are already in place).
 		if rawErr := s.repo.UpdateRawContent(ctx, sub.ID, body); rawErr != nil && s.logger != nil {
-			s.logger.Warn("subscription update raw_content failed",
+			s.logger.Warn(
+				"subscription update raw_content failed",
 				slog.String("subscription_id", sub.ID),
 				slog.String("err", rawErr.Error()),
 			)
@@ -248,7 +249,8 @@ func (s *SyncService) SyncOne(ctx context.Context, sub *storage.SubscriptionReco
 	// header (so used/limit match the source panel, e.g. 3X-UI).
 	if info != nil {
 		if mErr := s.repo.UpdateTrafficMeta(ctx, sub.ID, info.used, info.total, info.expireMs); mErr != nil && s.logger != nil {
-			s.logger.Warn("subscription update traffic meta failed",
+			s.logger.Warn(
+				"subscription update traffic meta failed",
 				slog.String("subscription_id", sub.ID),
 				slog.String("err", mErr.Error()),
 			)
@@ -289,7 +291,8 @@ func (s *SyncService) SyncAll(ctx context.Context, userID string) error {
 				firstErr = err
 			}
 			if s.logger != nil {
-				s.logger.Warn("sync subscription failed",
+				s.logger.Warn(
+					"sync subscription failed",
 					slog.String("subscription_id", sub.ID),
 					slog.String("err", err.Error()),
 				)
@@ -411,7 +414,8 @@ func (s *SyncService) failSync(ctx context.Context, sub *storage.SubscriptionRec
 	}
 	msg := cause.Error()
 	if err := s.repo.UpdateSyncState(ctx, sub.ID, string(types.SyncStatusError), s.now(), msg); err != nil && s.logger != nil {
-		s.logger.Warn("subscription update sync_state failed",
+		s.logger.Warn(
+			"subscription update sync_state failed",
 			slog.String("subscription_id", sub.ID),
 			slog.String("err", err.Error()),
 		)
@@ -436,7 +440,8 @@ func (s *SyncService) recordSyncLog(ctx context.Context, sub *storage.Subscripti
 		Error:          errMsg,
 		CreatedAt:      s.now().UnixMilli(),
 	}); err != nil && s.logger != nil {
-		s.logger.Warn("subscription record sync log failed",
+		s.logger.Warn(
+			"subscription record sync log failed",
 			slog.String("subscription_id", sub.ID),
 			slog.String("err", err.Error()),
 		)
@@ -639,7 +644,14 @@ func clashEntryToNode(m map[string]interface{}) *ParsedNode {
 	if v, ok := m["sni"].(string); ok {
 		n.SNI = v
 	}
-	// Stash everything else in Raw to preserve unsupported fields.
+	// Normalize Clash's nested / differently-named transport+TLS fields into the
+	// same flat n.* + Raw shape the URI parsers produce — otherwise the
+	// uri-list and sing-box producers (which read n.SNI / n.Path / n.Host /
+	// n.Reality / flat Raw keys, NOT Clash's nested maps) lose SNI, ws/grpc
+	// path, and reality entirely for Clash-sourced subscriptions.
+	normalizeClashNode(n, m)
+	// Stash everything else in Raw to preserve unsupported fields (the Clash
+	// producer promotes valid Clash keys from here back to the top level).
 	for k, v := range m {
 		switch k {
 		case "name", "type", "server", "port", "uuid", "password",
@@ -655,6 +667,87 @@ func clashEntryToNode(m map[string]interface{}) *ParsedNode {
 		n.Name = fmt.Sprintf("%s-%s:%d", n.Protocol, n.Server, n.Port)
 	}
 	return n
+}
+
+// normalizeClashNode bridges Clash-format fields into the flat representation
+// the URI / sing-box producers expect. The nested originals are LEFT in the
+// node's Raw map (the Clash producer's passthrough relies on them), so this
+// only adds — it never removes — keeping Clash→Clash lossless.
+func normalizeClashNode(n *ParsedNode, m map[string]interface{}) {
+	// Clash's TLS SNI key is "servername" (vless/vmess); URI parsers use n.SNI.
+	if n.SNI == "" {
+		if v, ok := m["servername"].(string); ok {
+			n.SNI = v
+		}
+	}
+	// Reality: the presence of reality-opts marks a reality node. Flatten its
+	// keys to pbk/sid/spx so the URI + sing-box producers (which read these
+	// flat keys) can emit reality.
+	if ro, ok := m["reality-opts"].(map[string]interface{}); ok {
+		n.Reality = true
+		if v, ok := ro["public-key"].(string); ok {
+			n.Raw["pbk"] = v
+		}
+		if v, ok := ro["short-id"].(string); ok {
+			n.Raw["sid"] = v
+		}
+		if v, ok := ro["spider-x"].(string); ok {
+			n.Raw["spx"] = v
+		}
+	}
+	// vless flow + uTLS fingerprint sit at the Clash node top level; map them
+	// to the flat Raw keys the producers consume.
+	if v, ok := m["flow"].(string); ok && v != "" {
+		n.Raw["flow"] = v
+	}
+	if v, ok := m["client-fingerprint"].(string); ok && v != "" {
+		n.Raw["fp"] = v
+	}
+	// WebSocket transport: pull path + Host header into n.Path / n.Host.
+	if wo, ok := m["ws-opts"].(map[string]interface{}); ok {
+		if p, ok := wo["path"].(string); ok && n.Path == "" {
+			n.Path = p
+		}
+		if hdrs, ok := wo["headers"].(map[string]interface{}); ok {
+			if h, ok := hdrs["Host"].(string); ok && n.Host == "" {
+				n.Host = h
+			} else if h, ok := hdrs["host"].(string); ok && n.Host == "" {
+				n.Host = h
+			}
+		}
+	}
+	// gRPC transport: flatten the service name for the producers.
+	if grpc, ok := m["grpc-opts"].(map[string]interface{}); ok {
+		if sn, ok := grpc["grpc-service-name"].(string); ok && sn != "" {
+			n.Raw["serviceName"] = sn
+		}
+	}
+	// vmess alterId → flat "aid" (URI vmess JSON + clash producer read aid).
+	switch a := m["alterId"].(type) {
+	case int:
+		n.Raw["aid"] = strconv.Itoa(a)
+	case int64:
+		n.Raw["aid"] = strconv.FormatInt(a, 10)
+	case float64:
+		n.Raw["aid"] = strconv.FormatInt(int64(a), 10)
+	case string:
+		if a != "" {
+			n.Raw["aid"] = a
+		}
+	}
+	// ALPN list.
+	if len(n.ALPN) == 0 {
+		switch a := m["alpn"].(type) {
+		case []interface{}:
+			for _, e := range a {
+				if s, ok := e.(string); ok && s != "" {
+					n.ALPN = append(n.ALPN, s)
+				}
+			}
+		case string:
+			n.ALPN = splitALPN(a)
+		}
+	}
 }
 
 // nodeInputsFromParsed converts the parser output into NodeRepo.UpsertBatch
