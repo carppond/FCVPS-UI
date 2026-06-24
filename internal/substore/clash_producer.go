@@ -555,6 +555,14 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 		_ = setStr(m, "username", n.UUID)
 		_ = setStr(m, "password", n.Password)
 	}
+	// Default udp: true (what mihomo-targeting subscription converters do).
+	// Without it mihomo leaves UDP off for several proxy types, which breaks
+	// QUIC / HTTP-3 (Google, YouTube, …) and surfaces as flaky connectivity —
+	// notably "works in Shadowrocket (UDP on by default) but not Clash".
+	// Honour an explicit udp from the source (promoted from Raw below).
+	if _, hasUDP := n.Raw["udp"]; !hasUDP && n.Protocol != "naive" {
+		_ = setBool(m, "udp", true)
+	}
 	// vless already emits SNI as "servername" in its protocol-specific block;
 	// skip the shared "sni" key to avoid duplicating the value in the output.
 	if n.SNI != "" && n.Protocol != "vless" {
@@ -599,9 +607,11 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 	if len(n.Raw) > 0 {
 		unknown := make(map[string]interface{})
 		for k, v := range n.Raw {
-			// Already emitted explicitly above (as a normalized bool).
-			if k == "skip-cert-verify" || k == "allowInsecure" ||
-				k == "insecure" || k == "allow_insecure" {
+			// Skip keys already consumed/emitted explicitly above so they don't
+			// also reappear as redundant clutter under _raw: the insecure flag
+			// (→ skip-cert-verify) and the URI-form reality/xtls extras
+			// (fp→client-fingerprint, pbk/sid/spx→reality-opts, flow).
+			if rawConsumedKeys[k] {
 				continue
 			}
 			if clashPassthroughKeys[k] {
@@ -753,6 +763,15 @@ func mapToYAML(m map[string]interface{}) *yaml.Node {
 // be re-emitted at the node's top level — burying them under the client-ignored
 // "_raw" bag silently drops a node's ws path, reality keys, servername, etc.,
 // which makes the node connect but carry no usable traffic.
+// rawConsumedKeys are Raw keys the producer already turns into proper Clash
+// fields elsewhere, so they must NOT be re-dumped under _raw.
+var rawConsumedKeys = map[string]bool{
+	"skip-cert-verify": true, "allowInsecure": true, "insecure": true,
+	"allow_insecure": true,
+	// URI-form reality / xtls extras → flow / client-fingerprint / reality-opts
+	"fp": true, "pbk": true, "sid": true, "spx": true, "flow": true,
+}
+
 var clashPassthroughKeys = map[string]bool{
 	// transport
 	"ws-opts": true, "grpc-opts": true, "h2-opts": true, "http-opts": true,
