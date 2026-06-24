@@ -132,23 +132,45 @@ func vlessToURI(n *ParsedNode) string {
 	if n.Host != "" {
 		q.Set("host", n.Host)
 	}
-	// Reality / xtls extras the parser keeps verbatim in Raw. Without these
-	// (flow / fp / pbk / sid / spx) a reality node TCP-pings but fails the
-	// handshake — the node is unusable in clients fed the uri-list format.
-	for _, k := range []string{"flow", "fp", "pbk", "sid", "spx"} {
-		if v, ok := stringFromRaw(n.Raw, k); ok && v != "" {
-			q.Set(k, v)
-		}
-	}
+	// Reality / xtls + transport extras the parser keeps verbatim in Raw.
+	// Without these (flow/fp/pbk/sid/spx for reality; serviceName/mode for grpc;
+	// headerType for tcp-http) a node TCP-pings but fails the handshake.
+	setFromRaw(q, n.Raw, "flow", "fp", "pbk", "sid", "spx",
+		"serviceName", "mode", "headerType")
 	return fmt.Sprintf("vless://%s@%s:%d?%s#%s",
 		n.UUID, n.Server, n.Port, q.Encode(), url.QueryEscape(n.Name))
 }
 
-// ssToURI emits the SIP002 form ss://base64(method:password)@host:port#name.
+// setFromRaw copies the given keys from Raw into the query when present and
+// non-empty — used to round-trip protocol extras (obfs / insecure / fp / …)
+// the parser preserved verbatim but the producer would otherwise drop.
+func setFromRaw(q url.Values, raw map[string]interface{}, keys ...string) {
+	for _, k := range keys {
+		if v, ok := stringFromRaw(raw, k); ok && v != "" {
+			q.Set(k, v)
+		}
+	}
+}
+
+// ssToURI emits the SIP002 form ss://base64(method:password)@host:port?plugin=…#name.
 func ssToURI(n *ParsedNode) string {
 	cred := base64.RawURLEncoding.EncodeToString([]byte(n.Method + ":" + n.Password))
-	return fmt.Sprintf("ss://%s@%s:%d#%s",
-		cred, n.Server, n.Port, url.QueryEscape(n.Name))
+	// Preserve the SIP002 plugin string (v2ray-plugin / obfs-local + opts);
+	// without it a plugin-based SS node degrades to plain SS and won't connect.
+	plugin, _ := stringFromRaw(n.Raw, "plugin")
+	if plugin == "" {
+		if name, ok := stringFromRaw(n.Raw, "plugin-opts"); ok && name != "" {
+			plugin = name // already a composed string in some sources
+		}
+	}
+	qs := ""
+	if plugin != "" {
+		q := url.Values{}
+		q.Set("plugin", plugin)
+		qs = "/?" + q.Encode()
+	}
+	return fmt.Sprintf("ss://%s@%s:%d%s#%s",
+		cred, n.Server, n.Port, qs, url.QueryEscape(n.Name))
 }
 
 // ssrToURI emits the canonical ssr://base64(host:port:protocol:method:obfs:base64(password)/?remarks=...) form.
@@ -213,6 +235,8 @@ func trojanToURI(n *ParsedNode) string {
 	if n.Host != "" {
 		q.Set("host", n.Host)
 	}
+	// uTLS fingerprint + skip-cert-verify intent.
+	setFromRaw(q, n.Raw, "fp", "allowInsecure", "insecure")
 	qs := q.Encode()
 	if qs != "" {
 		qs = "?" + qs
@@ -232,6 +256,8 @@ func hysteriaToURI(n *ParsedNode) string {
 	if len(n.ALPN) > 0 {
 		q.Set("alpn", strings.Join(n.ALPN, ","))
 	}
+	// Bandwidth + obfs + insecure that hysteria v1 needs to handshake correctly.
+	setFromRaw(q, n.Raw, "obfs", "insecure", "upmbps", "downmbps", "protocol")
 	return fmt.Sprintf("hysteria://%s:%d?%s#%s",
 		n.Server, n.Port, q.Encode(), url.QueryEscape(n.Name))
 }
@@ -244,6 +270,9 @@ func hysteria2ToURI(n *ParsedNode) string {
 	if len(n.ALPN) > 0 {
 		q.Set("alpn", strings.Join(n.ALPN, ","))
 	}
+	// Salamander obfs + self-signed cert flag — without these a hy2 node with
+	// obfs / bad cert handshake-fails (TCP-pings but no traffic).
+	setFromRaw(q, n.Raw, "obfs", "obfs-password", "insecure")
 	qs := q.Encode()
 	if qs != "" {
 		qs = "?" + qs
@@ -265,6 +294,8 @@ func tuicToURI(n *ParsedNode) string {
 			q.Set("congestion_control", v)
 		}
 	}
+	// UDP relay mode (native/quic) + self-signed cert flag.
+	setFromRaw(q, n.Raw, "udp_relay_mode", "allow_insecure", "disable_sni")
 	qs := q.Encode()
 	if qs != "" {
 		qs = "?" + qs
