@@ -553,7 +553,26 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 		_ = setStr(m, "uuid", n.UUID)
 		_ = setStr(m, "password", n.Password)
 	case "wireguard":
-		_ = setStr(m, "password", n.Password)
+		// mihomo wireguard uses private-key / public-key / ip / pre-shared-key /
+		// dns / mtu — NOT a generic "password". Pull the rest from Raw.
+		_ = setStr(m, "private-key", n.Password)
+		if v, ok := stringFromRaw(n.Raw, "public-key"); ok && v != "" {
+			_ = setStr(m, "public-key", v)
+		}
+		if v, ok := stringFromRaw(n.Raw, "address", "ip"); ok && v != "" {
+			_ = setStr(m, "ip", v)
+		}
+		if v, ok := stringFromRaw(n.Raw, "preshared-key", "pre-shared-key"); ok && v != "" {
+			_ = setStr(m, "pre-shared-key", v)
+		}
+		if v, ok := stringFromRaw(n.Raw, "dns"); ok && v != "" {
+			_ = util.SetMappingValue(m, "dns", strSeq(strings.Split(v, ",")))
+		}
+		if v, ok := stringFromRaw(n.Raw, "mtu"); ok && v != "" {
+			if mtu, err := strconv.Atoi(strings.TrimSpace(v)); err == nil && mtu > 0 {
+				_ = util.SetMappingValue(m, "mtu", mtu)
+			}
+		}
 	case "socks5":
 		if n.UUID != "" {
 			_ = setStr(m, "username", n.UUID)
@@ -790,6 +809,10 @@ var rawConsumedKeys = map[string]bool{
 	"allow_insecure": true,
 	// URI-form reality / xtls extras → flow / client-fingerprint / reality-opts
 	"fp": true, "pbk": true, "sid": true, "spx": true, "flow": true,
+	// wireguard extras → private-key / public-key / ip / pre-shared-key / dns / mtu
+	"public-key": true, "preshared-key": true, "address": true,
+	// vmess/grpc extras consumed by the producer
+	"aid": true, "serviceName": true,
 }
 
 var clashPassthroughKeys = map[string]bool{

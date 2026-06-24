@@ -115,7 +115,10 @@ func TestProduceClashYAML_RawPreserved(t *testing.T) {
 			UUID:     "uuid",
 			Network:  "tcp",
 			Raw: map[string]interface{}{
-				"aid":                "0",
+				// A genuinely-unknown (non-Clash) field must round-trip under
+				// _raw; known fields like client-fingerprint are instead promoted
+				// to the node top level (tested elsewhere).
+				"x-vendor-extension": "keepme",
 				"client-fingerprint": "chrome",
 			},
 		},
@@ -125,11 +128,12 @@ func TestProduceClashYAML_RawPreserved(t *testing.T) {
 		t.Fatalf("ProduceClashYAML: %v", err)
 	}
 	s := string(out)
-	if !strings.Contains(s, "_raw:") {
-		t.Errorf("_raw section missing")
+	if !strings.Contains(s, "_raw:") || !strings.Contains(s, "x-vendor-extension: keepme") {
+		t.Errorf("unknown field not preserved under _raw:\n%s", s)
 	}
+	// known field promoted to the top level, not buried in _raw.
 	if !strings.Contains(s, "client-fingerprint: chrome") {
-		t.Errorf("raw value not preserved:\n%s", s)
+		t.Errorf("client-fingerprint not emitted:\n%s", s)
 	}
 }
 
