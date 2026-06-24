@@ -53,7 +53,8 @@ func nodeToSurge(n *ParsedNode) (string, bool) {
 	var parts []string
 	switch n.Protocol {
 	case "vmess":
-		parts = []string{name + " = vmess", server, port,
+		parts = []string{
+			name + " = vmess", server, port,
 			"username=" + n.UUID,
 		}
 		if n.TLS {
@@ -71,8 +72,10 @@ func nodeToSurge(n *ParsedNode) (string, bool) {
 				parts = append(parts, "ws-headers=Host:"+n.Host)
 			}
 		}
+		parts = appendSurgeInsecure(parts, n)
 	case "trojan":
-		parts = []string{name + " = trojan", server, port,
+		parts = []string{
+			name + " = trojan", server, port,
 			"password=" + n.Password,
 		}
 		if n.SNI != "" {
@@ -87,10 +90,28 @@ func nodeToSurge(n *ParsedNode) (string, bool) {
 				parts = append(parts, "ws-headers=Host:"+n.Host)
 			}
 		}
+		parts = appendSurgeInsecure(parts, n)
 	case "ss":
-		parts = []string{name + " = ss", server, port,
+		parts = []string{
+			name + " = ss", server, port,
 			"encrypt-method=" + n.Method,
 			"password=" + n.Password,
+		}
+		// SIP002 simple-obfs → Surge obfs=/obfs-host=. v2ray-plugin can't be
+		// represented in Surge, so skip those nodes rather than emit a broken
+		// (plugin-less) line that would silently fail to connect.
+		if plugin, ok := stringFromRaw(n.Raw, "plugin"); ok && plugin != "" {
+			pname, popts, _ := strings.Cut(plugin, ";")
+			if !strings.Contains(pname, "obfs") {
+				return "", false
+			}
+			mode, host := parseSimpleObfs(popts)
+			if mode != "" {
+				parts = append(parts, "obfs="+mode)
+			}
+			if host != "" {
+				parts = append(parts, "obfs-host="+host)
+			}
 		}
 	case "http":
 		parts = []string{name + " = http", server, port}
@@ -116,6 +137,34 @@ func nodeToSurge(n *ParsedNode) (string, bool) {
 		return "", false
 	}
 	return strings.Join(parts, ", "), true
+}
+
+// appendSurgeInsecure adds skip-cert-verify=true when the node carries a
+// "skip certificate verification" intent (self-signed / expired upstream cert);
+// without it Surge fails TLS verification and the node can't connect.
+func appendSurgeInsecure(parts []string, n *ParsedNode) []string {
+	if n.TLS && rawBool(n.Raw, "skip-cert-verify", "allowInsecure", "insecure", "allow_insecure") {
+		parts = append(parts, "skip-cert-verify=true")
+	}
+	return parts
+}
+
+// parseSimpleObfs extracts obfs mode + host from a SIP002 simple-obfs opts
+// string like "obfs=tls;obfs-host=a.com".
+func parseSimpleObfs(opts string) (mode, host string) {
+	for _, kv := range strings.Split(opts, ";") {
+		k, v, ok := strings.Cut(kv, "=")
+		if !ok {
+			continue
+		}
+		switch strings.TrimSpace(k) {
+		case "obfs":
+			mode = strings.TrimSpace(v)
+		case "obfs-host":
+			host = strings.TrimSpace(v)
+		}
+	}
+	return mode, host
 }
 
 // quoteIfNeeded wraps a value in quotes when it contains a comma. Surge
