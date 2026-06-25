@@ -674,6 +674,11 @@ func clashEntryToNode(m map[string]interface{}) *ParsedNode {
 		case "name", "type", "server", "port", "uuid", "password",
 			"cipher", "network", "tls", "sni":
 			continue
+		// "_raw" is OUR internal passthrough marker, never a real proxy field.
+		// A source carrying it (a prior render of ours, re-synced) would nest
+		// _raw→_raw deeper every sync; drop it so the corruption can't compound.
+		case "_raw":
+			continue
 		}
 		n.Raw[k] = v
 	}

@@ -646,6 +646,15 @@ func nodeToYAML(n *ParsedNode) (*yaml.Node, error) {
 	if len(n.Raw) > 0 {
 		unknown := make(map[string]interface{})
 		for k, v := range n.Raw {
+			// Never propagate our own "_raw" passthrough marker. A Raw map that
+			// carries a nested "_raw" key is corruption left by a prior
+			// parse→render→re-sync round-trip; emitting it recurses
+			// _raw→_raw→_raw… (hundreds of levels deep), bloating the config to
+			// hundreds of KB and making mihomo intermittently fail to parse it.
+			// Dropping it loses nothing — clients ignore "_raw" anyway.
+			if k == "_raw" {
+				continue
+			}
 			// Skip keys already consumed/emitted explicitly above so they don't
 			// also reappear as redundant clutter under _raw: the insecure flag
 			// (→ skip-cert-verify) and the URI-form reality/xtls extras

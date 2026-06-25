@@ -137,6 +137,51 @@ func TestProduceClashYAML_RawPreserved(t *testing.T) {
 	}
 }
 
+// TestProduceClashYAML_NestedRawNotRecursed guards the 425KB-config bug: a node
+// whose Raw carries an inherited "_raw" key (corruption from a prior
+// parse→render→re-sync round-trip) must NOT have it re-emitted, or the producer
+// recurses _raw→_raw→_raw hundreds of levels deep and mihomo intermittently
+// fails to parse the bloated config ("有时通有时不通").
+func TestProduceClashYAML_NestedRawNotRecursed(t *testing.T) {
+	// Build a deliberately nested _raw chain, as observed in the wild.
+	nested := map[string]interface{}{"_raw": map[string]interface{}{}}
+	for i := 0; i < 50; i++ {
+		nested = map[string]interface{}{"_raw": nested}
+	}
+	nodes := []*ParsedNode{
+		{
+			Name:     "nested-raw",
+			Protocol: "vless",
+			Server:   "x.example.com",
+			Port:     443,
+			UUID:     "uuid",
+			Network:  "tcp",
+			TLS:      true,
+			SNI:      "www.microsoft.com",
+			Reality:  true,
+			Raw: map[string]interface{}{
+				"_raw": nested,
+				"pbk":  "PUBKEY",
+				"sid":  "a218cb",
+				"flow": "xtls-rprx-vision",
+			},
+		},
+	}
+	out, err := ProduceClashYAML(&ClashRenderInput{Nodes: nodes}, ClashProducerOpts{})
+	if err != nil {
+		t.Fatalf("ProduceClashYAML: %v", err)
+	}
+	s := string(out)
+	// The "_raw" marker must never appear in output, and real reality fields
+	// must still render at the top level.
+	if strings.Contains(s, "_raw") {
+		t.Errorf("nested _raw leaked into output (config bloat / parse failure):\n%s", s[:min(len(s), 600)])
+	}
+	if !strings.Contains(s, "public-key: PUBKEY") || !strings.Contains(s, "flow: xtls-rprx-vision") {
+		t.Errorf("reality fields lost while stripping _raw:\n%s", s)
+	}
+}
+
 // TestProduceClashYAML_DefaultSectionsEmittedWhenEmpty: a render with only
 // nodes (no user-configured groups / rules / rule-sets) must still produce a
 // usable Clash document with the four canonical sections (proxies +
