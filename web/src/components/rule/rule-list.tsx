@@ -178,7 +178,7 @@ function DraggableRuleTable({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)]",
+        "overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg backdrop-blur-xl",
         className,
       )}
     >
@@ -260,12 +260,9 @@ function SortableRuleRow({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const toggleEnabled = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const toggleEnabled = async (enabled: boolean) => {
     try {
-      await updateMutation.mutateAsync({
-        id: rule.id,
-        payload: { enabled: e.target.checked },
-      });
+      await updateMutation.mutateAsync({ id: rule.id, payload: { enabled } });
     } catch (err) {
       handleError(err);
     }
@@ -290,7 +287,10 @@ function SortableRuleRow({
       data-testid={`rule-row-${rule.id}`}
       className={cn(
         "border-b border-[var(--color-border)] last:border-0",
-        "hover:bg-[var(--color-surface-hover)] transition-colors duration-[var(--duration-fast)]",
+        "transition-colors duration-[var(--duration-fast)]",
+        selected
+          ? "bg-[var(--color-primary-soft)] shadow-[inset_3px_0_0_var(--color-primary)]"
+          : "hover:bg-[var(--color-surface-hover)]",
       )}
     >
       <Td className="w-10">
@@ -312,35 +312,62 @@ function SortableRuleRow({
         )}
       </Td>
       <Td>
-        <Badge variant="outline">{typeLabel(t, rule.type)}</Badge>
+        <Badge variant={typeBadgeVariant(rule.type)}>
+          {typeLabel(t, rule.type)}
+        </Badge>
       </Td>
       <Td>
         <Badge variant="secondary">{t(`rule:modes.${rule.mode}`)}</Badge>
       </Td>
       <Td>
-        <button
-          type="button"
-          onClick={() => onEdit(rule)}
-          className={cn(
-            "truncate text-left font-medium",
-            "hover:text-[var(--color-primary)] transition-colors duration-[var(--duration-fast)]",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] rounded-[var(--radius-sm)]",
-            rule.enabled
-              ? "text-[var(--color-text-primary)]"
-              : "text-[var(--color-text-tertiary)] line-through",
-          )}
-        >
-          {rule.name}
-        </button>
+        <span className="flex min-w-0 items-center gap-2">
+          <span
+            className={cn(
+              "inline-block size-1.5 shrink-0 rounded-full",
+              rule.enabled
+                ? "bg-[var(--color-success)]"
+                : "bg-[var(--color-text-disabled)]",
+            )}
+            aria-hidden
+          />
+          <button
+            type="button"
+            onClick={() => onEdit(rule)}
+            className={cn(
+              "truncate text-left font-medium",
+              "hover:text-[var(--color-primary)] transition-colors duration-[var(--duration-fast)]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] rounded-[var(--radius-sm)]",
+              rule.enabled
+                ? "text-[var(--color-text-primary)]"
+                : "text-[var(--color-text-tertiary)] line-through",
+            )}
+          >
+            {rule.name}
+          </button>
+        </span>
       </Td>
       <Td className="text-center">
-        <input
-          type="checkbox"
-          checked={rule.enabled}
-          onChange={toggleEnabled}
-          className="h-4 w-4 rounded border-[var(--color-border-strong)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+        <button
+          type="button"
+          role="switch"
+          aria-checked={rule.enabled}
+          onClick={() => void toggleEnabled(!rule.enabled)}
           aria-label={t("rule:form.enabled_label")}
-        />
+          className={cn(
+            "inline-flex h-5 w-9 items-center rounded-full px-0.5 align-middle transition-colors duration-[var(--duration-fast)]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1",
+            rule.enabled
+              ? "bg-[var(--color-success)]"
+              : "bg-[var(--color-border-strong)]",
+          )}
+        >
+          <span
+            className={cn(
+              "size-4 rounded-full bg-white shadow transition-transform duration-[var(--duration-fast)]",
+              rule.enabled && "translate-x-4",
+            )}
+          />
+        </button>
       </Td>
       <Td className="text-right">
         <DropdownMenu>
@@ -421,6 +448,12 @@ function RuleTableSkeleton({ className }: { className?: string }) {
       </div>
     </div>
   );
+}
+
+// typeBadgeVariant gives each rule type a soft-coloured badge so the table
+// scans faster: DNS in amber, rules / rule-providers in blue.
+function typeBadgeVariant(type: RuleType): "info" | "warning" {
+  return type === "dns" ? "warning" : "info";
 }
 
 function typeLabel(t: (key: string) => string, type: RuleType): string {
