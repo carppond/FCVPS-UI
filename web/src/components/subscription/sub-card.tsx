@@ -166,8 +166,9 @@ export function SubCard({
         // Hover
         "transition-all duration-150",
         "hover:border-[var(--color-border-strong)] hover:-translate-y-0.5 hover:shadow-lg",
-        // Selection highlight
-        selected && "border-[var(--color-primary)] ring-1 ring-[var(--color-primary)]",
+        // Selection highlight: primary border/ring + a soft primary tint layer.
+        selected &&
+          "border-[var(--color-primary)] ring-1 ring-[var(--color-primary)] bg-[linear-gradient(0deg,var(--color-primary-soft),var(--color-primary-soft))]",
       )}
       onClick={(e) => {
         // In selection mode the whole card toggles selection instead of navigating.
@@ -182,17 +183,6 @@ export function SubCard({
         }
       }}
     >
-      {/* Selection checkbox overlay */}
-      {selectionMode && (
-        <span className="absolute right-3 top-3 z-10" data-action>
-          <Checkbox
-            checked={selected}
-            onCheckedChange={() => onToggleSelect?.(sub.id)}
-            aria-label={sub.name}
-          />
-        </span>
-      )}
-
       {/* Left 3px status bar (::before equivalent) */}
       <span
         className={cn(
@@ -202,21 +192,31 @@ export function SubCard({
         aria-hidden
       />
 
-      {/* ── Row 1: Name + badge group ── */}
+      {/* ── Row 1: Name + (badges | selection checkbox) ── */}
       <div className="flex items-start justify-between gap-2.5">
         <span className="truncate text-[15px] font-semibold text-[var(--color-text-primary)]">
           {sub.name}
         </span>
-        <div className="flex shrink-0 items-center gap-1">
-          <Badge variant={sourceVariant(sub.type)}>
-            {t(`subscription:source_type.${sub.type}`)}
-          </Badge>
-          <Badge variant={statusVariant(sub.last_sync_status)}>
-            {t(
-              `subscription:status.${sub.last_sync_status ?? "never"}`,
-            )}
-          </Badge>
-        </div>
+        {selectionMode ? (
+          // Right-aligned checkbox replaces the badges in selection mode.
+          // Visual only: the whole card toggles selection, so it stays
+          // non-interactive to avoid a double-toggle on click.
+          <Checkbox
+            checked={selected}
+            tabIndex={-1}
+            aria-hidden
+            className="pointer-events-none mt-0.5 shrink-0"
+          />
+        ) : (
+          <div className="flex shrink-0 items-center gap-1">
+            <Badge variant={sourceVariant(sub.type)}>
+              {t(`subscription:source_type.${sub.type}`)}
+            </Badge>
+            <Badge variant={statusVariant(sub.last_sync_status)}>
+              {t(`subscription:status.${sub.last_sync_status ?? "never"}`)}
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* ── Row 2: Metrics ── */}
@@ -290,9 +290,12 @@ export function SubCard({
           )}
         </span>
 
-        {/* Action buttons */}
+        {/* Action buttons — hidden in selection mode (the whole card toggles). */}
         <div
-          className="flex items-center gap-1"
+          className={cn(
+            "flex items-center gap-1",
+            selectionMode && "hidden",
+          )}
           data-action
           onClick={(e) => e.stopPropagation()}
         >
