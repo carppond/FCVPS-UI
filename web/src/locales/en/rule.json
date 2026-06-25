@@ -85,5 +85,11 @@
     "delete_failed": "Failed to delete rule",
     "reorder_failed": "Failed to update order",
     "preview_failed": "Failed to render preview"
+  },
+  "issues": {
+    "title": "{{count}} issue(s) in the rule content — fix before saving",
+    "line": "Line {{line}}",
+    "suggest": "Suggested",
+    "available_groups": "Available groups"
   }
 }

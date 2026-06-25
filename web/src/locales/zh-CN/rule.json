@@ -85,5 +85,11 @@
     "delete_failed": "删除规则失败",
     "reorder_failed": "更新顺序失败",
     "preview_failed": "生成预览失败"
+  },
+  "issues": {
+    "title": "规则内容有 {{count}} 处问题,请修正后保存",
+    "line": "第 {{line}} 行",
+    "suggest": "建议",
+    "available_groups": "可用策略组"
   }
 }

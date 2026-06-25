@@ -352,6 +352,13 @@ export interface UpdateSubscriptionRequest {
   allow_insecure?: boolean;
 }
 
+export interface RuleLineIssue {
+  line: number;
+  text: string;
+  reason: string;
+  suggestion?: string;
+}
+
 export interface SubscriptionBatchSyncRequest {
   ids: string[];
 }

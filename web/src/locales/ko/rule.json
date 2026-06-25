@@ -85,5 +85,11 @@
     "delete_failed": "규칙 삭제 실패",
     "reorder_failed": "순서 업데이트 실패",
     "preview_failed": "미리보기 생성 실패"
+  },
+  "issues": {
+    "title": "규칙 내용에 {{count}}개의 문제가 있습니다. 수정 후 저장하세요",
+    "line": "{{line}}번째 줄",
+    "suggest": "제안",
+    "available_groups": "사용 가능한 그룹"
   }
 }

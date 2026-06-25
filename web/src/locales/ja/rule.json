@@ -85,5 +85,11 @@
     "delete_failed": "ルールの削除に失敗しました",
     "reorder_failed": "順序の更新に失敗しました",
     "preview_failed": "プレビュー生成に失敗しました"
+  },
+  "issues": {
+    "title": "ルール内容に {{count}} 件の問題があります。修正してください",
+    "line": "{{line}} 行目",
+    "suggest": "修正案",
+    "available_groups": "利用可能なグループ"
   }
 }

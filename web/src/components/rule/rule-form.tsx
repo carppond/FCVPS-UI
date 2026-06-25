@@ -16,9 +16,12 @@ import {
   useUpdateRuleMutation,
 } from "@/api/rule";
 import { RuleTemplatesDialog } from "@/components/rule/rule-templates";
+import { RuleIssues } from "@/components/rule/rule-issues";
+import { ApiError } from "@/lib/api-client";
 import type {
   CreateRuleRequest,
   CustomRule,
+  RuleLineIssue,
   RuleMode,
   RuleType,
   UpdateRuleRequest,
@@ -95,6 +98,7 @@ export function RuleForm({
   const { handle: handleError } = useApiError();
   const createMutation = useCreateRuleMutation();
   const updateMutation = useUpdateRuleMutation();
+  const [issues, setIssues] = React.useState<RuleLineIssue[]>([]);
 
   const [templateOpen, setTemplateOpen] = React.useState(false);
 
@@ -123,6 +127,7 @@ export function RuleForm({
   const currentType = form.watch("type");
 
   const onSubmit = form.handleSubmit(async (values) => {
+    setIssues([]);
     try {
       if (rule) {
         const payload: UpdateRuleRequest = {
@@ -150,6 +155,9 @@ export function RuleForm({
         onSaved?.(created);
       }
     } catch (err) {
+      if (err instanceof ApiError && Array.isArray(err.details)) {
+        setIssues(err.details as RuleLineIssue[]);
+      }
       handleError(err);
     }
   });
@@ -286,6 +294,8 @@ export function RuleForm({
           />
         </section>
       </div>
+
+      {issues.length > 0 && <RuleIssues issues={issues} />}
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer className="flex items-center justify-between gap-4 border-t border-[var(--color-border)] pt-4">
