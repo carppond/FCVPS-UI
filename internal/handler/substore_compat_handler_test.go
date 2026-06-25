@@ -263,3 +263,22 @@ func TestSubstoreCompatEmitsFullClashDocument(t *testing.T) {
 	}
 }
 
+
+func TestContentDisposition_NamesProfile(t *testing.T) {
+	// ASCII name appears in both the fallback and the RFC5987 form.
+	got := contentDisposition("myname")
+	if !strings.Contains(got, `filename="myname"`) ||
+		!strings.Contains(got, "filename*=UTF-8''myname") {
+		t.Fatalf("ascii name: %q", got)
+	}
+	// CJK name: ASCII fallback strips to the lone hyphen, filename* is encoded.
+	got = contentDisposition("潇-专用")
+	if !strings.HasPrefix(got, "attachment;") ||
+		!strings.Contains(got, "filename*=UTF-8''%E6%BD%87") {
+		t.Fatalf("cjk name not encoded: %q", got)
+	}
+	// Pure-CJK with no ASCII falls back to a sane default.
+	if got := asciiFilenameFallback("专用"); got != "subscription" {
+		t.Fatalf("empty ascii fallback = %q, want subscription", got)
+	}
+}

@@ -2,8 +2,10 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -61,9 +63,37 @@ func (h *SubstoreCompatHandler) Download(w http.ResponseWriter, r *http.Request)
 	}
 	w.Header().Set("Content-Type", ct)
 	w.Header().Set("X-Total-Nodes", strconv.Itoa(result.TotalNodes))
+	// Name the profile after the subscription so clients (Clash Verge etc.)
+	// don't fall back to the URL's last path segment — which, when imported via
+	// a short link like /s/11, would otherwise show the profile as "11".
+	w.Header().Set("Content-Disposition", contentDisposition(name))
 	// Disable downstream caches so subsequent token rotations take effect.
 	w.Header().Set("Cache-Control", "no-store")
 	_, _ = w.Write(result.Body)
+}
+
+// contentDisposition builds an attachment header whose filename is the
+// subscription name. It pairs an ASCII-only fallback with an RFC 5987
+// filename* so non-ASCII (CJK) names survive in clients that read it.
+func contentDisposition(name string) string {
+	ascii := asciiFilenameFallback(name)
+	return fmt.Sprintf("attachment; filename=%q; filename*=UTF-8''%s",
+		ascii, url.PathEscape(name))
+}
+
+// asciiFilenameFallback strips name down to safe printable ASCII (no quotes /
+// control chars), defaulting to "subscription" when nothing is left.
+func asciiFilenameFallback(name string) string {
+	var b strings.Builder
+	for _, r := range name {
+		if r >= 0x20 && r < 0x7f && r != '"' && r != '\\' {
+			b.WriteRune(r)
+		}
+	}
+	if s := strings.TrimSpace(b.String()); s != "" {
+		return s
+	}
+	return "subscription"
 }
 
 // notFound writes a minimal 404 response with no leak surface.
