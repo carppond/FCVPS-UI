@@ -8,6 +8,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,10 @@ export interface SubCardProps {
   onSync: (sub: Subscription) => void;
   onShare: (sub: Subscription) => void;
   onDelete: (sub: Subscription) => void;
+  /** When true the card acts as a selection toggle instead of a link. */
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +143,9 @@ export function SubCard({
   onSync,
   onShare,
   onDelete,
+  selectionMode = false,
+  selected = false,
+  onToggleSelect,
 }: SubCardProps) {
   const { t } = useTranslation(["subscription", "common"]);
 
@@ -158,14 +166,33 @@ export function SubCard({
         // Hover
         "transition-all duration-150",
         "hover:border-[var(--color-border-strong)] hover:-translate-y-0.5 hover:shadow-lg",
+        // Selection highlight
+        selected && "border-[var(--color-primary)] ring-1 ring-[var(--color-primary)]",
       )}
       onClick={(e) => {
+        // In selection mode the whole card toggles selection instead of navigating.
+        if (selectionMode) {
+          e.preventDefault();
+          onToggleSelect?.(sub.id);
+          return;
+        }
         // Prevent navigation when clicking action buttons
         if ((e.target as HTMLElement).closest("[data-action]")) {
           e.preventDefault();
         }
       }}
     >
+      {/* Selection checkbox overlay */}
+      {selectionMode && (
+        <span className="absolute right-3 top-3 z-10" data-action>
+          <Checkbox
+            checked={selected}
+            onCheckedChange={() => onToggleSelect?.(sub.id)}
+            aria-label={sub.name}
+          />
+        </span>
+      )}
+
       {/* Left 3px status bar (::before equivalent) */}
       <span
         className={cn(

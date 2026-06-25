@@ -352,6 +352,38 @@ export interface UpdateSubscriptionRequest {
   allow_insecure?: boolean;
 }
 
+export interface SubscriptionBatchSyncRequest {
+  ids: string[];
+}
+
+export interface SubscriptionBatchDeleteRequest {
+  ids: string[];
+}
+
+export interface SubscriptionBatchTagsRequest {
+  ids: string[];
+  add?: string[];
+  remove?: string[];
+}
+
+export interface SubscriptionBatchUpdateRequest {
+  ids: string[];
+  sync_interval?: number;
+  allow_insecure?: boolean;
+}
+
+export interface SubscriptionBatchItemResult {
+  id: string;
+  ok: boolean;
+  error?: string;
+}
+
+export interface SubscriptionBatchResult {
+  results: SubscriptionBatchItemResult[];
+  succeeded_count: number;
+  failed_count: number;
+}
+
 export interface SyncResult {
   subscription_id: string;
   node_count: number;

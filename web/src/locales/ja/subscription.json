@@ -247,5 +247,42 @@
     "started": "{{count}} 件のサブスクリプションを同期中…",
     "done": "{{count}} 件すべて同期しました",
     "partial": "同期完了:成功 {{ok}} / 全 {{total}}"
+  },
+  "batch": {
+    "enter": "一括管理",
+    "exit": "一括終了",
+    "selected": "{{count}} 件選択",
+    "actions": {
+      "sync": "同期",
+      "tags": "タグ",
+      "config": "設定",
+      "delete": "削除",
+      "cancel": "キャンセル"
+    },
+    "done": "{{ok}} 件成功",
+    "partial": "成功 {{ok}} 件、失敗 {{fail}} 件",
+    "delete_confirm": {
+      "title": "サブスクリプションを一括削除",
+      "description": "選択した {{count}} 件のサブスクリプション(およびノード)を削除します。元に戻せません。",
+      "submit": "削除"
+    },
+    "tags": {
+      "title": "タグを一括設定",
+      "add_label": "タグを追加",
+      "remove_label": "タグを削除",
+      "submit": "適用",
+      "empty": "追加または削除するタグを入力してください"
+    },
+    "config": {
+      "title": "設定を一括変更",
+      "interval_enable": "同期間隔を変更",
+      "interval_unit": "秒",
+      "insecure_label": "TLS 検証をスキップ",
+      "insecure_keep": "変更しない",
+      "insecure_on": "オン",
+      "insecure_off": "オフ",
+      "submit": "適用",
+      "empty": "変更する項目がありません"
+    }
   }
 }

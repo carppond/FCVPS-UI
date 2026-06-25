@@ -247,5 +247,42 @@
     "started": "开始同步 {{count}} 条订阅…",
     "done": "{{count}} 条订阅已全部同步完成",
     "partial": "同步完成:成功 {{ok}} / 共 {{total}}"
+  },
+  "batch": {
+    "enter": "批量管理",
+    "exit": "退出批量",
+    "selected": "已选 {{count}} 条",
+    "actions": {
+      "sync": "同步",
+      "tags": "打标签",
+      "config": "改配置",
+      "delete": "删除",
+      "cancel": "取消"
+    },
+    "done": "成功 {{ok}} 条",
+    "partial": "成功 {{ok}} 条,失败 {{fail}} 条",
+    "delete_confirm": {
+      "title": "批量删除订阅",
+      "description": "将删除选中的 {{count}} 条订阅(含其节点),操作不可恢复。",
+      "submit": "删除"
+    },
+    "tags": {
+      "title": "批量打标签",
+      "add_label": "添加标签",
+      "remove_label": "移除标签",
+      "submit": "应用",
+      "empty": "请至少填写一个要添加或移除的标签"
+    },
+    "config": {
+      "title": "批量改配置",
+      "interval_enable": "修改同步间隔",
+      "interval_unit": "秒",
+      "insecure_label": "跳过 TLS 证书校验",
+      "insecure_keep": "不修改",
+      "insecure_on": "开启",
+      "insecure_off": "关闭",
+      "submit": "应用",
+      "empty": "没有要修改的项"
+    }
   }
 }

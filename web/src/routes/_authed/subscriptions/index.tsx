@@ -8,6 +8,7 @@ import {
   Globe,
   BarChart3,
   RefreshCw,
+  ListChecks,
 } from "lucide-react";
 import {
   Dialog,
@@ -26,6 +27,7 @@ import { toast } from "@/components/ui/toast";
 import { useApiError } from "@/hooks/use-api-error";
 import { useDebounce } from "@/hooks/use-debounce";
 import { SubCard } from "@/components/subscription/sub-card";
+import { BatchActionBar } from "@/components/subscription/batch-action-bar";
 import { SubCreateWizard } from "@/components/subscription/sub-create-wizard";
 import { SubEditForm } from "@/components/subscription/sub-edit-form";
 import { useAuthStore } from "@/stores/auth-store";
@@ -96,6 +98,22 @@ function SubscriptionsPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<Subscription | null>(
     null,
   );
+
+  // Batch selection (current-page scope, own subscriptions only)
+  const [selectionMode, setSelectionMode] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const exitSelection = React.useCallback(() => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  }, []);
+  const toggleSelect = React.useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   // Mutations
   const syncMutation = useSyncSubscriptionMutation();
@@ -245,6 +263,16 @@ function SubscriptionsPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button
+            variant={selectionMode ? "default" : "outline"}
+            onClick={() =>
+              selectionMode ? exitSelection() : setSelectionMode(true)
+            }
+            disabled={allItems.length === 0}
+          >
+            <ListChecks className="mr-2 h-4 w-4" />
+            {t(selectionMode ? "subscription:batch.exit" : "subscription:batch.enter")}
+          </Button>
+          <Button
             variant="outline"
             onClick={onSyncAll}
             disabled={syncingAll || allItems.length === 0}
@@ -387,9 +415,19 @@ function SubscriptionsPage() {
               onSync={onSync}
               onShare={onShare}
               onDelete={(s) => setDeleteTarget(s)}
+              selectionMode={selectionMode}
+              selected={selectedIds.has(sub.id)}
+              onToggleSelect={toggleSelect}
             />
           ))}
         </div>
+      )}
+
+      {selectionMode && (
+        <BatchActionBar
+          selectedIds={[...selectedIds]}
+          onClear={exitSelection}
+        />
       )}
 
       {/* ── Dialogs ── */}

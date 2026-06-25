@@ -247,5 +247,42 @@
     "started": "Syncing {{count}} subscriptions…",
     "done": "All {{count}} subscriptions synced",
     "partial": "Sync finished: {{ok}} of {{total}} succeeded"
+  },
+  "batch": {
+    "enter": "Batch manage",
+    "exit": "Exit batch",
+    "selected": "{{count}} selected",
+    "actions": {
+      "sync": "Sync",
+      "tags": "Tags",
+      "config": "Config",
+      "delete": "Delete",
+      "cancel": "Cancel"
+    },
+    "done": "{{ok}} succeeded",
+    "partial": "{{ok}} succeeded, {{fail}} failed",
+    "delete_confirm": {
+      "title": "Delete subscriptions",
+      "description": "This deletes the {{count}} selected subscriptions (and their nodes). This cannot be undone.",
+      "submit": "Delete"
+    },
+    "tags": {
+      "title": "Batch tags",
+      "add_label": "Add tags",
+      "remove_label": "Remove tags",
+      "submit": "Apply",
+      "empty": "Enter at least one tag to add or remove"
+    },
+    "config": {
+      "title": "Batch config",
+      "interval_enable": "Change sync interval",
+      "interval_unit": "sec",
+      "insecure_label": "Skip TLS verification",
+      "insecure_keep": "Keep",
+      "insecure_on": "On",
+      "insecure_off": "Off",
+      "submit": "Apply",
+      "empty": "Nothing to change"
+    }
   }
 }

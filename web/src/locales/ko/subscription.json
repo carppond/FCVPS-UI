@@ -247,5 +247,42 @@
     "started": "{{count}}개 구독 동기화 중…",
     "done": "{{count}}개 구독 모두 동기화됨",
     "partial": "동기화 완료: {{total}}개 중 {{ok}}개 성공"
+  },
+  "batch": {
+    "enter": "일괄 관리",
+    "exit": "일괄 종료",
+    "selected": "{{count}}개 선택됨",
+    "actions": {
+      "sync": "동기화",
+      "tags": "태그",
+      "config": "설정",
+      "delete": "삭제",
+      "cancel": "취소"
+    },
+    "done": "{{ok}}개 성공",
+    "partial": "성공 {{ok}}개, 실패 {{fail}}개",
+    "delete_confirm": {
+      "title": "구독 일괄 삭제",
+      "description": "선택한 {{count}}개 구독(및 노드)을 삭제합니다. 되돌릴 수 없습니다.",
+      "submit": "삭제"
+    },
+    "tags": {
+      "title": "태그 일괄 설정",
+      "add_label": "태그 추가",
+      "remove_label": "태그 제거",
+      "submit": "적용",
+      "empty": "추가하거나 제거할 태그를 하나 이상 입력하세요"
+    },
+    "config": {
+      "title": "설정 일괄 변경",
+      "interval_enable": "동기화 간격 변경",
+      "interval_unit": "초",
+      "insecure_label": "TLS 검증 건너뛰기",
+      "insecure_keep": "변경 안 함",
+      "insecure_on": "켜기",
+      "insecure_off": "끄기",
+      "submit": "적용",
+      "empty": "변경할 항목이 없습니다"
+    }
   }
 }
