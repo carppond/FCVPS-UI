@@ -450,6 +450,15 @@ type UpdateSubscriptionRequest struct {
 	AllowInsecure *bool `json:"allow_insecure,omitempty"`
 }
 
+// RuleLineIssue 规则内容里某一行的校验问题(用于「规则」保存时返回的报错明细)。
+// 渲染层(订阅生成)也用同一套校验跳过这些坏行,保证订阅始终能加载。
+type RuleLineIssue struct {
+	Line       int    `json:"line"`
+	Text       string `json:"text"`
+	Reason     string `json:"reason"`
+	Suggestion string `json:"suggestion,omitempty"`
+}
+
 // SubscriptionBatchSyncRequest 批量同步请求(POST /api/subscriptions/batch-sync)。
 type SubscriptionBatchSyncRequest struct {
 	IDs []string `json:"ids"`

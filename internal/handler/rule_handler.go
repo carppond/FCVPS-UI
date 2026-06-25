@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -291,6 +292,12 @@ func (h *RuleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		util.RespondError(w, types.ErrValidationYAMLParse, err.Error(), nil, traceID)
 		return
 	}
+	if req.Type == types.RuleTypeRules {
+		if issues := substore.ValidateRuleContent(req.Content); len(issues) > 0 {
+			respondRuleLineIssues(w, traceID, issues)
+			return
+		}
+	}
 	rec := storage.CustomRuleRecord{
 		ID:      util.UUIDv7(),
 		UserID:  user.ID,
@@ -353,6 +360,12 @@ func (h *RuleHandler) Update(w http.ResponseWriter, r *http.Request) {
 		if err := validateRuleContent(types.RuleType(existing.Type), req.Content); err != nil {
 			util.RespondError(w, types.ErrValidationYAMLParse, err.Error(), nil, traceID)
 			return
+		}
+		if types.RuleType(existing.Type) == types.RuleTypeRules {
+			if issues := substore.ValidateRuleContent(req.Content); len(issues) > 0 {
+				respondRuleLineIssues(w, traceID, issues)
+				return
+			}
 		}
 	}
 	rec := storage.CustomRuleRecord{
@@ -570,6 +583,13 @@ func isValidRuleMode(m types.RuleMode) bool {
 // user gets fast feedback instead of seeing the error only when rendering a
 // preview. dns / rule-providers must be YAML mappings; rules can be free-form
 // text (one rule per line).
+// respondRuleLineIssues returns a 400 whose details carry every structurally
+// broken rule line, so the editor can show each one with its fix hint.
+func respondRuleLineIssues(w http.ResponseWriter, traceID string, issues []types.RuleLineIssue) {
+	msg := fmt.Sprintf("规则内容有 %d 处问题,请修正后保存", len(issues))
+	util.RespondError(w, types.ErrValidationSchemaMismatch, msg, issues, traceID)
+}
+
 func validateRuleContent(t types.RuleType, content string) error {
 	switch t {
 	case types.RuleTypeDNS, types.RuleTypeRuleProviders:

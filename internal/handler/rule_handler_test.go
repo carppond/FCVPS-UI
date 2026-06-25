@@ -372,3 +372,31 @@ func getDBFromStack(t *testing.T, s *ruleTestStack) *storage.DB {
 	t.Helper()
 	return s.dbRef
 }
+
+func TestRuleHandler_RejectsMalformedRuleLines(t *testing.T) {
+	s := newRuleTestStack(t)
+	_, tok := s.createUser("carol")
+
+	// A rules body with a line missing its policy (the 3rd field).
+	bad := map[string]any{
+		"name": "x", "type": "rules", "mode": "replace",
+		"content": "DOMAIN-SUFFIX,anthropic.com\nMATCH,🚀 节点选择\n", "enabled": true,
+	}
+	rec := s.do(http.MethodPost, "/api/rules", bad, tok)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for malformed rule line, got %d body=%s", rec.Code, rec.Body.String())
+	}
+	// The response should carry the fix hint so the editor can show it.
+	if !strings.Contains(rec.Body.String(), "DOMAIN-SUFFIX,anthropic.com,<") {
+		t.Fatalf("expected suggestion in body, got %s", rec.Body.String())
+	}
+
+	// A fully valid body still saves.
+	ok := map[string]any{
+		"name": "y", "type": "rules", "mode": "replace",
+		"content": "DOMAIN-SUFFIX,anthropic.com,🤖 AI 服务\nMATCH,🚀 节点选择\n", "enabled": true,
+	}
+	if rec := s.do(http.MethodPost, "/api/rules", ok, tok); rec.Code != http.StatusCreated {
+		t.Fatalf("valid rules should save, got %d body=%s", rec.Code, rec.Body.String())
+	}
+}

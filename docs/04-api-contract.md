@@ -243,6 +243,11 @@
 | 55 | GET | `/api/rules/preview/:subID` | 预览注入后的完整 Clash YAML | `[user]` |
 | 56 | GET | `/api/rules/templates` | 预设模板列表 | `[user]` |
 
+**规则内容校验(51 POST / 52 PATCH,`type=rules`):**
+- 保存时逐行校验 `content`:跳过空行/`#` 注释,检查每条规则字段是否完整。
+- 已知类型缺策略组(如 `DOMAIN-SUFFIX,anthropic.com`)或疑似类型拼写错误(如 `DOMAINSUFFIX`)→ 返回 `400`,`details` 为 `RuleLineIssue[]`(`{line,text,reason,suggestion}`),编辑器据此逐行提示并给出修正示例。
+- 渲染层(订阅生成)复用同一校验:结构损坏的行被**跳过**,保证订阅始终能被 mihomo 加载,单行手误不会拖垮整份订阅。
+
 ---
 
 ### M-SCRIPT：脚本扩展

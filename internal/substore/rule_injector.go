@@ -249,42 +249,21 @@ func decodeFragmentMapping(s string) (*yaml.Node, error) {
 	return util.CloneNode(mapping), nil
 }
 
-// parseRuleLines splits content into non-empty trimmed lines, stripping
-// leading "- " sequence markers so the user can paste both pure rule lines or
-// a YAML-style list.
+// parseRuleLines splits content into clean rule lines: it drops blank and
+// comment lines, strips "- " list markers / inline comments / surrounding
+// quotes (via cleanRuleLine), and — as the render-time guard (A1) — drops
+// structurally-broken lines so one bad rule never makes mihomo reject the whole
+// subscription. The editor (ValidateRuleContent) surfaces those same lines with
+// a fix hint on save, so a dropped line here is only a last-resort safety net.
 func parseRuleLines(content string) []string {
 	raw := strings.Split(content, "\n")
 	out := make([]string, 0, len(raw))
 	for _, l := range raw {
-		t := strings.TrimSpace(l)
-		if t == "" {
+		t, ok := cleanRuleLine(l)
+		if !ok || !renderableRuleLine(t) {
 			continue
 		}
-		if strings.HasPrefix(t, "- ") {
-			t = strings.TrimSpace(t[2:])
-		} else if t == "-" {
-			continue
-		}
-		// Skip comment lines — a "# 说明" note pasted into the rule body would
-		// otherwise be emitted as a rules[] entry, and mihomo rejects it with
-		// "format invalid" (the whole subscription then fails to load).
-		if t == "" || strings.HasPrefix(t, "#") {
-			continue
-		}
-		// Strip a trailing inline comment (" #...") for the same reason; clash
-		// rule lines never legitimately contain a space-hash sequence.
-		if i := strings.Index(t, " #"); i >= 0 {
-			t = strings.TrimSpace(t[:i])
-		}
-		// strip surrounding quotes if present (single-line YAML strings)
-		if len(t) >= 2 {
-			if (t[0] == '"' && t[len(t)-1] == '"') || (t[0] == '\'' && t[len(t)-1] == '\'') {
-				t = t[1 : len(t)-1]
-			}
-		}
-		if t != "" {
-			out = append(out, t)
-		}
+		out = append(out, t)
 	}
 	return out
 }
