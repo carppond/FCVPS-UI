@@ -204,10 +204,10 @@ func TestSubstoreCompatEmitsFullClashDocument(t *testing.T) {
 		t.Fatalf("expected 200, got %d body=%s", rec.Code, rec.Body.String())
 	}
 	var doc struct {
-		Proxies       []map[string]any            `yaml:"proxies"`
-		ProxyGroups   []map[string]any            `yaml:"proxy-groups"`
-		RuleProviders map[string]map[string]any   `yaml:"rule-providers"`
-		Rules         []string                    `yaml:"rules"`
+		Proxies       []map[string]any          `yaml:"proxies"`
+		ProxyGroups   []map[string]any          `yaml:"proxy-groups"`
+		RuleProviders map[string]map[string]any `yaml:"rule-providers"`
+		Rules         []string                  `yaml:"rules"`
 	}
 	if err := yaml.Unmarshal(rec.Body.Bytes(), &doc); err != nil {
 		t.Fatalf("decode rendered YAML: %v\n%s", err, rec.Body.String())
@@ -262,7 +262,6 @@ func TestSubstoreCompatEmitsFullClashDocument(t *testing.T) {
 		t.Errorf("expected text/yaml content-type, got %q", rec.Header().Get("Content-Type"))
 	}
 }
-
 
 func TestContentDisposition_NamesProfile(t *testing.T) {
 	// ASCII name appears in both the fallback and the RFC5987 form.
