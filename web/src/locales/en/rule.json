@@ -91,5 +91,24 @@
     "line": "Line {{line}}",
     "suggest": "Suggested",
     "available_groups": "Available groups"
+  },
+  "batch": {
+    "enter": "Batch manage",
+    "exit": "Exit batch",
+    "selected": "{{count}} selected",
+    "enable": "Enable",
+    "disable": "Disable",
+    "delete": "Delete",
+    "add_presets": "Add presets",
+    "cancel": "Cancel",
+    "select_all": "Select all",
+    "delete_confirm": "Delete the {{count}} selected rules? This cannot be undone.",
+    "done": "{{count}} succeeded",
+    "partial": "{{ok}} succeeded, {{fail}} failed",
+    "added": "Added {{count}} preset rule(s)",
+    "added_partial": "Added {{ok}}, failed {{fail}}",
+    "preset_title": "Add preset rules",
+    "preset_desc": "Check the presets to add — each becomes a new rule.",
+    "preset_add": "Add selected ({{count}})"
   }
 }

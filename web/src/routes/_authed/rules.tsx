@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { Eye, LayoutTemplate, Plus, Search } from "lucide-react";
+import { Eye, LayoutTemplate, ListChecks, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { useDebounce } from "@/hooks/use-debounce";
 import { RuleList } from "@/components/rule/rule-list";
+import { RuleBatchBar } from "@/components/rule/rule-batch-bar";
 import { RuleForm } from "@/components/rule/rule-form";
 import { RulePreviewPane } from "@/components/rule/rule-preview-pane";
 import { RuleTemplatesDialog } from "@/components/rule/rule-templates";
@@ -82,6 +83,31 @@ function RulesPage() {
     keyword,
   });
   const rules = data?.items;
+
+  // Batch selection
+  const [selectionMode, setSelectionMode] = React.useState(false);
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const exitSelection = React.useCallback(() => {
+    setSelectedIds(new Set());
+    setSelectionMode(false);
+  }, []);
+  const toggleSelect = React.useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const allSelected =
+    (rules?.length ?? 0) > 0 && selectedIds.size === rules?.length;
+  const toggleAll = React.useCallback(() => {
+    setSelectedIds((prev) =>
+      prev.size === (rules?.length ?? 0)
+        ? new Set()
+        : new Set((rules ?? []).map((r) => r.id)),
+    );
+  }, [rules]);
 
   const dialogOpen = creating || editingRule !== null;
 
@@ -153,6 +179,16 @@ function RulesPage() {
               <Eye className="h-3.5 w-3.5" />
               {t("rule:preview.button")}
             </Button>
+            <Button
+              variant={selectionMode ? "default" : "outline"}
+              size="sm"
+              onClick={() =>
+                selectionMode ? exitSelection() : setSelectionMode(true)
+              }
+            >
+              <ListChecks className="h-3.5 w-3.5" />
+              {t(selectionMode ? "rule:batch.exit" : "rule:batch.enter")}
+            </Button>
             <Button size="sm" onClick={handleNew}>
               <Plus className="h-3.5 w-3.5" />
               {t("rule:list.add_rule")}
@@ -171,8 +207,17 @@ function RulesPage() {
           onRetry={() => void refetch()}
           onEdit={handleEdit}
           onNew={handleNew}
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          onToggleAll={toggleAll}
+          allSelected={allSelected}
         />
       </main>
+
+      {selectionMode && (
+        <RuleBatchBar selectedIds={[...selectedIds]} onExit={exitSelection} />
+      )}
 
       {/* ── Edit / Create dialog ───────────────────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>

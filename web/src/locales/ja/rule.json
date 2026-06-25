@@ -91,5 +91,24 @@
     "line": "{{line}} 行目",
     "suggest": "修正案",
     "available_groups": "利用可能なグループ"
+  },
+  "batch": {
+    "enter": "一括管理",
+    "exit": "一括終了",
+    "selected": "{{count}} 件選択",
+    "enable": "有効化",
+    "disable": "無効化",
+    "delete": "削除",
+    "add_presets": "プリセット追加",
+    "cancel": "キャンセル",
+    "select_all": "全選択",
+    "delete_confirm": "選択した {{count}} 件のルールを削除しますか?元に戻せません。",
+    "done": "{{count}} 件成功",
+    "partial": "成功 {{ok}} 件、失敗 {{fail}} 件",
+    "added": "プリセットルールを {{count}} 件追加しました",
+    "added_partial": "{{ok}} 件追加、{{fail}} 件失敗",
+    "preset_title": "プリセットルールを追加",
+    "preset_desc": "追加するプリセットを選択 — 各々が新しいルールになります。",
+    "preset_add": "選択を追加 ({{count}})"
   }
 }

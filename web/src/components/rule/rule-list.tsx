@@ -18,6 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -49,6 +50,12 @@ interface RuleListProps {
   /** Open the "new rule" dialog (used by the empty state CTA). */
   onNew: () => void;
   className?: string;
+  /** Selection mode: rows show a checkbox instead of the drag handle. */
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleAll?: () => void;
+  allSelected?: boolean;
 }
 
 /**
@@ -68,6 +75,11 @@ export function RuleList({
   onEdit,
   onNew,
   className,
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
+  onToggleAll,
+  allSelected = false,
 }: RuleListProps) {
   const { t } = useTranslation(["rule", "common"]);
 
@@ -103,6 +115,11 @@ export function RuleList({
       rules={rules}
       onEdit={onEdit}
       className={className}
+      selectionMode={selectionMode}
+      selectedIds={selectedIds}
+      onToggleSelect={onToggleSelect}
+      onToggleAll={onToggleAll}
+      allSelected={allSelected}
     />
   );
 }
@@ -111,9 +128,23 @@ interface DraggableRuleTableProps {
   rules: CustomRule[];
   onEdit: (rule: CustomRule) => void;
   className?: string;
+  selectionMode: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleAll?: () => void;
+  allSelected: boolean;
 }
 
-function DraggableRuleTable({ rules, onEdit, className }: DraggableRuleTableProps) {
+function DraggableRuleTable({
+  rules,
+  onEdit,
+  className,
+  selectionMode,
+  selectedIds,
+  onToggleSelect,
+  allSelected,
+  onToggleAll,
+}: DraggableRuleTableProps) {
   const { t } = useTranslation(["rule", "common"]);
   const { handle: handleError } = useApiError();
   const reorderMutation = useReorderRulesMutation();
@@ -154,7 +185,15 @@ function DraggableRuleTable({ rules, onEdit, className }: DraggableRuleTableProp
       <table className="w-full text-[var(--font-size-sm)]" data-testid="rule-list">
         <thead className="border-b border-[var(--color-border)] text-[var(--color-text-tertiary)]">
           <tr>
-            <Th className="w-10" />
+            <Th className="w-10">
+              {selectionMode && (
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={() => onToggleAll?.()}
+                  aria-label={t("rule:batch.select_all")}
+                />
+              )}
+            </Th>
             <Th className="w-24">{t("rule:form.type_label")}</Th>
             <Th className="w-24">{t("rule:form.mode_label")}</Th>
             <Th>{t("rule:form.name_label")}</Th>
@@ -179,6 +218,9 @@ function DraggableRuleTable({ rules, onEdit, className }: DraggableRuleTableProp
                   key={rule.id}
                   rule={rule}
                   onEdit={onEdit}
+                  selectionMode={selectionMode}
+                  selected={selectedIds?.has(rule.id) ?? false}
+                  onToggleSelect={onToggleSelect}
                 />
               ))}
             </tbody>
@@ -192,9 +234,18 @@ function DraggableRuleTable({ rules, onEdit, className }: DraggableRuleTableProp
 interface SortableRuleRowProps {
   rule: CustomRule;
   onEdit: (rule: CustomRule) => void;
+  selectionMode: boolean;
+  selected: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
-function SortableRuleRow({ rule, onEdit }: SortableRuleRowProps) {
+function SortableRuleRow({
+  rule,
+  onEdit,
+  selectionMode,
+  selected,
+  onToggleSelect,
+}: SortableRuleRowProps) {
   const { t } = useTranslation(["rule", "common"]);
   const { handle: handleError } = useApiError();
   const updateMutation = useUpdateRuleMutation();
@@ -243,14 +294,22 @@ function SortableRuleRow({ rule, onEdit }: SortableRuleRowProps) {
       )}
     >
       <Td className="w-10">
-        <span
-          {...attributes}
-          {...listeners}
-          className="inline-flex cursor-grab text-[var(--color-text-tertiary)] active:cursor-grabbing"
-          aria-label={t("rule:list.drag_hint")}
-        >
-          <GripVertical className="h-4 w-4" />
-        </span>
+        {selectionMode ? (
+          <Checkbox
+            checked={selected}
+            onCheckedChange={() => onToggleSelect?.(rule.id)}
+            aria-label={rule.name}
+          />
+        ) : (
+          <span
+            {...attributes}
+            {...listeners}
+            className="inline-flex cursor-grab text-[var(--color-text-tertiary)] active:cursor-grabbing"
+            aria-label={t("rule:list.drag_hint")}
+          >
+            <GripVertical className="h-4 w-4" />
+          </span>
+        )}
       </Td>
       <Td>
         <Badge variant="outline">{typeLabel(t, rule.type)}</Badge>

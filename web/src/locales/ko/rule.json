@@ -91,5 +91,24 @@
     "line": "{{line}}번째 줄",
     "suggest": "제안",
     "available_groups": "사용 가능한 그룹"
+  },
+  "batch": {
+    "enter": "일괄 관리",
+    "exit": "일괄 종료",
+    "selected": "{{count}}개 선택됨",
+    "enable": "활성화",
+    "disable": "비활성화",
+    "delete": "삭제",
+    "add_presets": "프리셋 추가",
+    "cancel": "취소",
+    "select_all": "전체 선택",
+    "delete_confirm": "선택한 {{count}}개 규칙을 삭제할까요? 되돌릴 수 없습니다.",
+    "done": "{{count}}개 성공",
+    "partial": "성공 {{ok}}개, 실패 {{fail}}개",
+    "added": "프리셋 규칙 {{count}}개 추가됨",
+    "added_partial": "{{ok}}개 추가, {{fail}}개 실패",
+    "preset_title": "프리셋 규칙 추가",
+    "preset_desc": "추가할 프리셋을 선택하세요 — 각각 새 규칙이 됩니다.",
+    "preset_add": "선택 추가 ({{count}})"
   }
 }

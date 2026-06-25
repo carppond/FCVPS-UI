@@ -91,5 +91,24 @@
     "line": "第 {{line}} 行",
     "suggest": "建议",
     "available_groups": "可用策略组"
+  },
+  "batch": {
+    "enter": "批量管理",
+    "exit": "退出批量",
+    "selected": "已选 {{count}} 条",
+    "enable": "启用",
+    "disable": "停用",
+    "delete": "删除",
+    "add_presets": "加预设",
+    "cancel": "取消",
+    "select_all": "全选",
+    "delete_confirm": "删除选中的 {{count}} 条规则?此操作不可恢复。",
+    "done": "成功 {{count}} 条",
+    "partial": "成功 {{ok}} 条,失败 {{fail}} 条",
+    "added": "已添加 {{count}} 条预设规则",
+    "added_partial": "添加 {{ok}} 条,失败 {{fail}} 条",
+    "preset_title": "批量添加预设规则",
+    "preset_desc": "勾选要添加的预设,一次性创建多条规则。",
+    "preset_add": "添加所选 ({{count}})"
   }
 }
