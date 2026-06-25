@@ -40,3 +40,16 @@ function tryDecode(s: string): string {
     return s; // keep the raw segment when decoding fails
   }
 }
+
+/**
+ * displayShortUrl re-roots a backend-composed short URL onto the browser's
+ * current origin (scheme + host + port). Behind a reverse proxy that forwards
+ * `Host $host`, the server-composed short_url loses its port (e.g. ":8443");
+ * the admin is browsing at the correct origin, so we trust window.location to
+ * keep the port — matching how the subscription share card builds its link.
+ */
+export function displayShortUrl(shortUrl: string): string {
+  if (typeof window === "undefined" || !shortUrl) return shortUrl;
+  const path = shortUrl.replace(/^https?:\/\/[^/]+/i, "");
+  return path.startsWith("/") ? window.location.origin + path : shortUrl;
+}

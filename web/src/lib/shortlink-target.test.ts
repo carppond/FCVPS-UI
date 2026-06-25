@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseShortLinkTarget } from "./shortlink-target";
+import { parseShortLinkTarget, displayShortUrl } from "./shortlink-target";
 
 describe("parseShortLinkTarget", () => {
   it("parses a subscription share URL with token and target", () => {
@@ -35,5 +35,19 @@ describe("parseShortLinkTarget", () => {
     expect(
       parseShortLinkTarget("https://h.example.com/download/bad%zz?token=t"),
     ).toEqual({ subscriptionName: "bad%zz", client: undefined });
+  });
+});
+
+describe("displayShortUrl", () => {
+  it("re-roots a short URL onto the current browser origin (keeps port)", () => {
+    const out = displayShortUrl("https://vpn.example.com/s/11");
+    expect(out).toBe(`${window.location.origin}/s/11`);
+  });
+  it("handles a host that already has a port in the source", () => {
+    const out = displayShortUrl("https://vpn.example.com:9999/s/abcXYZ");
+    expect(out).toBe(`${window.location.origin}/s/abcXYZ`);
+  });
+  it("returns input unchanged when it has no http(s) host prefix", () => {
+    expect(displayShortUrl("/s/keep")).toBe(`${window.location.origin}/s/keep`);
   });
 });

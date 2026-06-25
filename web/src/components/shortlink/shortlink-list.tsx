@@ -9,6 +9,7 @@ import { toast } from "@/components/ui/toast";
 import { useApiError, formatApiError } from "@/hooks/use-api-error";
 import { useDeleteShortLink, useShortLinks } from "@/api/shortlink";
 import { formatDate } from "@/lib/format";
+import { displayShortUrl } from "@/lib/shortlink-target";
 import type { ShortLink } from "@/types/api";
 
 interface ShortLinkListProps {
@@ -133,7 +134,7 @@ export function ShortLinkList({ onCreate }: ShortLinkListProps) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleCopy(link.short_url)}
+                    onClick={() => handleCopy(displayShortUrl(link.short_url))}
                     title={t("shortlink:list.copy_short_url")}
                   >
                     <Copy className="h-4 w-4" />

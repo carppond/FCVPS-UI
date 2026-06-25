@@ -25,7 +25,7 @@ import { toast } from "@/components/ui/toast";
 import { useApiError } from "@/hooks/use-api-error";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
-import { parseShortLinkTarget } from "@/lib/shortlink-target";
+import { displayShortUrl, parseShortLinkTarget } from "@/lib/shortlink-target";
 import {
   useShortLinks,
   useCreateShortLink,
@@ -244,11 +244,11 @@ function LinkCard({
           {/* Short URL */}
           <div className="flex items-center gap-2">
             <code className="truncate font-mono text-[14px] font-semibold text-[var(--color-text-primary)]">
-              {link.short_url}
+              {displayShortUrl(link.short_url)}
             </code>
             <button
               type="button"
-              onClick={() => onCopy(link.short_url)}
+              onClick={() => onCopy(displayShortUrl(link.short_url))}
               className="shrink-0 rounded-md p-1 text-[var(--color-text-disabled)] transition hover:bg-white/[.06] hover:text-[var(--color-text-secondary)]"
               title={t("shortlink:list.copy_short_url")}
             >
