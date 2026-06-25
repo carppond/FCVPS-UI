@@ -216,9 +216,13 @@ func defaultSelectGroup(proxyNames []string) *yaml.Node {
 	m := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
 	_ = util.SetMappingValue(m, "name", "🚀 节点选择")
 	_ = util.SetMappingValue(m, "type", "select")
+	// Node names FIRST: mihomo treats a select group's first member as the
+	// default. Putting DIRECT first made every group default to a direct
+	// connection — so a fresh subscription proxied nothing, and a latency test
+	// effectively probed DIRECT (which times out from a censored network).
 	members := make([]string, 0, len(proxyNames)+2)
-	members = append(members, "DIRECT", "REJECT")
 	members = append(members, proxyNames...)
+	members = append(members, "DIRECT", "REJECT")
 	_ = util.SetMappingValue(m, "proxies", stringsToYAMLSeq(members))
 	return m
 }
@@ -298,9 +302,12 @@ func ensureMissingProxyGroups(root *yaml.Node, proxyNames []string) {
 		m := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
 		_ = util.SetMappingValue(m, "name", name)
 		_ = util.SetMappingValue(m, "type", "select")
+		// Node names first so an auto-created service/region group (美国节点 /
+		// 流媒体 / AI 服务 …) defaults to proxying through a node rather than
+		// DIRECT — otherwise these groups show DIRECT and route nothing.
 		members := make([]string, 0, len(proxyNames)+2)
-		members = append(members, "DIRECT", "REJECT")
 		members = append(members, proxyNames...)
+		members = append(members, "DIRECT", "REJECT")
 		_ = util.SetMappingValue(m, "proxies", stringsToYAMLSeq(members))
 		groupsNode.Content = append(groupsNode.Content, m)
 		existing[name] = true
