@@ -109,6 +109,7 @@
     "added_partial": "添加 {{ok}} 条,失败 {{fail}} 条",
     "preset_title": "批量添加预设规则",
     "preset_desc": "勾选要添加的预设,一次性创建多条规则。",
-    "preset_add": "添加所选 ({{count}})"
+    "preset_add": "添加所选 ({{count}})",
+    "preset_added": "已添加"
   }
 }

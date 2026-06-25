@@ -109,6 +109,7 @@
     "added_partial": "{{ok}} 件追加、{{fail}} 件失敗",
     "preset_title": "プリセットルールを追加",
     "preset_desc": "追加するプリセットを選択 — 各々が新しいルールになります。",
-    "preset_add": "選択を追加 ({{count}})"
+    "preset_add": "選択を追加 ({{count}})",
+    "preset_added": "追加済み"
   }
 }

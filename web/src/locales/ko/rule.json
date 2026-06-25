@@ -109,6 +109,7 @@
     "added_partial": "{{ok}}개 추가, {{fail}}개 실패",
     "preset_title": "프리셋 규칙 추가",
     "preset_desc": "추가할 프리셋을 선택하세요 — 각각 새 규칙이 됩니다.",
-    "preset_add": "선택 추가 ({{count}})"
+    "preset_add": "선택 추가 ({{count}})",
+    "preset_added": "추가됨"
   }
 }

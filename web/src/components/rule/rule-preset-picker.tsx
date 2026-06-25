@@ -11,7 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/toast";
-import { useCreateRuleMutation, useRuleTemplatesQuery } from "@/api/rule";
+import { cn } from "@/lib/cn";
+import {
+  useCreateRuleMutation,
+  useRuleTemplatesQuery,
+  useRulesQuery,
+} from "@/api/rule";
 
 interface RulePresetPickerProps {
   open: boolean;
@@ -32,6 +37,7 @@ export function RulePresetPicker({
 }: RulePresetPickerProps) {
   const { t } = useTranslation(["rule", "common"]);
   const { data: templates } = useRuleTemplatesQuery();
+  const { data: rulesData } = useRulesQuery({ page: 1, pageSize: 200 });
   const createMutation = useCreateRuleMutation();
   const [selected, setSelected] = React.useState<Set<string>>(new Set());
   const [busy, setBusy] = React.useState(false);
@@ -41,6 +47,12 @@ export function RulePresetPicker({
   }, [open]);
 
   const list = templates ?? [];
+  // Presets already added show as "已添加" and can't be re-selected — a rule
+  // created from a template carries the template's name, so match on that.
+  const existingNames = React.useMemo(
+    () => new Set((rulesData?.items ?? []).map((r) => r.name)),
+    [rulesData],
+  );
   const toggle = (id: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
@@ -50,7 +62,9 @@ export function RulePresetPicker({
     });
 
   const add = async () => {
-    const picks = list.filter((tpl) => selected.has(tpl.id));
+    const picks = list.filter(
+      (tpl) => selected.has(tpl.id) && !existingNames.has(tpl.name),
+    );
     if (picks.length === 0) return;
     setBusy(true);
     const results = await Promise.allSettled(
@@ -81,26 +95,42 @@ export function RulePresetPicker({
           <DialogDescription>{t("rule:batch.preset_desc")}</DialogDescription>
         </DialogHeader>
         <ul className="flex max-h-[55vh] flex-col gap-1 overflow-y-auto">
-          {list.map((tpl) => (
-            <li key={tpl.id}>
-              <label className="flex cursor-pointer items-start gap-2.5 rounded-[var(--radius-md)] px-2 py-2 hover:bg-[var(--color-surface-hover)]">
-                <Checkbox
-                  checked={selected.has(tpl.id)}
-                  onCheckedChange={() => toggle(tpl.id)}
-                  className="mt-0.5"
-                />
-                <span className="min-w-0">
-                  <span className="block text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)]">
-                    {tpl.emoji ? `${tpl.emoji} ` : ""}
-                    {tpl.name}
+          {list.map((tpl) => {
+            const added = existingNames.has(tpl.name);
+            return (
+              <li key={tpl.id}>
+                <label
+                  className={cn(
+                    "flex items-start gap-2.5 rounded-[var(--radius-md)] px-2 py-2",
+                    added
+                      ? "cursor-not-allowed opacity-55"
+                      : "cursor-pointer hover:bg-[var(--color-surface-hover)]",
+                  )}
+                >
+                  <Checkbox
+                    checked={added || selected.has(tpl.id)}
+                    disabled={added}
+                    onCheckedChange={() => !added && toggle(tpl.id)}
+                    className="mt-0.5"
+                  />
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-1.5 text-[var(--font-size-sm)] font-medium text-[var(--color-text-primary)]">
+                      {tpl.emoji ? `${tpl.emoji} ` : ""}
+                      {tpl.name}
+                      {added && (
+                        <span className="rounded bg-[var(--color-surface-hover)] px-1.5 py-0.5 text-[10px] font-normal text-[var(--color-text-tertiary)]">
+                          {t("rule:batch.preset_added")}
+                        </span>
+                      )}
+                    </span>
+                    <span className="block text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
+                      {tpl.description}
+                    </span>
                   </span>
-                  <span className="block text-[var(--font-size-xs)] text-[var(--color-text-tertiary)]">
-                    {tpl.description}
-                  </span>
-                </span>
-              </label>
-            </li>
-          ))}
+                </label>
+              </li>
+            );
+          })}
         </ul>
         <DialogFooter>
           <Button

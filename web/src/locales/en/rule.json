@@ -109,6 +109,7 @@
     "added_partial": "Added {{ok}}, failed {{fail}}",
     "preset_title": "Add preset rules",
     "preset_desc": "Check the presets to add — each becomes a new rule.",
-    "preset_add": "Add selected ({{count}})"
+    "preset_add": "Add selected ({{count}})",
+    "preset_added": "Added"
   }
 }
