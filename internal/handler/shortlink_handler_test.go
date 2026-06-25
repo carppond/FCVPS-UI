@@ -143,3 +143,44 @@ func TestShortLinkCreateRequiresAuth(t *testing.T) {
 		t.Fatalf("expected 401, got %d body=%s", rec.Code, rec.Body.String())
 	}
 }
+
+func TestComposeShortURL_PreservesPort(t *testing.T) {
+	h := &ShortLinkHandler{}
+	cases := []struct {
+		name    string
+		host    string
+		headers map[string]string
+		want    string
+	}{
+		{
+			name:    "nginx strips port, X-Forwarded-Port recovers it",
+			host:    "vpn.example.com",
+			headers: map[string]string{"X-Forwarded-Proto": "https", "X-Forwarded-Port": "8443"},
+			want:    "https://vpn.example.com:8443/s/abc",
+		},
+		{
+			name:    "default https port is omitted",
+			host:    "vpn.example.com",
+			headers: map[string]string{"X-Forwarded-Proto": "https", "X-Forwarded-Port": "443"},
+			want:    "https://vpn.example.com/s/abc",
+		},
+		{
+			name:    "host already carries a port (local dev) is untouched",
+			host:    "localhost:5173",
+			headers: map[string]string{"X-Forwarded-Proto": "https", "X-Forwarded-Port": "8443"},
+			want:    "https://localhost:5173/s/abc",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r, _ := http.NewRequest(http.MethodGet, "/api/shortlinks", nil)
+			r.Host = c.host
+			for k, v := range c.headers {
+				r.Header.Set(k, v)
+			}
+			if got := h.composeShortURL(r, "abc"); got != c.want {
+				t.Fatalf("got %q, want %q", got, c.want)
+			}
+		})
+	}
+}

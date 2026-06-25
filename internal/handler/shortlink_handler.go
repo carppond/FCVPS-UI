@@ -221,7 +221,30 @@ func (h *ShortLinkHandler) composeShortURL(r *http.Request, combined string) str
 	if fwd := r.Header.Get("X-Forwarded-Host"); fwd != "" {
 		host = fwd
 	}
+	// Behind a reverse proxy that forwards the Host as nginx's $host (hostname
+	// only), the public port is lost — recover it from X-Forwarded-Port when the
+	// host carries no port and the port is non-default for the scheme. Without
+	// this the short URL drops e.g. ":8443" and won't open.
+	if !hostHasPort(host) {
+		if port := r.Header.Get("X-Forwarded-Port"); port != "" && !isDefaultPort(scheme, port) {
+			host = host + ":" + port
+		}
+	}
 	return scheme + "://" + host + "/s/" + combined
+}
+
+// hostHasPort reports whether a Host value already carries a port, tolerating
+// bracketed IPv6 literals (e.g. "[::1]:8443").
+func hostHasPort(host string) bool {
+	if i := strings.LastIndex(host, "]"); i >= 0 {
+		return strings.Contains(host[i:], ":")
+	}
+	return strings.Contains(host, ":")
+}
+
+// isDefaultPort reports whether port is the scheme's default (and thus omitted).
+func isDefaultPort(scheme, port string) bool {
+	return (scheme == "https" && port == "443") || (scheme == "http" && port == "80")
 }
 
 // isValidURL is a tiny check that the request's target_url starts with

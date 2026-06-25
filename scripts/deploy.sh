@@ -77,6 +77,8 @@ app_locations() {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # Forward the public port so short links keep their :port (e.g. :8443).
+        proxy_set_header X-Forwarded-Port $server_port;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
