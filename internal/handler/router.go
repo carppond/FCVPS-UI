@@ -432,6 +432,14 @@ func mountSubscriptionRoutes(mux *http.ServeMux, deps *Deps) {
 	mux.Handle("POST /api/subscriptions/{id}/rotate-share-token",
 		required(http.HandlerFunc(sh.RotateShareToken)))
 
+	// Batch operations over a caller-supplied id list (own subscriptions only;
+	// each handler scopes its repo calls to the owner). Literal path segments so
+	// they don't collide with the /{id} routes above.
+	mux.Handle("POST /api/subscriptions/batch-sync", required(http.HandlerFunc(sh.BatchSync)))
+	mux.Handle("POST /api/subscriptions/batch-delete", required(http.HandlerFunc(sh.BatchDelete)))
+	mux.Handle("POST /api/subscriptions/batch-tags", required(http.HandlerFunc(sh.BatchTags)))
+	mux.Handle("POST /api/subscriptions/batch-update", required(http.HandlerFunc(sh.BatchUpdate)))
+
 	// Pipeline binding endpoints (architecture §5.1.4 line 1271-1273). The
 	// handler 501s when the pipeline repo is unwired so non-pipeline test
 	// stacks remain unaffected.

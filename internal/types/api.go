@@ -450,6 +450,46 @@ type UpdateSubscriptionRequest struct {
 	AllowInsecure *bool `json:"allow_insecure,omitempty"`
 }
 
+// SubscriptionBatchSyncRequest 批量同步请求(POST /api/subscriptions/batch-sync)。
+type SubscriptionBatchSyncRequest struct {
+	IDs []string `json:"ids"`
+}
+
+// SubscriptionBatchDeleteRequest 批量删除请求(POST /api/subscriptions/batch-delete)。
+type SubscriptionBatchDeleteRequest struct {
+	IDs []string `json:"ids"`
+}
+
+// SubscriptionBatchTagsRequest 批量增删标签请求(POST /api/subscriptions/batch-tags)。
+// add 并入现有标签,remove 从现有标签移除;两者都按去重后应用。
+type SubscriptionBatchTagsRequest struct {
+	IDs    []string `json:"ids"`
+	Add    []string `json:"add,omitempty"`
+	Remove []string `json:"remove,omitempty"`
+}
+
+// SubscriptionBatchUpdateRequest 批量改公共配置请求(POST /api/subscriptions/batch-update)。
+// 仅同步间隔与 allow_insecure 进入批量;名字/source_url 这类逐条独有字段不在内。
+type SubscriptionBatchUpdateRequest struct {
+	IDs           []string `json:"ids"`
+	SyncInterval  *int32   `json:"sync_interval,omitempty"`
+	AllowInsecure *bool    `json:"allow_insecure,omitempty"`
+}
+
+// SubscriptionBatchItemResult 批量操作中单条订阅的结果。
+type SubscriptionBatchItemResult struct {
+	ID    string `json:"id"`
+	OK    bool   `json:"ok"`
+	Error string `json:"error,omitempty"`
+}
+
+// SubscriptionBatchResult 批量操作的汇总结果(逐 id 成败 + 计数)。
+type SubscriptionBatchResult struct {
+	Results        []SubscriptionBatchItemResult `json:"results"`
+	SucceededCount int32                         `json:"succeeded_count"`
+	FailedCount    int32                         `json:"failed_count"`
+}
+
 // SyncResult 同步结果。
 type SyncResult struct {
 	SubscriptionID string `json:"subscription_id"`

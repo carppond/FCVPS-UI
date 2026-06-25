@@ -135,6 +135,15 @@
 | 31a | GET | `/api/subscriptions/:id/sync-logs` | 同步历史(最近 50 条,status/node_count/error/created_at) | `[user]` |
 | 32 | GET | `/api/subscriptions/:id/pipelines` | 列出绑定的流水线 | `[user]` |
 | 33 | PUT | `/api/subscriptions/:id/pipelines` | 重置绑定（全量替换，含排序） | `[user]` |
+| 34 | POST | `/api/subscriptions/batch-sync` | 批量同步（`{ids}`，仅本人，并发上限 5） | `[user]` |
+| 35 | POST | `/api/subscriptions/batch-delete` | 批量删除（`{ids}`，仅本人） | `[user]` |
+| 36 | POST | `/api/subscriptions/batch-tags` | 批量增删标签（`{ids,add,remove}`） | `[user]` |
+| 37 | POST | `/api/subscriptions/batch-update` | 批量改公共配置（`{ids,sync_interval?,allow_insecure?}`） | `[user]` |
+
+**批量端点说明（34–37）：**
+- 请求体携带 `ids`（去重后非空，单次上限 100；UI 仅当前页选择）。
+- 每条都按 `owner_id == 当前用户` 隔离;别人的 id 计为失败，不影响其余。
+- 统一返回 `SubscriptionBatchResult`：`{results:[{id,ok,error?}], succeeded_count, failed_count}`；单条失败不中断整体。
 
 **GET /api/subscriptions 查询参数：**
 - `page`、`page_size`（默认 20）
