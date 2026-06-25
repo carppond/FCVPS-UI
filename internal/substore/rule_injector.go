@@ -265,6 +265,17 @@ func parseRuleLines(content string) []string {
 		} else if t == "-" {
 			continue
 		}
+		// Skip comment lines — a "# 说明" note pasted into the rule body would
+		// otherwise be emitted as a rules[] entry, and mihomo rejects it with
+		// "format invalid" (the whole subscription then fails to load).
+		if t == "" || strings.HasPrefix(t, "#") {
+			continue
+		}
+		// Strip a trailing inline comment (" #...") for the same reason; clash
+		// rule lines never legitimately contain a space-hash sequence.
+		if i := strings.Index(t, " #"); i >= 0 {
+			t = strings.TrimSpace(t[:i])
+		}
 		// strip surrounding quotes if present (single-line YAML strings)
 		if len(t) >= 2 {
 			if (t[0] == '"' && t[len(t)-1] == '"') || (t[0] == '\'' && t[len(t)-1] == '\'') {

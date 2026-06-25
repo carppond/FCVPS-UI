@@ -342,3 +342,32 @@ func TestInject_RulesContentSupportsListSyntax(t *testing.T) {
 		t.Fatalf("list-syntax stripping failed: %v", rs)
 	}
 }
+
+// TestParseRuleLines_SkipsComments guards the Clash Verge "rules[N] ... format
+// invalid" failure: a "# 说明" note (whole-line or inline) pasted into a rule
+// body must NOT survive as a rules[] entry.
+func TestParseRuleLines_SkipsComments(t *testing.T) {
+	content := strings.Join([]string{
+		"# 核心域名（DOMAIN-SUFFIX 已覆盖所有 *.anthropic.com 子域名）",
+		"  # 缩进的注释",
+		"- # 列表式注释",
+		"RULE-SET,anthropic,🤖 AI 服务",
+		"RULE-SET,cn-domain,DIRECT  # 国内直连",
+		"",
+		"MATCH,🚀 节点选择",
+	}, "\n")
+	got := parseRuleLines(content)
+	want := []string{
+		"RULE-SET,anthropic,🤖 AI 服务",
+		"RULE-SET,cn-domain,DIRECT",
+		"MATCH,🚀 节点选择",
+	}
+	if len(got) != len(want) {
+		t.Fatalf("got %d lines %v, want %d %v", len(got), got, len(want), want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("line %d = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
